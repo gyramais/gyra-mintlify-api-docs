@@ -45,15 +45,26 @@
       ]
     },
     {
+      "group": "Autenticação",
+      "pages": [
+        "api-reference/auth/post-authauthenticate"
+      ]
+    },
+    {
       "group": "Relatórios",
       "pages": [
         "api-reference/report/get-report",
         "api-reference/report/get-report-section",
         "api-reference/report/get-reportlist",
-        "api-reference/report/get-reportsection",
         "api-reference/report/post-report",
         "api-reference/report/post-report-financial-tab",
         "api-reference/report/post-reportanalyze"
+      ]
+    },
+    {
+      "group": "Políticas de Decisão",
+      "pages": [
+        "api-reference/credit-policypolicy/get-credit-policypolicy"
       ]
     },
     {
@@ -65,21 +76,9 @@
       ]
     },
     {
-      "group": "Auth",
-      "pages": [
-        "api-reference/auth/post-authauthenticate"
-      ]
-    },
-    {
       "group": "Status da API",
       "pages": [
         "api-reference/health/get-health"
-      ]
-    },
-    {
-      "group": "Políticas de Decisão",
-      "pages": [
-        "api-reference/credit-policypolicy/get-credit-policypolicy"
       ]
     },
     {

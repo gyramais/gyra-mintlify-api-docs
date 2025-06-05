@@ -1,32 +1,51 @@
 ---
 openapi: post /report
+title: Criar Relatório
+description: Dispara a análise de crédito completa com CPF ou CNPJ em segundos.
 ---
 
-### Headers
+<Endpoint
+  method="POST"
+  path="/report"
+  headers={[
+    {
+      name: "Authorization",
+      type: "string",
+      required: true,
+      description: "Token JWT no formato Bearer. Exemplo: `Bearer abc123`"
+    }
+  ]}
+  requestBody={{
+    contentType: "application/json",
+    body: {
+      document: "12345678901",
+      type: "cpf",
+      policyId: "abc123"
+    }
+  }}
+  responses={{
+    200: {
+      contentType: "application/json",
+      body: {
+        id: "663a2b61b18bda19547ddaa8",
+        status: "PROCESSING",
+        createdAt: "2024-05-07T13:23:45.959Z",
+        updatedAt: "2024-05-07T13:23:45.959Z"
+      }
+    },
+    403: {
+      contentType: "application/json",
+      body: {
+        statusCode: 403,
+        message: "Forbidden"
+      }
+    }
+  }}
+/>
 
-| Name          | Type   | Required | Description                     |
-|---------------|--------|----------|---------------------------------|
-| Authorization | string | ✅        | Token Bearer. Ex: `Bearer xyz` |
+<RequestExample>
 
----
-
-### Body Parameters
-
-```json
-{
-  "document": "12345678901",
-  "type": "cpf",
-  "policyId": "abc123"
-}
-```
-
----
-
-### Exemplos de Código
-
-<CodeGroup>
-
-```bash request.sh
+```bash cURL
 curl --location 'https://gyra-core.gyramais.com.br/report' \
 --header 'Authorization: Bearer abc123' \
 --header 'Content-Type: application/json' \
@@ -37,7 +56,7 @@ curl --location 'https://gyra-core.gyramais.com.br/report' \
 }'
 ```
 
-```javascript request.js
+```javascript JavaScript
 fetch("https://gyra-core.gyramais.com.br/report", {
   method: "POST",
   headers: {
@@ -49,11 +68,12 @@ fetch("https://gyra-core.gyramais.com.br/report", {
     type: "cpf",
     policyId: "abc123"
   })
-}).then(res => res.json())
+})
+  .then(res => res.json())
   .then(console.log)
 ```
 
-```python request.py
+```python Python
 import requests
 
 url = "https://gyra-core.gyramais.com.br/report"
@@ -71,28 +91,20 @@ response = requests.post(url, headers=headers, json=payload)
 print(response.json())
 ```
 
-</CodeGroup>
+</RequestExample>
 
----
+<Tip>
+A requisição retorna o id e status do relatório. Você pode configurar para receber atualizações em real time na sessão webhooks ou consultar o id na api Get Report para um status atualizado
+</Tip>
 
-### Resposta 200
+<ResponseExample>
 
-```json
+```json 200 OK
 {
   "id": "663a2b61b18bda19547ddaa8",
   "status": "PROCESSING",
-  "createdAt": "2024-05-07T13:23:45.959Z",
-  "updatedAt": "2024-05-07T13:23:45.959Z"
+  "createdAt": "2024-05-07T13:23:45.959Z"
 }
 ```
 
----
-
-### Resposta 403
-
-```json
-{
-  "statusCode": 403,
-  "message": "Forbidden"
-}
-```
+</ResponseExample>

@@ -1,3 +1,117 @@
 ---
 openapi: get /report/{id}
+title: Consulta Relatório
+description: Busca um relatório por ID    
 ---
+
+<Endpoint
+  method="GET"
+  path="/report/{id}"
+  headers={[
+    {
+      name: "Authorization",
+      type: "string",
+      required: true,
+      description: "Token JWT no formato Bearer. Exemplo: `Bearer abc123`"
+    }
+  ]}
+  responses={{
+    200: {
+      contentType: "application/json",
+      body: {
+        id: "6734081bd2a2fc62e2c55c14",
+        createdAt: "2024-11-13T01:59:55.536Z",
+        updatedAt: "2024-11-13T01:59:55.536Z",
+        document: "022#######3",
+        yearMonthDay: 20241113,
+        policyId: "6711772c3bfe68b00fe85cde",
+        organizationId: "65eb4989a4a87b9a94d1920f",
+        status: {
+          id: "6614758260513064a5af1046",
+          value: "PENDING"
+        },
+        sections: [
+          {
+            id: "6734081bd2a2fc62e2c55c23",
+            type: { value: "SUMMARY" },
+            sectionDetails: [
+              {
+                values: {
+                  serasaScoreSummary: {
+                    order: 2,
+                    title: "Score BoaVista",
+                    value: "673",
+                    status: "BAD"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }}
+/>
+
+<RequestExample>
+
+```bash cURL
+curl --location --globoff 'https://gyra-core.gyramais.com.br/report/{id}' \
+--header 'Authorization: Bearer abc123'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/report/{id}", {
+  method: "GET",
+  headers: {
+    Authorization: "Bearer abc123"
+  }
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/report/{id}"
+headers = {
+  "Authorization": "Bearer abc123"
+}
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+
+</RequestExample>
+<Tip>
+O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo está disponível no ambiente real ou mediante solicitação técnica.
+</Tip>
+<ResponseExample>
+
+```json 200 OK
+{
+  "id": "6734081bd2a2fc62e2c55c14",
+  "document": "022#######3",
+  "status": {
+    "value": "PENDING"
+  },
+  "sections": [
+    {
+      "type": { "value": "SUMMARY" },
+      "sectionDetails": [
+        {
+          "values": {
+            "serasaScoreSummary": {
+              "title": "Score BoaVista",
+              "value": "673",
+              "status": "BAD"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+</ResponseExample>

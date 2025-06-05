@@ -1,18 +1,43 @@
 ---
-title: Tipos de Relatórios
+title: Políticas de Decisão
 icon: "files"
 ---
 
-A GYRA+ oferece diferentes tipos de relatórios de crédito que variam em profundidade e escopo. Cada tipo é vinculado a uma política de crédito específica, identificada por um `policyId`. Essa política define quais seções e validações farão parte do relatório.
+A **GYRA+** disponibiliza **modelos padrão de políticas de decisão de crédito**, desenvolvidos com base nas melhores práticas do mercado e na experiência da GYRA+ em análise de risco. Esses templates já vêm configurados no sistema e estão listados na tabela abaixo.
 
-## Tabela de Tipos de Relatórios
+### Opções de uso
 
-| Tipo de Relatório       | Pessoa Física (PF)                          | Pessoa Jurídica (PJ)                          | Observações                                                                 |
-|-------------------------|---------------------------------------------|-----------------------------------------------|------------------------------------------------------------------------------|
-| **RELATÓRIO COMPLETO+** | `66ad58a5a49150eb29ab9b87`                  | `66ad5d23a49150eb29ab9c8b`                    | Relatório mais completo com todos os módulos ativados.                      |
-| **RELATÓRIO COMPLETO**  | `66b0e143ccf8778c4a04261b`                  | `66b0e21accf8778c4a0426a1`                    | Relatório robusto com a maioria das análises ativadas.                     |
-| **RELATÓRIO ESSENCIAL** | `66f6b2afadf4c14e504b63d9`                  | `66f6b2afadf4c14e504b635c`                    | Relatório com as seções principais para uma análise ágil.                 |
-| **RELATÓRIO SIMPLES**   | -                                           | -                                             | Política personalizada criada via: [toolbox.gyramais.com.br](https://toolbox.gyramais.com.br). |
+O cliente pode escolher entre três formas de utilizar as políticas de decisão:
+
+1. **Usar um modelo padrão pronto**  
+   Ideal para começar rapidamente. Basta selecionar o template mais adequado e iniciar a análise.
+
+2. **Personalizar um modelo existente**  
+   Use qualquer template como base e ajuste as regras, pesos e critérios conforme sua estratégia de risco.
+
+3. **Criar uma política do zero**  
+   Para clientes com regras próprias bem definidas, é possível configurar uma política totalmente personalizada, selecionando as variáveis, condições e validações desde o início.
+---
+
+## Relatórios de Crédito e `policyId`
+
+A **GYRA+** oferece diferentes tipos de relatórios de crédito, que variam em profundidade e escopo — incluindo dados cadastrais, financeiros, jurídicos, comportamentais e outros.
+
+Cada tipo de relatório está vinculado a uma política de decisão específica, identificada por um campo chamado `policyId`. Essa política determina:
+
+- Quais seções serão incluídas no relatório
+- Quais regras e validações serão aplicadas
+- Quais critérios serão usados na recomendação final
+
+Dessa forma, é possível adaptar a análise de crédito ao perfil e ao apetite de risco de cada cliente.
+
+## Tabela de Templates &  Relatórios
+
+| Nome Template       | id                             | PJ   | PF   | Tipo Relatório | Bureau |
+|---------------------|----------------------------------|------|------|----------------|--------|
+| Abertura de Conta   | `67be2e43d6c1064a759601bf`      | ❌   | ✅   | Essencial      | -      |
+| Background Check    | `679955e0485aa2f033203f98`      | ✅   | ❌   | Completo       | -      |
+| Financiamento LP    | `67c07e841997d65ab3dc74cd`      | ✅   | ❌   | Completo       | Boavista     |
 
 <Tip>
 Utilize o `policyId` correspondente ao tipo de cliente (PF ou PJ) no momento da chamada à API de criação de relatório.
