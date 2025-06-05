@@ -1,33 +1,38 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: Introdução
+icon: "rocket"
+description: Documentação oficial da API GYRA+ 
 ---
+# Conheça a GYRA+
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+A GYRA+ é a plataforma mais completa de análise de crédito automatizada do Brasil.  
+Unificando dados públicos, informações de bureau, histórico judicial, relacionamentos e muito mais, nossa API permite que você integre inteligência avançada de crédito ao seu sistema com facilidade.
 
-## Welcome
+Ideal para fintechs, distribuidoras, bancos, factorings e qualquer empresa que queira **automatizar a análise de crédito com mais produtividade e menos risco**.
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+## Ambiente de Produção
+
+Utilize a URL abaixo para acessar o ambiente de produção da GYRA+:
+
+```url
+https://gyra-core.gyramais.com.br/
+```
+
+## Tipos de Relatórios
+
+Conheça os diferentes tipos de relatórios disponíveis e escolha o mais adequado para sua operação:
+
+- **COMPLETO+**: relatório mais completo da GYRA+, com certidões públicas, processos desde 1995, protestos e tudo que é possível integrar.  
+- **COMPLETO**: inclui dados profundos, mas sem certidões e com processos desde 2014.
+- **ESSENCIAL**: visão enxuta sem certidões e protestos, mas com relacionamentos e dados principais.
+- **SIMPLES**: apenas os dados cadastrais básicos e localização, ideal para qualificação rápida de leads ou limpeza de base.
 
 <Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
+  title="Comparativo dos Relatórios"
+  icon="file-text"
+  href="https://go.n8n.gyramais.com.br/webhook/comparativorelatorios"
+  arrow={true}
+  cta="Ver comparação completa"
 >
-  View the OpenAPI specification file
+  Acesse a tabela completa com todos os campos disponíveis em cada tipo de relatório.
 </Card>
-
-## Authentication
-
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
-
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
-```

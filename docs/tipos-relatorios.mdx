@@ -1,0 +1,29 @@
+---
+title: Tipos de Relatórios
+icon: "files"
+---
+
+A GYRA+ oferece diferentes tipos de relatórios de crédito que variam em profundidade e escopo. Cada tipo é vinculado a uma política de crédito específica, identificada por um `policyId`. Essa política define quais seções e validações farão parte do relatório.
+
+## Tabela de Tipos de Relatórios
+
+| Tipo de Relatório       | Pessoa Física (PF)                          | Pessoa Jurídica (PJ)                          | Observações                                                                 |
+|-------------------------|---------------------------------------------|-----------------------------------------------|------------------------------------------------------------------------------|
+| **RELATÓRIO COMPLETO+** | `66ad58a5a49150eb29ab9b87`                  | `66ad5d23a49150eb29ab9c8b`                    | Relatório mais completo com todos os módulos ativados.                      |
+| **RELATÓRIO COMPLETO**  | `66b0e143ccf8778c4a04261b`                  | `66b0e21accf8778c4a0426a1`                    | Relatório robusto com a maioria das análises ativadas.                     |
+| **RELATÓRIO ESSENCIAL** | `66f6b2afadf4c14e504b63d9`                  | `66f6b2afadf4c14e504b635c`                    | Relatório com as seções principais para uma análise ágil.                 |
+| **RELATÓRIO SIMPLES**   | -                                           | -                                             | Política personalizada criada via: [toolbox.gyramais.com.br](https://toolbox.gyramais.com.br). |
+
+<Tip>
+Utilize o `policyId` correspondente ao tipo de cliente (PF ou PJ) no momento da chamada à API de criação de relatório.
+</Tip>
+
+<Card
+  title="Comparativo dos Relatórios"
+  icon="file-text"
+  href="https://go.n8n.gyramais.com.br/webhook/comparativorelatorios"
+  arrow={true}
+  cta="Ver comparação completa"
+>
+  Acesse a tabela completa com todos os campos disponíveis em cada tipo de relatório.
+</Card>

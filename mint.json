@@ -1,91 +1,94 @@
 {
-  "$schema": "https://mintlify.com/schema.json",
-  "name": "Starter Kit",
+  "name": "GYRA+ API Docs",
+  "theme": "venus",
   "logo": {
-    "dark": "/logo/dark.svg",
-    "light": "/logo/light.svg"
+    "dark": "/logo/dark.png",
+    "light": "/logo/light.png"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon-gyra.ico",
   "colors": {
-    "primary": "#0D9373",
-    "light": "#07C983",
-    "dark": "#0D9373",
-    "anchors": {
-      "from": "#0D9373",
-      "to": "#07C983"
-    }
-  },
-  "topbarLinks": [
-    {
-      "name": "Support",
-      "url": "mailto:hi@mintlify.com"
-    }
-  ],
-  "topbarCtaButton": {
-    "name": "Dashboard",
-    "url": "https://dashboard.mintlify.com"
+    "primary": "#1a54fa",
+    "light": "#1a54fa",
+    "dark": "#1a54fa"
   },
   "tabs": [
     {
-      "name": "API Reference",
+      "name": "Referência da API",
       "url": "api-reference"
-    }
-  ],
-  "anchors": [
-    {
-      "name": "Documentation",
-      "icon": "book-open-cover",
-      "url": "https://mintlify.com/docs"
     },
     {
-      "name": "Community",
-      "icon": "slack",
-      "url": "https://mintlify.com/community"
+      "name": "Documentação",
+      "url": "docs"
+    }
+  ],
+  "topbarLinks": [
+    {
+      "name": "FAQ",
+      "url": "https://faq.gyramais.com.br/"
     },
     {
       "name": "Blog",
-      "icon": "newspaper",
-      "url": "https://mintlify.com/blog"
+      "url": "https://gyramais.com.br/blog"
     }
   ],
+  "topbarCtaButton": {
+    "name": "Login",
+    "url": "https://toolbox.gyramais.com.br/login",
+    "type": "link"
+  },
   "navigation": [
     {
-      "group": "Get Started",
+      "group": "Vamos começar",
       "pages": [
-        "introduction",
-        "quickstart",
-        "development"
+        "api-reference/introduction",
+        "api-reference/api-keys"
       ]
     },
     {
-      "group": "Essentials",
+      "group": "Relatórios",
       "pages": [
-        "essentials/markdown",
-        "essentials/code",
-        "essentials/images",
-        "essentials/settings",
-        "essentials/navigation",
-        "essentials/reusable-snippets"
+        "api-reference/report/get-report",
+        "api-reference/report/get-report-section",
+        "api-reference/report/get-reportlist",
+        "api-reference/report/get-reportsection",
+        "api-reference/report/post-report",
+        "api-reference/report/post-report-financial-tab",
+        "api-reference/report/post-reportanalyze"
       ]
     },
     {
-      "group": "API Documentation",
+      "group": "Webhook",
       "pages": [
-        "api-reference/introduction"
+        "api-reference/webhook/delete-webhook",
+        "api-reference/webhook/get-webhookfindby",
+        "api-reference/webhook/post-webhook"
       ]
     },
     {
-      "group": "Endpoint Examples",
+      "group": "Auth",
       "pages": [
-        "api-reference/endpoint/get",
-        "api-reference/endpoint/create",
-        "api-reference/endpoint/delete"
+        "api-reference/auth/post-authauthenticate"
+      ]
+    },
+    {
+      "group": "Status da API",
+      "pages": [
+        "api-reference/health/get-health"
+      ]
+    },
+    {
+      "group": "Políticas de Decisão",
+      "pages": [
+        "api-reference/credit-policypolicy/get-credit-policypolicy"
+      ]
+    },
+    {
+      "group": "Documentação",
+      "pages": [
+        "docs/estrutura-relatorio",
+        "docs/tipos-relatorios",
+        "docs/dados-entregues"
       ]
     }
-  ],
-  "footerSocials": {
-    "x": "https://x.com/mintlify",
-    "github": "https://github.com/mintlify",
-    "linkedin": "https://www.linkedin.com/company/mintsearch"
-  }
+  ]
 }

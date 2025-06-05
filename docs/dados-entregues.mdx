@@ -1,0 +1,306 @@
+---
+title: Dados Entregues
+icon: "database"
+description: Entenda todos os dados entregues no relatório da GYRA+.
+---
+
+## Relatório - Estrutura Geral
+
+| #   | Variável         | Descrição                                           |
+| --- | ---------------- | --------------------------------------------------- |
+| 1   | `id`             | Identificador do relatório                          |
+| 2   | `createdAt`      | Data de criação do relatório                        |
+| 3   | `updatedAt`      | Data da última atualização do relatório             |
+| 4   | `document`       | Documento consultado                                |
+| 5   | `yearMonthDay`   | Data de referência dos dados                        |
+| 6   | `organizationId` | Identificador da organização que fez a consulta     |
+| 7   | `type`           | Objeto com informações do tipo de consulta          |
+| 7.1 | `id`             | Identificador do tipo                               |
+| 7.2 | `createdAt`      | Data de criação                                     |
+| 7.3 | `updatedAt`      | Data de atualização                                 |
+| 7.4 | `title`          | Título                                              |
+| 7.5 | `value`          | Valor                                               |
+| 7.6 | `isPaid`         | Valida se a consulta foi paga (extra)               |
+| 8   | `commentary`     | Comentário da análise do relatório                  |
+| 9   | `status`         | Objeto com informações de status do relatório       |
+| 9.1 | `id`             | Identificador do status                             |
+| 9.2 | `value`          | Valor do status: `Pendente`, `Negado` ou `Aprovado` |
+| 9.3 | `sections`       | Seções detalhadas (ver tabela abaixo)               |
+
+## Seções do Relatório
+
+| #       | Variável      | Descrição                                    |
+| ------- | ------------- | -------------------------------------------- |
+| 9.3.1   | `id`          | Identificador da seção do relatório          |
+| 9.3.2   | `type`        | Objeto com informações sobre o tipo da seção |
+| 9.3.2.1 | `id`          | Identificador do tipo                        |
+| 9.3.2.2 | `title`       | Título da seção                              |
+| 9.3.2.3 | `tabs`        | -                                            |
+| 9.3.3   | `comments`    | Comentários sobre a seção                    |
+| 9.3.4   | `completedAt` | Data de finalização da seção                 |
+| 9.3.5   | `errors`      | Erros na seção                               |
+| 9.3.6   | `details`     | Informações detalhadas da seção              |
+
+## Comentários do Relatório
+
+| #       | Variável         | Descrição                                |
+| ------- | ---------------- | ---------------------------------------- |
+| 8       | `commentary`     | Comentário geral da análise              |
+| 8.1     | `createdAt`      | Data de criação do comentário            |
+| 8.2     | `id`             | Identificador do comentário              |
+| 8.3     | `text`           | Texto do comentário                      |
+| 8.4     | `authUserId`     | ID da autenticação do usuário            |
+| 8.5     | `user`           | Objeto com dados do usuário que comentou |
+| 8.5.1   | `id`             | ID do usuário                            |
+| 8.5.2   | `organizationId` | Organização do usuário                   |
+| 8.5.3   | `authUserId`     | ID de autenticação                       |
+| 8.5.4   | `email`          | Email do usuário                         |
+| 8.5.5   | `person`         | Objeto com dados pessoais                |
+| 8.5.5.1 | `id`             | ID do cadastro                           |
+| 8.5.5.2 | `name`           | Nome                                     |
+| 8.5.5.3 | `cpf`            | CPF                                      |
+
+## Resumo
+
+| #        | Variável                      | Descrição                                       |
+| -------- | ----------------------------- | ----------------------------------------------- |
+| 9.3.6    | `details`                     | Informações detalhadas da seção                 |
+| 9.3.6.1  | `integrationCount`            | Número de integrações realizadas                |
+| 9.3.6.2  | `companyPep` / `personPep`    | Dados sobre exposição política (ver Resumo PEP) |
+| 9.3.6.3  | `pepSummary`                  | Resumo sobre PEP                                |
+| 9.3.6.4  | `serasaScoreSummary`          | Score da Serasa                                 |
+| 9.3.6.5  | `protestsSummary`             | Resumo de protestos                             |
+| 9.3.6.6  | `pefinsSummary`               | Pendências financeiras                          |
+| 9.3.6.7  | `refinsSummary`               | Pendências financeiras estaduais ou federais    |
+| 9.3.6.8  | `checksSummary`               | Resumo de cheques sem fundo                     |
+| 9.3.6.9  | `economicGroupChanges`        | Alterações no grupo econômico                   |
+| 9.3.6.10 | `changesSummary`              | Resumo de alterações                            |
+| 9.3.6.11 | `companyLawsuits`             | Processos da empresa                            |
+| 9.3.6.12 | `lawsuitsSummary`             | Resumo de processos                             |
+| 9.3.6.13 | `ownersLawsuits`              | Processos dos sócios                            |
+| 9.3.6.14 | `addressesChanges`            | Mudanças de endereço                            |
+| 9.3.6.15 | `ownersPep`                   | PEP dos sócios                                  |
+| 9.3.6.16 | `basicDataChanges`            | Alterações cadastrais                           |
+| 9.3.6.17 | `pgfnCertificate`             | Certidão PGFN                                   |
+| 9.3.6.18 | `totalCertificates`           | Total de certidões emitidas                     |
+| 9.3.6.19 | `certificatesSummary`         | Resumo das certidões                            |
+| 9.3.6.20 | `debtLaborAbsenceCertificate` | Certidão negativa de débitos trabalhistas       |
+| 9.3.6.21 | `fgtsCertificate`             | Certidão FGTS                                   |
+| 9.3.6.22 | `debtAbsenceStateCertificate` | Certidão estadual negativa                      |
+
+## Resumo PEP
+| #  | Variável                 | Descrição                                                      |
+| -- | ------------------------ | -------------------------------------------------------------- |
+| .1 | `pEPCountPrimary`        | Quantidade de PEP no QSA da empresa                            |
+| .2 | `otherPepsCount`         | Quantidade de PEP nos relacionamentos da empresa, exceto QSA   |
+| .3 | `totalSanctionsCount`    | Quantidade total de sanções identificadas na empresa ou sócios |
+| .4 | `totalDonations`         | Quantidade total de doações realizadas pela empresa ou sócios  |
+| .5 | `lastThreeElectionYears` | Data das últimas 3 eleições                                    |
+
+## Resumo Padrão
+
+| #  | Variável   | Descrição                                                     |
+| -- | ---------- | ------------------------------------------------------------- |
+| .1 | `order`    | Ordenação                                                     |
+| .2 | `title`    | Título do resumo                                              |
+| .3 | `tooltip`  | Explicação sobre o resumo                                     |
+| .4 | `icon`     | Ícone de identificação                                        |
+| .5 | `dateText` | Texto com data da atualização do componente                   |
+| .6 | `error`    | Indica erro na análise (`true`/`false`)                       |
+| .7 | `value`    | Valor principal analisado                                     |
+| .8 | `subValue` | Segundo valor (ex: variação, complemento)                     |
+| .9 | `status`   | Status da análise: `BAD`, `GOOD`, `ALERT`, `PENDING`, `ERROR` |
+
+## Resumo Alterações
+
+| #  | Variável | Descrição                          |
+| -- | -------- | ---------------------------------- |
+| .1 | `id`     | Identificador da alteração         |
+| .2 | `date`   | Data da identificação da alteração |
+
+## Resumo Processos
+
+| #  | Variável | Descrição                 |
+| -- | -------- | ------------------------- |
+| .1 | `count`  | Quantidade de processos   |
+| .2 | `amount` | Valor total dos processos |
+
+## Resumo Certidões
+
+| #  | Variável | Descrição                                |
+| -- | -------- | ---------------------------------------- |
+| .1 | `valid`  | Certidão está aprovada? (`true`/`false`) |
+| .2 | `error`  | Teve erro na emissão? (`true`/`false`)   |
+
+## Alertas
+
+| #  | Variável  | Descrição                                                                 |
+| -- | --------- | ------------------------------------------------------------------------- |
+| .1 | `label`   | Nome do alerta                                                            |
+| .2 | `status`  | Tipo de alerta: `GOOD`, `BAD`, `ALERT`, `PENDING`, `ERROR`                |
+| .3 | `message` | Mensagem explicativa                                                      |
+| .4 | `type`    | Tipo da seção ou origem do alerta (ex: `PROTESTS`, `CERTIFICATES`, `PEP`) |
+
+## Alertas - Resultado dos Grupos de Regras
+
+| #  | Variável       | Descrição                                                         |
+| -- | -------------- | ----------------------------------------------------------------- |
+| .1 | `group`        | Nome do grupo de regras (ex: “Análise Documental”, “SCR Bacen”)   |
+| .2 | `totalRules`   | Quantidade total de regras avaliadas no grupo                     |
+| .3 | `matchedRules` | Quantidade de regras disparadas no grupo                          |
+| .4 | `score`        | Score (pontuação) daquele grupo                                   |
+| .5 | `status`       | Status final do grupo: `GOOD`, `BAD`, `ALERT`, `PENDING`, `ERROR` |
+
+## Informações Básicas
+
+| #   | Variável          | Descrição                                                 |
+| --- | ----------------- | --------------------------------------------------------- |
+| .1  | `document`        | Documento consultado (CPF ou CNPJ)                        |
+| .2  | `documentType`    | Tipo de documento: `CPF` ou `CNPJ`                        |
+| .3  | `name`            | Nome do titular do documento                              |
+| .4  | `birthDate`       | Data de nascimento (CPF) ou de abertura (CNPJ)            |
+| .5  | `email`           | Email informado                                           |
+| .6  | `phone`           | Telefone informado                                        |
+| .7  | `companyType`     | Tipo de empresa: `ME`, `EPP`, `LTDA`, etc.                |
+| .8  | `address`         | Endereço (logradouro, número, cidade, estado, CEP)        |
+| .9  | `taxRegime`       | Regime tributário                                         |
+| .10 | `simplesOption`   | Optante pelo Simples Nacional (`true` ou `false`)         |
+| .11 | `meiOption`       | Optante por MEI (`true` ou `false`)                       |
+| .12 | `cadastralStatus` | Status do cadastro na Receita Federal (ex: Ativa, Inapta) |
+| .13 | `openingDate`     | Data de abertura da empresa                               |
+| .14 | `cnaes`           | Lista de CNAEs vinculados                                 |
+
+## Relações
+
+| #  | Variável      | Descrição                                                       |
+| -- | ------------- | --------------------------------------------------------------- |
+| .1 | `type`        | Tipo da relação: `Sócio`, `Administrador`, `Participação`, etc. |
+| .2 | `name`        | Nome da pessoa ou empresa relacionada                           |
+| .3 | `document`    | Documento da relação (CPF ou CNPJ)                              |
+| .4 | `companyType` | Tipo da empresa relacionada (caso aplicável)                    |
+| .5 | `startDate`   | Data de início da relação                                       |
+| .6 | `endDate`     | Data de término da relação (se houver)                          |
+
+## Processos
+
+| #    | Variável           | Descrição                                                  |
+| ---- | ------------------ | ---------------------------------------------------------- |
+| .1   | `total`            | Quantidade total de processos encontrados                  |
+| .2   | `courts`           | Lista de tribunais com processos                           |
+| .3   | `processes`        | Lista de processos                                         |
+| .3.1 | `number`           | Número do processo                                         |
+| .3.2 | `class`            | Classe do processo (ex: Execução Fiscal, Ação Trabalhista) |
+| .3.3 | `subject`          | Assunto principal                                          |
+| .3.4 | `court`            | Tribunal responsável                                       |
+| .3.5 | `area`             | Área: `Cível`, `Trabalhista`, `Criminal`, etc.             |
+| .3.6 | `distributionDate` | Data de distribuição do processo                           |
+| .3.7 | `parties`          | Partes envolvidas (autor, réu, advogado)                   |
+| .3.8 | `history`          | Histórico de movimentações com data e conteúdo textual     |
+
+## Certidões
+
+| #  | Variável       | Descrição                                                                    |
+| -- | -------------- | ---------------------------------------------------------------------------- |
+| .1 | `type`         | Tipo da certidão: `Federal`, `Estadual`, `Trabalhista`, `FGTS`, etc.         |
+| .2 | `source`       | Fonte emissora (ex: Receita Federal, Justiça do Trabalho)                    |
+| .3 | `status`       | Status da certidão: `Negativa`, `Positiva`, `Positiva com Efeitos Negativos` |
+| .4 | `issuedAt`     | Data de emissão                                                              |
+| .5 | `validUntil`   | Data de validade                                                             |
+| .6 | `documentLink` | Link do PDF ou página de origem                                              |
+
+## Protestos
+
+| #    | Variável      | Descrição                             |
+| ---- | ------------- | ------------------------------------- |
+| .1   | `total`       | Número total de protestos encontrados |
+| .2   | `lastUpdated` | Data da última atualização            |
+| .3   | `entries`     | Lista com detalhes dos protestos      |
+| .3.1 | `value`       | Valor do protesto                     |
+| .3.2 | `city`        | Município de registro                 |
+| .3.3 | `state`       | Estado de registro                    |
+| .3.4 | `cartorio`    | Nome do cartório                      |
+| .3.5 | `date`        | Data de registro                      |
+
+## SCR
+
+| #  | Variável         | Descrição                               |
+| -- | ---------------- | --------------------------------------- |
+| .1 | `month`          | Mês de referência (formato YYYY-MM)     |
+| .2 | `contractedDebt` | Valor total da dívida contratada no mês |
+| .3 | `pastDueDebt`    | Valor da dívida vencida                 |
+| .4 | `overdue90d`     | Valor vencido há mais de 90 dias        |
+| .5 | `guarantees`     | Valor das garantias vinculadas          |
+| .6 | `limits`         | Limites de crédito disponíveis          |
+
+## Categorias SCR
+
+| #  | Variável         | Descrição                                                           |
+| -- | ---------------- | ------------------------------------------------------------------- |
+| .1 | `category`       | Categoria de crédito (ex: Capital de Giro, Cartão de Crédito, etc.) |
+| .2 | `month`          | Mês de referência (formato YYYY-MM)                                 |
+| .3 | `contractedDebt` | Valor total contratado naquela categoria e mês                      |
+| .4 | `pastDueDebt`    | Valor vencido                                                       |
+| .5 | `limits`         | Limites de crédito associados à categoria                           |
+
+## PEFIN
+
+| #    | Variável   | Descrição                                                      |
+| ---- | ---------- | -------------------------------------------------------------- |
+| .1   | `total`    | Número de pendências encontradas                               |
+| .2   | `entries`  | Lista com os detalhes das pendências                           |
+| .2.1 | `value`    | Valor da pendência                                             |
+| .2.2 | `creditor` | Nome da empresa ou entidade credora                            |
+| .2.3 | `date`     | Data da inclusão da pendência                                  |
+| .2.4 | `contract` | Tipo de contrato associado (ex: empréstimo, cartão de crédito) |
+
+## Cheques sem fundo (CCF)
+
+| #    | Variável  | Descrição                         |
+| ---- | --------- | --------------------------------- |
+| .1   | `total`   | Total de ocorrências encontradas  |
+| .2   | `entries` | Lista com os detalhes dos cheques |
+| .2.1 | `bank`    | Banco emissor                     |
+| .2.2 | `agency`  | Agência do banco                  |
+| .2.3 | `date`    | Data da ocorrência                |
+| .2.4 | `reason`  | Motivo da devolução               |
+
+## Sanções
+
+| #  | Variável  | Descrição                                  |
+| -- | --------- | ------------------------------------------ |
+| .1 | `type`    | Tipo da sanção (ex: OFAC, CEIS, CGU, etc.) |
+| .2 | `source`  | Origem da base de dados                    |
+| .3 | `date`    | Data de publicação                         |
+| .4 | `details` | Descrição do motivo e status atual         |
+
+## PEP
+
+| #  | Variável    | Descrição                                                |
+| -- | ----------- | -------------------------------------------------------- |
+| .1 | `name`      | Nome da pessoa identificada como PEP                     |
+| .2 | `type`      | Tipo de exposição: `Política`, `Familiar`, `Relacionada` |
+| .3 | `role`      | Cargo ou função pública exercida                         |
+| .4 | `startDate` | Data de início da exposição                              |
+| .5 | `endDate`   | Data de término (se houver)                              |
+| .6 | `donations` | Lista de doações declaradas a campanhas eleitorais       |
+
+## Política de Crédito
+
+| #  | Variável       | Descrição                                                           |
+| -- | -------------- | ------------------------------------------------------------------- |
+| .1 | `ruleName`     | Nome da regra avaliada                                              |
+| .2 | `status`       | Resultado da regra: `Aprovado`, `Negado`, `Alerta`                  |
+| .3 | `points`       | Pontos adicionados ou removidos na pontuação final                  |
+| .4 | `conditionMet` | Indica se a condição foi atendida (`true` ou `false`)               |
+| .5 | `rationale`    | Justificativa explicando o motivo da regra ter sido ou não atendida |
+
+## REFIN
+
+| #  | Variável       | Descrição                                                      |
+| -- | -------------- | -------------------------------------------------------------- |
+| .1 | `creditor`     | Nome da instituição financeira                                 |
+| .2 | `contract`     | Tipo de contrato refinanciado                                  |
+| .3 | `amount`       | Valor original da pendência refinanciada                       |
+| .4 | `refinancedAt` | Data de início do refinanciamento                              |
+| .5 | `installments` | Número de parcelas                                             |
+| .6 | `status`       | Status atual do contrato (em dia, inadimplente, quitado, etc.) |

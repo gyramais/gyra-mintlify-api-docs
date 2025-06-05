@@ -1,0 +1,111 @@
+---
+openapi: post /report
+---
+
+
+
+---
+title: Criar relatório
+description: Endpoint para criar um relatório de análise de crédito.
+---
+
+## POST `/report`
+
+Cria um relatório de análise de crédito com base no CPF ou CNPJ do cliente.
+
+---
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | ✅        | Token Bearer. Ex: `Bearer xyz` |
+
+---
+
+### Body Parameters
+
+```json
+{
+  "document": "12345678901",
+  "type": "cpf",
+  "policyId": "abc123"
+}
+```
+
+---
+
+### Exemplos de Código
+
+<CodeGroup>
+
+```bash request.sh
+curl --location 'https://gyra-core.gyramais.com.br/report' \
+--header 'Authorization: Bearer abc123' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "document": "12345678901",
+  "type": "cpf",
+  "policyId": "abc123"
+}'
+```
+
+```javascript request.js
+fetch("https://gyra-core.gyramais.com.br/report", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer abc123",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    document: "12345678901",
+    type: "cpf",
+    policyId: "abc123"
+  })
+}).then(res => res.json())
+  .then(console.log)
+```
+
+```python request.py
+import requests
+
+url = "https://gyra-core.gyramais.com.br/report"
+headers = {
+  "Authorization": "Bearer abc123",
+  "Content-Type": "application/json"
+}
+payload = {
+  "document": "12345678901",
+  "type": "cpf",
+  "policyId": "abc123"
+}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())
+```
+
+</CodeGroup>
+
+---
+
+### Resposta 200
+
+```json
+{
+  "id": "663a2b61b18bda19547ddaa8",
+  "status": "PROCESSING",
+  "createdAt": "2024-05-07T13:23:45.959Z",
+  "updatedAt": "2024-05-07T13:23:45.959Z"
+}
+```
+
+---
+
+### Resposta 403
+
+```json
+{
+  "statusCode": 403,
+  "message": "Forbidden"
+}
+```
