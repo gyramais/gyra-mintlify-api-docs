@@ -1,0 +1,44 @@
+---
+title: Como Funciona
+icon: "chart-network"
+description: Entenda como a GYRA+ entrega respostas em tempo real com alto nível de personalização por cliente e por tipo de política.
+---
+
+A API da GYRA+ foi construída para entregar **respostas em tempo real** com alto nível de personalização por cliente e por tipo de política.
+
+O fluxo padrão é simples:
+
+```mermaid
+flowchart TD
+  A["Usuário dispara<br>POST /report"] --> B["Entrada: CPF ou CNPJ + policyId"]
+  B --> C["GYRA+ Toolbox API"]
+  C --> D["Integrações externas"]
+  D --> D1["Certidões"]
+  D --> D2["SCR Bacen"]
+  D --> D3["Receita Federal"]
+  D --> D4["Bureaus de Crédito"]
+  D --> D5["Outros conectores"]
+  C --> E["Normalização dos dados"]
+  E --> F["Aplicação da política<br>(score e regras automatizadas)"]
+  F --> G["Criação do relatório e decisão"]
+
+  G --> H1["GET /report/{id}"]
+  G --> H2["Webhook com decisão<br><sub>Enviado em tempo real</sub>"]
+  G --> H3["Painel Toolbox<br><sub>Renderização via WebSocket</sub>"]
+
+  H2 --> I1["Sistema externo consome decisão"]
+  H3 --> I2["Analista visualiza relatório completo"]
+```
+
+## Eventos em tempo real
+
+Após o envio do documento via `POST /report`, o relatório é processado de forma assíncrona. O resultado pode ser consultado de duas maneiras:
+
+- 🔔 **Webhook:** se configurado, a GYRA+ enviará um POST para o seu endpoint com o status atualizado.
+- 📡 **Toolbox:** se você estiver logado no painel, o status do relatório aparece automaticamente via WebSocket sem precisar atualizar a página.
+
+---
+
+## Próximo passo
+
+Após obter suas chaves de API, veja como autenticar suas requisições em [Autenticação](/api-reference/auth/post-authauthenticate).

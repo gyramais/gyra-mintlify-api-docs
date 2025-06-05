@@ -41,6 +41,7 @@
       "group": "Vamos começar",
       "pages": [
         "api-reference/introduction",
+        "api-reference/como-funciona",
         "api-reference/api-keys"
       ]
     },

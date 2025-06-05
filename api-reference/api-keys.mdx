@@ -4,5 +4,30 @@ icon: "key"
 description: Obtenha uma chave de API para autenticar suas requisições à API da GYRA+.
 ---
 
-As credenciais da organização são disponibilizados através do cadastro com nossa equipe de onboarding no momento do cadastro, caso deseje solicitar as credenciais entre em contato com nosso time.
+Para utilizar os serviços da API da GYRA+, é necessário obter credenciais vinculadas à sua organização.
 
+Essas credenciais — `gyra-client-id` e `gyra-client-secret` — são fornecidas durante o processo de onboarding. Caso ainda não tenha acesso ou precise de suporte, entre em contato com nosso time pelo e-mail **[atendimento@gyramais.com](mailto:atendimento@gyramais.com)**.
+
+### 1. Autenticação inicial
+
+Para gerar o token de acesso, envie uma requisição `POST` para o endpoint de autenticação, incluindo os seguintes headers:
+
+| Header               | Tipo     | Obrigatório | Descrição                         |
+|----------------------|----------|-------------|-------------------------------------|
+| `gyra-client-id`     | `string` | ✅           | Identificador da sua organização   |
+| `gyra-client-secret` | `string` | ✅           | Chave secreta fornecida no onboarding |
+
+### 2. Requisições autenticadas
+
+Após a autenticação, utilize o token JWT retornado para autenticar todas as requisições subsequentes. Para isso, inclua o seguinte header:
+
+| Header         | Tipo     | Obrigatório | Descrição                      |
+|----------------|----------|-------------|----------------------------------|
+| `Authorization`| `string` | ✅           | Token no formato `Bearer {token}` |
+
+Exemplo:
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
+```
+
+> Consulte o endpoint de autenticação em [Autenticação](/api-reference/auth/post-authauthenticate).
