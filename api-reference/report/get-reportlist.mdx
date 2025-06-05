@@ -3,3 +3,111 @@ openapi: get /report/list
 title: Consulta Lista de Relatórios
 description: Busca uma lista de relatórios
 ---
+
+### Filtros disponíveis
+
+Você pode utilizar query parameters para filtrar os relatórios retornados por este endpoint.
+
+#### Parâmetros suportados
+
+| Parâmetro     | Tipo     | Descrição                                                                 |
+|---------------|----------|---------------------------------------------------------------------------|
+| `take`        | `number` | Limita o número de relatórios retornados (ex: `take=10`)                  |
+| `skip`        | `number` | Ignora os primeiros N resultados (ex: `skip=5`)                            |
+| `statusValue` | `string` | Filtra por status do relatório: `approved`, `rejected`, `pending`         |
+| `document`    | `string` | CPF ou CNPJ do cliente associado ao relatório (somente números)           |
+
+#### Exemplo de requisição com filtros
+
+```http
+GET /report/list?take=2&document=24657266000170
+```
+
+Este exemplo retorna os **2 relatórios mais recentes** relacionados ao documento **24657266000170**.
+
+> Você pode combinar múltiplos filtros conforme necessário.
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/report/list?take=2&document=24657266000170' \
+--header 'Authorization: Bearer {seu_token_jwt}'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/report/list?take=2&document=24657266000170", {
+  headers: {
+    Authorization: "Bearer {seu_token_jwt}"
+  }
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+headers = {
+    "Authorization": "Bearer {seu_token_jwt}"
+}
+
+params = {
+    "take": 2,
+    "document": "24657266000170"
+}
+
+response = requests.get("https://gyra-core.gyramais.com.br/report/list", headers=headers, params=params)
+print(response.json())
+```
+
+</RequestExample>
+
+<Tip>
+O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo está disponível no ambiente real ou mediante solicitação técnica.
+</Tip>
+
+<ResponseExample>
+
+```json 200 OK
+[
+  {
+    "id": "663a2ec7b18bda19547ddab7",
+    "document": "27######000##9",
+    "userId": "65eb49c0b94c5e61e0865e50",
+    "analystId": null,
+    "customerId": "65fb12d1ebf6d08945fafc6a",
+    "createdAt": "2024-05-07T13:38:15.054Z",
+    "commentary": null,
+    "status": {
+      "id": "6614758260513064a5af1046",
+      "title": "Não iniciado",
+      "value": "PENDING",
+      "color": "#FBBB3B"
+    },
+    "type": {
+      "id": "6614758260513064a5af1064",
+      "title": "GYRA360+",
+      "value": "CUSTOMER_GYRA_360_PLUS_COMPANY"
+    },
+    "user": {
+      "id": "65eb49c05d414c07459cdfdc",
+      "organizationId": "65eb4989a4a87b9a94d1920f",
+      "authUserId": "65eb49c0b94c5e61e0865e50",
+      "email": "t###@gyramais.com",
+      "person": {
+        "id": "65eb49c05d414c07459cdfdb",
+        "name": "Tecnologia Gyramais",
+        "cpf": "7#######074"
+      }
+    },
+    "customer": {
+      "id": "65eb4989a4a87b9a94d1920e",
+      "name": "",
+      "legalName": "GYRAMAIS TECNOLOGIA S.A.",
+      "document": "27######000##9"
+    }
+  }
+]
+```
+
+</ResponseExample>
