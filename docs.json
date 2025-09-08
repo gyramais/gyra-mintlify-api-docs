@@ -1,8 +1,6 @@
 {
   "name": "GYRA+ API Docs",
-  "theme": {
-    "default": "mint"
-  },
+  "theme": "mint",
   "logo": {
     "dark": "/logo/dark.png",
     "light": "/logo/light.png"
