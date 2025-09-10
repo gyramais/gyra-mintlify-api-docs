@@ -7,9 +7,7 @@
   },
   "favicon": "/favicon.svg",
   "colors": {
-    "primary": "#1a54fa",
-    "light": "#1a54fa",
-    "dark": "#1a54fa"
+    "primary": "#1a54fa"
   },
   "topbarLinks": [
     {
@@ -26,7 +24,7 @@
     "url": "https://toolbox.gyramais.com.br/login",
     "type": "link"
   },
-  "openapi": "./start/openapi.json",
+  "openapi": "./start/openapi.yaml",
   "navigation": {
     "groups": [
       {
