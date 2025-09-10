@@ -24,7 +24,7 @@
     "url": "https://toolbox.gyramais.com.br/login",
     "type": "link"
   },
-  "openapi": "./start/openapi.yaml",
+  "openapi": "./openapi.yaml",
   "navigation": {
     "groups": [
       {
