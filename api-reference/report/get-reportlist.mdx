@@ -71,43 +71,33 @@ O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo est
 ```json 200 OK
 [
   {
-    "id": "663a2ec7b18bda19547ddab7",
-    "document": "27######000##9",
-    "userId": "65eb49c0b94c5e61e0865e50",
-    "analystId": null,
-    "customerId": "65fb12d1ebf6d08945fafc6a",
-    "createdAt": "2024-05-07T13:38:15.054Z",
-    "commentary": null,
+    "id": "69a207bcdd0197828df9155a",
+    "policyId": "69a1fbb06a44799c9c440d2d",
+    "policyStatus": "DENIED",
+    "name": "CLIENTE EXEMPLO",
+    "document": "43**********30",
+    "createdAt": "2026-02-27T21:08:11.938Z",
     "status": {
-      "id": "6614758260513064a5af1046",
-      "title": "Não iniciado",
       "value": "PENDING",
-      "color": "#FBBB3B"
-    },
-    "type": {
-      "id": "6614758260513064a5af1064",
-      "title": "GYRA360+",
-      "value": "CUSTOMER_GYRA_360_PLUS_COMPANY"
-    },
-    "user": {
-      "id": "65eb49c05d414c07459cdfdc",
-      "organizationId": "65eb4989a4a87b9a94d1920f",
-      "authUserId": "65eb49c0b94c5e61e0865e50",
-      "email": "t###@gyramais.com",
-      "person": {
-        "id": "65eb49c05d414c07459cdfdb",
-        "name": "Tecnologia Gyramais",
-        "cpf": "7#######074"
-      }
-    },
-    "customer": {
-      "id": "65eb4989a4a87b9a94d1920e",
-      "name": "",
-      "legalName": "GYRAMAIS TECNOLOGIA S.A.",
-      "document": "27######000##9"
+      "title": "Não iniciado"
     }
   }
 ]
 ```
 
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
 </ResponseExample>
+
+### Quando usar
+
+Use este endpoint para recuperar histórico de análises com filtros operacionais. Você pode usar em telas de acompanhamento, filas de trabalho de analistas ou consultas por documento/status/período para operação diária.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.

@@ -1,0 +1,118 @@
+---
+title: Fundo de Crédito e Factoring
+description: Due diligence automatizada para originação e aquisição de recebíveis com inteligência de risco em tempo real.
+icon: "building-columns"
+---
+
+## Cenário
+
+Um fundo de crédito privado ou factoring que compra recebíveis e antecipa duplicatas precisa:
+- Analisar o cedente (quem vende os recebíveis) e o sacado (quem deve pagar)
+- Identificar riscos de concentração e exposição
+- Fazer due diligence completa em operações acima de determinado volume
+- Detectar sinais de fraude: QSA recém-alterado, empresa nova com alta dívida
+- Documentar cada decisão para compliance e auditores
+
+---
+
+## Análise dupla: cedente e sacado
+
+Em operações de factoring, a GYRA+ permite analisar os dois lados da operação simultaneamente:
+
+```javascript
+// Criando dois relatórios em paralelo
+const [relatorioCedente, relatorioSacado] = await Promise.all([
+  gyraApi.post('/report', {
+    document: operacao.cedenteCnpj,
+    type: 'CNPJ',
+    policyId: POLICY_CEDENTE,
+    externalId: `op-${operacao.id}-cedente`,
+  }),
+  gyraApi.post('/report', {
+    document: operacao.sacadoCnpj,
+    type: 'CNPJ',
+    policyId: POLICY_SACADO,
+    externalId: `op-${operacao.id}-sacado`,
+  }),
+]);
+```
+
+---
+
+## Sinais de alerta específicos para factoring
+
+Configure regras que detectam os padrões de risco mais comuns nesse segmento:
+
+### Sinais no cedente
+
+| Sinal | Regra | Critério |
+|-------|-------|----------|
+| Empresa nova com alta dívida | `COMPANY_OPENING_TIME` < 12 meses + `PEFIN_AMOUNT` > 0 | `DENIED` |
+| Troca total de sócios recente | `COMPLETE_QSA_CHANGE` IS_TRUE | `ALERT` |
+| Recuperação judicial ativa | `BANKRUPT` IS_TRUE | `DENIED` |
+| Alta concentração de processos trabalhistas | `LAWSUITS_COUNT_LABOR` > 10 | `ALERT` |
+| Endividamento bancário elevado | `SCR_CALCULATED_REVENUE_EXPIRED` > 15% | `ALERT` |
+
+### Sinais no sacado
+
+| Sinal | Regra | Critério |
+|-------|-------|----------|
+| Sacado inativo ou inapto | `COMPANY_SITUATION` ≠ "Ativa" | `DENIED` |
+| Score muito baixo | `SCORE` < 300 | `DENIED` |
+| Muitos protestos | `NOTARIES_COUNT` > 5 | `DENIED` |
+| Alta dívida total | `TOTAL_DEBT` > R$ 500.000 | `ALERT` |
+
+---
+
+## Due diligence completa — relatório COMPLETO+
+
+Para operações acima de determinado volume, use o tipo de relatório **COMPLETO+**, que inclui:
+
+- Certidões em tempo real (PGFN, Receita Federal, FGTS, Estaduais)
+- Processos desde 1995 (vs. 2014 no COMPLETO)
+- Histórico SCR com até 5 anos de endividamento bancário
+- Verificação PEP e sanções internacionais (OFAC, CEIS, CEPIM)
+
+```javascript
+// Para operações > R$ 100k, usar política de due diligence completa
+const policy = operacao.valor > 100000
+  ? POLICY_DUE_DILIGENCE_COMPLETO_PLUS
+  : POLICY_PADRAO_COMPLETO;
+```
+
+---
+
+## Documentação para compliance
+
+A GYRA+ guarda cada relatório com todos os dados brutos e a decisão tomada. Isso é essencial para:
+
+- **Auditoria interna**: rastrear por que uma operação foi aprovada
+- **Regulatório**: evidenciar o processo de análise de risco
+- **Litígios**: documentar a due diligence realizada
+
+```bash
+# Recuperar relatório completo de uma operação
+curl https://gyra-core.gyramais.com.br/report/{reportId} \
+  -H "Authorization: Bearer {token}"
+```
+
+<Note>
+Os relatórios ficam armazenados permanentemente na GYRA+. Guarde o `reportId` vinculado a cada operação no seu sistema para recuperação futura.
+</Note>
+
+---
+
+## Política sugerida para fundos
+
+Configure dois perfis de política:
+
+**Política Risco Baixo** (antecipação de duplicatas, ticket < R$ 50k):
+- Relatório ESSENCIAL
+- Critérios: CNPJ ativo, score > 400, sem PEFIN
+- Aprovação automática com SLA de 2 minutos
+
+**Política Due Diligence** (operações > R$ 100k ou cedentes novos):
+- Relatório COMPLETO+
+- Critérios completos + certidões + processos históricos
+- Score mínimo 600 para aprovação automática
+- ALERT acima de R$ 500k independente do score (revisão manual obrigatória)

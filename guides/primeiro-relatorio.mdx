@@ -1,0 +1,154 @@
+---
+title: Seu primeiro relatório em 5 minutos
+description: Do zero à primeira decisão de crédito automatizada. Siga este guia e comece a analisar.
+icon: "rocket"
+---
+
+## O que você vai fazer
+
+Neste guia você vai:
+1. Obter suas credenciais
+2. Autenticar na API
+3. Criar seu primeiro relatório de crédito
+4. Ler a decisão automática
+
+Tempo estimado: **5 minutos**.
+
+---
+
+## Pré-requisitos
+
+- `gyra-client-id` e `gyra-client-secret` recebidos no onboarding
+- Um CPF ou CNPJ para testar
+
+<Note>
+Ainda não tem credenciais? Entre em contato com **atendimento@gyramais.com** e solicite o acesso.
+</Note>
+
+---
+
+## Passo 1 — Autenticar
+
+Gere seu token JWT enviando suas credenciais no header da requisição:
+
+```bash
+curl -X POST https://gyra-core.gyramais.com.br/auth/authenticate \
+  -H "gyra-client-id: SEU_CLIENT_ID" \
+  -H "gyra-client-secret: SEU_CLIENT_SECRET"
+```
+
+**Resposta:**
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiresIn": 86400
+}
+```
+
+Guarde o `accessToken` — você vai usá-lo em todas as próximas requisições.
+
+---
+
+## Passo 2 — Criar o relatório
+
+Chame o endpoint `POST /report` com o documento e o `policyId` do template desejado:
+
+<CodeGroup>
+
+```bash CNPJ (Empresa)
+curl -X POST https://gyra-core.gyramais.com.br/report \
+  -H "Authorization: Bearer {accessToken}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "document": "43591367000130",
+    "type": "CNPJ",
+    "policyId": "679955e0485aa2f033203f98",
+    "externalId": "meu-pedido-001"
+  }'
+```
+
+```bash CPF (Pessoa Física)
+curl -X POST https://gyra-core.gyramais.com.br/report \
+  -H "Authorization: Bearer {accessToken}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "document": "12345678901",
+    "type": "CPF",
+    "policyId": "67be2e43d6c1064a759601bf",
+    "externalId": "meu-pedido-001"
+  }'
+```
+
+</CodeGroup>
+
+**Resposta imediata:**
+
+```json
+{
+  "id": "64a3b2c1d4e5f6a7b8c9d0e1",
+  "status": "PENDING",
+  "document": "43591367000130",
+  "createdAt": "2025-03-01T10:30:00.000Z"
+}
+```
+
+O status `PENDING` é esperado — o processamento é assíncrono.
+
+---
+
+## Passo 3 — Consultar o resultado
+
+Use o `id` retornado para consultar o relatório após alguns segundos:
+
+```bash
+curl https://gyra-core.gyramais.com.br/report/64a3b2c1d4e5f6a7b8c9d0e1 \
+  -H "Authorization: Bearer {accessToken}"
+```
+
+**Resposta com decisão:**
+
+```json
+{
+  "id": "64a3b2c1d4e5f6a7b8c9d0e1",
+  "status": "APPROVED",
+  "policyStatus": "APPROVED",
+  "score": 720,
+  "document": "43591367000130",
+  "sections": [...]
+}
+```
+
+---
+
+## Passo 4 — Interpretar a decisão
+
+| Campo | O que significa |
+|-------|-----------------|
+| `status` | Status geral do relatório |
+| `policyStatus` | Decisão da política de crédito: `APPROVED`, `DENIED` ou `ALERT` |
+| `score` | Score composto calculado pela política (0–1000) |
+| `sections` | Dados detalhados por seção temática |
+
+<Tip>
+Para produção, evite polling e configure um [webhook](/guides/configurar-webhook) para receber a decisão automaticamente assim que o relatório for concluído.
+</Tip>
+
+---
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Configurar webhook" icon="webhook" href="/guides/configurar-webhook">
+    Receba a decisão em tempo real no seu sistema sem polling.
+  </Card>
+  <Card title="Entender a decisão" icon="magnifying-glass" href="/guides/interpretar-decisao">
+    Saiba como ler o resultado da política e as regras avaliadas.
+  </Card>
+  <Card title="Criar política personalizada" icon="sliders" href="/guides/criar-politica-personalizada">
+    Adapte os critérios de análise para o seu modelo de risco.
+  </Card>
+  <Card title="Integrar com n8n" icon="bolt" href="/docs/integracao-n8n">
+    Use os templates prontos para conectar com seu ERP ou CRM em minutos.
+  </Card>
+</CardGroup>

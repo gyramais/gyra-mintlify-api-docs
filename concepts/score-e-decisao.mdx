@@ -1,0 +1,127 @@
+---
+title: Score e Decisão Automática
+description: Como a GYRA+ calcula o score, avalia as regras e chega a uma decisão de crédito.
+icon: "circle-check"
+---
+
+## Como funciona a decisão automática
+
+A GYRA+ não retorna apenas dados brutos — ela aplica a sua política de crédito sobre esses dados e entrega uma **decisão automática** (`APPROVED`, `DENIED` ou `ALERT`) junto com o raciocínio completo.
+
+O processo tem três etapas:
+
+```
+1. Avaliação das regras por grupo
+        ↓
+2. Composição do score final
+        ↓
+3. Mapeamento do score em uma faixa de risco (Risk Band)
+```
+
+---
+
+## Etapa 1 — Avaliação das regras por grupo
+
+Cada `PolicyRuleGroup` agrupa regras com um tema em comum (ex: "Cadastral", "Financeiro", "Processos"). As regras são avaliadas conforme o `operationType` configurado.
+
+**Exemplo:** grupo "Financeiro" com duas regras e operador `AND`:
+
+```
+Regra 1: SCORE > 500          → APPROVED (pontua +300)
+Regra 2: PEFIN_AMOUNT = 0     → APPROVED (pontua +200)
+Resultado do grupo: APPROVED  → score do grupo = 500
+```
+
+Se o `operationType` for `ADD`, os scores somam. Se for `AND`, todas as condições precisam ser verdadeiras para o grupo aprovar.
+
+---
+
+## Etapa 2 — Score final
+
+O score final é a composição dos scores de todos os grupos da política, normalizado para uma escala de 0 a 1000.
+
+<Note>
+O score final da GYRA+ **não é o score do bureau** (ex: Serasa). É um score composto calculado pela sua política de crédito, que pode incluir o score do bureau como um dos inputs.
+</Note>
+
+---
+
+## Etapa 3 — Faixas de risco (Risk Bands)
+
+O score final é mapeado nas **Risk Bands** configuradas na política. Cada faixa define um intervalo de score e o status resultante.
+
+**Exemplo de configuração de Risk Bands:**
+
+| Faixa | Score | Status |
+|-------|-------|--------|
+| Baixo risco | 700 – 1000 | `APPROVED` |
+| Risco moderado | 400 – 699 | `ALERT` |
+| Alto risco | 0 – 399 | `DENIED` |
+
+A faixa em que o score final se encaixar define o `policyStatus` retornado no relatório.
+
+---
+
+## O campo `CREDIT_POLICY` no relatório
+
+A seção `CREDIT_POLICY` do relatório expõe o resultado completo da avaliação: todos os grupos, todas as regras avaliadas, seus status individuais e o score final.
+
+```json
+{
+  "policyStatus": "APPROVED",
+  "score": 720,
+  "groups": [
+    {
+      "name": "Cadastral",
+      "status": "APPROVED",
+      "score": 250,
+      "rules": [
+        {
+          "rule": "COMPANY_OPENING_TIME",
+          "status": "APPROVED",
+          "value": 48,
+          "condition": "GREATER_THAN 12 meses"
+        },
+        {
+          "rule": "COMPANY_SITUATION",
+          "status": "APPROVED",
+          "value": "Ativa"
+        }
+      ]
+    },
+    {
+      "name": "Financeiro",
+      "status": "ALERT",
+      "score": 180,
+      "rules": [
+        {
+          "rule": "SCORE",
+          "status": "APPROVED",
+          "value": 620
+        },
+        {
+          "rule": "PEFIN_AMOUNT",
+          "status": "ALERT",
+          "value": 2
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+## Interpretando o resultado
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `policyStatus` | string | Decisão final: `APPROVED`, `DENIED` ou `ALERT` |
+| `score` | number | Score final composto (0–1000) |
+| `groups[].status` | string | Resultado do grupo de regras |
+| `groups[].rules[].status` | string | Resultado individual de cada regra |
+| `groups[].rules[].value` | any | Valor extraído dos dados para a regra |
+
+<Tip>
+O status `ALERT` não é uma negação. Significa que a análise identificou pontos que merecem atenção manual antes de uma decisão. Configure seus webhooks para tratar os três status de forma diferente no seu sistema.
+</Tip>

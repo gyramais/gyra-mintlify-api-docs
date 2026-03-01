@@ -1,0 +1,148 @@
+---
+title: Seção — Política de Crédito (CREDIT_POLICY)
+description: Campos da seção com o resultado completo da avaliação automática de regras e decisão final.
+icon: "shield-check"
+---
+
+A seção `CREDIT_POLICY` é onde fica a decisão automática da GYRA+. Ela expõe cada regra avaliada, o score por grupo e a decisão final baseada nas faixas de risco configuradas.
+
+Disponível em **todos os tipos** de relatório.
+
+---
+
+## Campos do `details`
+
+### Decisão final
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `policyStatus` | string | Decisão: `APPROVED`, `DENIED`, `ALERT` |
+| `score` | number | Score final composto (0–1000) |
+| `policyId` | string | ID da política utilizada |
+| `policyName` | string | Nome da política |
+| `evaluatedAt` | datetime | Data/hora da avaliação |
+
+### Faixa de risco ativada
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `riskBand.name` | string | Nome da faixa (ex: "Baixo Risco") |
+| `riskBand.from` | number | Limite inferior da faixa |
+| `riskBand.to` | number | Limite superior da faixa |
+| `riskBand.statusToApply` | string | Status resultante da faixa |
+
+### Grupos de regras (`groups[]`)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `groups[].name` | string | Nome do grupo |
+| `groups[].status` | string | Resultado do grupo |
+| `groups[].score` | number | Score acumulado do grupo |
+| `groups[].scoreApproved` | number | Limiar de aprovação configurado |
+| `groups[].scoreAlert` | number | Limiar de alerta configurado |
+| `groups[].scoreDenied` | number | Limiar de negação configurado |
+
+### Regras individuais (`groups[].rules[]`)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `rule` | string | Identificador da regra (ex: `SCORE`, `PEFIN_AMOUNT`) |
+| `ruleTitle` | string | Nome legível (ex: "Score de Bureau") |
+| `status` | string | Resultado: `APPROVED`, `DENIED`, `ALERT`, `NOT_APPLIED`, `ERROR` |
+| `value` | any | Valor extraído dos dados para avaliação |
+| `condition` | string | Condição configurada (ex: `"GREATER_THAN 500"`) |
+| `statusToApply` | string | Status configurado se condição verdadeira |
+| `operationType` | string | Como se combina com outras regras (`NONE`, `AND`, `ADD`, etc.) |
+| `score` | number | Score atribuído por esta regra |
+
+---
+
+## Status possíveis de uma regra
+
+| Status | Código | Significado |
+|--------|--------|-------------|
+| `APPROVED` | 3 | Condição atendida → aprovado |
+| `DENIED` | 4 | Condição atendida → negado |
+| `ALERT` | 5 | Condição atendida → alerta |
+| `NOT_APPLIED` | 8 | Dados não disponíveis para avaliação |
+| `ERROR` | 6 | Erro durante a avaliação |
+| `NOT_EXECUTED` | 0 | Regra não foi avaliada (dependência não resolvida) |
+
+---
+
+## Exemplo de resposta completa
+
+```json
+{
+  "type": { "value": "CREDIT_POLICY" },
+  "details": {
+    "policyStatus": "APPROVED",
+    "score": 720,
+    "policyName": "Background Check PJ",
+    "riskBand": {
+      "name": "Baixo Risco",
+      "from": 600,
+      "to": 1000,
+      "statusToApply": "APPROVED"
+    },
+    "groups": [
+      {
+        "name": "Cadastral",
+        "status": "APPROVED",
+        "score": 300,
+        "rules": [
+          {
+            "rule": "COMPANY_OPENING_TIME",
+            "ruleTitle": "Tempo de abertura da empresa",
+            "status": "APPROVED",
+            "value": 59,
+            "condition": "GREATER_THAN 12",
+            "score": 200
+          },
+          {
+            "rule": "COMPANY_SITUATION",
+            "ruleTitle": "Situação cadastral",
+            "status": "APPROVED",
+            "value": "Ativa",
+            "condition": "EQUAL_TO Ativa",
+            "score": 100
+          }
+        ]
+      },
+      {
+        "name": "Financeiro",
+        "status": "APPROVED",
+        "score": 420,
+        "rules": [
+          {
+            "rule": "SCORE",
+            "ruleTitle": "Score de Bureau",
+            "status": "APPROVED",
+            "value": 620,
+            "condition": "GREATER_THAN_OR_EQUAL_TO 500",
+            "score": 300
+          },
+          {
+            "rule": "PEFIN_AMOUNT",
+            "ruleTitle": "Pendências financeiras",
+            "status": "APPROVED",
+            "value": 0,
+            "condition": "EQUAL_TO 0",
+            "score": 120
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Dicas de uso
+
+<Tip>
+Ao integrar a GYRA+ no seu sistema, use o `policyStatus` para a decisão automatizada e o `groups[].rules[]` para exibir o raciocínio ao analista em casos de `ALERT`. Isso acelera a revisão manual significativamente.
+</Tip>
+
+Para entender como a decisão é calculada, veja [Score e Decisão Automática](/concepts/score-e-decisao).

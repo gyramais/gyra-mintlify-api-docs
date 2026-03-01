@@ -101,10 +101,56 @@ A requisição retorna o id e status do relatório. Você pode configurar para r
 
 ```json 200 OK
 {
-  "id": "663a2b61b18bda19547ddaa8",
-  "status": "PROCESSING",
-  "createdAt": "2024-05-07T13:23:45.959Z"
+  "id": "69a207bcdd0197828df9155a",
+  "policyId": "69a1fbb06a44799c9c440d2d",
+  "document": "43591367000130",
+  "policyStatus": "DENIED",
+  "status": {
+    "id": "6614758260513064a5af1046",
+    "value": "PENDING",
+    "title": "Não iniciado"
+  },
+  "createdAt": "2026-02-27T21:08:11.938Z",
+  "updatedAt": "2026-02-27T21:08:11.938Z"
+}
+```
+
+```json 500 Internal Server Error
+{
+  "code": 500,
+  "message": "Cannot read properties of undefined (reading 'replace')"
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
 }
 ```
 
 </ResponseExample>
+
+### Quando usar
+
+Use este endpoint para iniciar uma nova análise de crédito para CPF ou CNPJ. Você pode usar quando receber uma solicitação de avaliação de cliente e precisar gerar um relatório com base na política de decisão selecionada.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `front` | `query` | `string` | `sim` | Parâmetro da requisição. |
+
+### Corpo da requisição
+
+```json
+{
+  "policyId": "string",
+  "document": "string",
+  "type": "string"
+}
+```

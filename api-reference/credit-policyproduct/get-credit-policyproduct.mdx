@@ -1,3 +1,70 @@
 ---
 openapi: get /credit-policy/product
+title: Consultar Dados
+description: Consulta dados deste recurso.
 ---
+
+### Quando usar
+
+Use este endpoint para listar produtos associados ao motor de política de crédito. Você pode usar para vincular corretamente produto e política no momento de criar análises e manter consistência entre oferta comercial e regra de decisão.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/credit-policy/product' \
+--header 'Authorization: Bearer abc123'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/credit-policy/product", {
+  method: "GET",
+  headers: {
+    "Authorization": "Bearer abc123",
+  },
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/credit-policy/product"
+headers = {
+  "Authorization": "Bearer abc123"
+}
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+[
+  {
+    "id": "67b75aae7d92631273ab1f33",
+    "name": "Prazo de compra",
+    "value": "payment-term"
+  },
+  {
+    "id": "67b75aae7d92631273ab1f34",
+    "name": "Capital de giro",
+    "value": "working-capital"
+  }
+]
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+</ResponseExample>

@@ -1,3 +1,57 @@
 ---
 openapi: get /health/all
+title: Status Completo da API
+description: Retorna status consolidado dos serviços e dependências monitoradas.
 ---
+
+### Quando usar
+
+Use este endpoint para diagnóstico técnico completo de saúde dos serviços e dependências. Você pode usar em troubleshooting, investigação de incidentes e validação pós-deploy para confirmar estabilidade fim a fim.
+
+### Autenticação
+
+Sem autenticação obrigatória para esta operação.
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/health/all'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/health/all", {
+  method: "GET",
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/health/all"
+headers = {}
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "status": "ok",
+  "info": {
+    "id": "string"
+  },
+  "error": {
+    "id": "string"
+  },
+  "details": {
+    "id": "string"
+  }
+}
+```
+
+</ResponseExample>

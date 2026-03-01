@@ -163,15 +163,24 @@ paths:
   '/report/section/{id}':
     get:
       operationId: SectionController_get
+      summary: Consultar seção por ID
+      description: Retorna os dados de uma seção específica de um relatório.
       parameters:
         - name: id
           required: true
           in: path
+          description: Identificador da seção do relatório
           schema:
             type: string
       responses:
         '200':
-          description: ''
+          description: Seção encontrada com sucesso.
+        '401':
+          description: Token ausente ou inválido.
+        '403':
+          description: Sem permissão para acessar a seção.
+        '404':
+          description: Seção não encontrada.
       tags:
         - report
       security:
@@ -701,7 +710,9 @@ info:
   version: '1.0'
   contact: {}
 tags: []
-servers: []
+servers:
+  - url: https://gyra-core.gyramais.com.br
+    description: Produção
 components:
   securitySchemes:
     authorization:

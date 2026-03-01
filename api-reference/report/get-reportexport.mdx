@@ -1,3 +1,68 @@
 ---
 openapi: get /report/export/{id}
+title: Consultar por ID
+description: Consulta dados deste recurso.
 ---
+
+### Quando usar
+
+Use este endpoint para exportar o relatório em formato compartilhável. Você pode usar quando precisar enviar resultado para cliente/área interna, anexar em esteira externa ou guardar evidência formal da análise realizada.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | Parâmetro da requisição. |
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/report/export/{id}' \
+--header 'Authorization: Bearer abc123'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/report/export/{id}", {
+  method: "GET",
+  headers: {
+    "Authorization": "Bearer abc123",
+  },
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/report/export/{id}"
+headers = {
+  "Authorization": "Bearer abc123"
+}
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 400 Bad Request
+{
+  "code": 400,
+  "message": "type must be one of the following values: REPORT, REPORT_MINIFIED"
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+</ResponseExample>

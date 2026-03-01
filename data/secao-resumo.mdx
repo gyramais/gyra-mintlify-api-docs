@@ -1,0 +1,115 @@
+---
+title: Seção — Resumo (SUMMARY)
+description: Campos da seção de resumo com os principais indicadores de risco do relatório.
+icon: "chart-bar"
+---
+
+A seção `SUMMARY` reúne os principais indicadores de risco em um único painel. É o ponto de partida para uma leitura rápida da saúde financeira e jurídica do documento analisado.
+
+Disponível a partir do relatório **ESSENCIAL**.
+
+---
+
+## Campos do `details`
+
+### Score e avaliação geral
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `bureauScoreSummary` | object | Resumo do score do Bureau escolhido |
+| `bureauScoreSummary.score` | number | Pontuação (0–1000) |
+| `bureauScoreSummary.scoreClass` | string | Faixa: Muito Alto, Alto, Médio, Baixo, Muito Baixo |
+| `bureauScoreSummary.defaultProbability` | number | Probabilidade de inadimplência (%) |
+
+### Restrições financeiras
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `pefinsSummary` | object | Resumo de PEFIN |
+| `pefinsSummary.totalAmount` | number | Valor total em pendências (R$) |
+| `pefinsSummary.count` | number | Quantidade de ocorrências |
+| `pefinsSummary.lastOccurrenceDate` | string | Data da ocorrência mais recente |
+| `refinsSummary` | object | Resumo de REFIN |
+| `refinsSummary.totalAmount` | number | Valor total em refinanciamentos (R$) |
+| `refinsSummary.count` | number | Quantidade de ocorrências |
+| `checksSummary` | object | Resumo de cheques sem fundo |
+| `checksSummary.count` | number | Quantidade de cheques |
+| `checksSummary.totalAmount` | number | Valor total (R$) |
+
+### Protestos
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `protestsSummary` | object | Resumo de protestos |
+| `protestsSummary.count` | number | Quantidade de protestos |
+| `protestsSummary.totalAmount` | number | Valor total protestado (R$) |
+| `protestsSummary.lastOccurrenceDate` | string | Data do último protesto |
+
+### Processos judiciais
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `companyLawsuits` | object | Processos da empresa (CNPJ) |
+| `companyLawsuits.passive.count` | number | Total como réu |
+| `companyLawsuits.passive.totalAmount` | number | Valor total como réu (R$) |
+| `companyLawsuits.active.count` | number | Total como autor |
+| `ownersLawsuits` | object | Processos dos sócios (CNPJ) |
+| `ownersLawsuits.passive.count` | number | Total dos sócios como réu |
+| `ownersLawsuits.passive.totalAmount` | number | Valor total dos sócios como réu (R$) |
+| `lawsuitsSummary` | object | Indicadores consolidados |
+| `lawsuitsSummary.hasFinancial` | boolean | Tem processo financeiro |
+| `lawsuitsSummary.hasCriminal` | boolean | Tem processo criminal |
+| `lawsuitsSummary.hasLabor` | boolean | Tem processo trabalhista |
+
+### PEP
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `companyPep` | object | PEP da empresa (CNPJ) |
+| `companyPep.hasPep` | boolean | Empresa é PEP ou tem sócios PEP |
+| `companyPep.pepCount` | number | Número de vínculos PEP |
+| `personPep` | object | PEP da pessoa (CPF) |
+| `personPep.hasPep` | boolean | Pessoa é PEP |
+| `pepSummary` | object | Resumo consolidado |
+
+### Alterações cadastrais (CNPJ)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `changesSummary` | object | Resumo de alterações |
+| `changesSummary.totalChanges` | number | Total de alterações registradas |
+| `changesSummary.lastChangeDate` | string | Data da última alteração |
+| `changesSummary.hasQsaChange` | boolean | Houve mudança no quadro societário |
+| `economicGroupChanges` | object | Mudanças no grupo econômico |
+
+---
+
+## Exemplo de resposta
+
+```json
+{
+  "type": { "value": "SUMMARY" },
+  "details": {
+    "serasaScoreSummary": {
+      "score": 620,
+      "scoreClass": "Alto",
+      "defaultProbability": 12.5
+    },
+    "pefinsSummary": {
+      "totalAmount": 0,
+      "count": 0,
+      "lastOccurrenceDate": null
+    },
+    "protestsSummary": {
+      "count": 1,
+      "totalAmount": 3500.00,
+      "lastOccurrenceDate": "2024-06-15"
+    },
+    "lawsuitsSummary": {
+      "hasFinancial": false,
+      "hasCriminal": false,
+      "hasLabor": true
+    }
+  }
+}
+```

@@ -1,0 +1,104 @@
+---
+title: Seção — PEFIN e REFIN
+description: Campos das seções de pendências financeiras (PEFIN) e refinanciamentos (REFIN).
+icon: "triangle-exclamation"
+---
+
+## PEFIN — Pendências Financeiras
+
+O PEFIN (Cadastro de Emitentes de Cheques sem Fundo) é o registro nacional de dívidas vencidas e não pagas com empresas e instituições financeiras.
+
+Disponível a partir do relatório **ESSENCIAL**.
+
+### Campos do `details` — PEFIN
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `count` | number | Quantidade total de pendências |
+| `totalAmount` | number | Valor total das pendências (R$) |
+| `lastOccurrenceDate` | string | Data da ocorrência mais recente |
+| `firstOccurrenceDate` | string | Data da ocorrência mais antiga |
+| `calculatedRevenuePercentage` | number | % do faturamento comprometido |
+| `occurrences` | object[] | Lista detalhada de cada ocorrência |
+
+### Campos de cada ocorrência (`occurrences[]`) — PEFIN
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | string | ID da ocorrência |
+| `amount` | number | Valor da dívida (R$) |
+| `creditor` | string | Nome do credor |
+| `contractNumber` | string | Número do contrato ou título |
+| `occurrenceDate` | string | Data da ocorrência |
+| `origin` | string | Origem: `BANK`, `TRADE`, `OTHER` |
+
+### Exemplo PEFIN
+
+```json
+{
+  "type": { "value": "PEFIN" },
+  "details": {
+    "count": 2,
+    "totalAmount": 8750.00,
+    "lastOccurrenceDate": "2024-09-10",
+    "calculatedRevenuePercentage": 4.2,
+    "occurrences": [
+      {
+        "amount": 5000.00,
+        "creditor": "Banco XYZ S.A.",
+        "occurrenceDate": "2024-09-10",
+        "origin": "BANK"
+      },
+      {
+        "amount": 3750.00,
+        "creditor": "Distribuidora ABC Ltda",
+        "occurrenceDate": "2024-07-22",
+        "origin": "TRADE"
+      }
+    ]
+  }
+}
+```
+
+---
+
+## REFIN — Refinanciamentos com Instituições Financeiras
+
+O REFIN registra dívidas renegociadas com bancos e instituições financeiras. Diferente do PEFIN, foca especificamente em dívidas de origem bancária que passaram por renegociação.
+
+Disponível a partir do relatório **ESSENCIAL**.
+
+### Campos do `details` — REFIN
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `count` | number | Quantidade total de refinanciamentos |
+| `totalAmount` | number | Valor total (R$) |
+| `lastOccurrenceDate` | string | Data da ocorrência mais recente |
+| `calculatedRevenuePercentage` | number | % do faturamento comprometido |
+| `occurrences` | object[] | Lista detalhada de cada ocorrência |
+
+### Campos de cada ocorrência (`occurrences[]`) — REFIN
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `amount` | number | Valor refinanciado (R$) |
+| `creditor` | string | Instituição financeira |
+| `contractNumber` | string | Número do contrato |
+| `occurrenceDate` | string | Data do refinanciamento |
+| `modalidade` | string | Modalidade de crédito |
+
+---
+
+## Como interpretar juntos
+
+| Situação | O que indica |
+|----------|-------------|
+| PEFIN + REFIN zerados | Sem restrições financeiras registradas |
+| PEFIN > 0, REFIN = 0 | Dívidas vencidas sem renegociação — risco ativo |
+| PEFIN = 0, REFIN > 0 | Dívidas foram renegociadas — histórico de dificuldade, mas em tratamento |
+| PEFIN + REFIN altos | Comprometimento financeiro severo |
+
+<Tip>
+Use a regra `PEFIN_CALCULATED_REVENUE` em vez de `PEFIN_AMOUNT` quando quiser avaliar o impacto relativo ao porte da empresa. Uma dívida de R$ 50k é muito diferente para uma empresa com faturamento de R$ 100k vs. R$ 5M.
+</Tip>

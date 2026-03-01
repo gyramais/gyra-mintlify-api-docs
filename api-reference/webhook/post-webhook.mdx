@@ -3,3 +3,99 @@ openapi: post /webhook
 title: Criar Webhook
 description: Cria um webhook
 ---
+
+### Quando usar
+
+Use este endpoint para cadastrar um destino de webhook e receber eventos da plataforma em tempo real. Você pode usar quando quiser reagir automaticamente a mudanças de status de relatório, conclusão de processamento ou eventos operacionais sem depender de polling.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Corpo da requisição
+
+```json
+{
+  "type": "...",
+  "url": "https://webhook-test.com/a0a7aadb8de3e",
+  "apiKey": "xxx-xxx-xxx"
+}
+```
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/webhook' \
+--header 'Authorization: Bearer {seu_token_jwt}' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "type": "...",
+  "url": "https://webhook-test.com/a0a7aadb8de3e",
+  "apiKey": "xxx-xxx-xxx"
+}'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/webhook", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer {seu_token_jwt}",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+  "type": "...",
+  "url": "https://webhook-test.com/a0a7aadb8de3e",
+  "apiKey": "xxx-xxx-xxx"
+})
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/webhook"
+headers = {
+  "Authorization": "Bearer {seu_token_jwt}"
+}
+payload = {
+  "type": "...",
+  "url": "https://webhook-test.com/a0a7aadb8de3e",
+  "apiKey": "xxx-xxx-xxx"
+}
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "id": "69a20f96f5b9cb55d8e8a6a1",
+  "organizationId": "65eb4989a4a87b9a94d1920f",
+  "type": "REPORT_FINISHED",
+  "url": "https://webhook-test.com/a0a7aadb8de3e",
+  "apiKey": "xxx-xxx-xxx",
+  "createdAt": "2026-02-27T21:41:42.013Z",
+  "updatedAt": "2026-02-27T21:41:42.013Z"
+}
+```
+
+```json 400 Bad Request
+{
+  "code": 400,
+  "message": "type must be one of the following values: REPORT, OPTIN, CREDIT_POLICY, REPORT_STATUS, REPORT_FINISHED, OPERATION,type should not be empty,url should not be empty,url must be a string"
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+</ResponseExample>

@@ -1,5 +1,5 @@
 {
-  "name": "GYRA+ API Docs",
+  "name": "GYRA+ Docs",
   "theme": "mint",
   "logo": {
     "dark": "/logo/dark.png",
@@ -20,7 +20,7 @@
     }
   ],
   "topbarCtaButton": {
-    "name": "Login",
+    "name": "Acessar Toolbox",
     "url": "https://toolbox.gyramais.com.br/login",
     "type": "link"
   },
@@ -28,7 +28,7 @@
   "navigation": {
     "groups": [
       {
-        "group": "Vamos começar",
+        "group": "Primeiros Passos",
         "pages": [
           "api-reference/introduction",
           "api-reference/como-funciona",
@@ -36,48 +36,77 @@
         ]
       },
       {
-        "group": "Autenticação",
+        "group": "Conceitos Fundamentais",
         "pages": [
-          "api-reference/auth/post-authauthenticate"
+          "concepts/relatorio",
+          "concepts/politica-de-credito",
+          "concepts/secoes",
+          "concepts/score-e-decisao",
+          "concepts/webhooks-e-tempo-real"
         ]
       },
       {
-        "group": "Relatórios",
+        "group": "Guias",
         "pages": [
-          "api-reference/report/get-report",
-          "api-reference/report/get-report-section",
-          "api-reference/report/get-reportlist",
+          "guides/primeiro-relatorio",
+          "guides/configurar-webhook",
+          "guides/interpretar-decisao",
+          "guides/criar-politica-personalizada"
+        ]
+      },
+      {
+        "group": "Casos de Uso",
+        "pages": [
+          "use-cases/fintech-credito",
+          "use-cases/distribuidora-b2b",
+          "use-cases/fundo-e-factoring"
+        ]
+      },
+      {
+        "group": "Referência da API",
+        "pages": [
+          "api-reference/auth/post-authauthenticate",
           "api-reference/report/post-report",
+          "api-reference/report/get-report",
+          "api-reference/report/get-reportsection",
+          "api-reference/report/get-reportlist",
           "api-reference/report/post-report-financial-tab",
-          "api-reference/report/post-reportanalyze"
-        ]
-      },
-      {
-        "group": "Políticas de Decisão",
-        "pages": [
-          "api-reference/credit-policypolicy/get-credit-policypolicy"
-        ]
-      },
-      {
-        "group": "Webhook",
-        "pages": [
-          "api-reference/webhook/delete-webhook",
+          "api-reference/report/post-reportanalyze",
+          "api-reference/credit-policypolicy/get-credit-policypolicy",
+          "api-reference/webhook/post-webhook",
           "api-reference/webhook/get-webhookfindby",
-          "api-reference/webhook/post-webhook"
-        ]
-      },
-      {
-        "group": "Status da API",
-        "pages": [
+          "api-reference/webhook/delete-webhook",
           "api-reference/health/get-health"
         ]
       },
       {
-        "group": "Documentação",
+        "group": "Dicionário de Dados",
         "pages": [
-          "docs/estrutura-relatorio",
+          "data/estrutura-relatorio",
+          "data/secao-resumo",
+          "data/secao-informacoes-basicas",
+          "data/secao-processos",
+          "data/secao-protestos",
+          "data/secao-pefin-refin",
+          "data/secao-scr",
+          "data/secao-pep-sancoes",
+          "data/secao-politica-credito"
+        ]
+      },
+      {
+        "group": "Integrações",
+        "pages": [
+          "docs/postman-insomnia",
+          "docs/integracao-n8n",
           "docs/tipos-relatorios",
           "docs/dados-entregues"
+        ]
+      },
+      {
+        "group": "Referência",
+        "pages": [
+          "reference/erros",
+          "reference/changelog"
         ]
       }
     ]

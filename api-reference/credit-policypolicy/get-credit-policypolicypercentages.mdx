@@ -1,3 +1,71 @@
 ---
 openapi: get /credit-policy/policy/percentages
+title: Consultar Dados
+description: Consulta dados deste recurso.
 ---
+
+### Quando usar
+
+Use este endpoint para consultar percentuais agregados de resultado das políticas. Você pode usar em governança de risco e acompanhamento de performance para avaliar distribuição entre aprovado, alerta e negado.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/credit-policy/policy/percentages?policyId={policyId}' \
+--header 'Authorization: Bearer {seu_token_jwt}'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/credit-policy/policy/percentages?policyId={policyId}", {
+  method: "GET",
+  headers: {
+    "Authorization": "Bearer {seu_token_jwt}",
+  },
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/credit-policy/policy/percentages"
+headers = {
+  "Authorization": "Bearer {seu_token_jwt}"
+}
+params = {"policyId": "{policyId}"}
+response = requests.get(url, headers=headers, params=params)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "APPROVED": "0.00%",
+  "DENIED": "100.00%",
+  "ALERT": "0.00%"
+}
+```
+
+```json 400 Bad Request
+{
+  "code": 400,
+  "message": "policyId should not be empty,policyId must be a string"
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+</ResponseExample>

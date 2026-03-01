@@ -1,0 +1,452 @@
+{
+  "info": {
+    "name": "GYRA+ API",
+    "description": "Collection oficial da API GYRA+ para análise de crédito automatizada.\n\n## Como usar\n\n1. Importe esta collection no Postman\n2. Configure as variáveis `clientId` e `clientSecret` no environment\n3. Execute \"Autenticar\" primeiro para obter o token\n4. O token é salvo automaticamente na variável `accessToken`\n\n## Documentação completa\nhttps://developers.gyramais.com.br",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://gyra-core.gyramais.com.br",
+      "type": "string"
+    },
+    {
+      "key": "clientId",
+      "value": "SEU_CLIENT_ID_AQUI",
+      "type": "string"
+    },
+    {
+      "key": "clientSecret",
+      "value": "SEU_CLIENT_SECRET_AQUI",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reportId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "policyId",
+      "value": "SEU_POLICY_ID_AQUI",
+      "type": "string"
+    },
+    {
+      "key": "webhookId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Autenticação na API GYRA+. Use suas credenciais (Client ID + Client Secret) para obter um token JWT válido por 1 hora.",
+      "item": [
+        {
+          "name": "Autenticar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', jsonData.accessToken);",
+                  "        console.log('Token salvo automaticamente!');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "gyra-client-id",
+                "value": "{{clientId}}",
+                "description": "Seu Client ID (painel GYRA+ ou bizdev@gyramais.com)"
+              },
+              {
+                "key": "gyra-client-secret",
+                "value": "{{clientSecret}}",
+                "description": "Seu Client Secret"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/authenticate",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "authenticate"]
+            },
+            "description": "Gera um token JWT (accessToken) válido por 1 hora.\n\nO token é salvo automaticamente na variável `accessToken` da collection após a execução."
+          },
+          "response": [
+            {
+              "name": "Sucesso",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "gyra-client-id", "value": "{{clientId}}" },
+                  { "key": "gyra-client-secret", "value": "{{clientSecret}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/authenticate",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "authenticate"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Report",
+      "description": "Endpoints para criar, consultar e listar relatórios de análise de crédito.",
+      "item": [
+        {
+          "name": "Criar Relatório",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201 || pm.response.code === 202) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.id) {",
+                  "        pm.collectionVariables.set('reportId', jsonData.id);",
+                  "        console.log('reportId salvo: ' + jsonData.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document\": \"12345678000190\",\n  \"type\": \"CNPJ\",\n  \"reportType\": \"COMPLETO\",\n  \"policyId\": \"{{policyId}}\",\n  \"externalId\": \"pedido-001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/report",
+              "host": ["{{baseUrl}}"],
+              "path": ["report"]
+            },
+            "description": "Cria uma nova análise de crédito para um CNPJ ou CPF.\n\n**Campos:**\n- `document` (obrigatório) — CNPJ (14 dígitos) ou CPF (11 dígitos) sem formatação\n- `type` (obrigatório) — `CNPJ` ou `CPF`\n- `reportType` — `SIMPLES`, `ESSENCIAL`, `COMPLETO` ou `COMPLETO_PLUS`\n- `policyId` — ID da política de crédito a aplicar\n- `externalId` — ID externo para correlação com seu sistema\n\nO `reportId` é salvo automaticamente na variável da collection."
+          },
+          "response": [
+            {
+              "name": "Relatório criado",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"id\": \"664b63037707171ba58cf311\",\n  \"document\": \"12345678000190\",\n  \"type\": \"CNPJ\",\n  \"status\": \"PENDING\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Consultar Relatório",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/report/{{reportId}}?details=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["report", "{{reportId}}"],
+              "query": [
+                {
+                  "key": "tabType",
+                  "value": "",
+                  "description": "Tipo de aba (opcional)",
+                  "disabled": true
+                },
+                {
+                  "key": "details",
+                  "value": "true",
+                  "description": "Incluir detalhes das seções (true/false)"
+                }
+              ]
+            },
+            "description": "Retorna os dados completos de um relatório, incluindo todas as seções e a decisão da política de crédito.\n\nUse `details=false` para obter apenas o resumo sem os detalhes de cada seção."
+          },
+          "response": []
+        },
+        {
+          "name": "Consultar Seção do Relatório",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/report/{{reportId}}/section/CREDIT_POLICY",
+              "host": ["{{baseUrl}}"],
+              "path": ["report", "{{reportId}}", "section", "CREDIT_POLICY"],
+              "variable": []
+            },
+            "description": "Retorna uma seção específica de um relatório.\n\n**Seções disponíveis:**\n- `SUMMARY` — Resumo geral\n- `BASIC_INFO` — Informações cadastrais\n- `PEFIN` — Dívidas PEFIN/REFIN\n- `PROTESTS` — Protestos em cartório\n- `LAWSUITS` — Processos judiciais\n- `SCR` — Histórico bancário (Banco Central)\n- `PEP_SANCTIONS` — PEP e Sanções\n- `CREDIT_POLICY` — Decisão da política de crédito"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Relatórios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/report/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["report", "list"]
+            },
+            "description": "Lista todos os relatórios da organização."
+          },
+          "response": []
+        },
+        {
+          "name": "Aba Financeira",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/report/{{reportId}}/financial-tab",
+              "host": ["{{baseUrl}}"],
+              "path": ["report", "{{reportId}}", "financial-tab"]
+            },
+            "description": "Gera a aba financeira de um relatório (dados do SCR — Banco Central)."
+          },
+          "response": []
+        },
+        {
+          "name": "Analisar Relatório",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/report/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["report", "analyze"]
+            },
+            "description": "Dispara a análise de um relatório existente com a política de crédito configurada."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Credit Policy",
+      "description": "Consulta as políticas de crédito configuradas na organização.",
+      "item": [
+        {
+          "name": "Listar Políticas de Crédito",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/credit-policy/policy?enabled=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["credit-policy", "policy"],
+              "query": [
+                {
+                  "key": "enabled",
+                  "value": "true",
+                  "description": "Filtrar apenas políticas ativas"
+                },
+                {
+                  "key": "protected",
+                  "value": "false",
+                  "description": "Incluir políticas protegidas (templates)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retorna as políticas de crédito da organização.\n\nUse o `id` de uma política como `policyId` ao criar relatórios."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Webhook",
+      "description": "Gerencie webhooks para receber notificações em tempo real quando um relatório é processado.",
+      "item": [
+        {
+          "name": "Registrar Webhook",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.id) {",
+                  "        pm.collectionVariables.set('webhookId', jsonData.id);",
+                  "        console.log('webhookId salvo: ' + jsonData.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"REPORT_FINISHED\",\n  \"url\": \"https://seu-sistema.com/webhooks/gyra\",\n  \"apiKey\": \"sua-chave-secreta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhook"]
+            },
+            "description": "Registra um webhook para receber notificações.\n\n**Tipos disponíveis:**\n- `REPORT_FINISHED` — Quando o relatório é processado (mais usado)\n- `REPORT_STATUS` — Mudança de status do relatório\n- `CREDIT_POLICY` — Resultado da política de crédito\n- `REPORT` — Evento genérico de relatório\n- `OPTIN` — Evento de opt-in\n\nO campo `apiKey` será enviado como header `api-key` em cada chamada ao seu endpoint."
+          },
+          "response": [
+            {
+              "name": "Webhook criado",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"id\": \"664b63037707171ba58cf311\",\n  \"type\": \"REPORT_FINISHED\",\n  \"url\": \"https://seu-sistema.com/webhooks/gyra\",\n  \"createdAt\": \"2024-05-20T14:30:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Consultar Webhook",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/webhook/findBy?webhookId={{webhookId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhook", "findBy"],
+              "query": [
+                {
+                  "key": "webhookId",
+                  "value": "{{webhookId}}",
+                  "description": "ID do webhook (opcional — sem ele, lista todos da organização)"
+                }
+              ]
+            },
+            "description": "Consulta webhooks registrados. Se não informar o `webhookId`, retorna todos os webhooks da organização."
+          },
+          "response": []
+        },
+        {
+          "name": "Remover Webhook",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/webhook/{{webhookId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhook", "{{webhookId}}"]
+            },
+            "description": "Remove um webhook registrado."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "description": "Verificação de saúde da API.",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Verifica se a API está online. Não requer autenticação."
+          },
+          "response": [
+            {
+              "name": "API Online",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"status\": \"ok\",\n  \"info\": {\n    \"database\": { \"status\": \"up\" }\n  },\n  \"error\": {},\n  \"details\": {\n    \"database\": { \"status\": \"up\" }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

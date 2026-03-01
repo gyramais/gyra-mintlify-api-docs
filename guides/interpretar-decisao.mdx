@@ -1,0 +1,160 @@
+---
+title: Interpretar uma Decisão de Crédito
+description: Como ler o resultado de um relatório GYRA+ e entender o que cada campo significa.
+icon: "magnifying-glass-chart"
+---
+
+## Visão geral
+
+Todo relatório concluído pela GYRA+ traz uma decisão automática com três níveis de informação:
+
+1. **Decisão geral** (`policyStatus`) — `APPROVED`, `DENIED` ou `ALERT`
+2. **Score composto** (`score`) — valor de 0 a 1000 calculado pela política
+3. **Raciocínio detalhado** (seção `CREDIT_POLICY`) — cada regra avaliada, com valor e resultado
+
+---
+
+## Os três resultados possíveis
+
+<CardGroup cols={3}>
+  <Card title="APPROVED" icon="circle-check" color="#22c55e">
+    O documento passou em todos os critérios da política. Você pode prosseguir com a operação conforme seu processo interno.
+  </Card>
+  <Card title="ALERT" icon="triangle-exclamation" color="#f59e0b">
+    A análise identificou pontos de atenção que merecem revisão manual. Não é uma negação — é um sinal de que um analista deve avaliar antes de decidir.
+  </Card>
+  <Card title="DENIED" icon="circle-xmark" color="#ef4444">
+    O documento não atendeu aos critérios mínimos da política. A operação deve ser recusada.
+  </Card>
+</CardGroup>
+
+---
+
+## Exemplo de resposta completa
+
+```json
+{
+  "id": "64a3b2c1d4e5f6a7b8c9d0e1",
+  "document": "43591367000130",
+  "type": "CNPJ",
+  "status": "APPROVED",
+  "policyStatus": "APPROVED",
+  "score": 720,
+  "sections": [
+    {
+      "type": { "value": "CREDIT_POLICY" },
+      "details": {
+        "policyStatus": "APPROVED",
+        "score": 720,
+        "groups": [
+          {
+            "name": "Cadastral",
+            "status": "APPROVED",
+            "score": 300,
+            "rules": [
+              {
+                "rule": "COMPANY_OPENING_TIME",
+                "status": "APPROVED",
+                "value": 48,
+                "condition": "GREATER_THAN 12 meses"
+              },
+              {
+                "rule": "COMPANY_SITUATION",
+                "status": "APPROVED",
+                "value": "Ativa"
+              }
+            ]
+          },
+          {
+            "name": "Financeiro",
+            "status": "ALERT",
+            "score": 150,
+            "rules": [
+              {
+                "rule": "SCORE",
+                "status": "APPROVED",
+                "value": 620
+              },
+              {
+                "rule": "PEFIN_AMOUNT",
+                "status": "ALERT",
+                "value": 2,
+                "condition": "EQUAL_TO 0"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Campo a campo
+
+### Nível do relatório
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `status` | string | Status geral do relatório |
+| `policyStatus` | string | Decisão da política: `APPROVED`, `DENIED`, `ALERT` |
+| `score` | number | Score final composto (0–1000) |
+
+### Nível do grupo de regras
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `name` | string | Nome do grupo (ex: "Cadastral", "Financeiro") |
+| `status` | string | Resultado do grupo |
+| `score` | number | Score acumulado deste grupo |
+
+### Nível da regra individual
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `rule` | string | Identificador da regra (ex: `SCORE`, `PEFIN_AMOUNT`) |
+| `status` | string | Resultado: `APPROVED`, `DENIED`, `ALERT`, `NOT_APPLIED` |
+| `value` | any | Valor extraído dos dados para avaliação |
+| `condition` | string | Condição configurada na política |
+
+---
+
+## Cenários comuns e como agir
+
+<AccordionGroup>
+  <Accordion title="policyStatus: APPROVED">
+    A análise passou em todos os critérios. Seu fluxo de aprovação pode prosseguir automaticamente. Guarde o `reportId` para rastreabilidade.
+  </Accordion>
+  <Accordion title="policyStatus: ALERT com um grupo DENIED">
+    Verifique qual grupo retornou `DENIED` e quais regras específicas causaram a negação. Dependendo do critério, pode ser um caso para revisão manual — não necessariamente uma recusa definitiva.
+  </Accordion>
+  <Accordion title="policyStatus: DENIED">
+    O documento não atendeu aos critérios mínimos. Registre o motivo (grupo e regra) para transparência e possível comunicação com o solicitante.
+  </Accordion>
+  <Accordion title="Regra com status NOT_APPLIED">
+    Essa regra não pôde ser avaliada porque os dados necessários não estavam disponíveis (ex: integração sem dados para esse documento). Isso não conta como reprovação.
+  </Accordion>
+  <Accordion title="Score alto, mas policyStatus DENIED">
+    Isso acontece quando uma regra com `statusToApply: DENIED` foi ativada independentemente do score. Verifique qual regra "hardcoded" foi acionada — geralmente são critérios de exclusão (ex: óbito, falência).
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Acessando o relatório completo
+
+Para ver todas as seções (processos, protestos, score do bureau, etc.), acesse o relatório completo pelo painel ou pela API:
+
+```bash
+# Todas as seções
+curl https://gyra-core.gyramais.com.br/report/{id} \
+  -H "Authorization: Bearer {token}"
+
+# Uma seção específica
+curl https://gyra-core.gyramais.com.br/report/section/{sectionId} \
+  -H "Authorization: Bearer {token}"
+```
+
+Consulte o [Dicionário de Dados](/data/estrutura-relatorio) para entender todos os campos de cada seção.

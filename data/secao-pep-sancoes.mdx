@@ -1,0 +1,94 @@
+---
+title: Seção — PEP e Sanções
+description: Campos das seções de Pessoas Expostas Politicamente (PEP) e listas de sanções nacionais e internacionais.
+icon: "landmark"
+---
+
+## PEP — Pessoas Expostas Politicamente
+
+A seção `PEP` avalia se o documento está vinculado a cargos públicos, mandatos eletivos ou agentes políticos relevantes. Inclui também os sócios quando o documento for CNPJ.
+
+Disponível no relatório **COMPLETO** e **COMPLETO+**.
+
+### Campos do `details` — PEP (CNPJ)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `hasPep` | boolean | Empresa ou sócios têm vínculo PEP |
+| `pepCount` | number | Número de vínculos PEP identificados |
+| `persons` | object[] | Sócios com vínculo PEP |
+| `persons[].name` | string | Nome da pessoa |
+| `persons[].document` | string | CPF |
+| `persons[].positions` | object[] | Cargos políticos |
+| `persons[].positions[].title` | string | Título do cargo (ex: "Vereador", "Deputado Estadual") |
+| `persons[].positions[].organization` | string | Órgão ou instituição |
+| `persons[].positions[].startDate` | string | Início do mandato/cargo |
+| `persons[].positions[].endDate` | string | Fim do mandato/cargo (null se atual) |
+| `donations` | object[] | Doações eleitorais registradas |
+| `donations[].year` | number | Ano eleitoral |
+| `donations[].candidate` | string | Candidato beneficiado |
+| `donations[].amount` | number | Valor doado (R$) |
+
+### Campos do `details` — PEP (CPF)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `hasPep` | boolean | Pessoa tem vínculo PEP |
+| `positions` | object[] | Cargos políticos (mesma estrutura acima) |
+| `donations` | object[] | Doações eleitorais (mesma estrutura acima) |
+
+---
+
+## SANCTIONS — Sanções Nacionais e Internacionais
+
+A seção `SANCTIONS` verifica o documento contra listas de sanções regulatórias nacionais e internacionais, cobrindo OFAC, CEIS, CEPIM e outras.
+
+### Campos do `details` — SANCTIONS
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `hasSanctions` | boolean | Encontrado em alguma lista de sanções |
+| `count` | number | Número de registros em listas |
+| `lists` | object[] | Listas onde o documento foi encontrado |
+| `lists[].name` | string | Nome da lista (ex: "OFAC", "CEIS", "CEPIM") |
+| `lists[].country` | string | País da lista (`BR`, `US`, `EU`, etc.) |
+| `lists[].reason` | string | Motivo ou descrição da sanção |
+| `lists[].date` | string | Data de inclusão na lista |
+| `lists[].status` | string | Status: `ACTIVE`, `REMOVED` |
+
+### Principais listas verificadas
+
+| Lista | País | Descrição |
+|-------|------|-----------|
+| OFAC | EUA | Office of Foreign Assets Control — sanções internacionais dos EUA |
+| CEIS | Brasil | Cadastro de Empresas Inidôneas e Suspensas |
+| CEPIM | Brasil | Cadastro de Entidades Privadas Sem Fins Lucrativos Impedidas |
+| CNEP | Brasil | Cadastro Nacional de Empresas Punidas |
+| UN | Internacional | Lista da ONU de sanções globais |
+
+---
+
+## Exemplo de resposta — SANCTIONS
+
+```json
+{
+  "type": { "value": "SANCTIONS" },
+  "details": {
+    "hasSanctions": true,
+    "count": 1,
+    "lists": [
+      {
+        "name": "CEIS",
+        "country": "BR",
+        "reason": "Inexecução total do contrato administrativo",
+        "date": "2023-04-15",
+        "status": "ACTIVE"
+      }
+    ]
+  }
+}
+```
+
+<Warning>
+Qualquer resultado com `hasSanctions: true` deve ser tratado como critério de exclusão imediato na sua política de crédito, independente do score. Configure uma regra de negação direta para esse cenário.
+</Warning>

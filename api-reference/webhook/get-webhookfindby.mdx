@@ -3,3 +3,70 @@ openapi: get /webhook/findBy
 title: Consultar Webhook
 description: Busca um webhook por ID
 ---
+
+### Quando usar
+
+Use este endpoint para consultar o webhook ativo por ID (ou pelo contexto da organização). Você pode usar para auditoria de configuração, troubleshooting de entrega de eventos ou validação antes de atualizar/remover um webhook.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `webhookId` | `query` | `string` | `não` | Webhook Id, If you do not add the webhookId, the organizationId extracted from the token is used as a search. |
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/webhook/findBy'
+--header 'Authorization: Bearer {seu_token_jwt}'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/webhook/findBy", {
+  method: "GET",
+  headers: {
+    "Authorization": "Bearer {seu_token_jwt}",
+  },
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/webhook/findBy"
+headers = {
+  "Authorization": "Bearer {seu_token_jwt}"
+}
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+[
+  {
+    "id": "6853504897673f1bec57ea2f",
+    "type": "REPORT_FINISHED",
+    "url": "https://go.n8n.gyramais.com.br/webhook/33fa218c-347d-4425-8814-7afe842a87c6",
+    "apiKey": null
+  }
+]
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+</ResponseExample>

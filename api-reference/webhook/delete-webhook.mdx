@@ -3,3 +3,73 @@ openapi: delete /webhook/{id}
 title: Remover Webhook
 description: Remove um webhook por ID
 ---
+
+### Quando usar
+
+Use este endpoint para desativar um webhook existente. Você pode usar quando trocar URL de integração, encerrar uma automação ou interromper recebimento de eventos em um destino antigo.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | Webhook Id |
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/webhook/{id}' \
+--header 'Authorization: Bearer {seu_token_jwt}'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/webhook/{id}", {
+  method: "DELETE",
+  headers: {
+    "Authorization": "Bearer {seu_token_jwt}",
+  },
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/webhook/{id}"
+headers = {
+  "Authorization": "Bearer {seu_token_jwt}"
+}
+response = requests.delete(url, headers=headers)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "id": "69a20f96f5b9cb55d8e8a6a1",
+  "deleted": true
+}
+```
+
+```json 404 Not Found
+{
+  "code": 404,
+  "message": "An operation failed because it depends on one or more records that were required but not found. Record to delete does not exist."
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+</ResponseExample>

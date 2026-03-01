@@ -1,0 +1,501 @@
+{
+  "name": "GYRA+ | 2. Receber Decisão → Rotear para CRM",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 📬 GYRA+ | Workflow 2: Receber Decisão → Rotear para CRM\n\n**O que este workflow faz:**\n1. Recebe o webhook da GYRA+ quando o relatório é concluído\n2. Responde 200 OK imediatamente (boa prática — não deixe o webhook aguardar)\n3. Extrai `policyStatus`, `score` e dados do relatório\n4. Roteia para 3 caminhos: APPROVED, DENIED ou ALERT\n5. Atualiza o registro no seu CRM via HTTP\n6. Envia notificação para o responsável comercial\n\n**Pré-requisito:**\nRegistre a URL deste webhook na GYRA+:\n```\nPOST /webhook\n{ \"url\": \"https://seu-n8n.com/webhook/gyra-decisao\" }\n```\n\nOu use o **Workflow 1** que já inclui registro automático.",
+        "height": 300,
+        "width": 500,
+        "color": 5
+      },
+      "id": "sticky-intro",
+      "name": "📋 Sobre este Workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, -300]
+    },
+    {
+      "parameters": {
+        "content": "## ⚙️ Configure suas Credenciais\n\nSubstitua os valores abaixo:\n- `crmWebhookUrl` → URL do webhook do seu CRM para atualizar negócios\n- `notificationWebhookUrl` → Slack, Teams ou outro canal de notificação\n- `crmApiKey` → API Key do seu CRM (se necessário)\n\n**CRMs compatíveis:**\nHubSpot, Pipedrive, RD Station, Salesforce, Bitrix24, Monday.com",
+        "height": 220,
+        "width": 380,
+        "color": 4
+      },
+      "id": "sticky-config",
+      "name": "⚙️ Nota de Configuração",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [380, -300]
+    },
+    {
+      "parameters": {
+        "content": "## ✅ Branch APPROVED\n\nCliente aprovado!\n- Score acima da faixa mínima\n- Sem restrições críticas\n\nAções sugeridas:\n- Atualizar negócio no CRM para \"Aprovado\"\n- Definir prazo de pagamento automaticamente\n- Notificar time de vendas para fechar contrato",
+        "height": 200,
+        "width": 300,
+        "color": 3
+      },
+      "id": "sticky-approved",
+      "name": "✅ Nota APPROVED",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [860, -300]
+    },
+    {
+      "parameters": {
+        "content": "## ⚠️ Branch ALERT\n\nCliente em análise manual!\n- Score na faixa intermediária\n- Há pendências que precisam de revisão humana\n\nAções sugeridas:\n- Atualizar CRM para \"Em Análise\"\n- Notificar analista de crédito\n- Enviar lista de pendências encontradas",
+        "height": 200,
+        "width": 300,
+        "color": 4
+      },
+      "id": "sticky-alert",
+      "name": "⚠️ Nota ALERT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1220, -300]
+    },
+    {
+      "parameters": {
+        "content": "## ❌ Branch DENIED\n\nCliente reprovado!\n- Score abaixo do limite mínimo, ou\n- Regra de exclusão ativada (sanções, PEP, etc.)\n\nAções sugeridas:\n- Atualizar CRM para \"Reprovado\"\n- Arquivar lead por 90 dias\n- Notificar vendedor com motivo genérico (LGPD)",
+        "height": 200,
+        "width": 300,
+        "color": 1
+      },
+      "id": "sticky-denied",
+      "name": "❌ Nota DENIED",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1580, -300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gyra-decisao",
+        "responseMode": "onReceived",
+        "options": {
+          "noResponseBody": false
+        }
+      },
+      "id": "webhook-gyra",
+      "name": "📬 Receber Webhook GYRA+",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-200, 60],
+      "webhookId": "gyra-decisao"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-crm-url",
+              "name": "crmWebhookUrl",
+              "value": "https://SEU-CRM.com/webhook/atualizar-negocio",
+              "type": "string"
+            },
+            {
+              "id": "cfg-crm-key",
+              "name": "crmApiKey",
+              "value": "SUA_API_KEY_CRM_AQUI",
+              "type": "string"
+            },
+            {
+              "id": "cfg-notif-url",
+              "name": "notificationWebhookUrl",
+              "value": "https://hooks.slack.com/services/SEU_WEBHOOK_SLACK_AQUI",
+              "type": "string"
+            },
+            {
+              "id": "cfg-gyra-url",
+              "name": "apiBaseUrl",
+              "value": "https://gyra-core.gyramais.com.br",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-config",
+      "name": "⚙️ CONFIGURE AQUI",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [120, 60]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ext-report-id",
+              "name": "reportId",
+              "value": "={{ $('📬 Receber Webhook GYRA+').item.json.reportId }}",
+              "type": "string"
+            },
+            {
+              "id": "ext-document",
+              "name": "document",
+              "value": "={{ $('📬 Receber Webhook GYRA+').item.json.document }}",
+              "type": "string"
+            },
+            {
+              "id": "ext-status",
+              "name": "policyStatus",
+              "value": "={{ $('📬 Receber Webhook GYRA+').item.json.policyStatus }}",
+              "type": "string"
+            },
+            {
+              "id": "ext-score",
+              "name": "score",
+              "value": "={{ $('📬 Receber Webhook GYRA+').item.json.score }}",
+              "type": "number"
+            },
+            {
+              "id": "ext-type",
+              "name": "reportType",
+              "value": "={{ $('📬 Receber Webhook GYRA+').item.json.type }}",
+              "type": "string"
+            },
+            {
+              "id": "ext-external-id",
+              "name": "externalId",
+              "value": "={{ $('📬 Receber Webhook GYRA+').item.json.externalId || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-extract",
+      "name": "📊 Extrair Dados da Decisão",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [460, 60]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.policyStatus }}",
+                    "rightValue": "APPROVED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "APPROVED"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.policyStatus }}",
+                    "rightValue": "ALERT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ALERT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.policyStatus }}",
+                    "rightValue": "DENIED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DENIED"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "switch-status",
+      "name": "🔀 Rotear por Decisão",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [760, 60]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('⚙️ CONFIGURE AQUI').item.json.crmWebhookUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('⚙️ CONFIGURE AQUI').item.json.crmApiKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"externalId\": \"{{ $('📊 Extrair Dados da Decisão').item.json.externalId }}\",\n  \"document\": \"{{ $('📊 Extrair Dados da Decisão').item.json.document }}\",\n  \"reportId\": \"{{ $('📊 Extrair Dados da Decisão').item.json.reportId }}\",\n  \"creditStatus\": \"APROVADO\",\n  \"score\": {{ $('📊 Extrair Dados da Decisão').item.json.score }},\n  \"action\": \"MOVE_TO_PROPOSAL\",\n  \"notes\": \"Análise GYRA+ aprovada automaticamente. Score: {{ $('📊 Extrair Dados da Decisão').item.json.score }}/1000\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "crm-approved",
+      "name": "✅ Atualizar CRM → APROVADO",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1060, -100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('⚙️ CONFIGURE AQUI').item.json.notificationWebhookUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"✅ *Crédito APROVADO* — CNPJ/CPF: `{{ $('📊 Extrair Dados da Decisão').item.json.document }}` | Score: *{{ $('📊 Extrair Dados da Decisão').item.json.score }}/1000* | Relatório: `{{ $('📊 Extrair Dados da Decisão').item.json.reportId }}`\"\n}",
+        "options": {}
+      },
+      "id": "notify-approved",
+      "name": "🔔 Notificar Equipe → Aprovado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, -100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('⚙️ CONFIGURE AQUI').item.json.crmWebhookUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('⚙️ CONFIGURE AQUI').item.json.crmApiKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"externalId\": \"{{ $('📊 Extrair Dados da Decisão').item.json.externalId }}\",\n  \"document\": \"{{ $('📊 Extrair Dados da Decisão').item.json.document }}\",\n  \"reportId\": \"{{ $('📊 Extrair Dados da Decisão').item.json.reportId }}\",\n  \"creditStatus\": \"EM_ANALISE\",\n  \"score\": {{ $('📊 Extrair Dados da Decisão').item.json.score }},\n  \"action\": \"ASSIGN_TO_ANALYST\",\n  \"notes\": \"Análise GYRA+ em alerta — revisão manual necessária. Score: {{ $('📊 Extrair Dados da Decisão').item.json.score }}/1000. Acesse o relatório completo no Toolbox.\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "crm-alert",
+      "name": "⚠️ Atualizar CRM → EM ANÁLISE",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1060, 60]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('⚙️ CONFIGURE AQUI').item.json.notificationWebhookUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"⚠️ *Crédito em ANÁLISE MANUAL* — CNPJ/CPF: `{{ $('📊 Extrair Dados da Decisão').item.json.document }}` | Score: *{{ $('📊 Extrair Dados da Decisão').item.json.score }}/1000* | Atribuído ao analista de crédito. Relatório: `{{ $('📊 Extrair Dados da Decisão').item.json.reportId }}`\"\n}",
+        "options": {}
+      },
+      "id": "notify-alert",
+      "name": "🔔 Notificar Analista → Alerta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 60]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('⚙️ CONFIGURE AQUI').item.json.crmWebhookUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('⚙️ CONFIGURE AQUI').item.json.crmApiKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"externalId\": \"{{ $('📊 Extrair Dados da Decisão').item.json.externalId }}\",\n  \"document\": \"{{ $('📊 Extrair Dados da Decisão').item.json.document }}\",\n  \"reportId\": \"{{ $('📊 Extrair Dados da Decisão').item.json.reportId }}\",\n  \"creditStatus\": \"REPROVADO\",\n  \"score\": {{ $('📊 Extrair Dados da Decisão').item.json.score }},\n  \"action\": \"ARCHIVE_LEAD\",\n  \"notes\": \"Análise GYRA+ reprovada automaticamente. Score: {{ $('📊 Extrair Dados da Decisão').item.json.score }}/1000. Lead arquivado por 90 dias.\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "crm-denied",
+      "name": "❌ Atualizar CRM → REPROVADO",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1060, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('⚙️ CONFIGURE AQUI').item.json.notificationWebhookUrl }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"❌ *Crédito REPROVADO* — CNPJ/CPF: `{{ $('📊 Extrair Dados da Decisão').item.json.document }}` | Score: *{{ $('📊 Extrair Dados da Decisão').item.json.score }}/1000* | Lead arquivado automaticamente. Relatório: `{{ $('📊 Extrair Dados da Decisão').item.json.reportId }}`\"\n}",
+        "options": {}
+      },
+      "id": "notify-denied",
+      "name": "🔔 Notificar Equipe → Reprovado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 220]
+    }
+  ],
+  "connections": {
+    "📬 Receber Webhook GYRA+": {
+      "main": [
+        [
+          {
+            "node": "⚙️ CONFIGURE AQUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ CONFIGURE AQUI": {
+      "main": [
+        [
+          {
+            "node": "📊 Extrair Dados da Decisão",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 Extrair Dados da Decisão": {
+      "main": [
+        [
+          {
+            "node": "🔀 Rotear por Decisão",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 Rotear por Decisão": {
+      "main": [
+        [
+          {
+            "node": "✅ Atualizar CRM → APROVADO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "⚠️ Atualizar CRM → EM ANÁLISE",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ Atualizar CRM → REPROVADO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Atualizar CRM → APROVADO": {
+      "main": [
+        [
+          {
+            "node": "🔔 Notificar Equipe → Aprovado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚠️ Atualizar CRM → EM ANÁLISE": {
+      "main": [
+        [
+          {
+            "node": "🔔 Notificar Analista → Alerta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Atualizar CRM → REPROVADO": {
+      "main": [
+        [
+          {
+            "node": "🔔 Notificar Equipe → Reprovado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "id": "gyra-workflow-2",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "gyra-plus-template"
+  },
+  "tags": [
+    {
+      "name": "GYRA+"
+    },
+    {
+      "name": "Crédito"
+    }
+  ]
+}

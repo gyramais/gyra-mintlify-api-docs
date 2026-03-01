@@ -90,28 +90,40 @@ O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo est
 
 ```json 200 OK
 {
-  "id": "6734081bd2a2fc62e2c55c14",
-  "document": "022#######3",
+  "id": "69a207bcdd0197828df9155a",
   "status": {
+    "id": "6614758260513064a5af1046",
     "value": "PENDING"
   },
-  "sections": [
-    {
-      "type": { "value": "SUMMARY" },
-      "sectionDetails": [
-        {
-          "values": {
-            "serasaScoreSummary": {
-              "title": "Score BoaVista",
-              "value": "673",
-              "status": "BAD"
-            }
-          }
-        }
-      ]
-    }
-  ]
+  "document": "43**********30",
+  "policyId": "69a1fbb06a44799c9c440d2d",
+  "organizationId": "65eb4989a4a87b9a94d1920f",
+  "createdAt": "2026-02-27T21:08:11.938Z",
+  "updatedAt": "2026-02-27T21:09:39.455Z"
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
 }
 ```
 
 </ResponseExample>
+
+### Quando usar
+
+Use este endpoint para acompanhar o ciclo de vida de um relatório específico e obter o resultado consolidado. Você pode usar após criar um relatório para fazer polling de status ou para buscar os dados finais antes de tomar decisão de crédito.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | Parâmetro da requisição. |
+| `tabType` | `query` | `string` | `não` | Report type |
+| `details` | `query` | `string` | `não` | Para remover os detalhes da seção, defina como `false` |

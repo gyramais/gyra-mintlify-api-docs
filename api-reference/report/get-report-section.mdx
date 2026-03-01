@@ -1,5 +1,78 @@
 ---
 openapi: get /report/{id}/section/{sectionType}
-title: Consulta Seção
-description: Busca uma seção de relatório por ID    
+title: Consultar Seção por Tipo (Interno)
+description: Endpoint interno para consulta de seção por tipo dentro de um relatório.
 ---
+
+<Tip>
+Uso interno. Para clientes externos, utilize o endpoint <code>GET /report/section/{"{id}"}</code>.
+</Tip>
+
+### Quando usar
+
+Use este endpoint interno para buscar uma seção por tipo dentro de um relatório. Você pode usar em fluxos de backend, renderização por abas e componentes que carregam seções sob demanda por `sectionType`.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | Parâmetro da requisição. |
+| `sectionType` | `path` | `string` | `sim` | Parâmetro da requisição. |
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/report/{id}/section/{sectionType}' \
+--header 'Authorization: Bearer abc123'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/report/{id}/section/{sectionType}", {
+  method: "GET",
+  headers: {
+    "Authorization": "Bearer abc123",
+  },
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/report/{id}/section/{sectionType}"
+headers = {
+  "Authorization": "Bearer abc123"
+}
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "id": "69a207bcdd0197828df9156a",
+  "type": {
+    "id": "672b49a91acad6953b56b109",
+    "value": "SUMMARY"
+  },
+  "createdAt": "2026-02-27T21:08:11.938Z",
+  "updatedAt": "2026-02-27T21:09:39.250Z"
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+</ResponseExample>

@@ -1,3 +1,143 @@
 ---
 openapi: put /credit-policy/policy/all/{id}
+title: Atualizar Requisição
+description: Atualiza dados deste recurso.
 ---
+
+### Quando usar
+
+Use este endpoint para atualizar em lote a configuração completa de uma política de decisão. Você pode usar em revisões periódicas de estratégia de crédito, ajuste de thresholds/regras e publicação de nova versão operacional da política.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | Parâmetro da requisição. |
+
+### Corpo da requisição
+
+```json
+{
+  "id": "string",
+  "userId": "string",
+  "name": "string",
+  "scoreEnabled": true,
+  "useResultToReport": true,
+  "integrationGroupName": "string",
+  "documentType": "string",
+  "policyRuleGroups": [
+    "..."
+  ],
+  "risks": [
+    "..."
+  ],
+  "integrationGroup": "...",
+  "productTypeId": "string"
+}
+```
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/credit-policy/policy/all/{id}' \
+--header 'Authorization: Bearer {seu_token_jwt}' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "id": "string",
+  "userId": "string",
+  "name": "string",
+  "scoreEnabled": true,
+  "useResultToReport": true,
+  "integrationGroupName": "string",
+  "documentType": "string",
+  "policyRuleGroups": [
+    "..."
+  ],
+  "risks": [
+    "..."
+  ],
+  "integrationGroup": "...",
+  "productTypeId": "string"
+}'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/credit-policy/policy/all/{id}", {
+  method: "PUT",
+  headers: {
+    "Authorization": "Bearer {seu_token_jwt}",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+  "id": "string",
+  "userId": "string",
+  "name": "string",
+  "scoreEnabled": true,
+  "useResultToReport": true,
+  "integrationGroupName": "string",
+  "documentType": "string",
+  "policyRuleGroups": [
+    "..."
+  ],
+  "risks": [
+    "..."
+  ],
+  "integrationGroup": "...",
+  "productTypeId": "string"
+})
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/credit-policy/policy/all/{id}"
+headers = {
+  "Authorization": "Bearer {seu_token_jwt}"
+}
+payload = {
+  "id": "string",
+  "userId": "string",
+  "name": "string",
+  "scoreEnabled": true,
+  "useResultToReport": true,
+  "integrationGroupName": "string",
+  "documentType": "string",
+  "policyRuleGroups": [
+    "..."
+  ],
+  "risks": [
+    "..."
+  ],
+  "integrationGroup": "...",
+  "productTypeId": "string"
+}
+response = requests.put(url, headers=headers, json=payload)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 400 Bad Request
+{
+  "code": 400,
+  "message": "integrationGroupName must be a string"
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+</ResponseExample>

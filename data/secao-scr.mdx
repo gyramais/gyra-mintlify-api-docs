@@ -1,0 +1,128 @@
+---
+title: Seção — SCR (Banco Central)
+description: Campos das seções HISTORY e CATEGORIES com o histórico de crédito bancário via SCR do Bacen.
+icon: "chart-line"
+---
+
+O SCR (Sistema de Informações de Crédito do Banco Central) é a fonte mais completa de histórico de endividamento bancário disponível no Brasil. Cobre toda a exposição a crédito com instituições financeiras reguladas pelo Bacen.
+
+Disponível no relatório **COMPLETO** e **COMPLETO+**.
+
+---
+
+## HISTORY — Histórico mês a mês
+
+A seção `HISTORY` mostra o endividamento bancário do documento mês a mês, permitindo identificar tendências de crescimento ou redução da dívida ao longo do tempo.
+
+### Campos do `details` — HISTORY
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `months` | object[] | Array com os dados de cada mês |
+| `totalRisk` | number | Exposição total atual (R$) |
+| `totalExpired` | number | Total vencido atual (R$) |
+| `totalLate` | number | Total em atraso atual (R$) |
+| `availableCreditLimit` | number | Limite disponível (R$) |
+| `totalLosses` | number | Total de perdas registradas (R$) |
+
+### Campos de cada mês (`months[]`)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `yearMonth` | string | Ano/mês (YYYY-MM) |
+| `totalRisk` | number | Risco total no período (R$) |
+| `toExpire` | number | A vencer (R$) |
+| `expired` | number | Vencido (R$) |
+| `late` | number | Em atraso (R$) |
+| `losses` | number | Perdas (R$) |
+| `availableCreditLimit` | number | Limite disponível (R$) |
+
+### Exemplo HISTORY
+
+```json
+{
+  "type": { "value": "HISTORY" },
+  "details": {
+    "totalRisk": 450000.00,
+    "totalExpired": 15000.00,
+    "totalLosses": 0,
+    "availableCreditLimit": 120000.00,
+    "months": [
+      {
+        "yearMonth": "2025-01",
+        "totalRisk": 450000.00,
+        "toExpire": 435000.00,
+        "expired": 15000.00,
+        "late": 0,
+        "losses": 0,
+        "availableCreditLimit": 120000.00
+      },
+      {
+        "yearMonth": "2024-12",
+        "totalRisk": 480000.00,
+        "toExpire": 480000.00,
+        "expired": 0,
+        "late": 0,
+        "losses": 0
+      }
+    ]
+  }
+}
+```
+
+---
+
+## CATEGORIES — Breakdown por categoria de uso
+
+A seção `CATEGORIES` detalha o endividamento bancário por finalidade do crédito (capital de giro, cartão, financiamento, etc.).
+
+### Campos do `details` — CATEGORIES
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `months` | object[] | Array com os dados de cada mês por categoria |
+
+### Campos de cada mês (`months[]`)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `yearMonth` | string | Ano/mês (YYYY-MM) |
+| `categories` | object[] | Categorias com endividamento no período |
+| `categories[].name` | string | Nome da categoria (ex: "Capital de Giro") |
+| `categories[].code` | string | Código da modalidade SCR |
+| `categories[].totalRisk` | number | Risco total na categoria (R$) |
+| `categories[].expired` | number | Valor vencido na categoria (R$) |
+
+---
+
+## Principais categorias SCR
+
+| Categoria | Descrição |
+|-----------|-----------|
+| Capital de Giro | Financiamento de necessidades operacionais |
+| Cartão de Crédito | Saldo em cartão |
+| Financiamento de Veículos | Crédito para aquisição de veículos |
+| Conta Garantida | Limite rotativo em conta corrente |
+| Desconto de Recebíveis | Antecipação de duplicatas e cheques |
+| Financiamento Imobiliário | Crédito para imóveis |
+| BNDES / Repasse | Crédito via repasse de desenvolvimento |
+| Risco Sacado | Operações de supply chain finance |
+
+---
+
+## Como interpretar o SCR
+
+<AccordionGroup>
+  <Accordion title="Crescimento do 'expired' ao longo dos meses">
+    Dívidas vencidas crescendo mês a mês indicam deterioração financeira progressiva. Mesmo que o valor absoluto seja baixo, a tendência é um sinal importante.
+  </Accordion>
+  <Accordion title="Alto totalRisk com expired = 0">
+    Alta exposição bancária sem inadimplência indica empresa que usa intensamente o crédito bancário mas honra os compromissos. Avalie junto ao faturamento.
+  </Accordion>
+  <Accordion title="Losses > 0">
+    Perdas registradas pelo sistema bancário indicam dívidas que foram baixadas como prejuízo. Sinal grave — use a regra `SCR_TOTAL_LOSSES` para negar automaticamente.
+  </Accordion>
+  <Accordion title="availableCreditLimit muito baixo">
+    Limite disponível próximo de zero indica que o documento está com toda a capacidade de crédito bancário comprometida.
+  </Accordion>
+</AccordionGroup>

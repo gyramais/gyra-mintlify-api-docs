@@ -1,0 +1,137 @@
+---
+title: Estrutura do Relatório
+description: Campos de nível raiz de um relatório GYRA+ e como navegar pelas seções.
+icon: "database"
+---
+
+## Objeto Relatório
+
+Todo relatório retornado pela API tem a seguinte estrutura raiz:
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | string (ObjectId) | Identificador único do relatório |
+| `createdAt` | datetime | Data/hora de criação |
+| `updatedAt` | datetime | Data/hora da última atualização |
+| `document` | string | CPF ou CNPJ consultado (sem formatação) |
+| `yearMonthDay` | string | Data de referência dos dados (YYYY-MM-DD) |
+| `organizationId` | string (ObjectId) | ID da organização que gerou o relatório |
+| `externalId` | string | Identificador externo enviado na criação |
+| `type` | object | Tipo do relatório (ver abaixo) |
+| `status` | object | Status atual do relatório (ver abaixo) |
+| `policyStatus` | string | Decisão da política: `APPROVED`, `DENIED`, `ALERT` |
+| `score` | number | Score final composto (0–1000) |
+| `commentary` | object[] | Comentários de analistas |
+| `sections` | object[] | Seções do relatório (ver abaixo) |
+
+---
+
+## Tipo do relatório (`type`)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | string | ID do tipo |
+| `title` | string | Nome: `"Simples"`, `"Essencial"`, `"Completo"`, `"Completo+"` |
+| `value` | string | Valor: `GYRA_90`, `GYRA_180`, `GYRA_360`, `GYRA_360_PLUS` |
+| `isPaid` | boolean | Se a consulta gerou cobrança adicional |
+
+---
+
+## Status do relatório (`status`)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | string | ID do status |
+| `value` | string | `"Pendente"`, `"Aprovado"`, `"Negado"` |
+
+---
+
+## Estrutura de uma seção (`sections[]`)
+
+Cada elemento de `sections` tem:
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | string | ID da seção |
+| `type` | object | Tipo da seção (ver abaixo) |
+| `completedAt` | datetime | Quando a seção foi finalizada |
+| `errors` | object[] | Erros de integrações (se houver) |
+| `comments` | object[] | Comentários de analistas nesta seção |
+| `details` | object | Dados normalizados da seção (varia por tipo) |
+
+### Tipo da seção (`sections[].type`)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | string | ID do tipo |
+| `title` | string | Nome legível (ex: `"Processos Judiciais"`) |
+| `value` | string | Identificador: `BASIC_INFORMATION`, `PROCESSES`, etc. |
+
+---
+
+## Valores possíveis de `sections[].type.value`
+
+| Valor | Seção | Disponível em |
+|-------|-------|---------------|
+| `BASIC_INFORMATION` | Informações básicas e cadastrais | Todos os tipos |
+| `SUMMARY` | Resumo e insights principais | ESSENCIAL+ |
+| `RELATIONS` | Relacionamentos societários | ESSENCIAL+ |
+| `PROCESSES` | Processos judiciais | COMPLETO+ |
+| `PROTESTS` | Protestos em cartório | COMPLETO+ |
+| `CERTIFICATES` | Certidões em tempo real | COMPLETO+ |
+| `PEP` | Pessoas expostas politicamente | COMPLETO+ |
+| `SANCTIONS` | Sanções nacionais e internacionais | COMPLETO+ |
+| `LOCATION` | Localização com mapa | Todos os tipos |
+| `HISTORY` | Histórico SCR (mês a mês) | COMPLETO+ |
+| `CATEGORIES` | SCR por categoria de uso | COMPLETO+ |
+| `PEFIN` | Pendências financeiras | ESSENCIAL+ |
+| `REFIN` | Refinanciamentos | ESSENCIAL+ |
+| `BAD_CHECK` | Cheques sem fundo | ESSENCIAL+ |
+| `CRIMINAL_RECORD` | Antecedentes criminais (CPF) | ESSENCIAL+ |
+| `CREDIT_POLICY` | Resultado da política de crédito | Todos os tipos |
+
+---
+
+## Comentários (`commentary`)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | string | ID do comentário |
+| `createdAt` | datetime | Data do comentário |
+| `text` | string | Texto do comentário |
+| `authUserId` | string | ID de autenticação do autor |
+| `user.id` | string | ID do usuário no sistema |
+| `user.email` | string | E-mail do usuário |
+| `user.person.name` | string | Nome do usuário |
+| `user.person.cpf` | string | CPF do usuário |
+
+---
+
+## Navegação pelo dicionário
+
+<CardGroup cols={2}>
+  <Card title="Resumo" icon="chart-bar" href="/data/secao-resumo">
+    Campos da seção SUMMARY — principais indicadores de risco.
+  </Card>
+  <Card title="Informações Básicas" icon="address-card" href="/data/secao-informacoes-basicas">
+    Campos da seção BASIC_INFORMATION — cadastro completo.
+  </Card>
+  <Card title="Processos Judiciais" icon="gavel" href="/data/secao-processos">
+    Campos da seção PROCESSES — processos e valores.
+  </Card>
+  <Card title="Protestos" icon="stamp" href="/data/secao-protestos">
+    Campos da seção PROTESTS — protestos em cartório.
+  </Card>
+  <Card title="PEFIN e REFIN" icon="triangle-exclamation" href="/data/secao-pefin-refin">
+    Pendências financeiras e refinanciamentos.
+  </Card>
+  <Card title="SCR Bacen" icon="chart-line" href="/data/secao-scr">
+    Histórico de crédito bancário — SCR do Banco Central.
+  </Card>
+  <Card title="PEP e Sanções" icon="landmark" href="/data/secao-pep-sancoes">
+    Exposição política e listas de sanções.
+  </Card>
+  <Card title="Política de Crédito" icon="shield-check" href="/data/secao-politica-credito">
+    Resultado da avaliação automática das regras.
+  </Card>
+</CardGroup>

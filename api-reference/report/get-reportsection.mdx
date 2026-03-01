@@ -1,3 +1,122 @@
 ---
 openapi: get /report/section/{id}
+title: Consultar Seção por ID
+description: Retorna os dados completos de uma seção específica de um relatório.
 ---
+
+<Endpoint
+  method="GET"
+  path="/report/section/{id}"
+  headers={[
+    {
+      name: "Authorization",
+      type: "string",
+      required: true,
+      description: "Token JWT no formato Bearer. Exemplo: `Bearer abc123`"
+    }
+  ]}
+  pathParameters={[
+    {
+      name: "id",
+      type: "string",
+      required: true,
+      description: "Identificador da seção do relatório"
+    }
+  ]}
+  responses={{
+    200: {
+      contentType: "application/json",
+      body: {
+        id: "665f1498530134f172352f03",
+        reportId: "665f1498530134f172352efd",
+        sectionType: "financial",
+        status: "completed",
+        data: {
+          score: 742,
+          riskLevel: "LOW"
+        }
+      }
+    },
+    401: {
+      contentType: "application/json",
+      body: {
+        statusCode: 401,
+        message: "Unauthorized"
+      }
+    },
+    404: {
+      contentType: "application/json",
+      body: {
+        statusCode: 404,
+        message: "Section not found"
+      }
+    }
+  }}
+/>
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/report/section/665f1498530134f172352f03' \
+--header 'Authorization: Bearer abc123'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/report/section/665f1498530134f172352f03", {
+  method: "GET",
+  headers: {
+    Authorization: "Bearer abc123"
+  }
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/report/section/665f1498530134f172352f03"
+headers = {"Authorization": "Bearer abc123"}
+
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "id": "69a207bcdd0197828df9156a",
+  "type": {
+    "id": "672b49a91acad6953b56b109",
+    "value": "SUMMARY"
+  },
+  "createdAt": "2026-02-27T21:08:11.938Z",
+  "updatedAt": "2026-02-27T21:09:39.250Z"
+}
+```
+
+```json 501 Not Implemented
+{
+  "code": 501,
+  "message": "Inconsistent column data: Malformed ObjectID"
+}
+```
+
+</ResponseExample>
+
+### Quando usar
+
+Use este endpoint para consultar uma seção específica já identificada dentro de um relatório. Você pode usar quando a experiência do cliente ou do analista precisa abrir apenas um bloco do relatório (ex.: financeiro, restrições, score) sem recarregar tudo.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | Identificador da seção do relatório |

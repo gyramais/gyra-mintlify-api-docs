@@ -1,0 +1,449 @@
+{
+  "name": "GYRA+ | 3. Receber Decisão → Google Sheets + E-mail",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 📊 GYRA+ | Workflow 3: Receber Decisão → Google Sheets + E-mail\n\n**O que este workflow faz:**\n1. Recebe o webhook da GYRA+ com a decisão pronta\n2. Responde 200 OK imediatamente\n3. Autentica na GYRA+ e busca o relatório completo via GET /report/:id\n4. Extrai os dados mais relevantes (score, PEFIN, protestos, processos, decisão)\n5. Adiciona uma linha na planilha Google Sheets de controle\n6. Envia e-mail com resumo da decisão para o responsável\n\n**Ideal para:**\n- Fintechs e cooperativas com análise manual posterior\n- Equipes financeiras que monitoram análises em planilha\n- Processos de KYC/onboarding com registro histórico\n- Qualquer empresa que queira auditoria de decisões\n\n**Pré-requisito:**\n- Configure credencial do Google Sheets no n8n\n- Configure credencial de e-mail (SMTP/Gmail/Outlook) no n8n\n- Registre a URL do webhook na GYRA+",
+        "height": 360,
+        "width": 520,
+        "color": 5
+      },
+      "id": "sticky-intro",
+      "name": "📋 Sobre este Workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-220, -360]
+    },
+    {
+      "parameters": {
+        "content": "## ⚙️ Configure suas Credenciais\n\nSubstitua os valores abaixo:\n- `clientId` → seu Client ID GYRA+\n- `clientSecret` → seu Client Secret GYRA+\n- `emailDestino` → e-mail do analista de crédito\n- `emailRemetente` → e-mail remetente configurado no n8n\n- `planilhaId` → ID da sua planilha Google Sheets\n  (extraia da URL: docs.google.com/spreadsheets/d/**ID_AQUI**/edit)\n- `abaName` → nome da aba (ex: \"Análises de Crédito\")\n\n🔑 Credenciais do Google Sheets e do e-mail são configuradas nas **Credentials** do n8n, não aqui.",
+        "height": 280,
+        "width": 420,
+        "color": 4
+      },
+      "id": "sticky-config",
+      "name": "⚙️ Nota de Configuração",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [380, -360]
+    },
+    {
+      "parameters": {
+        "content": "## 📑 Busca do Relatório Completo\n\nO webhook GYRA+ envia apenas os dados resumidos (`reportId`, `document`, `policyStatus`, `score`).\n\nEste nó busca o relatório completo para extrair:\n- Razão social e dados cadastrais\n- Detalhes de PEFIN/protestos\n- Processos judiciais\n- Dados dos sócios\n\n💡 Se quiser apenas os dados básicos do webhook, remova este nó e ajuste os campos do Set abaixo.",
+        "height": 220,
+        "width": 340,
+        "color": 7
+      },
+      "id": "sticky-fetch",
+      "name": "📑 Nota Busca Relatório",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [900, -360]
+    },
+    {
+      "parameters": {
+        "content": "## 📊 Google Sheets\n\nA planilha deve ter as colunas:\n`Data | Documento | Razão Social | Tipo | Score | Decisão | PEFIN (R$) | Protestos | Processos | Report ID | Link Toolbox`\n\nCrie a planilha no Google Drive e compartilhe com a conta de serviço configurada no n8n.\n\n🔧 Configure a credencial Google Sheets em:\n**Settings → Credentials → Add Credential → Google Sheets**",
+        "height": 220,
+        "width": 360,
+        "color": 3
+      },
+      "id": "sticky-sheets",
+      "name": "📊 Nota Google Sheets",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1380, -360]
+    },
+    {
+      "parameters": {
+        "content": "## 📧 E-mail de Resumo\n\nO e-mail enviado inclui:\n- Decisão (APROVADO/REPROVADO/EM ANÁLISE)\n- Score GYRA+\n- Dados cadastrais básicos\n- Link direto para o relatório no Toolbox\n\nAdapte o template HTML conforme sua identidade visual.\n\n🔧 Configure SMTP em:\n**Settings → Credentials → Add Credential → SMTP**",
+        "height": 200,
+        "width": 320,
+        "color": 7
+      },
+      "id": "sticky-email",
+      "name": "📧 Nota E-mail",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1780, -360]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gyra-decisao-sheets",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-gyra",
+      "name": "📬 Receber Webhook GYRA+",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-220, 60],
+      "webhookId": "gyra-decisao-sheets"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-client-id",
+              "name": "clientId",
+              "value": "SEU_CLIENT_ID_AQUI",
+              "type": "string"
+            },
+            {
+              "id": "cfg-client-secret",
+              "name": "clientSecret",
+              "value": "SEU_CLIENT_SECRET_AQUI",
+              "type": "string"
+            },
+            {
+              "id": "cfg-api-url",
+              "name": "apiBaseUrl",
+              "value": "https://gyra-core.gyramais.com.br",
+              "type": "string"
+            },
+            {
+              "id": "cfg-email-dest",
+              "name": "emailDestino",
+              "value": "analista@suaempresa.com.br",
+              "type": "string"
+            },
+            {
+              "id": "cfg-email-from",
+              "name": "emailRemetente",
+              "value": "credito@suaempresa.com.br",
+              "type": "string"
+            },
+            {
+              "id": "cfg-sheet-id",
+              "name": "planilhaId",
+              "value": "ID_DA_SUA_PLANILHA_GOOGLE_SHEETS_AQUI",
+              "type": "string"
+            },
+            {
+              "id": "cfg-sheet-name",
+              "name": "abaName",
+              "value": "Análises de Crédito",
+              "type": "string"
+            },
+            {
+              "id": "cfg-toolbox-url",
+              "name": "toolboxUrl",
+              "value": "https://app.gyramais.com.br/relatorio",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-config",
+      "name": "⚙️ CONFIGURE AQUI",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [80, 60]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('⚙️ CONFIGURE AQUI').item.json.apiBaseUrl }}/auth/authenticate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "gyra-client-id",
+              "value": "={{ $('⚙️ CONFIGURE AQUI').item.json.clientId }}"
+            },
+            {
+              "name": "gyra-client-secret",
+              "value": "={{ $('⚙️ CONFIGURE AQUI').item.json.clientSecret }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-auth",
+      "name": "🔐 Autenticar na GYRA+",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [380, 60]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('⚙️ CONFIGURE AQUI').item.json.apiBaseUrl }}/report/{{ $('📬 Receber Webhook GYRA+').item.json.reportId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('🔐 Autenticar na GYRA+').item.json.accessToken }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "http-get-report",
+      "name": "📑 Buscar Relatório Completo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 60]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ext-date",
+              "name": "dataAnalise",
+              "value": "={{ new Date().toLocaleDateString('pt-BR') }}",
+              "type": "string"
+            },
+            {
+              "id": "ext-document",
+              "name": "documento",
+              "value": "={{ $('📬 Receber Webhook GYRA+').item.json.document }}",
+              "type": "string"
+            },
+            {
+              "id": "ext-company",
+              "name": "razaoSocial",
+              "value": "={{ $json.sections?.find(s => s.type?.value === 'BASIC_INFORMATION')?.details?.companyName || $json.sections?.find(s => s.type?.value === 'BASIC_INFORMATION')?.details?.name || 'N/D' }}",
+              "type": "string"
+            },
+            {
+              "id": "ext-type",
+              "name": "tipoDocumento",
+              "value": "={{ $('📬 Receber Webhook GYRA+').item.json.type || 'CNPJ' }}",
+              "type": "string"
+            },
+            {
+              "id": "ext-score",
+              "name": "score",
+              "value": "={{ $('📬 Receber Webhook GYRA+').item.json.score || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "ext-status",
+              "name": "decisao",
+              "value": "={{ $('📬 Receber Webhook GYRA+').item.json.policyStatus }}",
+              "type": "string"
+            },
+            {
+              "id": "ext-pefin",
+              "name": "pefinTotal",
+              "value": "={{ $json.sections?.find(s => s.type?.value === 'PEFIN')?.details?.totalAmount || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "ext-protests",
+              "name": "protestosCount",
+              "value": "={{ $json.sections?.find(s => s.type?.value === 'PROTESTS')?.details?.count || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "ext-lawsuits",
+              "name": "processosCount",
+              "value": "={{ $json.sections?.find(s => s.type?.value === 'PROCESSES')?.details?.passiveCount || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "ext-report-id",
+              "name": "reportId",
+              "value": "={{ $('📬 Receber Webhook GYRA+').item.json.reportId }}",
+              "type": "string"
+            },
+            {
+              "id": "ext-link",
+              "name": "linkRelatorio",
+              "value": "={{ $('⚙️ CONFIGURE AQUI').item.json.toolboxUrl }}/{{ $('📬 Receber Webhook GYRA+').item.json.reportId }}",
+              "type": "string"
+            },
+            {
+              "id": "ext-situation",
+              "name": "situacaoCadastral",
+              "value": "={{ $json.sections?.find(s => s.type?.value === 'BASIC_INFORMATION')?.details?.situation || 'N/D' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-extract",
+      "name": "📊 Extrair Campos do Relatório",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [980, 60]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('⚙️ CONFIGURE AQUI').item.json.planilhaId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('⚙️ CONFIGURE AQUI').item.json.abaName }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Data": "={{ $json.dataAnalise }}",
+            "Documento": "={{ $json.documento }}",
+            "Razão Social": "={{ $json.razaoSocial }}",
+            "Tipo": "={{ $json.tipoDocumento }}",
+            "Score": "={{ $json.score }}",
+            "Decisão": "={{ $json.decisao }}",
+            "PEFIN (R$)": "={{ $json.pefinTotal }}",
+            "Protestos": "={{ $json.protestosCount }}",
+            "Processos Passivos": "={{ $json.processosCount }}",
+            "Situação Cadastral": "={{ $json.situacaoCadastral }}",
+            "Report ID": "={{ $json.reportId }}",
+            "Link Toolbox": "={{ $json.linkRelatorio }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {"id": "Data", "displayName": "Data", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true},
+            {"id": "Documento", "displayName": "Documento", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true},
+            {"id": "Razão Social", "displayName": "Razão Social", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true},
+            {"id": "Tipo", "displayName": "Tipo", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true},
+            {"id": "Score", "displayName": "Score", "required": false, "defaultMatch": false, "display": true, "type": "number", "canBeUsedToMatch": true},
+            {"id": "Decisão", "displayName": "Decisão", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true},
+            {"id": "PEFIN (R$)", "displayName": "PEFIN (R$)", "required": false, "defaultMatch": false, "display": true, "type": "number", "canBeUsedToMatch": true},
+            {"id": "Protestos", "displayName": "Protestos", "required": false, "defaultMatch": false, "display": true, "type": "number", "canBeUsedToMatch": true},
+            {"id": "Processos Passivos", "displayName": "Processos Passivos", "required": false, "defaultMatch": false, "display": true, "type": "number", "canBeUsedToMatch": true},
+            {"id": "Situação Cadastral", "displayName": "Situação Cadastral", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true},
+            {"id": "Report ID", "displayName": "Report ID", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true},
+            {"id": "Link Toolbox", "displayName": "Link Toolbox", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true}
+          ]
+        },
+        "options": {}
+      },
+      "id": "google-sheets",
+      "name": "📊 Registrar na Planilha Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1280, 60],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CONFIGURE_GOOGLE_SHEETS_CREDENTIAL",
+          "name": "Google Sheets — Configure aqui"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $('⚙️ CONFIGURE AQUI').item.json.emailRemetente }}",
+        "toEmail": "={{ $('⚙️ CONFIGURE AQUI').item.json.emailDestino }}",
+        "subject": "={{ $('📊 Extrair Campos do Relatório').item.json.decisao === 'APPROVED' ? '✅' : $('📊 Extrair Campos do Relatório').item.json.decisao === 'DENIED' ? '❌' : '⚠️' }} Análise de Crédito GYRA+: {{ $('📊 Extrair Campos do Relatório').item.json.razaoSocial }} ({{ $('📊 Extrair Campos do Relatório').item.json.documento }})",
+        "emailType": "html",
+        "message": "=<html>\n<body style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;\">\n  <div style=\"background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n    \n    <h1 style=\"color: #1a1a2e; font-size: 22px; margin-bottom: 5px;\">Análise de Crédito GYRA+</h1>\n    <p style=\"color: #666; margin-top: 0;\">{{ new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'long', year:'numeric'}) }}</p>\n    \n    <div style=\"background-color: {{ $('📊 Extrair Campos do Relatório').item.json.decisao === 'APPROVED' ? '#d4edda' : $('📊 Extrair Campos do Relatório').item.json.decisao === 'DENIED' ? '#f8d7da' : '#fff3cd' }}; border-radius: 6px; padding: 20px; margin: 20px 0; text-align: center;\">\n      <div style=\"font-size: 36px;\">{{ $('📊 Extrair Campos do Relatório').item.json.decisao === 'APPROVED' ? '✅' : $('📊 Extrair Campos do Relatório').item.json.decisao === 'DENIED' ? '❌' : '⚠️' }}</div>\n      <div style=\"font-size: 24px; font-weight: bold; color: {{ $('📊 Extrair Campos do Relatório').item.json.decisao === 'APPROVED' ? '#155724' : $('📊 Extrair Campos do Relatório').item.json.decisao === 'DENIED' ? '#721c24' : '#856404' }};\">\n        {{ $('📊 Extrair Campos do Relatório').item.json.decisao === 'APPROVED' ? 'APROVADO' : $('📊 Extrair Campos do Relatório').item.json.decisao === 'DENIED' ? 'REPROVADO' : 'ANÁLISE MANUAL' }}\n      </div>\n      <div style=\"font-size: 18px; margin-top: 8px; color: #333;\">Score: <strong>{{ $('📊 Extrair Campos do Relatório').item.json.score }}/1000</strong></div>\n    </div>\n    \n    <h3 style=\"color: #1a1a2e; border-bottom: 2px solid #eee; padding-bottom: 8px;\">Dados do Solicitante</h3>\n    <table style=\"width: 100%; border-collapse: collapse;\">\n      <tr>\n        <td style=\"padding: 8px; color: #666; width: 40%;\">Documento</td>\n        <td style=\"padding: 8px; font-weight: bold;\">{{ $('📊 Extrair Campos do Relatório').item.json.documento }}</td>\n      </tr>\n      <tr style=\"background-color: #f9f9f9;\">\n        <td style=\"padding: 8px; color: #666;\">Razão Social</td>\n        <td style=\"padding: 8px; font-weight: bold;\">{{ $('📊 Extrair Campos do Relatório').item.json.razaoSocial }}</td>\n      </tr>\n      <tr>\n        <td style=\"padding: 8px; color: #666;\">Situação Cadastral</td>\n        <td style=\"padding: 8px;\">{{ $('📊 Extrair Campos do Relatório').item.json.situacaoCadastral }}</td>\n      </tr>\n    </table>\n    \n    <h3 style=\"color: #1a1a2e; border-bottom: 2px solid #eee; padding-bottom: 8px; margin-top: 20px;\">Indicadores de Risco</h3>\n    <table style=\"width: 100%; border-collapse: collapse;\">\n      <tr>\n        <td style=\"padding: 8px; color: #666;\">PEFIN Total</td>\n        <td style=\"padding: 8px;\">{{ $('📊 Extrair Campos do Relatório').item.json.pefinTotal > 0 ? 'R$ ' + $('📊 Extrair Campos do Relatório').item.json.pefinTotal.toLocaleString('pt-BR') : 'Sem pendências' }}</td>\n      </tr>\n      <tr style=\"background-color: #f9f9f9;\">\n        <td style=\"padding: 8px; color: #666;\">Protestos</td>\n        <td style=\"padding: 8px;\">{{ $('📊 Extrair Campos do Relatório').item.json.protestosCount }} ocorrência(s)</td>\n      </tr>\n      <tr>\n        <td style=\"padding: 8px; color: #666;\">Processos Passivos</td>\n        <td style=\"padding: 8px;\">{{ $('📊 Extrair Campos do Relatório').item.json.processosCount }} processo(s)</td>\n      </tr>\n    </table>\n    \n    <div style=\"margin-top: 24px; text-align: center;\">\n      <a href=\"{{ $('📊 Extrair Campos do Relatório').item.json.linkRelatorio }}\" \n         style=\"background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;\">\n        Ver Relatório Completo no Toolbox\n      </a>\n    </div>\n    \n    <p style=\"color: #999; font-size: 12px; margin-top: 24px; text-align: center;\">\n      Análise automatizada pela plataforma GYRA+ • Report ID: {{ $('📊 Extrair Campos do Relatório').item.json.reportId }}\n    </p>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "id": "send-email",
+      "name": "📧 Enviar E-mail de Decisão",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1580, 60],
+      "credentials": {
+        "smtp": {
+          "id": "CONFIGURE_SMTP_CREDENTIAL",
+          "name": "SMTP — Configure aqui"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "📬 Receber Webhook GYRA+": {
+      "main": [
+        [
+          {
+            "node": "⚙️ CONFIGURE AQUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ CONFIGURE AQUI": {
+      "main": [
+        [
+          {
+            "node": "🔐 Autenticar na GYRA+",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔐 Autenticar na GYRA+": {
+      "main": [
+        [
+          {
+            "node": "📑 Buscar Relatório Completo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📑 Buscar Relatório Completo": {
+      "main": [
+        [
+          {
+            "node": "📊 Extrair Campos do Relatório",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 Extrair Campos do Relatório": {
+      "main": [
+        [
+          {
+            "node": "📊 Registrar na Planilha Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 Registrar na Planilha Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "📧 Enviar E-mail de Decisão",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "id": "gyra-workflow-3",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "gyra-plus-template"
+  },
+  "tags": [
+    {
+      "name": "GYRA+"
+    },
+    {
+      "name": "Crédito"
+    }
+  ]
+}

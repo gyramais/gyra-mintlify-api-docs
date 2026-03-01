@@ -1,3 +1,59 @@
 ---
 openapi: get /report/count
+title: Consultar Dados
+description: Consulta dados deste recurso.
 ---
+
+### Quando usar
+
+Use este endpoint para obter contagens agregadas de relatórios. Você pode usar em dashboards e indicadores de operação para medir volume, throughput e distribuição de status sem carregar listas completas.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/report/count' \
+--header 'Authorization: Bearer abc123'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/report/count", {
+  method: "GET",
+  headers: {
+    "Authorization": "Bearer abc123",
+  },
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/report/count"
+headers = {
+  "Authorization": "Bearer abc123"
+}
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+3379
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+</ResponseExample>

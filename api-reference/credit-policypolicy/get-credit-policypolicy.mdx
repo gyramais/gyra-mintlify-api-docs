@@ -7,3 +7,73 @@ description: Busca todas as políticas de decisão
 <Tip>
 Retorna as características de todas as políticas em uma organização. O id é utilizado para Criar Relatórios
  </Tip>
+
+### Quando usar
+
+Use este endpoint para listar políticas de decisão disponíveis para o contexto da organização. Você pode usar antes de criar um relatório para selecionar a política adequada ao perfil de risco, produto e estratégia comercial.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `enabled` | `query` | `boolean` | `não` | Enabled policies |
+| `protected` | `query` | `boolean` | `não` | Include protected policies |
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/credit-policy/policy' \
+--header 'Authorization: Bearer abc123'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/credit-policy/policy", {
+  method: "GET",
+  headers: {
+    "Authorization": "Bearer abc123",
+  },
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/credit-policy/policy"
+headers = {
+  "Authorization": "Bearer abc123"
+}
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+[
+  {
+    "id": "66a13ac310f297c2849e6657",
+    "name": "Capital de Giro PJ",
+    "documentType": "CNPJ",
+    "reportType": "CUSTOMER_GYRA_360_PLUS",
+    "enabled": false,
+    "version": 1.24
+  }
+]
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+</ResponseExample>

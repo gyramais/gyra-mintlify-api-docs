@@ -1,0 +1,127 @@
+---
+title: Distribuidora e Crédito B2B
+description: Automatize a aprovação de crédito para novos clientes e revisões de limite em operações comerciais.
+icon: "truck"
+---
+
+## Cenário
+
+Uma distribuidora que vende a prazo para varejistas e empresas precisa:
+- Analisar o risco de cada novo cliente antes de conceder crédito comercial
+- Revisar periodicamente o limite de clientes existentes
+- Identificar sinais de deterioração financeira antes de aumentar a exposição
+- Integrar a análise com o ERP (SAP, Totvs, etc.) via webhook ou n8n
+
+---
+
+## O que a GYRA+ entrega para esse caso
+
+| Necessidade | Dado na GYRA+ |
+|-------------|---------------|
+| Risco de inadimplência | Score Serasa/Proscore, PEFIN, REFIN |
+| Saúde financeira | SCR Bacen (endividamento bancário histórico) |
+| Saúde jurídica | Processos cíveis, trabalhistas, financeiros |
+| Situação cadastral | CNPJ ativo, regime tributário, capital social |
+| Sócios com risco | Restrições e processos dos sócios |
+| Protestos | Cartório nacional |
+
+---
+
+## Política recomendada para B2B
+
+Configure uma política **COMPLETO** (CNPJ) com os seguintes grupos:
+
+### Grupo: Elegibilidade (critérios de exclusão)
+
+Regras que, se ativadas, negam automaticamente independente do score:
+
+| Regra | Critério | Resultado |
+|-------|----------|-----------|
+| `COMPANY_SITUATION` | ≠ "Ativa" | `DENIED` |
+| `BANKRUPT` | IS_TRUE | `DENIED` |
+| `BUSINESS_PARTNERS_RESTRICTIVE` | IS_TRUE | `DENIED` |
+| `OWNER_LAWSUITS_HAS_CRIMINAL` | IS_TRUE | `DENIED` |
+
+### Grupo: Cadastral
+
+| Regra | Critério | Resultado |
+|-------|----------|-----------|
+| `COMPANY_OPENING_TIME` | >= 24 meses | `APPROVED` (+200) |
+| `COMPANY_OPENING_TIME` | BETWEEN 12–24 | `ALERT` (+100) |
+| `COMPANY_OPENING_TIME` | < 12 meses | `DENIED` |
+| `CAPITAL_STOCK_AMOUNT` | >= 50.000 | `APPROVED` (+100) |
+
+### Grupo: Financeiro
+
+| Regra | Critério | Resultado |
+|-------|----------|-----------|
+| `SCORE` | >= 600 | `APPROVED` (+300) |
+| `SCORE` | BETWEEN 400–599 | `ALERT` (+150) |
+| `SCORE` | < 400 | `DENIED` |
+| `PEFIN_AMOUNT` | = 0 | `APPROVED` (+200) |
+| `PEFIN_CALCULATED_REVENUE` | < 10% | `APPROVED` (+100) |
+| `SCR_CALCULATED_REVENUE_EXPIRED` | < 5% | `APPROVED` (+100) |
+
+### Grupo: Processos
+
+| Regra | Critério | Resultado |
+|-------|----------|-----------|
+| `LAWSUITS_PASSIVE_COUNT` | = 0 | `APPROVED` (+100) |
+| `LAWSUITS_CALCULATED_REVENUE` | < 20% | `APPROVED` (+50) |
+| `NOTARIES_COUNT` | = 0 | `APPROVED` (+100) |
+
+### Risk Bands sugeridas
+
+| Score | Status | Ação recomendada |
+|-------|--------|------------------|
+| 800–1000 | `APPROVED` | Aprovação automática até R$ 50k |
+| 600–799 | `APPROVED` | Aprovação automática até R$ 20k |
+| 400–599 | `ALERT` | Revisão manual + documentação adicional |
+| 0–399 | `DENIED` | Recusar crédito |
+
+---
+
+## Integração com ERP via n8n
+
+A GYRA+ disponibiliza um workflow n8n pronto para integrar com seu ERP:
+
+<Steps>
+  <Step title="Importe o template n8n">
+    Baixe e importe o arquivo [gyra-create-report-from-erp.json](/templates/n8n/gyra-create-report-from-erp.json) no seu ambiente n8n.
+  </Step>
+  <Step title="Configure as credenciais">
+    Defina as variáveis `GYRA_CLIENT_ID` e `GYRA_CLIENT_SECRET` no n8n.
+  </Step>
+  <Step title="Conecte o gatilho do ERP">
+    Configure o webhook do seu ERP (SAP, Totvs, Protheus) para enviar novos cadastros de clientes para o n8n.
+  </Step>
+  <Step title="Configure o retorno">
+    O segundo workflow (gyra-webhook-to-erp-and-sheets) envia a decisão de volta ao ERP e opcionalmente para uma planilha de controle.
+  </Step>
+</Steps>
+
+Veja o guia completo em [Integração com n8n](/docs/integracao-n8n).
+
+---
+
+## Revisão periódica de limites
+
+Para revisar o risco de clientes existentes, crie relatórios em batch com a API:
+
+```javascript
+// Rodar mensalmente para clientes acima de R$ 20k de exposição
+const clientesParaRevisao = await db.clientes.findComExposicaoAlta();
+
+for (const cliente of clientesParaRevisao) {
+  await gyraApi.post('/report', {
+    document: cliente.cnpj,
+    type: 'CNPJ',
+    policyId: POLICY_ID_REVISAO,
+    externalId: `revisao-${cliente.id}-${mesAtual}`,
+  });
+}
+```
+
+<Tip>
+Use o `externalId` com um padrão como `revisao-{clienteId}-{mes}` para facilitar o rastreamento e evitar duplicatas no seu sistema.
+</Tip>

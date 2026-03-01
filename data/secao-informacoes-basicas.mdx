@@ -1,0 +1,139 @@
+---
+title: Seção — Informações Básicas (BASIC_INFORMATION)
+description: Campos da seção cadastral completa para CNPJ e CPF.
+icon: "address-card"
+---
+
+A seção `BASIC_INFORMATION` consolida os dados cadastrais do documento consultado, incluindo dados da Receita Federal, contatos, endereço e quadro societário.
+
+Disponível em **todos os tipos** de relatório.
+
+---
+
+## CNPJ — Empresa
+
+### Dados principais
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `cnpj` | string | CNPJ (sem formatação) |
+| `companyName` | string | Razão social |
+| `tradeName` | string | Nome fantasia |
+| `situation` | string | Situação cadastral: `Ativa`, `Inapta`, `Baixada`, `Suspensa` |
+| `situationDate` | string | Data da situação atual |
+| `openingDate` | string | Data de abertura |
+| `openingTimeMonths` | number | Tempo de abertura em meses |
+| `capitalStock` | number | Capital social (R$) |
+| `companyType` | string | Tipo da empresa (ex: "Sociedade Limitada", "MEI") |
+| `legalNature` | string | Natureza jurídica |
+| `size` | string | Porte: `ME`, `EPP`, `MEDIO`, `GRANDE` |
+| `taxRegime` | string | Regime tributário: `SIMPLES_NACIONAL`, `LUCRO_PRESUMIDO`, `LUCRO_REAL` |
+| `isSubsidiary` | boolean | É filial |
+| `headquartersCnpj` | string | CNPJ da matriz (se filial) |
+
+### Endereço
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `address.street` | string | Logradouro |
+| `address.number` | string | Número |
+| `address.complement` | string | Complemento |
+| `address.neighborhood` | string | Bairro |
+| `address.city` | string | Cidade |
+| `address.state` | string | Estado (UF) |
+| `address.zipCode` | string | CEP |
+
+### Atividades econômicas
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `primaryCnae.code` | string | Código CNAE principal |
+| `primaryCnae.description` | string | Descrição da atividade |
+| `secondaryCnaes` | object[] | CNAEs secundários (mesma estrutura) |
+
+### Contatos
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `contacts.emails` | string[] | E-mails registrados |
+| `contacts.phones` | string[] | Telefones registrados |
+
+### Quadro Societário (QSA)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `partners` | object[] | Lista de sócios |
+| `partners[].name` | string | Nome do sócio |
+| `partners[].document` | string | CPF (se disponível) |
+| `partners[].role` | string | Cargo/qualificação (ex: "Sócio-Administrador") |
+| `partners[].ownershipPercentage` | number | % de participação |
+| `partners[].entryDate` | string | Data de entrada na sociedade |
+| `totalPartners` | number | Total de sócios |
+
+### Histórico de alterações
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `registrationChanges` | object | Alterações cadastrais |
+| `registrationChanges.membership` | number | Qtd de mudanças no QSA |
+| `registrationChanges.address` | number | Qtd de mudanças de endereço |
+| `registrationChanges.cnaes` | number | Qtd de mudanças de atividade |
+| `registrationChanges.name` | number | Qtd de mudanças de razão social |
+| `completeQsaChange` | boolean | Troca total do quadro societário |
+
+---
+
+## CPF — Pessoa Física
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `cpf` | string | CPF (sem formatação) |
+| `name` | string | Nome completo |
+| `birthDate` | string | Data de nascimento |
+| `age` | number | Idade atual (anos) |
+| `gender` | string | Gênero |
+| `motherName` | string | Nome da mãe |
+| `situation` | string | Situação na Receita: `Regular`, `Pendente`, `Cancelado` |
+| `deceased` | boolean | Indicador de óbito |
+| `deceasedDate` | string | Data do óbito (se aplicável) |
+| `professions` | string[] | Profissões registradas |
+| `address` | object | Endereço (mesma estrutura do CNPJ) |
+| `contacts` | object | Contatos (mesma estrutura do CNPJ) |
+
+---
+
+## Exemplo de resposta — CNPJ
+
+```json
+{
+  "type": { "value": "BASIC_INFORMATION" },
+  "details": {
+    "cnpj": "43591367000130",
+    "companyName": "Empresa Exemplo Ltda",
+    "tradeName": "Exemplo",
+    "situation": "Ativa",
+    "openingDate": "2020-03-15",
+    "openingTimeMonths": 59,
+    "capitalStock": 100000.00,
+    "taxRegime": "LUCRO_PRESUMIDO",
+    "isSubsidiary": false,
+    "primaryCnae": {
+      "code": "4679699",
+      "description": "Comércio atacadista de materiais de construção"
+    },
+    "partners": [
+      {
+        "name": "João Silva",
+        "role": "Sócio-Administrador",
+        "ownershipPercentage": 60.0,
+        "entryDate": "2020-03-15"
+      }
+    ],
+    "registrationChanges": {
+      "membership": 0,
+      "address": 1,
+      "name": 0
+    }
+  }
+}
+```

@@ -1,0 +1,137 @@
+---
+title: Configurar Webhook
+description: Receba a decisão de crédito em tempo real no seu sistema assim que o relatório for concluído.
+icon: "webhook"
+---
+
+## Por que configurar um webhook
+
+Sem webhook, você precisa chamar `GET /report/:id` repetidamente até o relatório ficar pronto. Com webhook, a GYRA+ avisa você assim que o resultado estiver disponível — mais eficiente, mais confiável.
+
+---
+
+## Pré-requisitos
+
+- Token JWT válido (veja [autenticação](/api-reference/api-keys))
+- Um endpoint HTTPS público e acessível que responda `HTTP 200`
+
+---
+
+## Passo 1 — Crie seu endpoint
+
+Seu servidor precisa de um endpoint que aceite `POST` e responda `200` rapidamente.
+
+<CodeGroup>
+
+```javascript Node.js (Express)
+app.post('/webhooks/gyra', (req, res) => {
+  // Responder 200 imediatamente
+  res.sendStatus(200);
+
+  // Processar de forma assíncrona
+  const { reportId, policyStatus, score, externalId } = req.body;
+  processarDecisao({ reportId, policyStatus, score, externalId });
+});
+```
+
+```python Python (Flask)
+@app.route('/webhooks/gyra', methods=['POST'])
+def webhook_gyra():
+    data = request.json
+    # Processar de forma assíncrona (ex: Celery, thread)
+    processar_decisao.delay(data)
+    return '', 200
+```
+
+</CodeGroup>
+
+<Warning>
+Nunca processe o payload de forma síncrona antes de responder `200`. Se o seu servidor demorar para responder, a GYRA+ pode tentar reenviar.
+</Warning>
+
+---
+
+## Passo 2 — Registre a URL
+
+```bash
+curl -X POST https://gyra-core.gyramais.com.br/webhook \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://seu-sistema.com/webhooks/gyra"
+  }'
+```
+
+**Resposta:**
+
+```json
+{
+  "id": "64a3b2c1d4e5f6a7b8c9d0e2",
+  "url": "https://seu-sistema.com/webhooks/gyra",
+  "createdAt": "2025-03-01T10:00:00.000Z"
+}
+```
+
+---
+
+## Passo 3 — Teste o recebimento
+
+Crie um relatório e monitore se o webhook chega:
+
+```bash
+curl -X POST https://gyra-core.gyramais.com.br/report \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "document": "43591367000130",
+    "type": "CNPJ",
+    "policyId": "679955e0485aa2f033203f98",
+    "externalId": "teste-webhook-01"
+  }'
+```
+
+Após 30–90 segundos (dependendo das integrações ativas), seu endpoint deve receber:
+
+```json
+{
+  "reportId": "64a3b2c1d4e5f6a7b8c9d0e1",
+  "document": "43591367000130",
+  "type": "CNPJ",
+  "status": "APPROVED",
+  "policyStatus": "APPROVED",
+  "score": 720,
+  "externalId": "teste-webhook-01",
+  "createdAt": "2025-03-01T10:30:00.000Z",
+  "completedAt": "2025-03-01T10:31:05.000Z"
+}
+```
+
+---
+
+## Gerenciar webhooks
+
+**Listar webhooks cadastrados:**
+
+```bash
+curl https://gyra-core.gyramais.com.br/webhook/findby \
+  -H "Authorization: Bearer {token}"
+```
+
+**Remover um webhook:**
+
+```bash
+curl -X DELETE https://gyra-core.gyramais.com.br/webhook/{id} \
+  -H "Authorization: Bearer {token}"
+```
+
+---
+
+## Boas práticas
+
+| Prática | Por quê |
+|---------|---------|
+| Responder `200` em menos de 3 segundos | Evita retentativas desnecessárias |
+| Usar `externalId` para rastrear | Facilita o vínculo com seu sistema sem consultar a API |
+| Implementar idempotência | O mesmo `reportId` pode chegar mais de uma vez em casos de retry |
+| Ter fallback com `GET /report/:id` | Para casos em que o webhook falha por indisponibilidade temporária |
+| Usar HTTPS com certificado válido | Requisito de segurança — HTTP não é aceito |

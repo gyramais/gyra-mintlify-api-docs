@@ -1,0 +1,84 @@
+---
+title: Seção — Protestos (PROTESTS)
+description: Campos da seção de protestos em cartório com cobertura nacional.
+icon: "stamp"
+---
+
+A seção `PROTESTS` traz os protestos em cartório registrados para o documento, com cobertura nacional.
+
+Disponível no relatório **COMPLETO** e **COMPLETO+**.
+
+---
+
+## Campos do `details`
+
+### Totalizadores
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `count` | number | Quantidade total de protestos |
+| `totalAmount` | number | Valor total protestado (R$) |
+| `lastOccurrenceDate` | string | Data do protesto mais recente |
+| `firstOccurrenceDate` | string | Data do protesto mais antigo |
+| `calculatedRevenuePercentage` | number | % do faturamento comprometido em protestos |
+
+### Lista de protestos (`protests[]`)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | string | ID do protesto |
+| `amount` | number | Valor do protesto (R$) |
+| `protestDate` | string | Data do protesto |
+| `creditor` | string | Credor |
+| `notary` | string | Cartório responsável |
+| `city` | string | Cidade |
+| `state` | string | Estado (UF) |
+| `instrumentType` | string | Tipo de instrumento: `DUPLICATA`, `CHEQUE`, `CCB`, `NOTA_PROMISSORIA`, etc. |
+
+---
+
+## Exemplo de resposta
+
+```json
+{
+  "type": { "value": "PROTESTS" },
+  "details": {
+    "count": 2,
+    "totalAmount": 12500.00,
+    "lastOccurrenceDate": "2024-08-20",
+    "calculatedRevenuePercentage": 6.3,
+    "protests": [
+      {
+        "amount": 8000.00,
+        "protestDate": "2024-08-20",
+        "creditor": "Fornecedor XYZ",
+        "notary": "1º Ofício de Protestos",
+        "city": "São Paulo",
+        "state": "SP",
+        "instrumentType": "DUPLICATA"
+      },
+      {
+        "amount": 4500.00,
+        "protestDate": "2024-05-10",
+        "creditor": "Banco ABC",
+        "notary": "3º Tabelionato",
+        "city": "Campinas",
+        "state": "SP",
+        "instrumentType": "CCB"
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Regras sugeridas para protestos
+
+| Objetivo | Regra | Critério |
+|----------|-------|----------|
+| Sem protestos | `NOTARIES_COUNT` | = 0 → APPROVED |
+| Tolerância mínima | `NOTARIES_COUNT` | BETWEEN 1–2 → ALERT |
+| Negar acima de X | `NOTARIES_AMOUNT` | > R$ 50.000 → DENIED |
+| Protestos recentes | `NOTARIES_LAST_DAYS` | = 0 nos últimos 90 dias → APPROVED |
+| Proporcional | `NOTARIES_CALCULATED_REVENUE` | < 5% → APPROVED |

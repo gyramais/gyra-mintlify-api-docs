@@ -1,3 +1,85 @@
 ---
 openapi: post /insight/review
+title: Criar Requisição
+description: Cria ou processa uma ação deste recurso.
 ---
+
+### Quando usar
+
+Use este endpoint para revisar e ajustar insights já gerados. Você pode usar em fluxo de validação por analista, controle de qualidade do conteúdo e refinamento antes de compartilhar resultado com áreas de negócio.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Corpo da requisição
+
+```json
+{
+  "id": "string",
+  "review": "APPROVED"
+}
+```
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/insight/review' \
+--header 'Authorization: Bearer {seu_token_jwt}' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "id": "string",
+  "review": "APPROVED"
+}'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/insight/review", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer {seu_token_jwt}",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+  "id": "string",
+  "review": "APPROVED"
+})
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/insight/review"
+headers = {
+  "Authorization": "Bearer {seu_token_jwt}"
+}
+payload = {
+  "id": "string",
+  "review": "APPROVED"
+}
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 400 Bad Request
+{
+  "code": 400,
+  "message": "id should not be empty,id must be a string,review should not be empty,review must be a string"
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+</ResponseExample>

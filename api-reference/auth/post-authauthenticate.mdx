@@ -3,3 +3,63 @@ openapi: post /auth/authenticate
 title: Gerar Token
 description: Gera um token para autenticar as requisições
 ---
+
+### Quando usar
+
+Use este endpoint no início de qualquer integração server-to-server para obter o JWT de acesso. Você pode usar quando sua aplicação for iniciar uma sessão técnica, quando o token expirar e precisar renovar autenticação antes de chamar endpoints de relatório, política ou webhook.
+
+### Autenticação
+
+Headers obrigatórios: `gyra-client-secret`, `gyra-client-id`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `gyra-client-secret` | `header` | `string` | `não` | client secret |
+| `gyra-client-id` | `header` | `string` | `não` | client id |
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/auth/authenticate' \
+--header 'gyra-client-secret: valor' \
+--header 'gyra-client-id: valor'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/auth/authenticate", {
+  method: "POST",
+  headers: {
+    "gyra-client-secret": "valor",
+    "gyra-client-id": "valor",
+  },
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/auth/authenticate"
+headers = {
+  "gyra-client-secret": "valor",
+  "gyra-client-id": "valor"
+}
+response = requests.post(url, headers=headers)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "id": "string",
+  "status": "PROCESSING"
+}
+```
+
+</ResponseExample>

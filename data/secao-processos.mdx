@@ -1,0 +1,114 @@
+---
+title: Seção — Processos Judiciais (PROCESSES)
+description: Campos da seção de processos com cobertura de ações civis, trabalhistas, criminais e financeiras.
+icon: "gavel"
+---
+
+A seção `PROCESSES` traz os processos judiciais do documento analisado e, quando CNPJ, também dos sócios.
+
+- **Relatório COMPLETO**: processos desde 2014
+- **Relatório COMPLETO+**: processos desde 1995
+
+---
+
+## Campos do `details`
+
+### Totalizadores da empresa
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `passive.count` | number | Total de processos como réu |
+| `passive.totalAmount` | number | Valor total como réu (R$) |
+| `active.count` | number | Total de processos como autor |
+| `active.totalAmount` | number | Valor total como autor (R$) |
+
+### Breakdown por natureza — empresa (passivo)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `countCivel` | number | Processos civis |
+| `amountCivel` | number | Valor em processos civis (R$) |
+| `countLabor` | number | Processos trabalhistas |
+| `amountLabor` | number | Valor em processos trabalhistas (R$) |
+| `countCriminal` | number | Processos criminais |
+| `amountCriminal` | number | Valor em processos criminais (R$) |
+| `countFinancial` | number | Processos financeiros |
+| `amountFinancial` | number | Valor em processos financeiros (R$) |
+| `countEnvironment` | number | Processos ambientais |
+| `amountEnvironment` | number | Valor em processos ambientais (R$) |
+
+### Processos dos sócios
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `owners` | object[] | Lista de sócios com processos |
+| `owners[].name` | string | Nome do sócio |
+| `owners[].document` | string | CPF do sócio |
+| `owners[].passive.count` | number | Processos como réu |
+| `owners[].passive.totalAmount` | number | Valor total como réu (R$) |
+| `owners[].hasCriminal` | boolean | Tem processo criminal |
+| `owners[].hasFinancial` | boolean | Tem processo financeiro |
+| `owners[].hasLabor` | boolean | Tem processo trabalhista |
+| `owners[].hasCivel` | boolean | Tem processo civil |
+
+### Detalhes dos processos (`processes[]`)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | string | ID do processo |
+| `number` | string | Número do processo (CNJ) |
+| `court` | string | Tribunal |
+| `type` | string | Natureza: `CIVEL`, `LABOR`, `CRIMINAL`, `FINANCIAL`, `ENVIRONMENT` |
+| `role` | string | Posição: `PASSIVE` (réu) ou `ACTIVE` (autor) |
+| `amount` | number | Valor da causa (R$) |
+| `distributedAt` | string | Data de distribuição (YYYY-MM-DD) |
+| `state` | string | Estado do tribunal |
+| `parties` | object[] | Partes envolvidas |
+| `parties[].name` | string | Nome da parte |
+| `parties[].role` | string | Papel no processo |
+| `lastMovement` | object | Última movimentação |
+| `lastMovement.date` | string | Data |
+| `lastMovement.description` | string | Descrição da movimentação |
+
+---
+
+## Exemplo de resposta
+
+```json
+{
+  "type": { "value": "PROCESSES" },
+  "details": {
+    "passive": {
+      "count": 3,
+      "totalAmount": 125000.00
+    },
+    "active": {
+      "count": 1,
+      "totalAmount": 15000.00
+    },
+    "countLabor": 2,
+    "amountLabor": 85000.00,
+    "countCivel": 1,
+    "amountCivel": 40000.00,
+    "processes": [
+      {
+        "number": "1234567-89.2022.5.02.0001",
+        "court": "2ª Vara do Trabalho de São Paulo",
+        "type": "LABOR",
+        "role": "PASSIVE",
+        "amount": 45000.00,
+        "distributedAt": "2022-03-15",
+        "state": "SP",
+        "lastMovement": {
+          "date": "2024-11-20",
+          "description": "Audiência de instrução e julgamento"
+        }
+      }
+    ]
+  }
+}
+```
+
+<Warning>
+Processos com valores acima de R$ 500.000 são sinais de alerta crítico em análises B2B. Configure uma regra `LAWSUITS_PASSIVE_AMOUNT` na sua política para tratar esse cenário automaticamente.
+</Warning>

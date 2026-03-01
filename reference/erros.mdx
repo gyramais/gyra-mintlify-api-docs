@@ -1,0 +1,127 @@
+---
+title: Referência de Erros
+description: Todos os códigos de erro da API GYRA+, suas causas e como resolver.
+icon: "circle-exclamation"
+---
+
+## Formato de erro
+
+Todos os erros da API GYRA+ seguem o mesmo formato:
+
+```json
+{
+  "statusCode": 400,
+  "message": "Credenciais inválidas.",
+  "error": "Bad Request"
+}
+```
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `statusCode` | number | Código HTTP do erro |
+| `message` | string | Mensagem descritiva em português |
+| `error` | string | Categoria do erro HTTP |
+
+---
+
+## Erros de autenticação (4xx)
+
+### 400 — Bad Request
+
+| Mensagem | Causa | Solução |
+|----------|-------|---------|
+| `"Credenciais inválidas."` | `gyra-client-id` ou `gyra-client-secret` incorretos | Verifique as credenciais no painel do Toolbox |
+| `"Documento inválido."` | CPF ou CNPJ com formato ou dígitos incorretos | Valide o documento antes de enviar (sem formatação) |
+| `"Tipo de documento inválido."` | Campo `type` diferente de `CPF` ou `CNPJ` | Use exatamente `"CPF"` ou `"CNPJ"` (maiúsculo) |
+| `"policyId inválido."` | ID de política inexistente ou inativo | Consulte as políticas ativas com `GET /credit-policy/policy` |
+
+### 401 — Unauthorized
+
+| Mensagem | Causa | Solução |
+|----------|-------|---------|
+| `"Token de acesso inválido."` | Token JWT ausente, malformado ou expirado | Reautentique com `POST /auth/authenticate` |
+| `"Token expirado."` | JWT com mais de 24 horas | Gere um novo token |
+
+### 403 — Forbidden
+
+| Mensagem | Causa | Solução |
+|----------|-------|---------|
+| `"Você não tem permissão para acessar este recurso."` | Organização sem acesso ao endpoint | Entre em contato com **atendimento@gyramais.com** |
+| `"Plano sem permissão para este tipo de relatório."` | Tipo de relatório não incluído no plano contratado | Verifique o plano ou contate o comercial |
+
+### 404 — Not Found
+
+| Mensagem | Causa | Solução |
+|----------|-------|---------|
+| `"Registro não encontrado."` | `reportId`, `sectionId` ou `webhookId` inexistente | Verifique se o ID está correto |
+| `"Política não encontrada."` | `policyId` inválido ou removido | Consulte políticas ativas |
+
+### 429 — Too Many Requests
+
+| Mensagem | Causa | Solução |
+|----------|-------|---------|
+| `"Limite de requisições excedido."` | Rate limit atingido | Aguarde antes de tentar novamente. Implemente backoff exponencial |
+
+---
+
+## Erros de servidor (5xx)
+
+### 500 — Internal Server Error
+
+Erro inesperado no servidor. Se persistir, entre em contato com **atendimento@gyramais.com** informando o `reportId` ou a requisição que falhou.
+
+### 503 — Service Unavailable
+
+O serviço está temporariamente indisponível. Implemente retry com backoff. Acompanhe o status em [status.gyramais.com.br](https://status.gyramais.com.br).
+
+---
+
+## Erros em seções do relatório (`sections[].errors`)
+
+Algumas integrações podem falhar durante o processamento do relatório. Esses erros ficam na array `errors` da seção correspondente:
+
+```json
+{
+  "type": { "value": "PROCESSES" },
+  "errors": [
+    {
+      "integrationId": "64a3...",
+      "integrationType": "LAWSUITS",
+      "message": "Timeout na consulta ao provedor externo",
+      "code": "INTEGRATION_TIMEOUT",
+      "occurredAt": "2025-03-01T10:31:00.000Z"
+    }
+  ],
+  "details": { ... }  // Dados parciais disponíveis
+}
+```
+
+| Código | Causa |
+|--------|-------|
+| `INTEGRATION_TIMEOUT` | Provedor externo não respondeu no prazo |
+| `INTEGRATION_UNAVAILABLE` | Provedor externo indisponível temporariamente |
+| `INTEGRATION_NO_DATA` | Nenhum dado encontrado para o documento neste provedor |
+| `INTEGRATION_INVALID_DOCUMENT` | Documento inválido para este provedor específico |
+
+<Note>
+Erros em integrações individuais **não invalidam o relatório**. Os dados disponíveis são normalizados normalmente. A decisão da política é tomada com base nos dados que chegaram.
+</Note>
+
+---
+
+## Boas práticas para tratamento de erros
+
+<AccordionGroup>
+  <Accordion title="Implemente retry com backoff exponencial">
+    Para erros 429 e 503, não tente novamente imediatamente. Use backoff: 1s, 2s, 4s, 8s... até um máximo de 60s.
+  </Accordion>
+  <Accordion title="Diferencie erros de cliente e servidor">
+    Erros 4xx são da sua aplicação — não tente novamente automaticamente. Corrija o payload. Erros 5xx são do servidor — faça retry.
+  </Accordion>
+  <Accordion title="Registre sempre o reportId">
+    Ao abrir chamado de suporte, o `reportId` é essencial para diagnóstico. Guarde em seus logs.
+  </Accordion>
+  <Accordion title="Valide documentos antes de enviar">
+    Valide CPF e CNPJ (dígitos verificadores) no seu sistema antes de chamar a API. Isso evita erros 400 desnecessários.
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,100 @@
+---
+title: Política de Crédito
+description: Entenda como as políticas de crédito funcionam e como elas controlam as decisões automáticas da GYRA+.
+icon: "shield-check"
+---
+
+## O que é uma Política de Crédito
+
+Uma **política de crédito** é o conjunto de regras e critérios que define como a GYRA+ avalia um CPF ou CNPJ e chega a uma decisão automática.
+
+Ela responde a três perguntas:
+1. **Quais dados consultar?** → Define quais bureaus e integrações serão acionadas
+2. **Quais critérios aplicar?** → Define as regras de avaliação (score mínimo, limite de dívida, etc.)
+3. **Qual a decisão?** → Define quando aprovar, alertar ou negar
+
+Toda chamada ao `POST /report` exige um `policyId`. Esse ID determina completamente o comportamento da análise.
+
+---
+
+## Hierarquia de uma política
+
+```
+Policy
+├── IntegrationGroup          → Fontes de dados consultadas (Bureau, SCR, Dados Cadasrais...)
+├── PolicyRuleGroup[]         → Grupos de regras (ex: "Cadastral", "Financeiro")
+│   ├── scoreApproved         → Pontuação mínima para aprovação no grupo
+│   ├── scoreAlert            → Pontuação para alerta
+│   ├── scoreDenied           → Pontuação para negação
+│   └── PolicyRuleSettingJoin[]
+│       ├── operationType     → Como as regras se combinam (AND, ADD, SUB...)
+│       ├── statusToApply     → Resultado se a condição for verdadeira
+│       └── PolicyRuleSetting → Regra configurada com seus parâmetros
+└── Risk[]                    → Faixas de score final → status final
+    └── { from, to, statusToApply }
+```
+
+---
+
+## Status possíveis de uma decisão
+
+| Status | Código | Descrição |
+|--------|--------|-----------|
+| `NOT_EXECUTED` | 0 | Regra não foi avaliada |
+| `PENDING` | 1 | Aguardando avaliação |
+| `APPROVED` | 3 | Aprovado automaticamente |
+| `DENIED` | 4 | Negado automaticamente |
+| `ALERT` | 5 | Requer revisão manual |
+| `NOT_APPLIED` | 8 | Regra não aplicável ao documento |
+
+---
+
+## Templates disponíveis
+
+A GYRA+ oferece políticas prontas para os cenários mais comuns. Use o `policyId` correspondente ao chamar a API.
+
+| Template | `policyId` | Tipo | Relatório | Uso recomendado |
+|----------|------------|------|-----------|-----------------|
+| Abertura de Conta | `67be2e43d6c1064a759601bf` | CPF | Essencial | KYC e onboarding de PF |
+| Background Check | `679955e0485aa2f033203f98` | CNPJ | Completo | Due diligence de fornecedores |
+| Financiamento LP | `67c07e841997d65ab3dc74cd` | CNPJ | Completo | Crédito para empresas |
+
+<Tip>
+Você pode usar um template como ponto de partida e personalizar as regras, pesos e faixas de risco pelo painel do Toolbox ou pela API.
+</Tip>
+
+---
+
+## Como as regras são combinadas
+
+Dentro de um grupo, as regras podem ser combinadas de formas diferentes usando o campo `operationType`:
+
+| Operador | Comportamento |
+|----------|---------------|
+| `NONE` | Regra avaliada de forma independente |
+| `AND` | Todas as regras do grupo devem ser verdadeiras |
+| `ADD` | Soma os scores das regras |
+| `SUB` | Subtrai o score |
+| `DIV` | Divide o score |
+| `MULT` | Multiplica o score |
+
+---
+
+## Opções de uso
+
+Você tem três formas de trabalhar com políticas:
+
+<CardGroup cols={3}>
+  <Card title="Usar template pronto" icon="bolt">
+    Escolha um dos templates da GYRA+ e comece a analisar imediatamente. Ideal para quem está começando.
+  </Card>
+  <Card title="Personalizar template" icon="sliders">
+    Parta de um template existente e ajuste regras, pesos e critérios para a sua estratégia de risco.
+  </Card>
+  <Card title="Criar do zero" icon="plus">
+    Configure uma política completamente nova com suas próprias variáveis, condições e faixas de decisão.
+  </Card>
+</CardGroup>
+
+Para criar ou editar políticas pelo painel, acesse **Políticas de Decisão** no menu do Toolbox.
+Para gerenciar via API, veja a [referência do endpoint de políticas](/api-reference/credit-policypolicy/get-credit-policypolicy).

@@ -1,0 +1,241 @@
+---
+title: Criar uma Política de Crédito
+description: Configure os critérios de aprovação, alerta e negação de crédito do seu negócio — sem precisar escrever código.
+icon: "sliders"
+---
+
+<Info>
+**Você não precisa ser desenvolvedor para configurar uma política.** O painel do Toolbox tem uma interface visual completa. Esta página cobre os dois caminhos: o painel gráfico e a API.
+</Info>
+
+---
+
+## O que é uma política de crédito?
+
+Pense numa política de crédito como um **conjunto de regras do jogo** que define quem pode e quem não pode fazer negócio com você — e em quais condições.
+
+Na GYRA+, a política fica salva no sistema e é aplicada automaticamente toda vez que um relatório é gerado. O resultado final é sempre um de três status:
+
+<CardGroup cols={3}>
+  <Card title="✅ Aprovado" icon="circle-check" color="#16a34a">
+    Todos os critérios foram atendidos. O cliente passou na análise automática.
+  </Card>
+  <Card title="⚠️ Alerta" icon="triangle-exclamation" color="#d97706">
+    Passou na maioria dos critérios, mas algum ponto merece atenção manual.
+  </Card>
+  <Card title="❌ Negado" icon="circle-xmark" color="#dc2626">
+    Pelo menos um critério de exclusão foi ativado. Análise encerrada.
+  </Card>
+</CardGroup>
+
+---
+
+## Pra que serve uma política personalizada?
+
+A GYRA+ já oferece **templates prontos** para os casos mais comuns. Use um template se você está começando — é mais rápido e já cobre a maioria dos cenários.
+
+Crie uma política personalizada quando precisar:
+
+- **Definir um score mínimo diferente** do padrão (ex: exigir score acima de 600 para B2B)
+- **Bloquear categorias específicas** de empresa (ex: não atender MEIs ou empresas com menos de 1 ano)
+- **Adicionar critérios do seu setor** (ex: cooperativas que só atendem determinados CNAEs)
+- **Configurar limites de dívida proporcionais** ao faturamento (ex: PEFIN inferior a 20% do faturamento)
+- **Criar faixas de risco com nomes próprios** (ex: "Ouro", "Prata", "Bronze")
+
+---
+
+## Como criar pelo painel (sem código)
+
+<Steps>
+  <Step title="Acesse Políticas de Decisão">
+    No menu lateral do Toolbox, clique em **Políticas de Decisão**. Você verá a lista das políticas ativas da sua organização.
+  </Step>
+  <Step title="Crie uma nova política ou clone um template">
+    Clique em **Nova Política**. Escolha entre:
+
+    - **Partir de um template** (recomendado): selecione o modelo mais próximo do seu caso e personalize
+    - **Criar do zero**: para casos muito específicos
+
+    <Tip>
+    Templates disponíveis: Score Básico PJ, Crédito B2B, Onboarding KYC, Varejo PF, Cooperativa/Fintech. Cada um já tem grupos e regras pré-configurados.
+    </Tip>
+  </Step>
+  <Step title="Dê um nome e selecione o tipo de documento">
+    Digite um nome descritivo (ex: "Crédito Distribuidor PJ 2024") e selecione se a política é para **CNPJ**, **CPF** ou **ambos**.
+  </Step>
+  <Step title="Configure os Grupos de Regras">
+    Cada grupo é um tema de análise (ex: "Financeiro", "Cadastral", "Processos"). Dentro de cada grupo, você adiciona as regras — veja a seção abaixo com todas as opções disponíveis.
+
+    Para cada grupo, defina as **pontuações de corte**:
+    - Pontuação para **Aprovado** (ex: ≥ 70 pontos no grupo)
+    - Pontuação para **Alerta** (ex: entre 40 e 69 pontos)
+    - Pontuação para **Negado** (ex: abaixo de 40 pontos)
+  </Step>
+  <Step title="Configure as Faixas de Risco (Risk Bands)">
+    As faixas de risco transformam a pontuação composta (soma dos grupos) em uma decisão final. Exemplo:
+
+    | Score composto | Decisão final |
+    |---------------|--------------|
+    | 700 – 1000 | APPROVED |
+    | 400 – 699 | ALERT |
+    | 0 – 399 | DENIED |
+
+    Você nomeia cada faixa como quiser (ex: "A", "B", "C" ou "Premium", "Standard", "Risco").
+  </Step>
+  <Step title="Salve e ative a política">
+    Clique em **Salvar**. A política fica em rascunho até você clicar em **Ativar**. Apenas políticas ativas são aplicadas nos relatórios.
+  </Step>
+</Steps>
+
+---
+
+## Entendendo as Regras
+
+Cada regra tem três partes:
+
+```
+[O QUE AVALIAR]  [COMO COMPARAR]  [QUAL VALOR]
+    SCORE              maior que         500
+    PEFIN_AMOUNT       igual a            0
+    COMPANY_SITUATION  igual a        "Ativa"
+```
+
+Se a condição for **verdadeira**, a regra aplica um resultado (`APPROVED`, `ALERT` ou `DENIED`) ou uma pontuação ao grupo.
+
+---
+
+## Regras disponíveis
+
+### Dados da Empresa (CNPJ)
+
+| Regra | O que verifica | Uso típico |
+|-------|---------------|-----------|
+| `COMPANY_SITUATION` | Situação cadastral na Receita Federal | Bloquear empresas inativas, inaptas ou baixadas |
+| `COMPANY_OPENING_TIME` | Tempo de existência em meses | Exigir mínimo de 12 ou 24 meses de atividade |
+| `CAPITAL_STOCK_AMOUNT` | Capital social declarado em R$ | Exigir capital mínimo (ex: R$ 50.000) |
+| `CORPORATE_TAX_REGIME` | Regime tributário (Simples, Lucro Real, etc.) | Excluir MEIs ou selecionar apenas Lucro Real |
+| `TOTAL_PARTNERS` | Quantidade de sócios na empresa | Limitar empresas com muitos sócios |
+| `BUSINESS_PARTNERS_RESTRICTIVE` | Sócios com restrições | Negar se algum sócio está negativado |
+| `COMPLETE_QSA_CHANGE` | Mudança completa no quadro societário | Alertar quando todos os sócios foram trocados recentemente |
+
+### Dados da Pessoa (CPF)
+
+| Regra | O que verifica | Uso típico |
+|-------|---------------|-----------|
+| `AGE_PERSON` | Idade em anos | Exigir idade mínima de 21 anos |
+| `DEATH` | Óbito registrado | Negar automaticamente se há registro de falecimento |
+| `PROFESSIONS` | Profissão declarada | Filtrar por categoria profissional |
+
+### Score de Crédito
+
+| Regra | O que verifica | Uso típico |
+|-------|---------------|-----------|
+| `SCORE` | Score do bureau (0–1000) | Exigir pontuação mínima (ex: ≥ 500) para aprovação |
+
+<Tip>
+O score de 0 a 1000 representa o risco do cliente: **quanto maior, melhor**. Score 700+ é considerado baixo risco na maioria dos modelos.
+</Tip>
+
+### Dívidas e Negativações
+
+| Regra | O que verifica | Uso típico |
+|-------|---------------|-----------|
+| `PEFIN_AMOUNT` | Total de dívidas no PEFIN (R$) | Negar se há qualquer dívida (= 0) ou até um limite |
+| `PEFIN_CALCULATED_REVENUE` | Dívidas PEFIN como % do faturamento | Aceitar até 20% do faturamento em dívidas |
+| `REFIN_AMOUNT` | Total de refinanciamentos | Limitar volume de refinanciamentos |
+| `TOTAL_DEBT` | Dívida total consolidada (R$) | Teto absoluto de dívidas |
+| `BANKRUPT` | Falência ou recuperação judicial | Negar automaticamente em qualquer caso |
+
+### Protestos em Cartório
+
+| Regra | O que verifica | Uso típico |
+|-------|---------------|-----------|
+| `NOTARIES_COUNT` | Quantidade de protestos | Negar se há mais de X protestos |
+| `NOTARIES_AMOUNT` | Valor total em protestos (R$) | Teto de R$ para protestos |
+| `NOTARIES_LAST_DAYS` | Protestos recentes (em dias) | Alerta se protestou nos últimos 180 dias |
+
+### Histórico Bancário (SCR — Banco Central)
+
+| Regra | O que verifica | Uso típico |
+|-------|---------------|-----------|
+| `SCR_TOTAL_LOSSES` | Perdas registradas no BC (R$) | Negar se há qualquer perda bancária |
+| `SCR_CALCULATED_REVENUE_EXPIRED` | Créditos vencidos como % do faturamento | Aceitar até 5% do faturamento vencido |
+| `SCR_TOTAL_RISK` | Exposição total no sistema financeiro (R$) | Limite de endividamento bancário |
+
+### Processos Judiciais
+
+| Regra | O que verifica | Uso típico |
+|-------|---------------|-----------|
+| `LAWSUITS_PASSIVE_COUNT` | Quantidade de processos como réu | Negar se há mais de X processos |
+| `LAWSUITS_PASSIVE_AMOUNT` | Valor total em processos passivos (R$) | Teto de R$ em processos |
+| `LAWSUITS_CALCULATED_REVENUE` | Processos como % do faturamento | Aceitar até 20% do faturamento em litígios |
+| `OWNER_LAWSUITS_HAS_CRIMINAL` | Sócios com processos criminais | Negar se qualquer sócio tem processo criminal |
+
+---
+
+## Operadores de comparação
+
+| Operador | Significado | Exemplo |
+|----------|-------------|---------|
+| `>` | Maior que | `Score > 500` |
+| `>=` | Maior ou igual | `Score >= 500` |
+| `<` | Menor que | `PEFIN < 3` ocorrências |
+| `<=` | Menor ou igual | `Dívida <= 50000` |
+| `=` | Igual a | `Situação = "Ativa"` |
+| `BETWEEN` | Dentro de um intervalo | Score entre 400 e 700 |
+| `CONTAINS` | Inclui um texto | Profissão contém "médico" |
+| `NOT_CONTAINS` | Não inclui um texto | Sanções não contém "OFAC" |
+| `IS_TRUE` | Flag ativada | Óbito verdadeiro → Negar |
+| `IS_FALSE` | Flag não ativada | Falência falso → OK |
+
+---
+
+## Dicas práticas
+
+<AccordionGroup>
+  <Accordion title="Por onde começar? Use um template e ajuste aos poucos">
+    A maioria das empresas começa com o template de **Score Básico PJ** ou **Crédito B2B** e vai refinando as regras com o tempo. Não tente criar a política perfeita logo de início — calibre com dados reais.
+  </Accordion>
+  <Accordion title="Regras de exclusão (bloqueio total) ficam em grupo separado">
+    Regras como "Negar se óbito" ou "Negar se falência" devem ficar em um grupo chamado "Exclusão" ou "Hard Rules", com resultado direto `DENIED` — independente de qualquer pontuação. Isso deixa a lógica mais clara e fácil de auditar.
+  </Accordion>
+  <Accordion title="Use o campo externalId para rastrear análises no seu sistema">
+    Ao solicitar um relatório, passe o `externalId` com o ID do cliente ou negócio no seu sistema. Assim, quando a decisão chegar pelo webhook, você sabe exatamente qual registro atualizar — sem precisar cruzar dados manualmente.
+  </Accordion>
+  <Accordion title="Calibre as faixas de risco com dados reais">
+    Nas primeiras semanas de operação, observe a distribuição de scores dos seus clientes. Se a maioria está na faixa de "Alerta", talvez seus cortes estejam muito rígidos. Ajuste as Risk Bands a cada 30–60 dias no início.
+  </Accordion>
+  <Accordion title="Teste antes de ativar em produção">
+    Sempre rode alguns CNPJs ou CPFs de teste com a nova política antes de ativá-la para todos. O Toolbox permite simular análises sem consumir créditos.
+  </Accordion>
+  <Accordion title="Uma política pode ser usada por múltiplos relatórios">
+    Não é necessário criar uma política por cliente. Crie políticas por **perfil de risco** ou **produto** (ex: "Política PJ 30 dias", "Política PF Consignado") e reutilize em todos os relatórios daquele segmento.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Para desenvolvedores — via API
+
+Consulte as políticas ativas da sua organização:
+
+```bash
+curl https://gyra-core.gyramais.com.br/credit-policy/policy \
+  -H "Authorization: Bearer {access_token}"
+```
+
+Ao criar um relatório, passe o `policyId` para aplicar uma política específica:
+
+```bash
+curl -X POST https://gyra-core.gyramais.com.br/report \
+  -H "Authorization: Bearer {access_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "document": "43591367000130",
+    "type": "CNPJ",
+    "reportType": "COMPLETO",
+    "policyId": "64a1b2c3d4e5f6a7b8c9d0e1"
+  }'
+```
+
+O resultado da política aparece na seção `CREDIT_POLICY` do relatório. Veja a referência completa em [Seção: Política de Crédito](/data/secao-politica-credito).

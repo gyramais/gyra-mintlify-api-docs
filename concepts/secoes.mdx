@@ -1,0 +1,122 @@
+---
+title: Seções do Relatório
+description: Cada relatório é dividido em seções temáticas. Entenda o que cada uma entrega.
+icon: "layout-panel-top"
+---
+
+## O que são seções
+
+Um relatório GYRA+ é estruturado em **seções independentes**, cada uma responsável por um tema de análise. As seções são processadas em paralelo e chegam ao frontend em tempo real via WebSocket conforme as integrações são concluídas.
+
+A disponibilidade de cada seção depende do tipo de relatório (SIMPLES, ESSENCIAL, COMPLETO, COMPLETO+) e da política de crédito utilizada.
+
+---
+
+## Catálogo de seções
+
+### Informações Cadastrais
+
+<CardGroup cols={2}>
+  <Card title="BASIC_INFORMATION" icon="address-card">
+    Dados cadastrais completos: razão social, CNAE, situação na Receita Federal, endereço, contatos, quadro societário e histórico de alterações.
+  </Card>
+  <Card title="RELATIONS" icon="diagram-project">
+    Relacionamentos empresariais e societários: empresas associadas, participações como sócio, vínculos relevantes.
+  </Card>
+</CardGroup>
+
+### Análise de Risco
+
+<CardGroup cols={2}>
+  <Card title="SUMMARY" icon="chart-bar">
+    Painel de resumo com os principais indicadores de risco: score, alertas críticos, totais de restrições e insights gerados por IA.
+  </Card>
+  <Card title="CREDIT_POLICY" icon="shield-check">
+    Resultado detalhado de todas as regras avaliadas pela política de crédito: status por grupo, pontuações e decisão final.
+  </Card>
+</CardGroup>
+
+### Restrições Financeiras
+
+<CardGroup cols={2}>
+  <Card title="PEFIN" icon="triangle-exclamation">
+    Pendências financeiras registradas em bureaus de crédito. Inclui valor, quantidade, período e comparativo com faturamento.
+  </Card>
+  <Card title="REFIN" icon="rotate-left">
+    Refinanciamentos com instituições financeiras. Semelhante ao PEFIN, com foco em dívidas renegociadas com bancos.
+  </Card>
+  <Card title="BAD_CHECK" icon="money-bill-slash">
+    Cheques sem fundo, sustados ou roubados registrados no CCF (Cadastro de Emitentes de Cheques sem Fundo).
+  </Card>
+  <Card title="HISTORY / CATEGORIES" icon="chart-line">
+    Histórico de endividamento mês a mês via SCR (Sistema de Informações de Crédito do Banco Central). Inclui breakdown por categoria de uso.
+  </Card>
+</CardGroup>
+
+### Processos e Protestos
+
+<CardGroup cols={2}>
+  <Card title="PROCESSES" icon="gavel">
+    Processos judiciais do documento e dos sócios (quando empresa): civis, trabalhistas, criminais, ambientais e financeiros. Com partes, valores e movimentações.
+  </Card>
+  <Card title="PROTESTS" icon="stamp">
+    Protestos em cartório com abrangência nacional. Valor, quantidade, período e cartório de origem.
+  </Card>
+  <Card title="CRIMINAL_RECORD" icon="fingerprint">
+    Antecedentes criminais (disponível apenas para CPF).
+  </Card>
+</CardGroup>
+
+### Compliance e Localização
+
+<CardGroup cols={2}>
+  <Card title="PEP" icon="landmark">
+    Pessoas Expostas Politicamente: cargos públicos, mandatos, vínculos com agentes políticos e histórico de doações eleitorais.
+  </Card>
+  <Card title="SANCTIONS" icon="ban">
+    Sanções nacionais e internacionais: OFAC, listas de bloqueio, CEIS, CEPIM e outros registros regulatórios.
+  </Card>
+  <Card title="CERTIFICATES" icon="certificate">
+    Certidões emitidas em tempo real: PGFN, Receita Federal, FGTS, Estaduais. Disponível no relatório COMPLETO+.
+  </Card>
+  <Card title="LOCATION" icon="map-pin">
+    Localização com visualização de Street View e mapa. Valida endereço registrado e aponta inconsistências.
+  </Card>
+</CardGroup>
+
+---
+
+## Status de uma seção
+
+Cada seção pode estar em um dos seguintes estados:
+
+| Status | Descrição |
+|--------|-----------|
+| Pendente | Aguardando conclusão das integrações |
+| Completa | Todos os dados foram recebidos e normalizados |
+| Parcial | Algumas integrações concluídas, outras ainda em andamento |
+| Erro | Uma ou mais integrações falharam — dados parciais disponíveis |
+
+<Note>
+Mesmo com erro em uma integração, o relatório é gerado com os dados disponíveis. A seção `errors` de cada seção detalha o que falhou.
+</Note>
+
+---
+
+## Disponibilidade por tipo de relatório
+
+| Seção | SIMPLES | ESSENCIAL | COMPLETO | COMPLETO+ |
+|-------|:-------:|:---------:|:--------:|:---------:|
+| BASIC_INFORMATION | ✅ | ✅ | ✅ | ✅ |
+| LOCATION | ✅ | ✅ | ✅ | ✅ |
+| SUMMARY | ❌ | ✅ | ✅ | ✅ |
+| RELATIONS | ❌ | ✅ | ✅ | ✅ |
+| PEFIN / REFIN | ❌ | ✅ | ✅ | ✅ |
+| BAD_CHECK | ❌ | ✅ | ✅ | ✅ |
+| HISTORY / CATEGORIES (SCR) | ❌ | ❌ | ✅ | ✅ |
+| PROCESSES | ❌ | ❌ | ✅ (2014+) | ✅ (1995+) |
+| PROTESTS | ❌ | ❌ | ✅ | ✅ |
+| PEP / SANCTIONS | ❌ | ❌ | ✅ | ✅ |
+| CERTIFICATES | ❌ | ❌ | ❌ | ✅ |
+| CRIMINAL_RECORD | ❌ | ✅ | ✅ | ✅ |
+| CREDIT_POLICY | ✅ | ✅ | ✅ | ✅ |

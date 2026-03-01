@@ -1,0 +1,286 @@
+{
+  "name": "GYRA+ | 1. Solicitar Análise de Crédito",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🚀 GYRA+ | Workflow 1: Solicitar Análise de Crédito\n\n**O que este workflow faz:**\n1. Recebe uma chamada do seu ERP/CRM com o CNPJ ou CPF\n2. Autentica na API GYRA+\n3. Solicita a criação do relatório\n4. Retorna o `reportId` para o sistema chamador\n\n**Como usar:**\n- Configure o nó ⚙️ CONFIGURE AQUI com suas credenciais\n- Envie um POST para a URL do webhook com `{ \"document\": \"12345678000190\", \"type\": \"CNPJ\" }`\n- O workflow retorna `{ reportId, status, message }` imediatamente\n- Use o **Workflow 2 ou 3** para receber a decisão quando pronta\n\n📌 **Dica:** Salve o `reportId` no seu sistema para correlacionar com o webhook de resposta.",
+        "height": 280,
+        "width": 480,
+        "color": 5
+      },
+      "id": "sticky-intro",
+      "name": "📋 Sobre este Workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, -240]
+    },
+    {
+      "parameters": {
+        "content": "## ⚙️ Configure suas Credenciais GYRA+\n\nSubstitua os valores abaixo:\n- `clientId` → seu Client ID (painel GYRA+)\n- `clientSecret` → seu Client Secret (painel GYRA+)\n- `policyId` → ID da sua política de crédito ativa\n- `reportType` → tipo padrão: SIMPLES, ESSENCIAL, COMPLETO ou COMPLETO_PLUS\n\n🔑 Encontre suas credenciais em:\n**Toolbox → Configurações → Integrações → API**",
+        "height": 220,
+        "width": 360,
+        "color": 4
+      },
+      "id": "sticky-config",
+      "name": "⚙️ Nota de Configuração",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [120, -240]
+    },
+    {
+      "parameters": {
+        "content": "## 🔐 Autenticação\n\nA GYRA+ usa autenticação via headers:\n`gyra-client-id` + `gyra-client-secret`\n\nRetorna um `accessToken` JWT válido por **1 hora**.\n\n💡 Em produção, considere cachear o token e renovar apenas quando expirar.",
+        "height": 180,
+        "width": 300,
+        "color": 7
+      },
+      "id": "sticky-auth",
+      "name": "🔐 Nota Autenticação",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [580, -240]
+    },
+    {
+      "parameters": {
+        "content": "## 📄 Criação do Relatório\n\nO campo `document` aceita CNPJ (14 dígitos) ou CPF (11 dígitos) sem formatação.\n\n**Tipos de relatório:**\n- `SIMPLES` — Score + PEFIN básico\n- `ESSENCIAL` — + REFIN, Protestos\n- `COMPLETO` — + Processos, PEP, Sanções\n- `COMPLETO_PLUS` — + Certidões em tempo real\n\nO campo `externalId` é opcional — use para correlacionar com seu sistema interno.",
+        "height": 220,
+        "width": 340,
+        "color": 7
+      },
+      "id": "sticky-report",
+      "name": "📄 Nota Relatório",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [960, -240]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gyra-solicitar-analise",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "📥 Receber Solicitação (ERP/CRM)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-200, 60],
+      "webhookId": "gyra-solicitar-analise"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-client-id",
+              "name": "clientId",
+              "value": "SEU_CLIENT_ID_AQUI",
+              "type": "string"
+            },
+            {
+              "id": "cfg-client-secret",
+              "name": "clientSecret",
+              "value": "SEU_CLIENT_SECRET_AQUI",
+              "type": "string"
+            },
+            {
+              "id": "cfg-policy-id",
+              "name": "policyId",
+              "value": "SEU_POLICY_ID_AQUI",
+              "type": "string"
+            },
+            {
+              "id": "cfg-report-type",
+              "name": "reportType",
+              "value": "COMPLETO",
+              "type": "string"
+            },
+            {
+              "id": "cfg-api-url",
+              "name": "apiBaseUrl",
+              "value": "https://gyra-core.gyramais.com.br",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-config",
+      "name": "⚙️ CONFIGURE AQUI",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [120, 60]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('⚙️ CONFIGURE AQUI').item.json.apiBaseUrl }}/auth/authenticate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "gyra-client-id",
+              "value": "={{ $('⚙️ CONFIGURE AQUI').item.json.clientId }}"
+            },
+            {
+              "name": "gyra-client-secret",
+              "value": "={{ $('⚙️ CONFIGURE AQUI').item.json.clientSecret }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-auth",
+      "name": "🔐 Autenticar na GYRA+",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 60]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('⚙️ CONFIGURE AQUI').item.json.apiBaseUrl }}/report",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('🔐 Autenticar na GYRA+').item.json.accessToken }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"document\": \"{{ $('📥 Receber Solicitação (ERP/CRM)').item.json.body.document }}\",\n  \"type\": \"{{ $('📥 Receber Solicitação (ERP/CRM)').item.json.body.type || 'CNPJ' }}\",\n  \"reportType\": \"{{ $('📥 Receber Solicitação (ERP/CRM)').item.json.body.reportType || $('⚙️ CONFIGURE AQUI').item.json.reportType }}\",\n  \"policyId\": \"{{ $('📥 Receber Solicitação (ERP/CRM)').item.json.body.policyId || $('⚙️ CONFIGURE AQUI').item.json.policyId }}\",\n  \"externalId\": \"{{ $('📥 Receber Solicitação (ERP/CRM)').item.json.body.externalId || '' }}\"\n}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-create-report",
+      "name": "📄 Criar Relatório GYRA+",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [820, 60]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"reportId\": \"{{ $('📄 Criar Relatório GYRA+').item.json.id }}\",\n  \"document\": \"{{ $('📥 Receber Solicitação (ERP/CRM)').item.json.body.document }}\",\n  \"status\": \"PENDING\",\n  \"message\": \"Análise de crédito solicitada com sucesso. Você receberá a decisão via webhook quando o relatório for processado.\",\n  \"estimatedTimeSeconds\": 90\n}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "respond-ok",
+      "name": "✅ Retornar reportId ao Chamador",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1180, 60]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"Falha ao processar a solicitação de análise\",\n  \"message\": \"{{ $json.message || 'Erro interno. Verifique suas credenciais e tente novamente.' }}\"\n}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "respond-error",
+      "name": "❌ Retornar Erro ao Chamador",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [820, 260]
+    },
+    {
+      "parameters": {
+        "content": "## ❌ Tratamento de Erro\n\nSe a autenticação ou criação do relatório falhar, o workflow responde com HTTP 500 e uma mensagem de erro.\n\nVerifique:\n- Credenciais corretas no nó ⚙️ CONFIGURE AQUI\n- `policyId` existente e ativo\n- `document` com 11 (CPF) ou 14 (CNPJ) dígitos",
+        "height": 180,
+        "width": 320,
+        "color": 1
+      },
+      "id": "sticky-error",
+      "name": "❌ Nota Erro",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [700, 200]
+    }
+  ],
+  "connections": {
+    "📥 Receber Solicitação (ERP/CRM)": {
+      "main": [
+        [
+          {
+            "node": "⚙️ CONFIGURE AQUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ CONFIGURE AQUI": {
+      "main": [
+        [
+          {
+            "node": "🔐 Autenticar na GYRA+",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔐 Autenticar na GYRA+": {
+      "main": [
+        [
+          {
+            "node": "📄 Criar Relatório GYRA+",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📄 Criar Relatório GYRA+": {
+      "main": [
+        [
+          {
+            "node": "✅ Retornar reportId ao Chamador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "id": "gyra-workflow-1",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "gyra-plus-template"
+  },
+  "tags": [
+    {
+      "name": "GYRA+"
+    },
+    {
+      "name": "Crédito"
+    }
+  ]
+}
