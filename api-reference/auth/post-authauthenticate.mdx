@@ -57,8 +57,16 @@ print(response.json())
 
 ```json 200 OK
 {
-  "id": "string",
-  "status": "PROCESSING"
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiresIn": 3600,
+  "tokenType": "Bearer"
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Credenciais inválidas."
 }
 ```
 

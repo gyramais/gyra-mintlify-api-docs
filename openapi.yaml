@@ -136,37 +136,6 @@ paths:
           - Resultado da politica de credito
           
           Use get_report para obter a lista de secoes e seus IDs.
-  /report:
-    post:
-      operationId: ReportController_create
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateReportDto'
-      responses:
-        200:
-          description: 'Objeto do relatorio com id, status (PENDING), document, type e createdAt.'
-      tags:
-        - report
-      security:
-        - authorization: []
-      summary: Criar relatorio de analise de credito
-      description: |
-          Cria um novo relatorio de analise de credito para um CPF ou CNPJ.
-          
-          O processamento e ASSINCRONO: voce recebe o reportId imediatamente com status PENDING.
-          Para saber quando o relatorio ficou pronto:
-            1. Configure um webhook (create_webhook) para receber notificacao automatica
-            2. Ou consulte periodicamente com get_report ate o status mudar
-          
-          Status possiveis: PENDING → APPROVED, DENIED ou ALERT.
-          O tipo de relatorio (SIMPLES, ESSENCIAL, COMPLETO, COMPLETO+) e determinado
-          pela politica de credito (policyId) utilizada.
-          
-          Use list_policies para obter os policyIds disponiveis na organizacao.
   /report/list:
     get:
       operationId: ReportController_list
@@ -256,73 +225,6 @@ paths:
           
           Suporta paginacao (take/skip) e filtros por status, documento, usuario, periodo,
           produtos, operacao, batch.
-  /report/count:
-    get:
-      operationId: ReportController_count
-      parameters:
-        - name: statusValue
-          in: query
-          required: false
-          schema:
-            type: string
-            enum:
-              - PENDING
-              - APPROVED
-              - DENIED
-              - ALERT
-          description: Status do relatorio.
-        - name: document
-          in: query
-          required: false
-          schema:
-            type: string
-          description: CPF ou CNPJ (apenas numeros).
-        - name: userId
-          in: query
-          required: false
-          schema:
-            type: string
-          description: ID do usuario criador.
-        - name: createdAtBetween
-          in: query
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
-          description: 'Intervalo [startISO, endISO].'
-        - name: productIds
-          in: query
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
-          description: Filtrar por productIds.
-        - name: operationResultId
-          in: query
-          required: false
-          schema:
-            type: string
-          description: ID do resultado de operacao.
-        - name: batchId
-          in: query
-          required: false
-          schema:
-            type: string
-          description: ID do batch.
-      responses:
-        200:
-          description: Objeto com count (numero de relatorios).
-      tags:
-        - report
-      security:
-        - authorization: []
-      summary: Contar relatorios
-      description: |
-          Retorna a contagem de relatorios que correspondem aos filtros aplicados.
-          Util para dashboards e analytics sem carregar os dados completos. Aceita os mesmos
-          filtros de list_reports.
   /report/export/{id}:
     get:
       operationId: ReportController_export
@@ -375,41 +277,6 @@ paths:
           
           Pre-requisito: o relatorio precisa estar finalizado (status APPROVED, DENIED
           ou ALERT). Relatorios em PENDING nao podem ser exportados.
-  /report/{id}:
-    get:
-      operationId: ReportController_get
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-          description: ID do relatorio (ObjectId). Retornado pelo create_report.
-        - name: details
-          required: false
-          in: query
-          description: Defina como "false" para omitir detalhes das secoes. Util para verificar status rapidamente.
-          schema:
-            type: string
-      responses:
-        200:
-          description: 'Relatorio completo com secoes, decisao e metadados.'
-      tags:
-        - report
-      security:
-        - authorization: []
-      summary: Consultar relatorio por ID
-      description: |
-          Retorna o relatorio completo com secoes, decisao da politica e score.
-          
-          Se o relatorio esta em processamento, o status sera PENDING.
-          Quando pronto, o objeto retornado contem:
-          - status: APPROVED, DENIED ou ALERT
-          - policyResult: decisao automatica com regras avaliadas
-          - sections[]: array de secoes (BASIC_INFORMATION, PROCESSES, PROTESTS, SCR, etc.)
-          - commentary: analise do analista (se houver)
-          
-          Use details=false para obter apenas metadados sem o conteudo das secoes.
   /report/{id}/section/{sectionType}:
     get:
       operationId: ReportController_getReportSection
@@ -475,13 +342,14 @@ paths:
         - report
       security:
         - authorization: []
-      summary: Analisar/aprovar relatorio
+      summary: Analisar relatorio manualmente
       description: |
-          Registra a analise de um relatorio por um analista de credito.
-          
-          Define o status de aprovacao (approved: true/false), comentarios do analista
-          e decisao manual. Usado quando a decisao automatica da politica precisa de
-          revisao humana.
+          Registra uma ANALISE MANUAL de um relatorio por um usuario (ex.: analista de credito).
+
+          O usuario submete uma decisao (approved: true/false) com justificativa
+          (commentary). Nao reprocessa nem recoleta dados das fontes — apenas registra
+          a decisao humana sobre o relatorio existente. Para refazer uma analise manual
+          ja registrada, use re_analyze.
   /report/re-analyze:
     post:
       operationId: ReportController_reAnalyze
@@ -512,12 +380,14 @@ paths:
         - report
       security:
         - authorization: []
-      summary: Re-analisar relatorio
+      summary: Refazer analise manual do relatorio
       description: |
-          Re-analisa um relatorio previamente analisado. Verifica se o usuario
-          tem permissao para editar relatorios com base na politica de credito configurada.
-          
-          Util quando dados adicionais foram obtidos ou a decisao precisa ser revisada.
+          Refaz a ANALISE MANUAL de um relatorio que ja recebeu uma decisao humana
+          previa via /report/analyze. Exige permissao do usuario para revisar analises
+          manuais ja registradas.
+
+          Nao reprocessa nem recoleta dados das fontes — apenas substitui a decisao
+          humana (approved + commentary) anteriormente registrada.
   /credit-policy/policy:
     get:
       operationId: PolicyController_find
@@ -562,40 +432,6 @@ paths:
           Filtros opcionais:
           - enabled: true para ver apenas politicas ativas
           - protected: true para incluir politicas protegidas (padrao do sistema)
-  /insight:
-    post:
-      operationId: InsightController_generateInsight
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                sectionId:
-                  type: string
-                  description: ID da secao do relatorio para gerar o insight.
-              required:
-                - sectionId
-      responses:
-        200:
-          description: 'Insight gerado com analise, pontos de atencao e recomendacoes.'
-      tags:
-        - insight
-      summary: Gerar insight com IA para secao do relatorio
-      description: |
-          Gera uma analise automatica com IA para uma secao especifica de um relatorio.
-          
-          A IA analisa os dados da secao e produz um resumo interpretativo com
-          pontos de atencao e recomendacoes. O insight e salvo como comentario
-          na secao do relatorio.
-          
-          Requisitos:
-          - A secao deve estar finalizada (processamento completo)
-          - A organizacao deve ter plano que suporte IA (nao disponivel em planos Trial ou Basic)
-          
-          Use get_report para obter os IDs das secoes disponiveis.
   /v2/report:
     post:
       operationId: ReportApiController_create

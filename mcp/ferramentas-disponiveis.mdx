@@ -5,7 +5,7 @@ icon: "toolbox"
 ---
 
 <Info>
-  **Resumo:** esta página lista todas as tools do MCP Server da GYRA+, agrupadas por domínio (autenticação, relatórios, políticas, webhooks, credenciais, insights). Cada entrada descreve o que a tool faz, os parâmetros principais e um exemplo de prompt natural que costuma invocá-la.
+  **Resumo:** esta página lista todas as tools do MCP Server da GYRA+, agrupadas por domínio (autenticação, relatórios, políticas, webhooks). Cada entrada descreve o que a tool faz, os parâmetros principais e um exemplo de prompt natural que costuma invocá-la.
 </Info>
 
 ## Autenticação
@@ -64,26 +64,28 @@ Atalho para pegar seção por tipo, sem precisar saber o `sectionId`.
 - **Parâmetros**: `reportId`, `sectionType` (ex: `"LAWSUITS"`, `"BUREAU"`, `"SCR"`).
 - **Prompt típico**: *"qual o score do bureau nesse relatório?"*.
 
-### `re_analyze_report`
-
-Reprocessa um relatório já existente (útil quando fonte estava indisponível).
-
-- **Parâmetros**: `reportId`.
-- **Prompt típico**: *"reanalisa esse relatório, o bureau falhou na primeira vez"*.
-
 ### `analyze_report`
 
-Roda uma política alternativa sobre dados já coletados em um relatório existente, sem re-consultar fontes.
+Registra uma **análise manual** de um relatório: o usuário submete uma decisão (aprovado/negado) com justificativa, sobrescrevendo ou complementando o resultado automático da política.
 
-- **Parâmetros**: `reportId`, `policyId`.
-- **Prompt típico**: *"e se eu rodar a política 'Capital de Giro Tier B' nesse mesmo relatório?"*.
+- **Parâmetros**: `reportId`, `approved` (boolean), `commentary` (motivo da decisão).
+- **Quando usa**: analista de crédito precisa registrar decisão manual (ex.: "aprovado por relacionamento comercial", "negado por política interna").
+- **Prompt típico**: *"marca o relatório X como aprovado, justificativa: cliente histórico com bom relacionamento"*.
+
+### `re_analyze_report`
+
+Refaz uma análise manual já registrada em um relatório. Só pode ser usada quando já existe uma análise manual prévia e o usuário tem permissão para revisar.
+
+- **Parâmetros**: `reportId`, `approved`, `commentary`.
+- **Quando usa**: revisão de decisão manual anterior (ex.: nova informação chegou e o analista quer alterar o parecer já dado).
+- **Prompt típico**: *"reanalisa manualmente esse relatório, mudei minha decisão para negado"*.
 
 ### `export_report_sync`
 
-Exporta o relatório em formato específico (PDF, JSON, link público).
+Exporta o relatório em PDF, XLS ou ambos e retorna um link com validade de 7 dias.
 
-- **Parâmetros**: `reportId`, `format` (`"PDF"`, `"JSON"`, `"LINK"`).
-- **Prompt típico**: *"gera um PDF desse relatório"*.
+- **Parâmetros**: `reportId`, `exportFormat` (`"pdf"`, `"excel"` ou `"both"`).
+- **Prompt típico**: *"gera um PDF desse relatório"* ou *"me manda a planilha do relatório"*.
 
 ## Políticas
 
@@ -116,37 +118,6 @@ Remove um webhook.
 
 - **Parâmetros**: `webhookId`.
 - **Prompt típico**: *"remove o webhook antigo que não está sendo usado"*.
-
-## Credenciais (BYOC)
-
-### `create_credential`
-
-Cadastra credencial própria de bureau (por exemplo, Serasa via contrato direto).
-
-- **Parâmetros**: `provider`, `username`, `password` (ou chaves específicas conforme o bureau).
-- **Prompt típico**: *"registra minha credencial do Serasa"* (o agente pede os dados com cuidado).
-
-### `get_credential`, `list_credentials`, `update_credential`, `delete_credential`
-
-CRUD padrão da credencial.
-
-- **Prompt típico**: *"lista credenciais de bureau que eu tenho"*.
-
-## Insights
-
-### `generate_insight`
-
-Dispara geração de insight agregado sobre um conjunto de relatórios (ex: concentração por CNAE, distribuição de status).
-
-- **Parâmetros**: `filters` (mesmos de `list_reports`), `type` de insight.
-- **Prompt típico**: *"gera insight sobre as análises aprovadas desta semana"*.
-
-### `review_insight`
-
-Recupera o resultado de um insight já gerado.
-
-- **Parâmetros**: `insightId`.
-- **Prompt típico**: *"qual o resultado do insight X?"*.
 
 ## Exemplos encadeados
 

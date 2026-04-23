@@ -33,11 +33,15 @@ Ela responde perguntas como:
 
 | Componente | Atualização |
 | ---------- | ----------- |
-| Consulta na fonte | real-time ao rodar a análise |
+| Base cadastral da GYRA+ | **mensal** |
 | Base de origem | Receita Federal atualiza diariamente |
-| Cache interno | sem cache (cada análise consulta novamente) |
+| Cache por documento | reaproveitado dentro do mês corrente |
 
-Na prática: uma alteração cadastral registrada hoje na Receita (ex: baixa de CNPJ) aparece na nossa consulta em 1 a 2 dias.
+Os dados cadastrais chegam à GYRA+ via **dump mensal** consolidado, então o dado exibido na análise pode ter até cerca de 30 dias de defasagem em relação à Receita Federal. Para a grande maioria das decisões de crédito isso é suficiente (razão social, CNAE e data de abertura mudam pouco), mas mudanças muito recentes — baixa de CNPJ nos últimos dias, alteração de endereço feita na semana — podem ainda não ter refletido.
+
+<Warning>
+  **Precisa de dado em tempo real?** Use as [Certidões](/sources/certidoes): elas consultam a fonte oficial na hora (Receita Federal, PGFN, Junta Comercial, etc.) e trazem a situação atualizada em segundos. Recomendadas quando a decisão depende de estado regulatório de hoje, como emissão de certidão negativa, ou quando o próprio fluxo operacional exige prova atual.
+</Warning>
 
 ## Dados entregues
 
@@ -124,7 +128,8 @@ Exemplo:
 
 ## Limitações e considerações
 
-- **Defasagem da Receita:** a Receita Federal demora a atualizar certos campos (ex: mudança de regime tributário). Dado pode estar correto mas desatualizado por semanas.
+- **Atualização mensal:** a base cadastral é consolidada mensalmente, então alterações recentes (dias) podem ainda não ter refletido. Para estado atual, use [Certidões](/sources/certidoes) (Cartão CNPJ, situação CPF Receita Federal, etc.).
+- **Defasagem da Receita:** a Receita Federal demora a atualizar certos campos (ex: mudança de regime tributário). Dado pode estar correto mas desatualizado por semanas mesmo na fonte.
 - **CNPJs muito novos:** empresas recém-abertas podem não ter CNAEs secundários ou sócios completamente preenchidos.
 - **Endereço declarado vs real:** o endereço do cadastro é o declarado, não necessariamente onde a empresa opera.
 - **Nome social:** CPFs com nome social podem aparecer com nome civil em algumas consultas, reconciliação manual necessária em casos específicos.
@@ -160,5 +165,8 @@ Exemplo:
   </Card>
   <Card title="Demográfica" icon="location-dot" href="/sources/demografica">
     Endereço, contatos, detalhes de localização.
+  </Card>
+  <Card title="Certidões" icon="stamp" href="/sources/certidoes">
+    Situação em tempo real direto na fonte oficial.
   </Card>
 </CardGroup>

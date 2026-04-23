@@ -77,7 +77,7 @@
           "sources/vinculos-societarios",
           "sources/demografica",
           "sources/financeira",
-          "sources/veiculos",
+          "sources/certidoes",
           "sources/midia-reputacao",
           "sources/beneficios-sociais"
         ]
@@ -113,20 +113,16 @@
         "group": "Referência da API",
         "pages": [
           "api-reference/auth/post-authauthenticate",
-          "api-reference/report/post-report",
-          "api-reference/report/get-report",
+          "api-reference/report-v2/post-v2report",
+          "api-reference/report-v2/get-v2report",
           "api-reference/report/get-reportlist",
-          "api-reference/report/get-reportcount",
           "api-reference/report/get-reportsection",
           "api-reference/report/get-report-section",
           "api-reference/report/post-reportanalyze",
           "api-reference/report/post-reportre-analyze",
           "api-reference/report/get-reportexport",
           "api-reference/report/get-reportexport-sync",
-          "api-reference/report-v2/post-v2report",
-          "api-reference/report-v2/get-v2report",
           "api-reference/credit-policypolicy/get-credit-policypolicy",
-          "api-reference/insight/post-insight",
           "api-reference/webhook/post-webhook",
           "api-reference/webhook/get-webhookfindby",
           "api-reference/webhook/delete-webhook"

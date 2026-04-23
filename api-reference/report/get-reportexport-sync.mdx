@@ -1,5 +1,111 @@
 ---
 openapi: get /report/export-sync/{id}
-title: Exportar Relatório (Sync)
-description: Exporta o relatório em PDF e retorna a URL na mesma resposta. Bloqueia até o PDF ficar pronto.
+title: Exportar Relatório (Síncrono)
+description: Exporta o relatório em PDF e retorna a URL na mesma resposta. Bloqueia até o arquivo ficar pronto.
 ---
+
+<Endpoint
+  method="GET"
+  path="/report/export-sync/{id}"
+  headers={[
+    {
+      name: "Authorization",
+      type: "string",
+      required: true,
+      description: "Token JWT no formato Bearer. Exemplo: `Bearer abc123`"
+    }
+  ]}
+  pathParameters={[
+    {
+      name: "id",
+      type: "string",
+      required: true,
+      description: "ID do relatório a exportar"
+    }
+  ]}
+/>
+
+### Quando usar
+
+Use este endpoint para gerar e receber o arquivo de export (PDF, XLS ou ambos) de um relatório **na mesma requisição**. A chamada bloqueia até o arquivo estar pronto e retorna direto a URL para download. Para volumes grandes ou quando preferir não bloquear, use `GET /report/export/{id}` com webhook `REPORT_EXPORTED`.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID do relatório a exportar. |
+| `format` | `query` | `string` | `não` | Formato do arquivo: `pdf`, `excel` ou `both`. Padrão: `pdf`. |
+| `type` | `query` | `string` | `não` | Tipo de export: `REPORT` (completo) ou `REPORT_MINIFIED` (resumido). Padrão: `REPORT`. |
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/report/export-sync/69a207bcdd0197828df9155a?format=pdf' \
+--header 'Authorization: Bearer abc123'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/report/export-sync/69a207bcdd0197828df9155a?format=pdf", {
+  method: "GET",
+  headers: {
+    "Authorization": "Bearer abc123",
+  },
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/report/export-sync/69a207bcdd0197828df9155a"
+headers = {"Authorization": "Bearer abc123"}
+params = {"format": "pdf"}
+
+response = requests.get(url, headers=headers, params=params)
+print(response.json())
+```
+
+</RequestExample>
+
+<Tip>
+O link retornado tem validade de 7 dias. Para geração em lote ou relatórios muito grandes, prefira a versão assíncrona (`GET /report/export/{id}`) para não segurar a conexão HTTP.
+</Tip>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "id": "69a207bcdd0197828df9155a",
+  "url": "https://toolbox.gyramais.com.br/export/report/69a207bcdd0197828df9155a.pdf",
+  "format": "pdf",
+  "expiresAt": "2026-03-06T21:08:11.938Z"
+}
+```
+
+```json 400 Bad Request
+{
+  "code": 400,
+  "message": "format must be one of the following values: pdf, excel, both"
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+```json 404 Not Found
+{
+  "code": 404,
+  "message": "Report not found"
+}
+```
+
+</ResponseExample>

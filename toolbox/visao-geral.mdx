@@ -63,11 +63,13 @@ Relatório agregado por carteira: distribuição de status, concentração por C
 
 ### Configurações
 
-- **Organização**, dados da sua organização, branding, domínios permitidos.
 - **Usuários**, convidar, remover, atribuir papéis. Ver [Gerenciar Usuários e Permissões](/toolbox/gerenciar-usuarios-permissoes).
-- **Integrações**, credenciais próprias de bureau (BYOC Serasa), integrações externas, webhooks.
-- **API Keys**, gerar e gerenciar chaves de acesso à API REST. Ver [Webhooks e API Keys](/toolbox/webhooks-e-api-keys).
-- **Faturamento**, consumo do mês, histórico de cobrança, contrato vigente.
+- **Integrações**, credenciais próprias de bureau (BYOC Serasa) e demais bases externas com contrato direto.
+- **Webhooks**, endpoints que recebem eventos em tempo real. Ver [Webhooks e API Keys](/toolbox/webhooks-e-api-keys).
+
+<Note>
+  **Não configura pelo toolbox:** API Keys (solicite ao suporte em `suporte@gyramais.com.br`), logo e branding da organização (configurado pela equipe da GYRA+ no provisionamento) e dados de faturamento (gestão via contrato, ainda sem tela no toolbox).
+</Note>
 
 ## Fluxos principais do dia a dia
 
@@ -85,7 +87,7 @@ Relatório agregado por carteira: distribuição de status, concentração por C
     Configurações, Usuários.
   </Card>
   <Card title="Configurar webhook" icon="webhook" href="/toolbox/webhooks-e-api-keys">
-    Configurações, Integrações.
+    Configurações, Webhooks.
   </Card>
   <Card title="Ler um relatório" icon="chart-line" href="/toolbox/interpretar-resultado-operacao">
     Clicar em qualquer linha na lista de Análises.
@@ -96,8 +98,8 @@ Relatório agregado por carteira: distribuição de status, concentração por C
 
 | Papel | Vê |
 | ----- | -- |
-| **Administrador** | Tudo. Usuários, políticas, integrações, faturamento. |
-| **Gestor de Crédito** | Políticas, templates, produtos, todas as análises. Não vê faturamento nem usuários. |
+| **Administrador** | Tudo. Usuários, políticas, integrações, webhooks. |
+| **Gestor de Crédito** | Políticas, templates, produtos, todas as análises. Não vê usuários. |
 | **Analista de Crédito** | Input de análise, análises próprias e da organização, relatórios. Não edita política. |
 | **Somente leitura** | Visualiza análises e relatórios, não roda novas análises. |
 
@@ -108,7 +110,7 @@ Detalhamento em [Gerenciar Usuários e Permissões](/toolbox/gerenciar-usuarios-
 - **Busca global** (ícone de lupa no topo): procura por documento, nome, política ou lote.
 - **Política padrão** (marcada no próprio dropdown do input): pré-seleciona ao digitar um documento, um clique a menos por análise.
 - **Filtros salvos** na listagem de análises: útil para quem monitora carteira por produto ou período.
-- **Exportar** em PDF, JSON ou link público em qualquer relatório individual.
+- **Exportar** em PDF, XLS ou PDF+XLS em qualquer relatório individual pelo menu de três pontos ao lado do nome da empresa (links válidos por 7 dias, regenerável a qualquer momento).
 
 ## Perguntas frequentes
 

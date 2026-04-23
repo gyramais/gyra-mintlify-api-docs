@@ -40,18 +40,14 @@ Protesto lavrado hoje em cartório tipicamente aparece na nossa consulta em 1 a 
 
 ## Dados entregues
 
-| Campo | Descrição | Exemplo |
-| ----- | --------- | ------- |
-| `protests.count` | Quantidade de protestos ativos | `3` |
-| `protests.totalAmount` | Soma dos valores protestados | `45720.50` |
-| `protests.items[].date` | Data do protesto | `"2025-11-12"` |
-| `protests.items[].amount` | Valor do título | `15240.00` |
-| `protests.items[].registryOffice` | Nome do cartório | `"1º Tabelião de Protesto de Belo Horizonte"` |
-| `protests.items[].state` | UF | `"MG"` |
-| `protests.items[].city` | Município | `"Belo Horizonte"` |
-| `protests.items[].status` | Ativo ou quitado | `"ACTIVE"` / `"PAID"` |
+A seção de Protestos do relatório traz:
 
-Protestos **quitados** aparecem com `status: "PAID"` e ficam registrados por um período, úteis para histórico mesmo depois de resolvidos.
+- **Resumo agregado**: quantidade de ocorrências, valor total protestado e data do último protesto.
+- **Lista detalhada de ocorrências**: cada registro com cartório, comarca, UF, data de ocorrência, data de atualização, valor do título, credor/cedente, indicador de anuência, custas e status (ativo/baixado) conforme o bureau de origem (Serasa, Boa Vista, ProScore ou SCloud).
+
+A estrutura JSON exata varia conforme o bureau que populou a seção. Para contrato integrador, consuma a seção via `get_report_section_by_type(reportId, "PROTESTS")` e tipe em cima do retorno real — documentação autoritativa no [Dicionário de Dados](/data/secao-protestos).
+
+Protestos **quitados** ficam registrados por um período mesmo depois de resolvidos, úteis para histórico.
 
 ## Casos de uso
 

@@ -1,0 +1,277 @@
+---
+title: "Certidões"
+description: "Certidões oficiais consultadas em tempo real na fonte: PGFN, FGTS, CNDT, Fazenda Estadual, Junta Comercial, CNJ, IBAMA, SIPROQUIM, Simples Nacional, SUFRAMA, CCC, MTE, Anatel."
+icon: "stamp"
+---
+
+<Info>
+  **Resumo:** certidões são consultas **online e ao vivo** nos órgãos emissores oficiais. A GYRA+ intermedeia a chamada, mas o dado vem direto da fonte (Receita Federal, PGFN, TST, juntas comerciais, CNJ, IBAMA, etc.), o que garante estado atual — e ao mesmo tempo introduz latência. Esta página lista todas as certidões disponíveis, como usá-las em política e os cuidados para não quebrar UX em processos síncronos.
+</Info>
+
+## O que é uma certidão
+
+Enquanto dados cadastrais vêm de bases consolidadas (com atualização periódica), **certidão é consulta pontual no órgão emissor** feita no momento da análise. O resultado reflete o estado no exato instante da consulta.
+
+Duas implicações imediatas:
+
+1. **O dado é o mais atualizado possível.** Se a PGFN regularizou o débito hoje cedo, a certidão negativa sai na análise da tarde.
+2. **A latência depende do órgão.** Se o site da Receita está lento, a certidão demora. Se o CNJ está fora do ar, a certidão falha. A GYRA+ não tem controle sobre isso.
+
+<Warning>
+  **Certidões podem demorar 30, 60 ou até 120 segundos.** Projete o fluxo pensando nisso: em processos síncronos (cliente esperando na tela), combine um loading bem comunicado com timeout razoável. Em decisão automática sem humano, use webhook ou polling com backoff. Ver [Webhooks e tempo real](/concepts/webhooks-e-tempo-real).
+</Warning>
+
+## Catálogo de certidões
+
+### Fiscais federais
+
+#### Certidão Conjunta PGFN/Receita Federal
+
+- **Emissor:** Procuradoria-Geral da Fazenda Nacional (PGFN) + Receita Federal.
+- **Documento:** CPF e CNPJ.
+- **O que mostra:** débitos relativos a créditos tributários federais administrados pela RFB e a Dívida Ativa da União administrada pela PGFN.
+- **Status possíveis:** `NEGATIVA`, `POSITIVA COM EFEITOS DE NEGATIVA`, `POSITIVA`.
+- **Campos principais:** `baseStatus`, `pGFNClearance`, `protocolNumber`, `emissionDate`, `validityDate`, `rawResultFile` (comprovante).
+- **Enum interno:** `BDC_CERTIFICATE_PGFN`.
+
+#### Certificado de Regularidade do FGTS (CRF)
+
+- **Emissor:** Caixa Econômica Federal (gestora do FGTS).
+- **Documento:** CNPJ.
+- **O que mostra:** se a empresa está em dia com os depósitos do FGTS dos colaboradores.
+- **Status possíveis:** `REGULAR`, `IRREGULAR`.
+- **Campos principais:** `baseStatus`, `status`, `certificateNumber`, `validity`, endereço, `rawResultFile`.
+- **Enum interno:** `BDC_CERTIFICATE_FGTS`.
+
+### Trabalhistas
+
+#### Certidão Negativa de Débitos Trabalhistas (CNDT)
+
+- **Emissor:** Tribunal Superior do Trabalho (TST).
+- **Documento:** CPF e CNPJ.
+- **O que mostra:** existência de débitos inadimplidos perante a Justiça do Trabalho.
+- **Enum interno:** `BDC_CERTIFICATE_DEBT_LABOR_ABSENCE`.
+
+#### Lista Suja do Trabalho Escravo (MTE)
+
+- **Emissor:** Ministério do Trabalho e Emprego.
+- **Documento:** CNPJ.
+- **O que mostra:** se o CNPJ consta na base de empregadores flagrados com trabalho análogo à escravidão.
+- **Observação:** a GYRA+ mantém uma réplica atualizada periodicamente da lista oficial, a checagem é instantânea sobre essa réplica (não há chamada externa por análise).
+- **Enum interno:** `MTE_CERTIFICATE`.
+
+### Fiscais estaduais
+
+#### Certidão Negativa de Débitos Estaduais
+
+- **Emissor:** Secretaria da Fazenda do estado de registro do contribuinte.
+- **Documento:** CPF e CNPJ.
+- **O que mostra:** pendências fiscais no âmbito estadual (ICMS principalmente).
+- **Enum interno:** `BDC_CERTIFICATE_DEBT_ABSENCE_STATE`.
+
+#### Cadastro Centralizado de Contribuintes (CCC)
+
+- **Emissor:** SEFAZ estaduais via integração centralizada.
+- **Documento:** CNPJ.
+- **O que mostra:** inscrições estaduais do CNPJ e situação cadastral em cada estado onde opera.
+- **Enum interno:** `CNPJJA_CCC_CERTIFICATE`.
+
+### Regimes especiais
+
+#### Certidão do Simples Nacional
+
+- **Emissor:** Receita Federal.
+- **Documento:** CNPJ.
+- **O que mostra:** se a empresa está enquadrada no Simples Nacional e/ou no SIMEI no momento da consulta.
+- **Enum interno:** `CNPJJA_SIMPLES_CERTIFICATE`.
+
+#### Certidão SUFRAMA
+
+- **Emissor:** Superintendência da Zona Franca de Manaus (SUFRAMA).
+- **Documento:** CNPJ.
+- **O que mostra:** inscrição e situação cadastral na SUFRAMA para empresas que atuam na área de incentivo fiscal.
+- **Enum interno:** `CNPJJA_SUFRAMA_CERTIFICATE`.
+
+### Judiciais
+
+#### Certidão Negativa Distribuidor (CNJ) — Pessoa Física
+
+- **Emissor:** Conselho Nacional de Justiça (CNJ).
+- **Documento:** CPF.
+- **O que mostra:** existência de ações judiciais distribuídas em nome do CPF nos tribunais integrados ao banco do CNJ.
+- **Enum interno:** `BDC_CERTIFICATE_CNJ_NEGATIVE_PERSON`.
+
+#### Certidão Negativa Distribuidor (CNJ) — Pessoa Jurídica
+
+- **Emissor:** CNJ.
+- **Documento:** CNPJ.
+- **O que mostra:** o mesmo, para pessoa jurídica.
+- **Enum interno:** `BDC_CERTIFICATE_CNJ_NEGATIVE_COMPANY`.
+
+#### Certidão de Antecedentes Criminais
+
+- **Emissor:** Polícia Federal.
+- **Documento:** CPF.
+- **O que mostra:** existência de registros criminais no âmbito da PF.
+- **Enum interno:** `BDC_CERTIFICATE_CRIMINAL_RECORD`.
+
+### Ambientais
+
+#### Certidão Negativa IBAMA — PF e PJ
+
+- **Emissor:** Instituto Brasileiro do Meio Ambiente e dos Recursos Naturais Renováveis (IBAMA).
+- **Documento:** CPF (PF) ou CNPJ (PJ).
+- **O que mostra:** existência de débitos ambientais junto ao IBAMA.
+- **Enum interno:** `BDC_CERTIFICATE_IBAMA_NEGATIVE_PERSON`, `BDC_CERTIFICATE_IBAMA_NEGATIVE_COMPANY`.
+
+#### Embargos IBAMA — PF e PJ
+
+- **Emissor:** IBAMA.
+- **Documento:** CPF (PF) ou CNPJ (PJ).
+- **O que mostra:** áreas ou atividades embargadas.
+- **Enum interno:** `BDC_CERTIFICATE_IBAMA_EMBARGOES_PERSON`, `BDC_CERTIFICATE_IBAMA_EMBARGOES_COMPANY`.
+
+### Regulatórias
+
+#### Certidão Junta Comercial
+
+- **Emissor:** Junta Comercial do estado de registro.
+- **Documento:** CNPJ.
+- **O que mostra:** situação registral na Junta, atos societários, arquivamentos.
+- **Enum interno:** `BDC_CERTIFICATE_BOARD`.
+
+#### SIPROQUIM (Polícia Federal)
+
+- **Emissor:** Polícia Federal — Sistema de Controle de Produtos Químicos.
+- **Documento:** CNPJ.
+- **O que mostra:** regularidade de empresas que manipulam produtos químicos controlados.
+- **Enum interno:** `BDC_CERTIFICATE_SIPROQUIM`.
+
+#### Anatel (outorgas e licenças)
+
+- **Emissor:** Agência Nacional de Telecomunicações (Anatel).
+- **Documento:** CNPJ.
+- **O que mostra:** outorgas e licenças ativas em nome da empresa para operação de serviços de telecomunicações.
+- **Enum interno:** `ANATEL_LICENSE_GRANT`.
+
+## Natureza real-time e implicações de design
+
+Todas as certidões acima, com exceção da **Lista Suja MTE** (réplica local), são consultas **síncronas à fonte oficial**. Isso tem três consequências de produto que você precisa considerar ao desenhar política e fluxo:
+
+### 1. Latência variável
+
+A GYRA+ não controla o tempo da fonte. Observações típicas:
+
+| Fonte | Latência típica | Pico |
+| ----- | --------------- | ---- |
+| PGFN/Receita | 5 a 20s | 60s+ |
+| FGTS (Caixa) | 10 a 30s | 90s+ |
+| CNDT (TST) | 5 a 15s | 45s |
+| Fazenda Estadual | 10 a 40s | depende do estado |
+| Junta Comercial | 15 a 60s | depende da junta |
+| CNJ | 10 a 30s | 60s |
+| IBAMA | 5 a 20s | 45s |
+| Simples Nacional | 5 a 15s | 30s |
+| SIPROQUIM | 10 a 30s | 60s |
+| Lista Suja MTE | imediato | imediato |
+
+### 2. Indisponibilidade real
+
+Fontes oficiais caem. Quando isso acontece, o integrador retorna `ERROR` na certidão específica e o relatório continua com as demais informações. O analista (ou o policy engine) decide se a ausência daquela certidão bloqueia ou não a decisão.
+
+### 3. UX síncrona vs. assíncrona
+
+<CardGroup cols={2}>
+  <Card title="Processo síncrono com humano" icon="user">
+    Cliente ou analista na tela esperando. Mostrar estado de cada certidão (pendente, emitindo, pronta, falhou) e permitir seguir quando as essenciais já retornaram. Timeout curto por certidão (ex: 45s) com retry opcional.
+  </Card>
+  <Card title="Decisão automática em site" icon="bolt">
+    Esperar 60s+ na tela do cliente final normalmente é inaceitável. Se a política depende de certidões lentas, **rode de forma assíncrona** e comunique por e-mail, WhatsApp ou SMS quando a decisão sair. Ver [Webhooks e tempo real](/concepts/webhooks-e-tempo-real).
+  </Card>
+  <Card title="Agente autônomo/worker" icon="robot">
+    Sem humano esperando. Use polling com backoff (10s, 20s, 40s) ou webhook `report.completed`. Trate timeout como falha recuperável e reanalise.
+  </Card>
+  <Card title="Análise em lote" icon="layer-group">
+    Em Lote de Clientes, as certidões são puxadas em paralelo com as demais seções e cada documento completa quando a última fonte retorna. Tolerância maior ao tempo, sem impacto em UX.
+  </Card>
+</CardGroup>
+
+## Como usar em política
+
+Certidões costumam bloquear por simples presença de débito ou situação irregular:
+
+```json
+{
+  "field": "certificate.pgfn.baseStatus",
+  "operator": "EQUALS",
+  "value": "POSITIVA",
+  "status": "DENIED"
+}
+```
+
+```json
+{
+  "field": "certificate.fgts.status",
+  "operator": "NOT_EQUALS",
+  "value": "REGULAR",
+  "status": "ALERT"
+}
+```
+
+```json
+{
+  "field": "certificate.mte.situation",
+  "operator": "EQUALS",
+  "value": "invalid",
+  "status": "DENIED"
+}
+```
+
+Padrões recomendados:
+
+- **Negativa = seguir**, positiva = bloquear ou alertar.
+- **Erro ao emitir certidão ≠ negativa.** Se você tratar falha de comunicação como "empresa limpa", cai em risco de liberar crédito sem saber. Considere bloquear ou exigir reanálise.
+- **Política de certidões costuma ser paralela à política de débitos privados** (PEFIN/REFIN). Débito público é separado do privado.
+
+## Custo e contratação
+
+As certidões são cobradas por consulta, em cima do plano base. Cada certidão tem custo individual e algumas (Junta Comercial, IBAMA em alguns estados) são mais caras. Verifique o contrato vigente antes de adicionar dezenas de certidões à política padrão.
+
+Se a sua organização já contratou pacotes específicos com a GYRA+, o toolbox libera as certidões habilitadas e ignora as não contratadas silenciosamente no relatório.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Uma certidão falhou, o relatório inteiro falha?">
+    Não. Cada certidão é uma seção independente. Se a certidão PGFN falhar, o relatório conclui com as demais informações disponíveis e a seção da certidão fica com status de erro. A política decide se isso é motivo de bloqueio.
+  </Accordion>
+  <Accordion title="Quanto tempo dura a certidão emitida?">
+    O comprovante (`rawResultFile`) segue a validade da fonte oficial (em geral, 60 a 180 dias). O dado da análise, no entanto, é fotografia do momento — se quiser reconsultar depois, rode nova análise.
+  </Accordion>
+  <Accordion title="Consigo reusar uma certidão já emitida?">
+    A GYRA+ armazena a última emissão por `document + yearMonth`. Consultas dentro do mesmo mês para o mesmo CPF/CNPJ reaproveitam a certidão, o que acelera e evita cobrança duplicada. Para forçar nova consulta, reanalise.
+  </Accordion>
+  <Accordion title="Posso baixar o PDF oficial da certidão?">
+    Sim. O campo `rawResultFile` contém o comprovante codificado (ou link) emitido pela fonte oficial. Exportável via API ou visível no relatório individual no toolbox.
+  </Accordion>
+  <Accordion title="O que acontece em horário de pico das fontes?">
+    Receita Federal e tribunais tipicamente ficam lentos no início do mês e no fechamento do ano fiscal. Nestes períodos a latência pode dobrar ou triplicar. Ajuste timeouts e mensagens de UX sazonalmente.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Cadastral" icon="id-card" href="/sources/cadastral">
+    Dados oficiais de CPF/CNPJ com atualização mensal.
+  </Card>
+  <Card title="Bureau de Crédito" icon="chart-column" href="/sources/bureau-credito">
+    Serasa, Boa Vista, ProScore.
+  </Card>
+  <Card title="Webhooks e tempo real" icon="webhook" href="/concepts/webhooks-e-tempo-real">
+    Evite travar UX: receba eventos assíncronos.
+  </Card>
+  <Card title="Criar política" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Usar certidões em regras.
+  </Card>
+</CardGroup>

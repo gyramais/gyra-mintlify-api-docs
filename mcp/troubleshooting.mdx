@@ -92,7 +92,7 @@ Depois de chamar `create_report`, o agente faz polling em `get_report` e o statu
 ### Causas possíveis
 
 - **Fonte lenta** (SCR via Open Finance, por exemplo). Esperar até 2 minutos é normal.
-- **Fonte totalmente indisponível**: o status acaba em `ERROR`. Use `re_analyze_report` depois.
+- **Fonte totalmente indisponível**: o status acaba em `ERROR`. Acione `create_report` novamente ou aguarde o restabelecimento da fonte.
 - **Polling muito rápido**: se você instruir o agente a chamar `get_report` cada 1s, o 429 aparece sem progresso real.
 
 ### Solução

@@ -1,16 +1,39 @@
 ---
 openapi: get /report/{id}/section/{sectionType}
-title: Consultar Seção por Tipo (Interno)
-description: Endpoint interno para consulta de seção por tipo dentro de um relatório.
+title: Consultar Seção por Tipo
+description: Retorna uma seção específica de um relatório pelo seu tipo, sem precisar do sectionId.
 ---
 
-<Tip>
-Uso interno. Para clientes externos, utilize o endpoint <code>GET /report/section/{"{id}"}</code>.
-</Tip>
+<Endpoint
+  method="GET"
+  path="/report/{id}/section/{sectionType}"
+  headers={[
+    {
+      name: "Authorization",
+      type: "string",
+      required: true,
+      description: "Token JWT no formato Bearer. Exemplo: `Bearer abc123`"
+    }
+  ]}
+  pathParameters={[
+    {
+      name: "id",
+      type: "string",
+      required: true,
+      description: "ID do relatório"
+    },
+    {
+      name: "sectionType",
+      type: "string",
+      required: true,
+      description: "Tipo da seção (ex.: SUMMARY, LAWSUITS, BUREAU, SCR)"
+    }
+  ]}
+/>
 
 ### Quando usar
 
-Use este endpoint interno para buscar uma seção por tipo dentro de um relatório. Você pode usar em fluxos de backend, renderização por abas e componentes que carregam seções sob demanda por `sectionType`.
+Use este endpoint para buscar uma seção de um relatório usando o **tipo** (`sectionType`) em vez do `sectionId`. Útil em telas que renderizam abas por seção, carregam conteúdo sob demanda ou quando você só tem o ID do relatório e quer um bloco específico (ex.: score do bureau, processos judiciais).
 
 ### Autenticação
 
@@ -20,18 +43,18 @@ Bearer JWT no header `Authorization`.
 
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
-| `id` | `path` | `string` | `sim` | Parâmetro da requisição. |
-| `sectionType` | `path` | `string` | `sim` | Parâmetro da requisição. |
+| `id` | `path` | `string` | `sim` | ID do relatório. |
+| `sectionType` | `path` | `string` | `sim` | Tipo da seção. Valores comuns: `SUMMARY`, `LAWSUITS`, `BUREAU`, `SCR`, `PROTESTS`, `PEFIN_REFIN`, `PEP_SANCTIONS`. |
 
 <RequestExample>
 
 ```bash cURL
-curl --location 'https://gyra-core.gyramais.com.br/report/{id}/section/{sectionType}' \
+curl --location 'https://gyra-core.gyramais.com.br/report/69a207bcdd0197828df9155a/section/SUMMARY' \
 --header 'Authorization: Bearer abc123'
 ```
 
 ```javascript JavaScript
-fetch("https://gyra-core.gyramais.com.br/report/{id}/section/{sectionType}", {
+fetch("https://gyra-core.gyramais.com.br/report/69a207bcdd0197828df9155a/section/SUMMARY", {
   method: "GET",
   headers: {
     "Authorization": "Bearer abc123",
@@ -44,7 +67,7 @@ fetch("https://gyra-core.gyramais.com.br/report/{id}/section/{sectionType}", {
 ```python Python
 import requests
 
-url = "https://gyra-core.gyramais.com.br/report/{id}/section/{sectionType}"
+url = "https://gyra-core.gyramais.com.br/report/69a207bcdd0197828df9155a/section/SUMMARY"
 headers = {
   "Authorization": "Bearer abc123"
 }
@@ -72,6 +95,13 @@ print(response.json())
 {
   "code": 401,
   "message": "Token de acesso inválido."
+}
+```
+
+```json 404 Not Found
+{
+  "code": 404,
+  "message": "Section not found"
 }
 ```
 

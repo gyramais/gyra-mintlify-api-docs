@@ -26,11 +26,11 @@ Analista recebeu o CNPJ de um possível cliente por WhatsApp e quer rodar a aná
 > - Faturamento estimado: R$ 1.8MM/ano
 > - Precificação sugerida: R$ 80.000 em 24 meses a 1.99% a.m.
 >
-> Quer que eu gere o PDF ou envie um link público para o cliente?
+> Quer que eu gere o PDF ou o XLS para você compartilhar?
 >
-> **Analista**: Manda o link público.
+> **Analista**: Manda o PDF.
 >
-> **Agente**: Link gerado, válido por 7 dias: https://toolbox.gyramais.com.br/public/report/...
+> **Agente**: PDF gerado, link válido por 7 dias: https://toolbox.gyramais.com.br/export/report/...
 
 ### Tools encadeadas
 
@@ -38,7 +38,7 @@ Analista recebeu o CNPJ de um possível cliente por WhatsApp e quer rodar a aná
 2. `create_report(document, policyId)` — disparar.
 3. `get_report(reportId)` — polling até completar.
 4. `get_report_section_by_type(reportId, "SUMMARY")` — pegar o resumo.
-5. `export_report_sync(reportId, "LINK")` — gerar link.
+5. `export_report_sync(reportId, exportFormat: "pdf")` — gerar PDF com link de 7 dias.
 
 ## Caso 2, monitoramento de carteira
 
@@ -66,27 +66,30 @@ Gestor de crédito quer saber, toda segunda de manhã, quais análises foram neg
 3. `get_report_section_by_type(...)` iterando para extrair regras bloqueantes.
 4. Agregação e resposta.
 
-## Caso 3, reanálise em batch conversacional
+## Caso 3, análise manual com justificativa
 
 ### Contexto
 
-Bureau caiu ontem à tarde e 15 análises ficaram com `ERROR`. Analista quer reanalisar tudo sem precisar clicar uma por uma.
+Relatório voltou `DENIED` pela política automática, mas o analista sabe que o cliente é histórico e decide aprovar manualmente com justificativa.
 
 ### Conversa
 
-> **Analista**: Quais análises ficaram com status ERROR ontem?
+> **Analista**: Me traz o relatório 6612a7f3...
 >
-> **Agente**: Encontrei 15 análises com status `ERROR` entre 14:00 e 18:00 de ontem. Todas falharam na coleta do bureau.
+> **Agente**: O relatório foi **NEGADO** pela política (score bureau abaixo do mínimo). Quer que eu registre uma análise manual?
 >
-> **Analista**: Reanalisa todas.
+> **Analista**: Sim, aprova com a justificativa "cliente há 5 anos, sem inadimplência no histórico".
 >
-> **Agente**: Reanalisando... 15 de 15 concluídas. 14 ficaram `APPROVED`, 1 `DENIED` por protesto.
+> **Agente**: Análise manual registrada, relatório agora consta como **APPROVED** com seu parecer anexado.
 
 ### Tools encadeadas
 
-1. `list_reports({ status: "ERROR", from, to })`.
-2. Loop com `re_analyze_report(reportId)` para cada.
-3. `get_report(reportId)` em cada até completar.
+1. `get_report(reportId)` — revisa o status automático.
+2. `analyze_report({ reportId, approved: true, commentary: "..." })` — registra decisão manual.
+
+<Tip>
+Se a decisão manual já tiver sido registrada e for necessário alterá-la, o agente usa `re_analyze_report` (exige permissão específica do usuário).
+</Tip>
 
 ## Caso 4, onboarding self-service com agente
 
@@ -117,17 +120,17 @@ Auditoria independente precisa revisar 200 análises de crédito do último trim
 
 > **Auditor**: Me traz todas as análises aprovadas no Q1 de 2026 com valor acima de R$ 500.000 e que usaram a política "Capital de Giro PJ".
 >
-> **Agente**: Encontrei 38 análises. Quer que eu exporte em CSV, gere um relatório consolidado ou rode insight agregado?
+> **Agente**: Encontrei 38 análises. Quer que eu traga o breakdown por seção para consolidar?
 >
-> **Auditor**: Insight agregado, foco em concentração por CNAE e score médio.
+> **Auditor**: Sim, foco em concentração por CNAE e score médio.
 >
-> **Agente**: Insight gerado. 3 CNAEs concentram 72% do volume aprovado: Comércio (34%), Serviços Empresariais (24%), Indústria Têxtil (14%). Score médio: 712, mediana: 698.
+> **Agente**: Consolidei os breakdowns. 3 CNAEs concentram 72% do volume aprovado: Comércio (34%), Serviços Empresariais (24%), Indústria Têxtil (14%). Score médio: 712, mediana: 698.
 
 ### Tools encadeadas
 
 1. `list_reports({ status: "APPROVED", minAmount: 500000, policyId, from, to })`.
-2. `generate_insight({ filters, type: "CONCENTRATION_CNAE" })`.
-3. `review_insight(insightId)`.
+2. `get_report_section_by_type(...)` iterando para extrair CNAE e score.
+3. Agregação e resposta.
 
 ## Caso 6, agente autônomo com cron
 

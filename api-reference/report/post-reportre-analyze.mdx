@@ -1,22 +1,36 @@
 ---
 openapi: post /report/re-analyze
-title: Criar Requisição
-description: Cria ou processa uma ação deste recurso.
+title: Refazer Análise Manual
+description: Refaz uma análise manual já registrada em um relatório, substituindo o parecer anterior.
 ---
 
 ### Quando usar
 
-Use este endpoint para reanalisar um caso já processado anteriormente. Você pode usar quando houver mudança de política, atualização de dados do cliente ou necessidade de segunda opinião antes da decisão final.
+Use este endpoint para **refazer a análise manual** de um relatório que já recebeu uma decisão humana prévia via `POST /report/analyze`. Cenário típico: nova informação chegou, o analista quer mudar o parecer registrado (ex.: de aprovado para negado), e ele tem permissão para revisar análises manuais.
+
+<Info>
+Esta chamada só funciona quando **já existe uma análise manual registrada** no relatório. Se nenhuma decisão manual foi feita ainda, use `POST /report/analyze`. O endpoint também não reprocessa dados das fontes — apenas atualiza a decisão humana.
+</Info>
 
 ### Autenticação
 
-Bearer JWT no header `Authorization`.
+Bearer JWT no header `Authorization`. O usuário precisa ter permissão para refazer análises manuais.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `body` | `string` | `sim` | ID do relatório cuja análise manual será refeita. |
+| `approved` | `body` | `boolean` | `sim` | Nova decisão: `true` para aprovar, `false` para negar. |
+| `commentary` | `body` | `string` | `sim` | Nova justificativa/parecer substituindo o anterior. |
 
 ### Corpo da requisição
 
 ```json
 {
-  "id": "string"
+  "id": "69a207bcdd0197828df9155a",
+  "approved": false,
+  "commentary": "Revisão: informação adicional identificou risco não mapeado. Decisão alterada para negado."
 }
 ```
 
@@ -27,7 +41,9 @@ curl --location 'https://gyra-core.gyramais.com.br/report/re-analyze' \
 --header 'Authorization: Bearer abc123' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-  "id": "string"
+  "id": "69a207bcdd0197828df9155a",
+  "approved": false,
+  "commentary": "Revisão: decisão alterada para negado."
 }'
 ```
 
@@ -39,8 +55,10 @@ fetch("https://gyra-core.gyramais.com.br/report/re-analyze", {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-  "id": "string"
-})
+    id: "69a207bcdd0197828df9155a",
+    approved: false,
+    commentary: "Revisão: decisão alterada para negado."
+  })
 })
   .then(res => res.json())
   .then(console.log)
@@ -51,10 +69,13 @@ import requests
 
 url = "https://gyra-core.gyramais.com.br/report/re-analyze"
 headers = {
-  "Authorization": "Bearer abc123"
+  "Authorization": "Bearer abc123",
+  "Content-Type": "application/json"
 }
 payload = {
-  "id": "string"
+  "id": "69a207bcdd0197828df9155a",
+  "approved": False,
+  "commentary": "Revisão: decisão alterada para negado."
 }
 response = requests.post(url, headers=headers, json=payload)
 print(response.json())
@@ -63,6 +84,22 @@ print(response.json())
 </RequestExample>
 
 <ResponseExample>
+
+```json 200 OK
+{
+  "id": "69a207bcdd0197828df9155a",
+  "analystId": "6610684663774970a8cf738d",
+  "analystName": "Usuário API",
+  "policyStatus": "DENIED",
+  "commentary": "Revisão: decisão alterada para negado.",
+  "status": {
+    "id": "6614758260513064a5af1045",
+    "value": "DENIED",
+    "title": "Negado"
+  },
+  "updatedAt": "2026-02-27T22:02:10.110Z"
+}
+```
 
 ```json 400 Bad Request
 {
@@ -75,6 +112,13 @@ print(response.json())
 {
   "code": 401,
   "message": "Token de acesso inválido."
+}
+```
+
+```json 403 Forbidden
+{
+  "code": 403,
+  "message": "Usuário não tem permissão para refazer análise manual."
 }
 ```
 
