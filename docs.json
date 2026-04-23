@@ -129,7 +129,7 @@
         ]
       },
       {
-        "group": "Dicionário de Dados (legado)",
+        "group": "Dicionário de Dados",
         "pages": [
           "data/estrutura-relatorio",
           "data/secao-resumo",
