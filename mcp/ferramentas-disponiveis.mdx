@@ -1,0 +1,209 @@
+---
+title: "Ferramentas Disponíveis"
+description: "Catálogo completo de tools expostas pelo MCP Server da GYRA+, agrupadas por domínio."
+icon: "toolbox"
+---
+
+<Info>
+  **Resumo:** esta página lista todas as tools do MCP Server da GYRA+, agrupadas por domínio (autenticação, relatórios, políticas, webhooks, credenciais, insights). Cada entrada descreve o que a tool faz, os parâmetros principais e um exemplo de prompt natural que costuma invocá-la.
+</Info>
+
+## Autenticação
+
+### `authenticate`
+
+Autentica com e-mail e senha, retornando um token de sessão para uso subsequente.
+
+- **Quando usa**: cliente sem API Key persistida, agente que gerencia múltiplas organizações.
+- **Parâmetros**: `email`, `password`, opcional `twoFactorCode`.
+- **Prompt típico**: *"autentica na gyra com meu e-mail"* (o agente pede a senha de forma segura).
+
+## Relatórios
+
+### `create_report`
+
+Cria uma nova análise para um CPF ou CNPJ.
+
+- **Parâmetros**: `document`, `policyId`, opcional `amount`.
+- **Retorno**: objeto `Report` com `id` e status inicial (`PROCESSING`).
+- **Prompt típico**: *"roda uma análise no CNPJ 43.591.367/0001-30 com a política Capital de Giro"*.
+
+### `get_report`
+
+Consulta o detalhe de um relatório existente pelo id.
+
+- **Parâmetros**: `reportId`.
+- **Retorno**: objeto `Report` completo.
+- **Prompt típico**: *"mostra o resultado da análise 6612a7f3..."*.
+
+### `list_reports`
+
+Lista relatórios da organização com filtros.
+
+- **Parâmetros**: opcionais `status`, `document`, `policyId`, `from`, `to`, `limit`, `offset`.
+- **Prompt típico**: *"quais foram as 10 últimas análises?"*.
+
+### `count_reports`
+
+Conta quantos relatórios existem que atendem filtros específicos.
+
+- **Parâmetros**: mesmos filtros de `list_reports`.
+- **Prompt típico**: *"quantas análises foram negadas este mês?"*.
+
+### `get_section`
+
+Retorna uma seção específica de um relatório.
+
+- **Parâmetros**: `reportId`, `sectionId`.
+- **Prompt típico**: *"me traz a seção de processos judiciais desse relatório"*.
+
+### `get_report_section_by_type`
+
+Atalho para pegar seção por tipo, sem precisar saber o `sectionId`.
+
+- **Parâmetros**: `reportId`, `sectionType` (ex: `"LAWSUITS"`, `"BUREAU"`, `"SCR"`).
+- **Prompt típico**: *"qual o score do bureau nesse relatório?"*.
+
+### `re_analyze_report`
+
+Reprocessa um relatório já existente (útil quando fonte estava indisponível).
+
+- **Parâmetros**: `reportId`.
+- **Prompt típico**: *"reanalisa esse relatório, o bureau falhou na primeira vez"*.
+
+### `analyze_report`
+
+Roda uma política alternativa sobre dados já coletados em um relatório existente, sem re-consultar fontes.
+
+- **Parâmetros**: `reportId`, `policyId`.
+- **Prompt típico**: *"e se eu rodar a política 'Capital de Giro Tier B' nesse mesmo relatório?"*.
+
+### `export_report_sync`
+
+Exporta o relatório em formato específico (PDF, JSON, link público).
+
+- **Parâmetros**: `reportId`, `format` (`"PDF"`, `"JSON"`, `"LINK"`).
+- **Prompt típico**: *"gera um PDF desse relatório"*.
+
+## Políticas
+
+### `list_policies`
+
+Lista as políticas de crédito da organização.
+
+- **Parâmetros**: opcionais `documentType` (`"PF"` / `"PJ"`), `enabled`.
+- **Prompt típico**: *"quais políticas PJ estão ativas?"*.
+
+## Webhooks
+
+### `create_webhook`
+
+Cria um webhook para receber notificações de eventos.
+
+- **Parâmetros**: `url`, `events[]`.
+- **Prompt típico**: *"configura webhook para report.completed apontando para https://meu-backend/gyra"*.
+
+### `find_webhooks`
+
+Lista webhooks configurados.
+
+- **Parâmetros**: opcionais `active`, `event`.
+- **Prompt típico**: *"quais webhooks eu tenho configurados?"*.
+
+### `delete_webhook`
+
+Remove um webhook.
+
+- **Parâmetros**: `webhookId`.
+- **Prompt típico**: *"remove o webhook antigo que não está sendo usado"*.
+
+## Credenciais (BYOC)
+
+### `create_credential`
+
+Cadastra credencial própria de bureau (por exemplo, Serasa via contrato direto).
+
+- **Parâmetros**: `provider`, `username`, `password` (ou chaves específicas conforme o bureau).
+- **Prompt típico**: *"registra minha credencial do Serasa"* (o agente pede os dados com cuidado).
+
+### `get_credential`, `list_credentials`, `update_credential`, `delete_credential`
+
+CRUD padrão da credencial.
+
+- **Prompt típico**: *"lista credenciais de bureau que eu tenho"*.
+
+## Insights
+
+### `generate_insight`
+
+Dispara geração de insight agregado sobre um conjunto de relatórios (ex: concentração por CNAE, distribuição de status).
+
+- **Parâmetros**: `filters` (mesmos de `list_reports`), `type` de insight.
+- **Prompt típico**: *"gera insight sobre as análises aprovadas desta semana"*.
+
+### `review_insight`
+
+Recupera o resultado de um insight já gerado.
+
+- **Parâmetros**: `insightId`.
+- **Prompt típico**: *"qual o resultado do insight X?"*.
+
+## Exemplos encadeados
+
+O poder do MCP aparece quando o agente **encadeia** tools sem você precisar dizer qual chamar:
+
+### Exemplo 1, análise completa por conversa
+
+> Você: *"roda uma análise no 43591367000130 com a política padrão PJ e me diz por que foi aprovada ou negada."*
+
+1. Agente chama `list_policies` filtrando por `PJ` para achar a política padrão.
+2. Agente chama `create_report` com `document` e `policyId`.
+3. Agente faz polling em `get_report` até status `COMPLETED`.
+4. Agente chama `get_report_section_by_type` para pegar o breakdown.
+5. Agente responde em linguagem natural com a conclusão.
+
+### Exemplo 2, auditoria semanal
+
+> Você: *"quantas análises negadas tivemos esta semana e qual a regra mais frequente de bloqueio?"*
+
+1. Agente chama `count_reports` com `status: "DENIED"` e intervalo de datas.
+2. Agente chama `list_reports` com o mesmo filtro.
+3. Agente consulta breakdown de cada relatório via `get_report_section_by_type`.
+4. Agente agrega e responde.
+
+## Limitações
+
+- **Tools são limitadas ao escopo da API Key.** Se a chave só lê, tentativas de criar relatório falham com erro claro.
+- **Rate limit aplicável**: mesmas regras da API REST (100 req/min padrão). O cliente MCP retransmite 429 e o modelo espera.
+- **Payloads grandes**: relatórios COMPLETO+ podem exceder o limite de contexto do modelo. Use `get_report_section_by_type` em vez de `get_report` para buscar só o que precisa.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Posso criar tools customizadas?">
+    Por enquanto o catálogo é fechado. Se você precisa de tool específica, fale com o suporte. Se precisa de tool composta, deixe o modelo encadear as existentes (costuma ser suficiente).
+  </Accordion>
+  <Accordion title="As tools têm descrição em português ou inglês?">
+    Os schemas (nomes, parâmetros) estão em inglês para alinhar ao padrão MCP. As descrições funcionais estão em português para que modelos em PT-BR escolham corretamente.
+  </Accordion>
+  <Accordion title="Como vejo o que o modelo chamou em background?">
+    Todo cliente MCP sério (Claude Desktop, Cursor) mostra as tool calls na UI. Além disso, toda chamada fica no log de auditoria do toolbox.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Casos de uso" icon="lightbulb" href="/mcp/casos-de-uso">
+    Conversas práticas com exemplos reais.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/mcp/troubleshooting">
+    Quando uma tool não é chamada.
+  </Card>
+  <Card title="Instalação" icon="download" href="/mcp/instalacao">
+    Voltar e configurar o cliente.
+  </Card>
+  <Card title="API REST" icon="code" href="/api-reference/como-funciona">
+    Acesso direto sem MCP.
+  </Card>
+</CardGroup>

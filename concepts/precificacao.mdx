@@ -1,0 +1,217 @@
+---
+title: "Precificação"
+description: "Como a GYRA+ calcula prazo, taxa de juros e valor final usando fórmulas dinâmicas dentro da política de crédito."
+icon: "calculator"
+---
+
+<Info>
+  **Resumo:** a GYRA+ permite que cada política defina **três fórmulas dinâmicas** que calculam o prazo, a taxa de juros e o valor final aprovado a partir dos dados do relatório. A sintaxe é **idêntica ao Excel**, com mais de 270 funções suportadas (matemáticas, lógicas, de data, texto, estatísticas) e permite referenciar qualquer variável da política.
+</Info>
+
+## O que é
+
+Precificar, no contexto GYRA+, é decidir **quanto**, **por quanto tempo** e **a que taxa** o crédito pode ser concedido a um tomador após a política aprovar a operação. A decisão binária (aprovar, alertar, negar) é feita pelas regras; a **precificação é feita pelas fórmulas**.
+
+Cada política tem três fórmulas independentes:
+
+| Fórmula | Campo | O que calcula |
+| ------- | ----- | ------------- |
+| **Prazo** | `periodFormula` | Número de meses (ou dias, conforme o produto) do contrato |
+| **Taxa de juros** | `interestFormula` | Taxa mensal ou anual aplicada à operação |
+| **Valor final** | `amountFormula` | Valor efetivo aprovado (pode ser menor que o valor solicitado) |
+
+As três são opcionais. Política que não define fórmula entrega o valor solicitado na operação sem transformação.
+
+## Como habilitar na política
+
+<Steps>
+  <Step title="Abrir a política no toolbox">
+    Em *Política de Crédito, editar* a política onde você quer configurar precificação.
+  </Step>
+  <Step title="Ativar Pós-Avaliação">
+    A precificação roda **após** a avaliação das regras ter retornado `APPROVED`. No editor de política, ative o bloco *Ações pós-política* (campo `postPolicyActionsEnabled`).
+  </Step>
+  <Step title="Preencher uma, duas ou as três fórmulas">
+    Cada campo aceita uma expressão no estilo Excel. Validação automática impede salvar uma fórmula mal formada.
+  </Step>
+  <Step title="Rodar uma operação de teste">
+    A fórmula é avaliada no momento da operação e o resultado aparece no payload de saída (`amount`, `period`, `interest`).
+  </Step>
+</Steps>
+
+## Sintaxe
+
+### Operadores básicos
+
+| Operador | Uso | Exemplo |
+| -------- | --- | ------- |
+| `+` `-` `*` `/` | Aritmética | `1000 * 1.05` |
+| `^` | Potência | `2^10` |
+| `=` `<>` `<` `>` `<=` `>=` | Comparação | `score >= 600` |
+| `&` | Concatenação de texto | `"PREFIXO-" & id` |
+
+### Como referenciar variáveis da política
+
+A fórmula pode puxar qualquer variável definida na política (valor solicitado, score, faturamento, campos do relatório) usando a sintaxe de **menção**:
+
+```text
+|#<id>|<nome visível>|#|
+```
+
+Exemplo, se a política tem uma variável chamada `valorSolicitado` com id `abc123`:
+
+```excel
+|#abc123|valorSolicitado|#| * 0.8
+```
+
+No editor do toolbox a menção aparece como um *chip* clicável, internamente ela é a string acima. Ao salvar, a GYRA+ resolve cada menção para o valor real antes de calcular.
+
+Também é possível referenciar o resultado de outra fórmula calculada na mesma avaliação:
+
+```text
+|=<id>|<nome>|=|
+```
+
+## Fórmulas de exemplo
+
+### 1. Valor aprovado limitado a 30% do faturamento
+
+```excel
+MIN(|#solicitado|valor solicitado|#|, |#faturamento|faturamento mensal|#| * 0.3)
+```
+
+Aprova o que foi pedido, desde que não ultrapasse 30% do faturamento mensal informado.
+
+### 2. Taxa de juros condicional ao score
+
+```excel
+IF(|#score|score bureau|#| >= 800, 1.49,
+IF(|#score|score bureau|#| >= 650, 1.99,
+IF(|#score|score bureau|#| >= 500, 2.49, 2.99)))
+```
+
+Escalona a taxa mensal conforme a faixa do score.
+
+### 3. Prazo máximo baseado em anos de abertura
+
+```excel
+IF(|#anosAbertura|anos de abertura|#| >= 5, 36,
+IF(|#anosAbertura|anos de abertura|#| >= 2, 18, 12))
+```
+
+Empresa com 5+ anos: até 36 meses. Entre 2 e 5: até 18. Abaixo de 2: 12 meses.
+
+### 4. Valor com haircut por protesto
+
+```excel
+|#solicitado|valor|#| * IF(|#protestos|qtde protestos|#| > 0, 0.5, 1)
+```
+
+Aplica 50% de haircut caso haja qualquer protesto ativo.
+
+## Catálogo de funções disponíveis
+
+A GYRA+ usa o motor `fast-formula-parser`, compatível com a semântica do Excel. **271 funções** suportadas, organizadas por família:
+
+### Matemáticas e trigonométricas
+
+`ABS`, `CEILING`, `EVEN`, `EXP`, `FACT`, `FACTDOUBLE`, `FLOOR`, `GCD`, `INT`, `LCM`, `LN`, `LOG`, `MOD`, `MROUND`, `ODD`, `PI`, `POWER`, `PRODUCT`, `QUOTIENT`, `RAND`, `RANDBETWEEN`, `ROUND`, `ROUNDDOWN`, `ROUNDUP`, `SIGN`, `SQRT`, `SQRTPI`, `SUM`, `SUMIF`, `SUMPRODUCT`, `SUMSQ`, `TRUNC`, `SIN`, `COS`, `TAN`, `ASIN`, `ACOS`, `ATAN`, `ATAN2`, `SINH`, `COSH`, `TANH`, `DEGREES`, `RADIANS`.
+
+### Lógicas
+
+`AND`, `OR`, `NOT`, `XOR`, `IF`, `IFS`, `IFERROR`, `IFNA`, `TRUE`, `FALSE`.
+
+### Estatísticas
+
+`AVERAGE`, `AVERAGEA`, `AVERAGEIF`, `AVEDEV`, `COUNT`, `COUNTIF`, `MAX`, `MIN`, `MEDIAN`, `MODE`, `STDEV`, `VAR`, `CORREL`, `FORECAST`, `FREQUENCY`, `GEOMEAN`, `HARMEAN`, `GROWTH`, `INTERCEPT`, `KURT`, `STANDARDIZE`, `DEVSQ`.
+
+### Data e hora
+
+`DATE`, `DATEDIF`, `DATEVALUE`, `DAY`, `DAYS`, `EDATE`, `EOMONTH`, `HOUR`, `MINUTE`, `MONTH`, `NETWORKDAYS`, `NOW`, `SECOND`, `TIME`, `TIMEVALUE`, `TODAY`, `WEEKDAY`, `WEEKNUM`, `WORKDAY`, `YEAR`, `YEARFRAC`, `ISOWEEKNUM`.
+
+### Texto
+
+`CHAR`, `CLEAN`, `CODE`, `CONCAT`, `CONCATENATE`, `EXACT`, `FIND`, `FIXED`, `LEFT`, `LOWER`, `MID`, `PROPER`, `REPLACE`, `REPT`, `RIGHT`, `SEARCH`, `T`, `TEXT`, `TRIM`, `UPPER`, `VALUE`, `UNICHAR`, `UNICODE`, `NUMBERVALUE`, `DOLLAR`.
+
+### Informação e tipos
+
+`ISBLANK`, `ISERR`, `ISERROR`, `ISEVEN`, `ISLOGICAL`, `ISNA`, `ISNONTEXT`, `ISNUMBER`, `ISTEXT`, `N`, `NA`, `TYPE`.
+
+### Engenharia e avançadas
+
+`BITAND`, `BITOR`, `BITXOR`, `BITLSHIFT`, `BITRSHIFT`, `DELTA`, `GESTEP`, `BASE`, `DECIMAL`, `COMPLEX`, `IMABS`, `IMAGINARY`, `IMREAL`, `IMSUM`, `IMPRODUCT`, `IMPOWER`, `IMSQRT`, `IMEXP`, `IMLN`, funções de Bessel (`BESSELI`, `BESSELJ`, `BESSELK`, `BESSELY`), funções de erro (`ERF`, `ERFC`), `GAMMA`, `GAMMALN`, `FISHER`, `FISHERINV`, `GAUSS`, `PHI`, `COMBIN`, `PERMUT`, `MULTINOMIAL`.
+
+### Matrizes
+
+`MDETERM`, `MINVERSE`, `MMULT`, `MUNIT`, `TRANSPOSE`.
+
+### Financeiras (compatíveis)
+
+`PMT`, `PV`, `FV`, `NPER`, `RATE`, `IRR`, `NPV`, `SLN`, `SYD`, `DB`, `DDB`, `PPMT`, `IPMT`.
+
+<Tip>
+  A lista acima cobre as funções mais usadas. O conjunto completo de 271 está disponível no dropdown do editor de fórmulas do toolbox, com busca por nome e descrição de cada função.
+</Tip>
+
+## Onde o resultado aparece
+
+No payload da operação, após a execução da política aprovada:
+
+```json
+{
+  "operationId": "6612a7f30000000000000001",
+  "status": "APPROVED",
+  "pricing": {
+    "amount": 80000.00,
+    "period": 24,
+    "interest": 1.99
+  }
+}
+```
+
+Também visível no toolbox na tela de detalhe da operação, aba *Precificação*.
+
+## Limitações e considerações
+
+- **Fórmulas rodam só quando política aprova.** Se a política negar, `pricing` vem vazio.
+- **Sem efeitos colaterais.** Fórmulas são puras: não fazem chamadas HTTP, não gravam em banco, não disparam eventos. Se precisar de efeito colateral, use webhook na operação.
+- **Variável inexistente retorna erro.** Se uma menção apontar para variável que não está mais na política, a validação falha ao salvar.
+- **Precisão numérica.** Seguimos precisão de ponto flutuante IEEE 754 do JavaScript. Para valores monetários, sempre arredondar ao final com `ROUND(..., 2)`.
+- **Sem loops ou recursão.** Fórmulas são expressões, não scripts. Lógica sequencial complexa deve ser resolvida em camadas com `IF` aninhado ou múltiplas fórmulas.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Posso usar a mesma variável em várias fórmulas?">
+    Sim. Variáveis são referenciadas por id; podem aparecer em `periodFormula`, `interestFormula` e `amountFormula` simultaneamente.
+  </Accordion>
+  <Accordion title="O que acontece se a fórmula retornar um valor inválido (texto, negativo)?">
+    A plataforma valida o tipo esperado para cada campo: `period` e `amount` devem ser números positivos, `interest` precisa ser numérico. Retorno inválido marca a operação como `ERROR` e dispara notificação.
+  </Accordion>
+  <Accordion title="Como testar uma fórmula antes de salvar?">
+    O editor do toolbox tem um campo *pré-visualizar* onde você informa valores de teste para cada variável e vê o resultado da fórmula em tempo real.
+  </Accordion>
+  <Accordion title="Fórmulas são versionadas?">
+    Sim. Toda edição em `periodFormula`, `interestFormula` ou `amountFormula` é registrada em `PolicyChange`, com diff entre versões, autor e timestamp. Ver [Operações](/concepts/operacoes) para detalhes de versionamento.
+  </Accordion>
+  <Accordion title="Qual nível de relatório habilita precificação?">
+    Precificação funciona em qualquer nível de relatório, desde que a política esteja com *Ações pós-política* ativadas. Os campos que a fórmula pode consultar variam com o nível: fórmulas que usam SCR, por exemplo, só funcionam em COMPLETO ou COMPLETO+.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Criar política" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Passo a passo no toolbox.
+  </Card>
+  <Card title="Operações" icon="diagram-project" href="/concepts/operacoes">
+    Como a operação consome o resultado da precificação.
+  </Card>
+  <Card title="Templates de política" icon="file-lines" href="/concepts/templates-de-politica">
+    Vários templates já vêm com fórmulas pré-configuradas.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/concepts/webhooks-e-tempo-real">
+    Receber o resultado da precificação em tempo real.
+  </Card>
+</CardGroup>

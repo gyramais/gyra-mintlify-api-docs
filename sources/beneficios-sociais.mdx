@@ -1,0 +1,124 @@
+---
+title: "Benefícios Sociais"
+description: "Participação em programas sociais (Bolsa Família, BPC, Seguro Desemprego) e vínculos governamentais para CPF."
+icon: "hand-holding-heart"
+---
+
+<Info>
+  **Resumo:** a fonte de benefícios sociais indica se o CPF recebe ou recebeu recentemente **programas sociais do governo federal** (Bolsa Família/Auxílio Brasil, BPC, Seguro Desemprego, Abono Salarial). É informação de perfil socioeconômico útil em segmentação, calibração de produtos e detecção de uso indevido.
+</Info>
+
+## O que é
+
+O Brasil tem uma rede robusta de programas sociais e parte relevante da população adulta recebe algum benefício em algum momento. Para crédito PF, saber se o tomador está em programa social (e em qual) é informação de contexto para segmentar produto e calibrar capacidade.
+
+Responde:
+
+- O CPF recebe algum benefício social ativo?
+- Qual programa? Há quanto tempo?
+- Valor mensal aproximado?
+- Histórico de passagem por programas?
+
+## De onde vem
+
+- **Tipo de fonte:** bases públicas oficiais (CadÚnico, SIAPE, CAGED, RAIS), consolidadas via agregadores.
+- **Cobertura geográfica:** Brasil, programas federais.
+- **Natureza do dado:** público (participação em programa é informação pública, com nome e valor).
+- **Base legal:** dados públicos conforme Lei de Acesso à Informação, finalidade de análise de crédito.
+
+## Frequência de atualização
+
+| Componente | Atualização |
+| ---------- | ----------- |
+| Bolsa Família / Auxílio Brasil | mensal (ciclo de pagamento) |
+| BPC | mensal |
+| Seguro Desemprego | conforme parcelas pagas |
+| Abono Salarial | anual |
+
+## Dados entregues
+
+| Campo | Descrição | Exemplo |
+| ----- | --------- | ------- |
+| `socialBenefits.hasActive` | Há benefício ativo? | `true` / `false` |
+| `socialBenefits.programs[]` | Lista de programas | `[{...}]` |
+| `socialBenefits.programs[].name` | Programa | `"Bolsa Família"`, `"BPC"`, `"Seguro Desemprego"`, `"Abono Salarial"` |
+| `socialBenefits.programs[].status` | Ativo/encerrado | `"ACTIVE"` / `"FINISHED"` |
+| `socialBenefits.programs[].startDate` | Início | `"2023-04-01"` |
+| `socialBenefits.programs[].endDate` | Fim, se encerrado | `null` |
+| `socialBenefits.programs[].monthlyValue` | Valor mensal aproximado | `600.00` |
+| `socialBenefits.totalMonthly` | Soma dos benefícios ativos | `600.00` |
+
+## Casos de uso
+
+<CardGroup cols={2}>
+  <Card title="Segmentação de produto PF" icon="user-tag">
+    Produtos de cartão e consignado podem ter regras específicas para beneficiários (consignado INSS, crédito para BPC).
+  </Card>
+  <Card title="Capacidade realista" icon="scale-balanced">
+    Renda via benefício é parte da capacidade de pagamento, desde que respeitado o teto de comprometimento.
+  </Card>
+  <Card title="Detecção de inconsistência" icon="magnifying-glass">
+    CPF recebendo Bolsa Família e com participação em várias empresas ativas é ponto de atenção.
+  </Card>
+  <Card title="Crédito consignado específico" icon="handshake">
+    Produto consignado BPC: identificar elegibilidade pelo campo `programs.name = "BPC"`.
+  </Card>
+</CardGroup>
+
+## Como usar na política
+
+<Steps>
+  <Step title="Não usar como bloqueio genérico">
+    Receber benefício social **não é motivo para negar crédito**. Pode ser motivo para ajustar produto, limite ou prazo.
+  </Step>
+  <Step title="Regras positivas para produto específico">
+    Ex: produto consignado INSS só aprova quem tem `socialBenefits.programs.name = "APOSENTADORIA"` ou equivalente.
+  </Step>
+  <Step title="Capacidade com piso conservador">
+    Fórmula de `amountFormula` pode considerar `socialBenefits.totalMonthly` com peso menor que renda formal.
+  </Step>
+</Steps>
+
+## Limitações e considerações
+
+- **Discriminação**: usar "recebe benefício" como critério negativo de crédito pode configurar discriminação. Cada organização deve revisar com sua área jurídica.
+- **Atraso de ciclo**: benefício concedido este mês aparece com 30 a 60 dias de defasagem.
+- **Histórico limitado**: a fonte cobre o ciclo atual e histórico recente (últimos 24-36 meses). Histórico antigo nem sempre está disponível.
+- **Variação regional**: alguns programas estaduais/municipais não estão cobertos.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Posso recusar crédito por CPF receber Bolsa Família?">
+    Tecnicamente possível, mas juridicamente arriscado. Pode configurar discriminação. Recomendamos usar o campo para segmentação de produto adequado, não para recusa.
+  </Accordion>
+  <Accordion title="BPC conta como renda para cálculo de limite?">
+    Sim, é renda formal e pode ser considerada. Para consignado BPC, é a base do produto.
+  </Accordion>
+  <Accordion title="Seguro Desemprego vira sinal negativo?">
+    Indica desemprego recente, o que pode impactar capacidade. Tratar como informação contextual, não bloqueio automático.
+  </Accordion>
+  <Accordion title="A pessoa saiu do Bolsa Família recentemente, aparece?">
+    Sim, como `status: "FINISHED"` com `endDate`. Útil para entender histórico.
+  </Accordion>
+  <Accordion title="Qual nível de relatório inclui benefícios sociais?">
+    Disponível a partir do **COMPLETO**.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Financeira" icon="sack-dollar" href="/sources/financeira">
+    Renda inferida e perfil financeiro.
+  </Card>
+  <Card title="Cadastral" icon="id-card" href="/sources/cadastral">
+    Situação do CPF como pré-requisito.
+  </Card>
+  <Card title="Demográfica" icon="location-dot" href="/sources/demografica">
+    Região e classe socioeconômica.
+  </Card>
+  <Card title="Criar política PF" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Regras e segmentação para produtos PF.
+  </Card>
+</CardGroup>

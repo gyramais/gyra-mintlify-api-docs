@@ -1,0 +1,156 @@
+---
+title: "Financeira"
+description: "Faturamento declarado, indicadores contábeis, integrações de balanço e sinais de capacidade financeira para CNPJ e CPF."
+icon: "sack-dollar"
+---
+
+<Info>
+  **Resumo:** a fonte financeira entrega **indicadores de capacidade e saúde econômica** do tomador: para PJ, faturamento estimado, balanço (quando integrado), regime tributário, porte; para PF, indicadores de renda inferida. É fonte fundamental para calibrar o valor aprovado e a taxa na precificação.
+</Info>
+
+## O que é
+
+Crédito só faz sentido se a operação cabe no bolso do tomador. Protestos e score dizem se ele **pagou bem no passado**; a fonte financeira tenta responder se ele **tem como pagar no futuro**. Combinada com [SCR](/sources/scr-open-finance), dá a visão mais próxima de capacidade real.
+
+Responde:
+
+- Qual o faturamento da empresa? Cresceu ou caiu?
+- Qual o balanço declarado (quando disponível)?
+- Regime tributário, porte, sinais de saúde econômica?
+- Para PF: faixa de renda inferida?
+
+## De onde vem
+
+- **Tipo de fonte:** combinação de dados públicos (RFB, Simples Nacional, Junta Comercial) + integrações externas opcionais (balanço via ERP, Contabilizei, Omie) + inferências estatísticas.
+- **Cobertura geográfica:** Brasil.
+- **Natureza do dado:** misto público + inferido + contratado.
+- **Base legal:** dados públicos + consentimento específico para integrações externas.
+
+## Frequência de atualização
+
+| Componente | Atualização |
+| ---------- | ----------- |
+| Porte, regime tributário (RFB) | 24-48 h |
+| Faturamento declarado (Simples Nacional) | trimestral |
+| Balanço via integração externa | real-time conforme webhook do ERP |
+| Faturamento estimado (inferência) | mensal |
+
+## Dados entregues
+
+### CNPJ
+
+| Campo | Descrição | Exemplo |
+| ----- | --------- | ------- |
+| `revenue.estimated` | Faturamento estimado (inferência agregada) | `1800000.00` |
+| `revenue.declared` | Faturamento declarado (Simples, quando acessível) | `1650000.00` |
+| `revenue.growth12m` | Variação percentual últimos 12 meses | `0.12` (+12%) |
+| `balance.totalAssets` | Ativo total (via integração) | `4500000.00` |
+| `balance.netEquity` | Patrimônio líquido | `1200000.00` |
+| `balance.ebitda` | EBITDA 12m | `380000.00` |
+| `balance.netRevenue` | Receita líquida | `1700000.00` |
+| `balance.referenceDate` | Data base do balanço | `"2025-12-31"` |
+| `taxRegime` | SIMPLES, LUCRO_REAL, LUCRO_PRESUMIDO, MEI | `"LUCRO_PRESUMIDO"` |
+| `size` | ME, EPP, DEMAIS | `"EPP"` |
+
+### CPF
+
+| Campo | Descrição |
+| ----- | --------- |
+| `income.estimated` | Renda mensal estimada (faixa inferida) |
+| `income.band` | Classificação em faixas (A, B, C, D, E) |
+| `income.source` | Natureza da renda inferida (assalariado, autônomo, empresário, aposentado) |
+
+## Casos de uso
+
+<CardGroup cols={2}>
+  <Card title="Limite por % do faturamento" icon="calculator">
+    Regra clássica: aprovar no máximo X% do faturamento mensal ou anual.
+    **Fórmula:** `MIN(solicitado, revenue.estimated * 0.3)`.
+  </Card>
+  <Card title="Capacidade mínima" icon="chart-simple">
+    Não aprovar se faturamento estimado abaixo de um limite.
+    **Regra:** `revenue.estimated < 100000` : `DENIED` em produto PJ médio ticket.
+  </Card>
+  <Card title="Saúde via EBITDA" icon="heart-pulse">
+    Com balanço, olhar EBITDA/receita líquida como sinal de margem operacional.
+  </Card>
+  <Card title="Renda PF" icon="user-tag">
+    Segmentar produto por faixa de renda: cartão PF, crédito consignado, consórcio.
+  </Card>
+</CardGroup>
+
+## Como usar na política
+
+<Steps>
+  <Step title="Faturamento como regra + variável de fórmula">
+    O mesmo campo `revenue.estimated` entra como regra (ex: mínimo absoluto) e como variável na fórmula de `amountFormula` para cap proporcional.
+  </Step>
+  <Step title="Balanço como bônus opcional">
+    Quando o tomador tem integração de balanço ativa (ERP conectado), usar indicadores contábeis para refinar taxa e prazo.
+  </Step>
+  <Step title="Renda PF para produtos de pessoa física">
+    `income.band` ou `income.estimated` alimentam segmentação e limites em cartão e crédito PF.
+  </Step>
+</Steps>
+
+Exemplo de fórmula:
+
+```excel
+MIN(|#solicitado|valor|#|, |#faturamento|faturamento anual|#| / 12 * 3)
+```
+
+Aprova até 3 meses de faturamento, cap no solicitado.
+
+## Integrações externas (balanço)
+
+A GYRA+ aceita integrações que trazem balanço em tempo real:
+
+- **ERPs comuns** (Omie, Conta Azul, ContaBit, Contabilizei, NFe.io).
+- **Upload manual** via PDF/Excel (parse OCR).
+- **Webhook do cliente** para sincronizar balanço próprio.
+
+Configurar em *Configurações, Integrações, Financeira*. Depois de conectado, o campo `balance.*` passa a vir populado nas análises.
+
+## Limitações e considerações
+
+- **Faturamento estimado é inferência**, com margem de erro. Empresas com operação atípica (sazonal, exportação, grupo econômico complexo) podem ter estimativa defasada.
+- **Balanço depende de consentimento e integração**. Sem integração, os campos de balanço ficam nulos.
+- **Simples Nacional**: faturamento declarado é acessível para algumas empresas, dependendo de consentimento e disponibilidade na base.
+- **Renda PF é inferida**: a GYRA+ não acessa holerite individual sem consentimento específico (Open Finance PF). Para precisão, usar SCR via Open Finance.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Faturamento estimado vem pelo contrato padrão?">
+    Sim, disponível a partir do COMPLETO. É inferência proprietária baseada em cruzamento de porte, regime, atividade e comportamento de mercado.
+  </Accordion>
+  <Accordion title="Como ter balanço real no relatório?">
+    Configurar integração em *Configurações, Integrações, Financeira* com o ERP ou contabilidade do cliente. Sem integração, apenas estimativa.
+  </Accordion>
+  <Accordion title="Renda PF precisa de consentimento?">
+    A inferência em faixa (`income.band`) é estatística e não requer consentimento específico. Renda precisa e declarada requer SCR/Open Finance com consentimento.
+  </Accordion>
+  <Accordion title="Empresa sem faturamento estimado, o que fazer?">
+    Campo nulo quando a inferência não tem confiança suficiente (empresa muito nova, atividade atípica). Tratar como `ALERT` em produtos médio ticket ou usar regra alternativa.
+  </Accordion>
+  <Accordion title="Qual nível de relatório inclui financeira?">
+    Disponível a partir do **COMPLETO**. Campos de balanço via integração externa exigem `externalIntegrationEnabled: true` na política.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="SCR / Open Finance" icon="building-columns" href="/sources/scr-open-finance">
+    Capacidade via endividamento bancário real.
+  </Card>
+  <Card title="Precificação" icon="calculator" href="/concepts/precificacao">
+    Fórmulas usando faturamento e balanço.
+  </Card>
+  <Card title="Bureau de Crédito" icon="chart-line" href="/sources/bureau-credito">
+    Score e restritivos, complementar a capacidade.
+  </Card>
+  <Card title="Criar política PJ" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Regras de faturamento e fórmulas.
+  </Card>
+</CardGroup>

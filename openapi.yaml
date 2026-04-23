@@ -1,118 +1,39 @@
 openapi: 3.0.0
+info:
+  title: GYRA+ API - MCP Server
+  description: API da Gyra+ para analise de credito. Spec curada para uso com agentes AI via MCP.
+  version: 1.0
+  contact: {}
+servers: []
 paths:
-  /auth/user/create-deletion-token:
-    post:
-      operationId: AuthUserController_createDeletionToken
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DeleteTokenDto'
-      responses:
-        '200':
-          description: ''
-      tags:
-        - user
   /auth/authenticate:
     post:
       operationId: AuthController_generateAccessToken
       parameters:
         - name: gyra-client-secret
           in: header
-          description: client secret
+          description: 'Client Secret da integracao. Obtido no painel Toolbox em Configuracoes > Integracao.'
           schema:
             type: string
         - name: gyra-client-id
           in: header
-          description: client id
+          description: 'Client ID da integracao. Obtido no painel Toolbox em Configuracoes > Integracao.'
           schema:
             type: string
       responses:
-        '200':
-          description: ''
+        200:
+          description: Objeto com accessToken (JWT) e expiresIn (tempo em segundos).
       tags:
         - auth
-  /integration/credential:
-    post:
-      operationId: CredentialController_create
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateDto'
-      responses:
-        '200':
-          description: ''
-      tags:
-        - integration/credential
-      security:
-        - authorization: []
-    get:
-      operationId: CredentialController_findAll
-      parameters: []
-      responses:
-        '200':
-          description: ''
-      tags:
-        - integration/credential
-      security:
-        - authorization: []
-  '/integration/credential/{id}':
-    get:
-      operationId: CredentialController_findOne
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-      tags:
-        - integration/credential
-      security:
-        - authorization: []
-    put:
-      operationId: CredentialController_update
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EditDto'
-      responses:
-        '200':
-          description: ''
-      tags:
-        - integration/credential
-      security:
-        - authorization: []
-    delete:
-      operationId: CredentialController_delete
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-      tags:
-        - integration/credential
-      security:
-        - authorization: []
+      summary: Gerar token de acesso JWT
+      description: |
+          Autentica via client credentials (client-id e client-secret) e retorna um JWT.
+          
+          Este e o primeiro passo para usar a API. O token retornado deve ser enviado
+          no header Authorization de todas as requisicoes subsequentes.
+          
+          NOTA: No MCP server, a autenticacao e automatica — este tool e exposto apenas
+          para uso manual ou debug. O server gerencia o token internamente.
   /webhook:
     post:
       operationId: WebhookController_create
@@ -124,10 +45,26 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateWebhookDto'
       responses:
-        '200':
-          description: ''
+        200:
+          description: 'Webhook criado com id, type, url e organizationId.'
       tags:
         - webhook
+      summary: Criar webhook para notificacoes
+      description: |
+          Registra uma URL de webhook para receber notificacoes em tempo real.
+          
+          Tipos de webhook disponiveis:
+          - REPORT: notificado quando um relatorio muda de status (PENDING → APPROVED/DENIED/ALERT)
+          - REPORT_FINISHED: notificado quando o processamento do relatorio finaliza
+          - REPORT_STATUS: notificado em cada mudanca de status intermediaria
+          - CREDIT_POLICY: notificado quando a politica de credito e avaliada
+          - OPTIN: notificado quando um opt-in e processado
+          
+          O webhook recebe um POST na URL configurada com o payload do evento.
+          Se apiKey for informada, sera enviada no header api-key da requisicao.
+          
+          RECOMENDADO: Sempre configure um webhook ao criar relatorios. Evita
+          a necessidade de polling com get_report.
   /webhook/findBy:
     get:
       operationId: WebhookController_find
@@ -135,101 +72,258 @@ paths:
         - name: webhookId
           required: false
           in: query
-          description: 'Webhook Id, If you do not add the webhookId, the organizationId extracted from the token is used as a search.'
+          description: 'ID do webhook especifico (opcional). Sem este parametro, retorna todos.'
+          example: 664b63037707171ba58cf311
           schema:
-            example: 664b63037707171ba58cf311
             type: string
       responses:
-        '200':
-          description: ''
+        200:
+          description: 'Webhook(s) com id, type, url, apiKey e organizationId.'
       tags:
         - webhook
-  '/webhook/{id}':
+      summary: Consultar webhooks cadastrados
+      description: |
+          Busca webhooks cadastrados na organizacao.
+          
+          Se webhookId for informado, retorna o webhook especifico.
+          Caso contrario, retorna todos os webhooks da organizacao autenticada.
+  /webhook/{id}:
     delete:
       operationId: WebhookController_delete
       parameters:
         - name: id
           required: true
           in: path
-          description: Webhook Id
+          description: ID do webhook a remover.
+          example: 664b63037707171ba58cf311
           schema:
-            example: 664b63037707171ba58cf311
             type: string
       responses:
-        '200':
-          description: ''
+        200:
+          description: Confirmacao de remocao.
       tags:
         - webhook
-  '/report/section/{id}':
+      summary: Deletar webhook
+      description: Remove um webhook cadastrado. A URL deixa de receber notificacoes imediatamente.
+  /report/section/{id}:
     get:
       operationId: SectionController_get
-      summary: Consultar seção por ID
-      description: Retorna os dados de uma seção específica de um relatório.
       parameters:
         - name: id
           required: true
           in: path
-          description: Identificador da seção do relatório
           schema:
             type: string
+          description: 'ID da secao (ObjectId). Disponivel no array sections[] do relatorio.'
       responses:
-        '200':
-          description: Seção encontrada com sucesso.
-        '401':
-          description: Token ausente ou inválido.
-        '403':
-          description: Sem permissão para acessar a seção.
-        '404':
-          description: Seção não encontrada.
+        200:
+          description: 'Secao completa com dados detalhados, status de finalizacao e metadados.'
       tags:
         - report
       security:
         - authorization: []
+      summary: Consultar secao por ID
+      description: |
+          Retorna os dados detalhados de uma secao especifica de um relatorio.
+          
+          Cada relatorio e composto por varias secoes que contem dados de diferentes fontes:
+          - Informacoes basicas (CNPJ/CPF, endereco, socios, QSA)
+          - Processos judiciais
+          - Protestos em cartorio
+          - Dividas Pefin/Refin
+          - Dados SCR / Open Finance (Banco Central)
+          - PEP e sancoes internacionais
+          - Resultado da politica de credito
+          
+          Use get_report para obter a lista de secoes e seus IDs.
   /report:
     post:
       operationId: ReportController_create
-      parameters:
-        - name: front
-          required: true
-          in: query
-          schema:
-            type: string
+      parameters: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateDto'
+              $ref: '#/components/schemas/CreateReportDto'
       responses:
-        '200':
-          description: ''
+        200:
+          description: 'Objeto do relatorio com id, status (PENDING), document, type e createdAt.'
       tags:
         - report
       security:
         - authorization: []
+      summary: Criar relatorio de analise de credito
+      description: |
+          Cria um novo relatorio de analise de credito para um CPF ou CNPJ.
+          
+          O processamento e ASSINCRONO: voce recebe o reportId imediatamente com status PENDING.
+          Para saber quando o relatorio ficou pronto:
+            1. Configure um webhook (create_webhook) para receber notificacao automatica
+            2. Ou consulte periodicamente com get_report ate o status mudar
+          
+          Status possiveis: PENDING → APPROVED, DENIED ou ALERT.
+          O tipo de relatorio (SIMPLES, ESSENCIAL, COMPLETO, COMPLETO+) e determinado
+          pela politica de credito (policyId) utilizada.
+          
+          Use list_policies para obter os policyIds disponiveis na organizacao.
   /report/list:
     get:
       operationId: ReportController_list
-      parameters: []
+      parameters:
+        - name: take
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Quantidade maxima de registros.
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Offset de paginacao.
+        - name: statusValue
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - APPROVED
+              - DENIED
+              - ALERT
+          description: Status do relatorio.
+        - name: document
+          in: query
+          required: false
+          schema:
+            type: string
+          description: CPF ou CNPJ (apenas numeros).
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: ID do usuario criador.
+        - name: createdAtBetween
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          description: 'Intervalo [startISO, endISO].'
+        - name: productIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          description: Filtrar por productIds.
+        - name: operationResultId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: ID do resultado de operacao.
+        - name: reportIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          description: IDs especificos de relatorios.
+        - name: batchId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: ID do batch.
       responses:
-        '200':
-          description: ''
+        200:
+          description: Array de relatorios com metadados (sem secoes detalhadas).
       tags:
         - report
       security:
         - authorization: []
+      summary: Listar relatorios da organizacao
+      description: |
+          Lista relatorios com filtros opcionais. Retorna relatorios da organizacao
+          autenticada. Analistas de credito veem apenas os proprios relatorios.
+          
+          Suporta paginacao (take/skip) e filtros por status, documento, usuario, periodo,
+          produtos, operacao, batch.
   /report/count:
     get:
       operationId: ReportController_count
-      parameters: []
+      parameters:
+        - name: statusValue
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - APPROVED
+              - DENIED
+              - ALERT
+          description: Status do relatorio.
+        - name: document
+          in: query
+          required: false
+          schema:
+            type: string
+          description: CPF ou CNPJ (apenas numeros).
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: ID do usuario criador.
+        - name: createdAtBetween
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          description: 'Intervalo [startISO, endISO].'
+        - name: productIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          description: Filtrar por productIds.
+        - name: operationResultId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: ID do resultado de operacao.
+        - name: batchId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: ID do batch.
       responses:
-        '200':
-          description: ''
+        200:
+          description: Objeto com count (numero de relatorios).
       tags:
         - report
       security:
         - authorization: []
-  '/report/export/{id}':
+      summary: Contar relatorios
+      description: |
+          Retorna a contagem de relatorios que correspondem aos filtros aplicados.
+          Util para dashboards e analytics sem carregar os dados completos. Aceita os mesmos
+          filtros de list_reports.
+  /report/export/{id}:
     get:
       operationId: ReportController_export
       parameters:
@@ -238,14 +332,50 @@ paths:
           in: path
           schema:
             type: string
+          description: ID do relatorio a exportar.
       responses:
-        '200':
-          description: ''
+        200:
+          description: 'Objeto { status: "processing", reportId } — o PDF chega via webhook.'
       tags:
         - report
       security:
         - authorization: []
-  '/report/{id}':
+      summary: Exportar relatorio em PDF (assincrono)
+      description: |
+          Solicita a geracao de PDF de um relatorio. Processamento assincrono:
+          retorna imediatamente com status "processing" e o arquivo e entregue via webhook
+          quando pronto.
+          
+          Use quando precisar processar varios relatorios em lote ou quando a latencia nao
+          for critica. Para receber o PDF na hora, use export_report_sync.
+  /report/export-sync/{id}:
+    get:
+      operationId: ReportController_exportSync
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio a exportar.
+      responses:
+        200:
+          description: 'Objeto com a URL de download do PDF gerado (assinada, com expiracao).'
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Exportar relatorio em PDF
+      description: |
+          Exporta um relatorio em PDF e retorna a URL de download na resposta.
+          
+          O endpoint BLOQUEIA ate a geracao concluir — pode levar ate 6 minutos para
+          relatorios completos. Use com timeout adequado do lado do cliente. Sempre
+          gera PDF do relatorio completo (todas as secoes).
+          
+          Pre-requisito: o relatorio precisa estar finalizado (status APPROVED, DENIED
+          ou ALERT). Relatorios em PENDING nao podem ser exportados.
+  /report/{id}:
     get:
       operationId: ReportController_get
       parameters:
@@ -254,26 +384,33 @@ paths:
           in: path
           schema:
             type: string
-        - name: tabType
-          required: false
-          in: query
-          description: Report type
-          schema:
-            type: string
+          description: ID do relatorio (ObjectId). Retornado pelo create_report.
         - name: details
           required: false
           in: query
-          description: 'Para remover os detalhes da seção, defina como `false`'
+          description: Defina como "false" para omitir detalhes das secoes. Util para verificar status rapidamente.
           schema:
             type: string
       responses:
-        '200':
-          description: ''
+        200:
+          description: 'Relatorio completo com secoes, decisao e metadados.'
       tags:
         - report
       security:
         - authorization: []
-  '/report/{id}/section/{sectionType}':
+      summary: Consultar relatorio por ID
+      description: |
+          Retorna o relatorio completo com secoes, decisao da politica e score.
+          
+          Se o relatorio esta em processamento, o status sera PENDING.
+          Quando pronto, o objeto retornado contem:
+          - status: APPROVED, DENIED ou ALERT
+          - policyResult: decisao automatica com regras avaliadas
+          - sections[]: array de secoes (BASIC_INFORMATION, PROCESSES, PROTESTS, SCR, etc.)
+          - commentary: analise do analista (se houver)
+          
+          Use details=false para obter apenas metadados sem o conteudo das secoes.
+  /report/{id}/section/{sectionType}:
     get:
       operationId: ReportController_getReportSection
       parameters:
@@ -282,34 +419,32 @@ paths:
           in: path
           schema:
             type: string
+          description: ID do relatorio.
         - name: sectionType
           required: true
           in: path
           schema:
             type: string
+          description: 'Tipo da secao (ex: BASIC_INFORMATION, PROCESSES, SCR, CREDIT_POLICY).'
       responses:
-        '200':
-          description: ''
+        200:
+          description: Secao com dados detalhados do tipo solicitado.
       tags:
         - report
       security:
         - authorization: []
-  '/report/{id}/financial-tab':
-    post:
-      operationId: ReportController_financialSection
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        '200':
-          description: ''
-      tags:
-        - report
-      security:
-        - authorization: []
+      summary: Consultar secao especifica do relatorio
+      description: |
+          Retorna uma secao especifica de um relatorio pelo tipo.
+          
+          Tipos de secao disponiveis:
+          - BASIC_INFORMATION: dados cadastrais, endereco, socios
+          - PROCESSES: processos judiciais
+          - PROTESTS: protestos em cartorio
+          - PEFIN_REFIN: dividas Pefin/Refin
+          - SCR: dados do Sistema de Informacoes de Credito do Banco Central
+          - PEP_SANCTIONS: Pessoa Politicamente Exposta e sancoes
+          - CREDIT_POLICY: resultado da avaliacao da politica de credito
   /report/analyze:
     post:
       operationId: ReportController_analyze
@@ -319,14 +454,34 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AnalyzeDto'
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: ID do relatorio a analisar.
+                approved:
+                  type: boolean
+                  description: 'true para aprovar, false para negar.'
+                commentary:
+                  type: string
+                  description: Comentario do analista (opcional).
+              required:
+                - id
+                - approved
       responses:
-        '200':
-          description: ''
+        200:
+          description: Relatorio atualizado com a analise registrada.
       tags:
         - report
       security:
         - authorization: []
+      summary: Analisar/aprovar relatorio
+      description: |
+          Registra a analise de um relatorio por um analista de credito.
+          
+          Define o status de aprovacao (approved: true/false), comentarios do analista
+          e decisao manual. Usado quando a decisao automatica da politica precisa de
+          revisao humana.
   /report/re-analyze:
     post:
       operationId: ReportController_reAnalyze
@@ -336,344 +491,77 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AnalyzeDto'
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: ID do relatorio a re-analisar.
+                approved:
+                  type: boolean
+                  description: 'true para aprovar, false para negar.'
+                commentary:
+                  type: string
+                  description: Comentario do analista (opcional).
+              required:
+                - id
+                - approved
       responses:
-        '200':
-          description: ''
+        200:
+          description: Relatorio atualizado com a nova analise.
       tags:
         - report
       security:
         - authorization: []
-  /report/save-product:
-    post:
-      operationId: ReportController_saveProduct
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SaveProductDto'
-      responses:
-        '200':
-          description: ''
-      tags:
-        - report
-      security:
-        - authorization: []
-  /report/heal:
-    post:
-      operationId: ReportController_heal
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/HealDto'
-      responses:
-        '200':
-          description: ''
-      tags:
-        - report
-      security:
-        - authorization: []
+      summary: Re-analisar relatorio
+      description: |
+          Re-analisa um relatorio previamente analisado. Verifica se o usuario
+          tem permissao para editar relatorios com base na politica de credito configurada.
+          
+          Util quando dados adicionais foram obtidos ou a decisao precisa ser revisada.
   /credit-policy/policy:
     get:
       operationId: PolicyController_find
       parameters:
+        - name: percentages
+          required: false
+          in: query
+          description: Enable percentage of policies
+          schema:
+            type: boolean
         - name: enabled
           required: false
           in: query
-          description: Enabled policies
+          description: Filtrar por politicas ativas. "true" ou "false" (como string).
           schema:
             type: boolean
         - name: protected
           required: false
           in: query
-          description: Include protected policies
+          description: Incluir politicas protegidas do sistema. "true" ou "false" (como string).
           schema:
             type: boolean
       responses:
-        '200':
-          description: ''
+        200:
+          description: 'Array de politicas com id, name, enabled, documentType, grupos de regras e configuracoes.'
       tags:
         - credit-policy/policy
       security:
         - authorization: []
-  /credit-policy/policy/percentages:
-    get:
-      operationId: PolicyController_policyResultPercentages
-      parameters: []
-      responses:
-        '200':
-          description: ''
-      tags:
-        - credit-policy/policy
-      security:
-        - authorization: []
-  /credit-policy/policy/who-can-edit-report:
-    get:
-      operationId: PolicyController_getEditReportAccess
-      parameters: []
-      responses:
-        '200':
-          description: ''
-      tags:
-        - credit-policy/policy
-  '/credit-policy/policy/all/{id}':
-    put:
-      operationId: PolicyController_saveBatchPolicy
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SaveBatchPolicyDto'
-      responses:
-        '200':
-          description: ''
-      tags:
-        - credit-policy/policy
-  /credit-policy/product:
-    get:
-      operationId: ProductController_getProductTypes
-      parameters: []
-      responses:
-        '200':
-          description: ''
-      tags:
-        - credit-policy/product
-      security:
-        - authorization: []
-  /health:
-    get:
-      operationId: HealthController_check
-      parameters: []
-      responses:
-        '200':
-          description: The Health Check is successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: ok
-                  info:
-                    type: object
-                    example:
-                      database:
-                        status: up
-                    additionalProperties:
-                      type: object
-                      required:
-                        - status
-                      properties:
-                        status:
-                          type: string
-                      additionalProperties: true
-                    nullable: true
-                  error:
-                    type: object
-                    example: {}
-                    additionalProperties:
-                      type: object
-                      required:
-                        - status
-                      properties:
-                        status:
-                          type: string
-                      additionalProperties: true
-                    nullable: true
-                  details:
-                    type: object
-                    example:
-                      database:
-                        status: up
-                    additionalProperties:
-                      type: object
-                      required:
-                        - status
-                      properties:
-                        status:
-                          type: string
-                      additionalProperties: true
-        '503':
-          description: The Health Check is not successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: error
-                  info:
-                    type: object
-                    example:
-                      database:
-                        status: up
-                    additionalProperties:
-                      type: object
-                      required:
-                        - status
-                      properties:
-                        status:
-                          type: string
-                      additionalProperties: true
-                    nullable: true
-                  error:
-                    type: object
-                    example:
-                      redis:
-                        status: down
-                        message: Could not connect
-                    additionalProperties:
-                      type: object
-                      required:
-                        - status
-                      properties:
-                        status:
-                          type: string
-                      additionalProperties: true
-                    nullable: true
-                  details:
-                    type: object
-                    example:
-                      database:
-                        status: up
-                      redis:
-                        status: down
-                        message: Could not connect
-                    additionalProperties:
-                      type: object
-                      required:
-                        - status
-                      properties:
-                        status:
-                          type: string
-                      additionalProperties: true
-      tags:
-        - Health
-  /health/all:
-    get:
-      operationId: HealthController_checkAll
-      parameters: []
-      responses:
-        '200':
-          description: The Health Check is successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: ok
-                  info:
-                    type: object
-                    example:
-                      database:
-                        status: up
-                    additionalProperties:
-                      type: object
-                      required:
-                        - status
-                      properties:
-                        status:
-                          type: string
-                      additionalProperties: true
-                    nullable: true
-                  error:
-                    type: object
-                    example: {}
-                    additionalProperties:
-                      type: object
-                      required:
-                        - status
-                      properties:
-                        status:
-                          type: string
-                      additionalProperties: true
-                    nullable: true
-                  details:
-                    type: object
-                    example:
-                      database:
-                        status: up
-                    additionalProperties:
-                      type: object
-                      required:
-                        - status
-                      properties:
-                        status:
-                          type: string
-                      additionalProperties: true
-        '503':
-          description: The Health Check is not successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: error
-                  info:
-                    type: object
-                    example:
-                      database:
-                        status: up
-                    additionalProperties:
-                      type: object
-                      required:
-                        - status
-                      properties:
-                        status:
-                          type: string
-                      additionalProperties: true
-                    nullable: true
-                  error:
-                    type: object
-                    example:
-                      redis:
-                        status: down
-                        message: Could not connect
-                    additionalProperties:
-                      type: object
-                      required:
-                        - status
-                      properties:
-                        status:
-                          type: string
-                      additionalProperties: true
-                    nullable: true
-                  details:
-                    type: object
-                    example:
-                      database:
-                        status: up
-                      redis:
-                        status: down
-                        message: Could not connect
-                    additionalProperties:
-                      type: object
-                      required:
-                        - status
-                      properties:
-                        status:
-                          type: string
-                      additionalProperties: true
-      tags:
-        - Health
+      summary: Listar politicas de credito
+      description: |
+          Lista as politicas de credito da organizacao.
+          
+          Cada politica define:
+          - Quais fontes de dados consultar (bureau de credito, SCR/Open Finance, etc.)
+          - Regras de aprovacao automatica (score, limites, restricoes)
+          - Tipo de relatorio gerado (SIMPLES, ESSENCIAL, COMPLETO, COMPLETO+)
+          - Grupos de regras com pesos e thresholds
+          
+          O policyId retornado e necessario para criar relatorios (create_report).
+          
+          Filtros opcionais:
+          - enabled: true para ver apenas politicas ativas
+          - protected: true para incluir politicas protegidas (padrao do sistema)
   /insight:
     post:
       operationId: InsightController_generateInsight
@@ -683,72 +571,83 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GenerateInsightDto'
+              type: object
+              properties:
+                sectionId:
+                  type: string
+                  description: ID da secao do relatorio para gerar o insight.
+              required:
+                - sectionId
       responses:
-        '200':
-          description: ''
+        200:
+          description: 'Insight gerado com analise, pontos de atencao e recomendacoes.'
       tags:
         - insight
-  /insight/review:
+      summary: Gerar insight com IA para secao do relatorio
+      description: |
+          Gera uma analise automatica com IA para uma secao especifica de um relatorio.
+          
+          A IA analisa os dados da secao e produz um resumo interpretativo com
+          pontos de atencao e recomendacoes. O insight e salvo como comentario
+          na secao do relatorio.
+          
+          Requisitos:
+          - A secao deve estar finalizada (processamento completo)
+          - A organizacao deve ter plano que suporte IA (nao disponivel em planos Trial ou Basic)
+          
+          Use get_report para obter os IDs das secoes disponiveis.
+  /v2/report:
     post:
-      operationId: InsightController_reviewInsight
+      operationId: ReportApiController_create
       parameters: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReviewInsightDto'
+              $ref: '#/components/schemas/CreateReportDto'
       responses:
-        '200':
+        200:
           description: ''
       tags:
-        - insight
-info:
-  title: GYRA+ API Documentation
-  description: Documentação da API da GYRA+
-  version: '1.0'
-  contact: {}
-tags: []
-servers:
-  - url: https://gyra-core.gyramais.com.br
-    description: Produção
+        - report
+      security:
+        - authorization: []
+      summary: Criar relatorio (API v2)
+      description: |
+          Versao v2 da criacao de relatorio. Mesma funcionalidade de create_report
+          com payload revisado. Use create_report_v2 para novas integracoes.
+  /v2/report/{id}:
+    get:
+      operationId: ReportApiController_get
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio.
+      responses:
+        200:
+          description: ''
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Consultar relatorio (API v2)
+      description: |
+          Versao v2 da consulta de relatorio. Retorna o relatorio com estrutura
+          atualizada. Use get_report_v2 para novas integracoes.
 components:
   securitySchemes:
     authorization:
-      type: http
-      scheme: bearer
+      scheme: Bearer
       bearerFormat: JWT
+      type: apiKey
+      name: authorization
       description: Enter JWT token
+      in: header
   schemas:
-    DeleteTokenDto:
-      type: object
-      properties: {}
-    CreateDto:
-      type: object
-      properties:
-        policyId:
-          type: string
-        document:
-          type: string
-        type:
-          type: string
-      required:
-        - policyId
-        - document
-        - type
-    EditDto:
-      type: object
-      properties: {}
-    WebhookTypeEnum:
-      type: string
-      description: Type Webhook
-      enum:
-        - REPORT
-        - OPTIN
-        - CREDIT_POLICY
-        - REPORT_STATUS
-        - REPORT_FINISHED
     CreateWebhookDto:
       type: object
       properties:
@@ -766,172 +665,27 @@ components:
         - type
         - url
         - apiKey
-    AnalyzeDto:
-      type: object
-      properties: {}
-    SaveProductDto:
-      type: object
-      properties: {}
-    HealDto:
-      type: object
-      properties:
-        id:
-          type: string
-      required:
-        - id
-    ParamsSettingDto:
+    WebhookTypeEnum:
+      type: string
+      description: Type Webhook
+      enum:
+        - REPORT
+        - OPTIN
+        - CREDIT_POLICY
+        - REPORT_STATUS
+        - REPORT_FINISHED
+        - REPORT_EXPORTED
+        - OPERATION
+    CreateReportDto:
       type: object
       properties:
-        key:
-          type: string
-        value:
-          type: string
-      required:
-        - key
-        - value
-    SaveBatchRuleSettingDto:
-      type: object
-      properties:
-        id:
-          type: string
-        params:
-          type: array
-          items:
-            $ref: '#/components/schemas/ParamsSettingDto'
-        typeRuleId:
-          type: string
-      required:
-        - id
-        - params
-        - typeRuleId
-    SaveBatchRuleSettingJoinDto:
-      type: object
-      properties:
-        id:
-          type: string
-        statusToApply:
-          type: string
-        operationType:
-          type: string
-        policyRuleSettings:
-          type: array
-          items:
-            $ref: '#/components/schemas/SaveBatchRuleSettingDto'
-      required:
-        - id
-        - statusToApply
-        - operationType
-        - policyRuleSettings
-    SaveBatchGroupDto:
-      type: object
-      properties:
-        id:
-          type: string
-        userId:
-          type: string
-        name:
-          type: string
-        scoreApproved:
-          type: number
-        scoreAlert:
-          type: number
-        scoreDenied:
-          type: number
         policyId:
           type: string
-        policyRuleSettingJoins:
-          type: array
-          items:
-            $ref: '#/components/schemas/SaveBatchRuleSettingJoinDto'
+        document:
+          type: string
+        type:
+          type: string
       required:
-        - id
-        - userId
-        - name
-        - scoreApproved
-        - scoreAlert
-        - scoreDenied
         - policyId
-        - policyRuleSettingJoins
-    SaveBatchRiskDto:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        from:
-          type: number
-        to:
-          type: number
-        removed:
-          type: boolean
-      required:
-        - id
-        - name
-        - from
-        - to
-        - removed
-    SaveBatchIntegrationGroup:
-      type: object
-      properties:
-        name:
-          type: string
-        bureauType:
-          type: string
-        hasSCR:
-          type: boolean
-        externalIntegrationEnabled:
-          type: boolean
-        externalIntegrationIds:
-          type: array
-          items:
-            type: string
-      required:
-        - name
-    SaveBatchPolicyDto:
-      type: object
-      properties:
-        id:
-          type: string
-        userId:
-          type: string
-        name:
-          type: string
-        scoreEnabled:
-          type: boolean
-        useResultToReport:
-          type: boolean
-        integrationGroupName:
-          type: string
-        documentType:
-          type: string
-        policyRuleGroups:
-          type: array
-          items:
-            $ref: '#/components/schemas/SaveBatchGroupDto'
-        risks:
-          type: array
-          items:
-            $ref: '#/components/schemas/SaveBatchRiskDto'
-        integrationGroup:
-          $ref: '#/components/schemas/SaveBatchIntegrationGroup'
-        productTypeId:
-          type: string
-      required:
-        - id
-        - userId
-        - name
-        - scoreEnabled
-        - useResultToReport
-        - integrationGroupName
-        - documentType
-        - policyRuleGroups
-        - risks
-        - integrationGroup
-        - productTypeId
-    GenerateInsightDto:
-      type: object
-      properties: {}
-    ReviewInsightDto:
-      type: object
-      properties: {}
+        - document
+        - type

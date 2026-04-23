@@ -1,0 +1,153 @@
+---
+title: "PEFIN e REFIN"
+description: "Pendências financeiras registradas e refinanciamentos bancários."
+icon: "circle-exclamation"
+---
+
+<Info>
+  **Resumo:** PEFIN e REFIN são os **restritivos ativos** de um CPF ou CNPJ. PEFIN registra dívidas vencidas e não pagas com qualquer credor; REFIN registra dívidas bancárias que foram renegociadas. Juntos dão a foto das pendências não quitadas.
+</Info>
+
+## O que é
+
+- **PEFIN (Pendências Financeiras):** registro nacional de dívidas vencidas e não pagas, comunicadas por bancos, empresas de cartão, utilities (água, luz, telefone), lojas e distribuidoras. Abrange **qualquer credor**, não só bancos.
+- **REFIN (Refinanciamentos):** registro específico de dívidas **bancárias** que passaram por renegociação. Indica que o tomador chegou a ter problema com uma instituição financeira e o contrato foi reestruturado.
+
+A diferença prática: PEFIN é "está devendo agora"; REFIN é "já teve problema, renegociou, está pagando o acordo".
+
+## De onde vem
+
+- **Tipo de fonte:** bureau de crédito (registros comunicados por credores).
+- **Cobertura geográfica:** Brasil (nacional).
+- **Natureza do dado:** comunicado pelos credores ao bureau, sob regulamentação.
+- **Base legal:** Código de Defesa do Consumidor, LGPD, Lei 8.078/1990 (prazo de 5 anos para manutenção do registro).
+
+## Frequência de atualização
+
+| Componente | Atualização |
+| ---------- | ----------- |
+| Consulta na fonte | real-time ao rodar a análise |
+| Base de origem | credores comunicam diariamente, mas a defasagem típica é 1 a 7 dias |
+| Vida útil do registro | até 5 anos contados da data do vencimento |
+
+Na prática: uma dívida que venceu hoje e não foi paga aparece no PEFIN em poucos dias. Uma dívida quitada sai do PEFIN em até 5 dias úteis após a baixa comunicada pelo credor.
+
+## Dados entregues
+
+Duas seções distintas: `PEFIN` e `REFIN`. Estrutura idêntica, conteúdo complementar.
+
+### Resumo (ambas as seções)
+
+| Campo | Tipo | Descrição | Exemplo |
+| ----- | ---- | --------- | ------- |
+| `count` | number | Quantidade de ocorrências | `2` |
+| `totalAmount` | number | Valor total devido (R$) | `8750.00` |
+| `firstOccurrenceDate` | string | Data da ocorrência mais antiga | `"2024-07-22"` |
+| `lastOccurrenceDate` | string | Data da ocorrência mais recente | `"2024-09-10"` |
+| `calculatedRevenuePercentage` | number | % do faturamento comprometido (quando calculável) | `4.2` |
+
+### Ocorrências (`occurrences[]`)
+
+| Campo | Tipo | Descrição |
+| ----- | ---- | --------- |
+| `amount` | number | Valor da dívida (R$) |
+| `creditor` | string | Nome do credor |
+| `contractNumber` | string | Número do contrato ou título |
+| `occurrenceDate` | string | Data do vencimento |
+| `origin` | string | Origem do credor: `BANK`, `TRADE`, `OTHER` (só PEFIN) |
+| `modalidade` | string | Modalidade do refinanciamento (só REFIN) |
+
+Detalhes completos em [Seção, PEFIN e REFIN](/data/secao-pefin-refin).
+
+## Como interpretar juntos
+
+| Situação | O que indica |
+| -------- | ------------ |
+| PEFIN = 0, REFIN = 0 | Sem restrições registradas, histórico limpo. |
+| PEFIN > 0, REFIN = 0 | Dívidas ativas sem renegociação, risco alto agora. |
+| PEFIN = 0, REFIN > 0 | Problema passado em processo de resolução, recuperação em andamento. |
+| PEFIN > 0 e REFIN > 0 | Comprometimento severo, pendências ativas mesmo após renegociar antes. |
+
+## Casos de uso
+
+<CardGroup cols={2}>
+  <Card title="Corte por valor absoluto" icon="ban">
+    Negar quando a soma dos PEFIN ultrapassa um threshold crítico.
+    **Regra sugerida:** `PEFIN_AMOUNT > 10000` : `DENIED`.
+  </Card>
+  <Card title="Corte proporcional ao porte" icon="chart-pie">
+    Para PJ, usar `PEFIN_CALCULATED_REVENUE > 5%` ao invés de valor absoluto: respeita o porte da empresa.
+  </Card>
+  <Card title="Alerta para dívida recente" icon="clock">
+    `lastOccurrenceDate` nos últimos 30 dias indica problema em curso, marcar para revisão.
+  </Card>
+  <Card title="Ignorar dívidas muito antigas" icon="calendar-days">
+    Dívidas prestes a prescrever (4 a 5 anos) pesam menos, calibrar a política para não ser injusto.
+  </Card>
+</CardGroup>
+
+## Como usar na política
+
+<Steps>
+  <Step title="Escolher o campo">
+    `pefin.totalAmount`, `pefin.count`, `pefin.calculatedRevenuePercentage`, ou equivalentes em `refin`.
+  </Step>
+  <Step title="Definir o operador">
+    `GREATER_THAN` para valor, `COUNT_GREATER_THAN` para quantidade de ocorrências.
+  </Step>
+  <Step title="Definir threshold e ação">
+    Ser conservador pra PF, tolerar mais pra PJ maior: PF com PEFIN acima de R$ 5k normalmente já é sinal forte.
+  </Step>
+</Steps>
+
+Exemplo:
+
+```json
+{
+  "field": "pefin.calculatedRevenuePercentage",
+  "operator": "GREATER_THAN",
+  "value": 5,
+  "status": "DENIED"
+}
+```
+
+## Limitações e considerações
+
+- **Defasagem de reporte:** credores têm prazo para comunicar; uma dívida que venceu ontem pode não estar no bureau ainda.
+- **Nem todo credor reporta:** pequenos fornecedores, pessoas físicas que emprestaram dinheiro, credores informais não aparecem aqui.
+- **Prescrição:** registros saem após 5 anos mesmo que a dívida exista (o credor pode ter que renovar o protesto).
+- **Comparação com SCR:** PEFIN/REFIN mostram o que está **ruim**; SCR mostra o endividamento **total** (inclusive o que está em dia). Use as duas fontes juntas.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="PEFIN zerado significa que não há dívida?">
+    Não. Significa apenas que não há **registro** de dívida vencida comunicada ao bureau. Para visão completa do endividamento, complementar com SCR e Open Finance.
+  </Accordion>
+  <Accordion title="Por que o mesmo credor aparece duas vezes?">
+    Cada **título vencido** gera uma ocorrência. Um cliente que atrasou 3 parcelas do mesmo credor tem 3 ocorrências.
+  </Accordion>
+  <Accordion title="Dívida quitada ainda aparece?">
+    Não deveria: o credor é obrigado a comunicar a baixa em até 5 dias úteis. Se aparecer quitada, é rastro do bureau, tende a sumir na próxima consulta.
+  </Accordion>
+  <Accordion title="Qual nível de relatório inclui PEFIN/REFIN?">
+    Disponível a partir do relatório **ESSENCIAL**.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Seção detalhada" icon="diagram-project" href="/data/secao-pefin-refin">
+    Campos completos e JSON de exemplo.
+  </Card>
+  <Card title="Bureau de Crédito" icon="chart-simple" href="/sources/bureau-credito">
+    Score sintético e outros restritivos.
+  </Card>
+  <Card title="SCR e Open Finance" icon="building-columns" href="/sources/scr-open-finance">
+    Endividamento bancário total.
+  </Card>
+  <Card title="Protestos" icon="scale-balanced" href="/sources/protestos">
+    Protestos em cartório.
+  </Card>
+</CardGroup>

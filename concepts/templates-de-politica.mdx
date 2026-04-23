@@ -1,0 +1,135 @@
+---
+title: "Templates de Política"
+description: "Políticas prontas para partir de uma base testada em vez de começar do zero."
+icon: "sparkles"
+---
+
+<Info>
+  **Resumo:** Templates são **políticas de crédito pré-configuradas** para os casos de uso mais comuns. Você clona o template, ajusta o que for específico do seu negócio e publica, sem precisar desenhar regras do zero.
+</Info>
+
+## Por que existem
+
+Configurar uma política de crédito do zero exige:
+
+- Saber quais fontes consultar.
+- Escolher thresholds defensáveis (qual score mínimo? quantos protestos toleráveis?).
+- Modelar grupos de regras com pesos que façam sentido.
+
+Isso leva tempo e é fácil errar. Templates resolvem o **cold start**: você começa com uma política que já considera as fontes relevantes e tem thresholds calibrados para o caso de uso.
+
+## Como funcionam
+
+Template é **uma política comum** com uma marca que sinaliza que ela é modelo (campo `templatedAt`). Quando você clona:
+
+1. A GYRA+ cria uma **nova política** na sua organização, com todas as regras, grupos, riscos e parâmetros do template.
+2. A partir daí a política é sua, mudanças não afetam o template original, e atualizações no template não afetam sua cópia.
+3. Você ajusta o que for específico (limites, nome, produtos onde se aplica) e publica.
+
+<Note>
+Templates não criam "herança viva". Uma vez clonado, o link quebra, é um ponto de partida, não uma dependência contínua.
+</Note>
+
+## Catálogo atual
+
+Os templates cobrem os cenários mais frequentes dos clientes GYRA+:
+
+### Crédito
+
+| Template | Para quê |
+| -------- | -------- |
+| **Antecipação de Recebíveis Express** | Operações de curto prazo, baixo ticket, decisão rápida. Foca em situação cadastral PJ, liminares e processos. |
+| **Crédito PJ Premium com SCR e Balanço** | Crédito empresarial de ticket maior, com análise de endividamento bancário e fragilidades jurídicas. |
+| **Crédito PF Consignado** | Crédito consignado pessoa física com bureau complementar. |
+| **Capital de Giro Tradicional PJ** | Linha de capital de giro com análise completa de bloqueios e restrições. |
+
+### Cartão
+
+| Template | Para quê |
+| -------- | -------- |
+| **Cartão de Crédito PF, Mainstream** | Emissão de cartão para pessoa física, foco em bloqueios severos e histórico recente. |
+| **Cartão Corporativo PJ** | Cartão para empresas, analisa bloqueios PJ e processos por vara. |
+
+### Vendas a prazo
+
+| Template | Para quê |
+| -------- | -------- |
+| **Vendas a Prazo B2B** | Distribuidoras, atacado, indústria vendendo prazo para clientes PJ. |
+| **Vendas a Prazo Varejo PF** | Varejo com crediário próprio para consumidor final. |
+
+### RH
+
+| Template | Para quê |
+| -------- | -------- |
+| **RH, Contratação Executiva** | Background check de candidatos a cargo executivo, incluindo histórico criminal e cível. |
+| **RH, Contratação Operacional** | Triagem criminal simplificada para contratação operacional em volume. |
+
+### Compliance
+
+| Template | Para quê |
+| -------- | -------- |
+| **Compliance, KYC Completo PJ** | KYC robusto para onboarding de cliente PJ: sanções, PEP, detecção de laranja, mudanças cadastrais. |
+| **Compliance, KYC Simplificado PF** | KYC mais leve para PF, foco em integridade e listas restritivas. |
+
+<Note>
+A lista evolui. Ao acessar a área de Templates no Toolbox você vê sempre o catálogo atualizado, com descrição detalhada e lista de regras de cada um.
+</Note>
+
+## Quando usar um template
+
+<CardGroup cols={2}>
+  <Card title="Cold start" icon="rocket">
+    Você está configurando a GYRA+ pela primeira vez e ainda não tem uma política própria.
+  </Card>
+  <Card title="Novo produto" icon="grid-2-plus">
+    Vai lançar um produto novo (ex: cartão corporativo) e quer uma base razoável para começar a aprovar.
+  </Card>
+  <Card title="Benchmark" icon="chart-gantt">
+    Já tem política própria e quer comparar thresholds com o que a GYRA+ recomenda para o caso.
+  </Card>
+  <Card title="Segunda opinião" icon="users">
+    Dúvida se está sendo conservador ou agressivo demais, clone o template e compare lado a lado.
+  </Card>
+</CardGroup>
+
+## Quando **não** usar
+
+- Quando você tem histórico suficiente (meses de volume) e sua política já está calibrada com o apetite real do produto. Nesse caso, templates são ponto de referência, não ponto de partida.
+- Quando o caso de uso é muito específico (ex: crédito para produtor rural em região com característica própria). Comece do zero ou adapte um template próximo.
+
+## Fluxo recomendado
+
+<Steps>
+  <Step title="Escolha o template mais próximo do seu caso">
+    Não precisa ser idêntico, próximo o suficiente para aproveitar 70-80% das regras.
+  </Step>
+  <Step title="Clone e renomeie">
+    Dê um nome que identifique o produto e versão (ex: "Capital de Giro, v1 pilot").
+  </Step>
+  <Step title="Ajuste thresholds ao seu apetite">
+    Score mínimo, quantidade de protestos, ticket máximo, validade. Comece conservador.
+  </Step>
+  <Step title="Rode em modo sombra">
+    Aprove manualmente, mas use a política para comparar. Depois de 100–300 análises, calibre.
+  </Step>
+  <Step title="Ative e monitore">
+    Habilite para aprovação automática e acompanhe taxa de aprovação, alertas e casos negados.
+  </Step>
+</Steps>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Usar um template no Toolbox" icon="wand-magic-sparkles" href="/toolbox/usar-templates">
+    Passo a passo de clonagem e customização.
+  </Card>
+  <Card title="Criar política do zero" icon="scale-balanced" href="/toolbox/criar-politica">
+    Quando você prefere montar a sua.
+  </Card>
+  <Card title="Política de Crédito" icon="book" href="/concepts/politica-de-credito">
+    Entenda a estrutura antes de modificar um template.
+  </Card>
+  <Card title="Guia: política personalizada" icon="pen-ruler" href="/guides/criar-politica-personalizada">
+    Tutorial end-to-end.
+  </Card>
+</CardGroup>

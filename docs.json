@@ -39,10 +39,47 @@
         "group": "Conceitos Fundamentais",
         "pages": [
           "concepts/relatorio",
+          "concepts/analise-de-credito",
           "concepts/politica-de-credito",
+          "concepts/templates-de-politica",
+          "concepts/operacoes",
           "concepts/secoes",
           "concepts/score-e-decisao",
+          "concepts/precificacao",
           "concepts/webhooks-e-tempo-real"
+        ]
+      },
+      {
+        "group": "Guia do Toolbox",
+        "pages": [
+          "toolbox/visao-geral",
+          "toolbox/primeiro-acesso",
+          "toolbox/rodar-operacao",
+          "toolbox/interpretar-resultado-operacao",
+          "toolbox/criar-politica",
+          "toolbox/editar-politica",
+          "toolbox/usar-templates",
+          "toolbox/gerenciar-usuarios-permissoes",
+          "toolbox/webhooks-e-api-keys"
+        ]
+      },
+      {
+        "group": "Fontes de Dados",
+        "pages": [
+          "sources/visao-geral",
+          "sources/cadastral",
+          "sources/bureau-credito",
+          "sources/processos-judiciais",
+          "sources/protestos",
+          "sources/pefin-refin",
+          "sources/scr-open-finance",
+          "sources/pep-sancoes",
+          "sources/vinculos-societarios",
+          "sources/demografica",
+          "sources/financeira",
+          "sources/veiculos",
+          "sources/midia-reputacao",
+          "sources/beneficios-sociais"
         ]
       },
       {
@@ -63,24 +100,40 @@
         ]
       },
       {
+        "group": "MCP Server",
+        "pages": [
+          "mcp/o-que-e",
+          "mcp/instalacao",
+          "mcp/ferramentas-disponiveis",
+          "mcp/casos-de-uso",
+          "mcp/troubleshooting"
+        ]
+      },
+      {
         "group": "Referência da API",
         "pages": [
           "api-reference/auth/post-authauthenticate",
           "api-reference/report/post-report",
           "api-reference/report/get-report",
-          "api-reference/report/get-reportsection",
           "api-reference/report/get-reportlist",
-          "api-reference/report/post-report-financial-tab",
+          "api-reference/report/get-reportcount",
+          "api-reference/report/get-reportsection",
+          "api-reference/report/get-report-section",
           "api-reference/report/post-reportanalyze",
+          "api-reference/report/post-reportre-analyze",
+          "api-reference/report/get-reportexport",
+          "api-reference/report/get-reportexport-sync",
+          "api-reference/report-v2/post-v2report",
+          "api-reference/report-v2/get-v2report",
           "api-reference/credit-policypolicy/get-credit-policypolicy",
+          "api-reference/insight/post-insight",
           "api-reference/webhook/post-webhook",
           "api-reference/webhook/get-webhookfindby",
-          "api-reference/webhook/delete-webhook",
-          "api-reference/health/get-health"
+          "api-reference/webhook/delete-webhook"
         ]
       },
       {
-        "group": "Dicionário de Dados",
+        "group": "Dicionário de Dados (legado)",
         "pages": [
           "data/estrutura-relatorio",
           "data/secao-resumo",

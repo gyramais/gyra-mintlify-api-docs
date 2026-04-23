@@ -1,0 +1,157 @@
+---
+title: "Editar Política"
+description: "Ajustar regras, thresholds, fórmulas e mensagens de uma política existente. Versionamento e como reverter."
+icon: "pen-to-square"
+---
+
+<Info>
+  **Resumo:** editar uma política é o trabalho contínuo de calibração: ajustar thresholds à medida que os resultados reais aparecem, adicionar regras novas quando o risco muda, corrigir fórmulas de precificação. Toda edição gera uma nova versão automaticamente, com diff e autor. Esta página cobre o fluxo de edição e as mecânicas de versionamento e reversão.
+</Info>
+
+## Quando editar
+
+- **Calibrar thresholds** a partir de casos reais (taxa de aprovação baixa demais, falsos negativos, default inesperado).
+- **Adicionar regra** para cobrir um cenário novo (ex: novo tipo de restritivo, nova fonte disponível).
+- **Ajustar precificação** (taxa, prazo, valor aprovado) em resposta a mudança de funding ou apetite.
+- **Corrigir mensagem** mostrada ao tomador.
+- **Desabilitar regra** que está gerando ruído sem valor discriminante.
+
+## Pré-requisitos
+
+- Papel de **administrador** ou **gestor de crédito**.
+- Política já existe (criada do zero ou clonada de template).
+
+## Fluxo
+
+<Steps>
+  <Step title="Abrir a política">
+    Em *Política de Crédito, Políticas*, clicar na política que você quer editar. O editor abre com o estado atual.
+  </Step>
+  <Step title="Entrar em modo edição">
+    Toggle *Editar* no cabeçalho. Enquanto em edição, as alterações ficam em um **rascunho não publicado**, a política em produção continua rodando a versão anterior para quem disparar análise.
+  </Step>
+  <Step title="Fazer as alterações">
+    Tudo que pode ser editado:
+
+    - **Cabeçalho**: nome, nível de relatório, produto vinculado. (O tipo de documento PF/PJ é imutável.)
+    - **Grupos**: adicionar, remover, renomear, mudar score agregado (`scoreApproved`, `scoreAlert`, `scoreDenied`).
+    - **Regras**: adicionar, remover, desabilitar, ajustar campo/operador/threshold/status.
+    - **Fórmulas**: `periodFormula`, `interestFormula`, `amountFormula`. Ver [Precificação](/concepts/precificacao).
+    - **Dados consultados**: ativar ou desativar SCR, janela de processos, níveis de vínculos societários.
+    - **Mensagens**: textos mostrados para `APPROVED`, `ALERT`, `DENIED`.
+  </Step>
+  <Step title="Ver o diff">
+    Botão *Ver alterações* mostra, lado a lado, o que mudou em relação à versão publicada: regras adicionadas, removidas, alteradas, fórmulas antes/depois.
+  </Step>
+  <Step title="Testar antes de publicar">
+    Em *Testar*, rodar contra um CPF/CNPJ conhecido para validar que as regras disparam como esperado. Ideal rodar contra pelo menos um caso esperado `APPROVED`, um `DENIED` e um limítrofe.
+  </Step>
+  <Step title="Publicar">
+    Clicar em *Publicar*. A nova versão passa a ser a vigente imediatamente. Qualquer análise disparada a partir desse momento usa a nova versão.
+  </Step>
+</Steps>
+
+<Tip>
+  Análises disparadas **antes** da publicação continuam rastreáveis à versão antiga da política. A tela de resultado sempre mostra qual versão rodou.
+</Tip>
+
+## Versionamento
+
+Toda publicação gera um registro em `PolicyChange` com:
+
+| Campo | O que guarda |
+| ----- | ------------ |
+| `version` | Número sequencial da versão |
+| `authorId` | Quem publicou |
+| `createdAt` | Timestamp da publicação |
+| `diff` | Estrutura com campos alterados, antes/depois |
+| `description` | Comentário opcional do autor |
+
+Aba *Histórico* da política lista todas as versões. Clicar em qualquer linha abre o diff completo.
+
+## Reverter para versão anterior
+
+<Steps>
+  <Step title="Abrir Histórico">
+    Aba *Histórico* no cabeçalho da política.
+  </Step>
+  <Step title="Escolher a versão destino">
+    Clicar em *Ver* na versão que você quer como base.
+  </Step>
+  <Step title="Restaurar">
+    Botão *Restaurar como rascunho* copia o estado daquela versão para o editor. Nada é publicado automaticamente: você ainda precisa revisar, testar e clicar em *Publicar*.
+  </Step>
+</Steps>
+
+Reverter é tratado como uma edição normal: gera uma nova versão, nunca "apaga" versões antigas.
+
+## Desabilitar uma regra sem removê-la
+
+Útil quando você quer medir impacto sem perder a configuração:
+
+1. Abrir a regra no editor.
+2. Desmarcar o toggle *Ativa*.
+3. Publicar.
+
+A regra fica registrada mas não avalia. Reativar é um toggle e novo publish.
+
+## Boas práticas
+
+<CardGroup cols={2}>
+  <Card title="Uma mudança por publicação" icon="git-branch">
+    Facilita entender o impacto. Evite empilhar 10 ajustes numa única publicação.
+  </Card>
+  <Card title="Descrição sempre preenchida" icon="pen">
+    O campo *descrição* na publicação é o commit message da política. Futuro você agradece.
+  </Card>
+  <Card title="Testar antes de publicar" icon="flask">
+    Ao menos 1 caso `APPROVED`, 1 `DENIED` e 1 limítrofe.
+  </Card>
+  <Card title="Janela de observação" icon="clock">
+    Depois de alterar threshold crítico, observe as próximas 20 a 50 análises antes de consolidar.
+  </Card>
+</CardGroup>
+
+## Limitações e considerações
+
+- **Edição concorrente:** se dois usuários editam a mesma política ao mesmo tempo, o último a publicar sobrescreve. A tela alerta se outra edição está em curso.
+- **Tipo de documento imutável.** PF não vira PJ. Para mudar, duplique e edite a cópia.
+- **Nível de relatório impacta campos disponíveis.** Reduzir o nível (ex: de COMPLETO para ESSENCIAL) invalida regras que usam campos SCR; o editor bloqueia a publicação até você remover ou desabilitar.
+- **Fórmulas com variáveis inexistentes** bloqueiam o salvar. Se uma variável referenciada sumiu, corrija antes de publicar.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Posso editar uma política que está em uso por um lote em processamento?">
+    Pode. O lote em curso continua usando a versão vigente no momento em que foi disparado. Só novas análises pegam a versão nova.
+  </Accordion>
+  <Accordion title="Existe limite de versões por política?">
+    Não. Todas as versões ficam salvas indefinidamente, com diff completo.
+  </Accordion>
+  <Accordion title="Como comparo duas versões não consecutivas?">
+    Na aba *Histórico*, selecionar duas versões (checkbox) e clicar em *Comparar*. Mostra o diff acumulado entre as duas.
+  </Accordion>
+  <Accordion title="Desabilitei uma regra, mas ela ainda aparece no breakdown das análises antigas.">
+    Correto. Análises antigas são rastreáveis à versão da política que rodou no momento. A regra não é apagada, só deixa de avaliar em análises futuras.
+  </Accordion>
+  <Accordion title="Qualquer usuário vê o histórico?">
+    Administradores e gestores de crédito veem. Analistas veem apenas a versão vigente.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Criar Política" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Do zero, quando nenhum template serve.
+  </Card>
+  <Card title="Usar Templates" icon="sparkles" href="/toolbox/usar-templates">
+    Partir de um template pronto.
+  </Card>
+  <Card title="Precificação" icon="calculator" href="/concepts/precificacao">
+    Fórmulas de prazo, taxa e valor.
+  </Card>
+  <Card title="Interpretar Resultado" icon="chart-line" href="/toolbox/interpretar-resultado-operacao">
+    Calibrar thresholds a partir do breakdown.
+  </Card>
+</CardGroup>

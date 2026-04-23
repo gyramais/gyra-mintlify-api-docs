@@ -10,7 +10,7 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ## Março 2025
 
-### API v2.3 — Templates de Políticas e Melhoria no Webhook
+### API v2.3, Templates de Políticas e Melhoria no Webhook
 
 **Novidades**
 - Três novos templates de política disponíveis: `Abertura de Conta`, `Background Check` e `Financiamento LP`
@@ -30,7 +30,7 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ## Fevereiro 2025
 
-### API v2.2 — SCR com Histórico Ampliado
+### API v2.2, SCR com Histórico Ampliado
 
 **Novidades**
 - Histórico SCR ampliado de 12 para 60 meses (5 anos) no relatório COMPLETO+
@@ -46,7 +46,7 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ## Janeiro 2025
 
-### API v2.1 — Processos com Cobertura Estendida
+### API v2.1, Processos com Cobertura Estendida
 
 **Novidades**
 - Relatório COMPLETO+ agora cobre processos desde **1995** (anteriormente 2005)
@@ -54,7 +54,7 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 - Webhook com retry automático: até 3 tentativas em caso de falha no seu endpoint
 
 **Melhorias**
-- Melhoria na detecção de `COMPLETE_QSA_CHANGE` — agora detecta trocas parciais significativas (> 70%)
+- Melhoria na detecção de `COMPLETE_QSA_CHANGE`, agora detecta trocas parciais significativas (> 70%)
 - Seção PEP com histórico de doações eleitorais desde 2010
 - Resposta da autenticação agora inclui `expiresIn` (TTL do token em segundos)
 
@@ -62,10 +62,10 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ## Dezembro 2024
 
-### API v2.0 — Motor de Políticas Customizáveis
+### API v2.0, Motor de Políticas Customizáveis
 
 **Novidades**
-- **Motor de políticas de crédito completamente reescrito** — suporte a grupos de regras, scores por grupo e Risk Bands configuráveis
+- **Motor de políticas de crédito completamente reescrito:** suporte a grupos de regras, scores por grupo e Risk Bands configuráveis
 - Novos operadores: `BETWEEN`, `CONTAINS`, `NOT_CONTAINS`, `IS_TRUE`, `IS_FALSE`
 - Regras financeiras proporcionais ao faturamento: `PEFIN_CALCULATED_REVENUE`, `LAWSUITS_CALCULATED_REVENUE`, `SCR_CALCULATED_REVENUE_EXPIRED`
 - Suporte a análise de sócios nas regras: `OWNER_LAWSUITS_HAS_CRIMINAL`, `BUSINESS_PARTNERS_RESTRICTIVE`
@@ -83,11 +83,11 @@ Se você ainda usa a API v1 (endpoints sem `/v2/`), migre para a v2 antes de mar
 
 ## Novembro 2024
 
-### API v1.5 — Integrações Boavista e Proscore
+### API v1.5, Novo Bureau Complementar e Score PJ
 
 **Novidades**
-- Integração com **Boavista** como fonte de score alternativa
-- Integração com **Proscore** para empresas — score sintético especializado em PJ
+- Integração com **Bureau de Crédito Complementar** como fonte de score alternativa
+- Score sintético especializado em PJ, disponibilizado pelo Bureau de Crédito Principal
 - Novo tipo de relatório `COMPLETO+` com certidões em tempo real
 - Campo `integrationCount` por seção indicando quantas fontes contribuíram para os dados
 
@@ -95,10 +95,10 @@ Se você ainda usa a API v1 (endpoints sem `/v2/`), migre para a v2 antes de mar
 
 ## Outubro 2024
 
-### API v1.4 — Webhooks
+### API v1.4, Webhooks
 
 **Novidades**
-- Lançamento dos webhooks — receba a decisão assim que o relatório for concluído
+- Lançamento dos webhooks, receba a decisão assim que o relatório for concluído
 - Endpoints: `POST /webhook`, `GET /webhook/findby`, `DELETE /webhook/:id`
 - Payload do webhook inclui: `reportId`, `document`, `type`, `status`, `policyStatus`
 

@@ -1,0 +1,168 @@
+---
+title: "Criar Política"
+description: "Montar uma política de crédito do zero ou a partir de template: regras, grupos, scoring, fórmulas de precificação, habilitação."
+icon: "wand-magic-sparkles"
+---
+
+<Info>
+  **Resumo:** uma política é o conjunto de **regras** que decide aprovar, alertar ou negar, mais as **fórmulas** opcionais que precificam. Criar uma política no toolbox é montar esse conjunto visualmente, validar e habilitar. Esta página cobre o fluxo do zero; para partir de template pronto, ver [Usar Templates](/toolbox/usar-templates).
+</Info>
+
+## Quando criar do zero
+
+- Nenhum template cobre o seu produto, segmento ou apetite de risco.
+- Política muito específica (ex: linha experimental, piloto interno, produto novo).
+- Você já tem um modelo mental claro de quais regras precisa.
+
+Se o caso é próximo de algum template, **sempre prefira clonar** pela opção B de [Usar Templates](/toolbox/usar-templates). É mais rápido e menos propenso a erro.
+
+## Pré-requisitos
+
+- Papel de **administrador** ou **gestor de crédito**.
+- Entender o [modelo de política](/concepts/politica-de-credito) e os [tipos de fonte](/sources/visao-geral) disponíveis.
+
+## Fluxo
+
+<Steps>
+  <Step title="Entrar em Nova Política">
+    *Política de Crédito, Políticas, Nova política*. O editor abre com uma política em branco.
+  </Step>
+  <Step title="Definir cabeçalho">
+    - **Nome**, interno, reconhecível pelo time.
+    - **Tipo de documento**, `PF` (CPF) ou `PJ` (CNPJ). A política só pode ser usada no tipo declarado.
+    - **Nível de relatório**, `SIMPLES`, `ESSENCIAL`, `COMPLETO` ou `COMPLETO+`. Define quais fontes ficam disponíveis para as regras.
+    - **Produto**, vínculo opcional a um produto cadastrado (ex: Capital de Giro, Antecipação).
+  </Step>
+  <Step title="Adicionar grupos de regras">
+    Uma política é organizada em **grupos**. Cada grupo reúne regras com uma lógica interna (e.g. "Bloqueios cadastrais", "Restritivos", "Endividamento"). Regras dentro do grupo funcionam em E: todas precisam passar.
+
+    Botão *Adicionar grupo*, nomear e configurar se o grupo contribui para um score agregado (campos `scoreApproved`, `scoreAlert`, `scoreDenied`).
+  </Step>
+  <Step title="Adicionar regras ao grupo">
+    Cada regra tem:
+
+    - **Campo**, atributo do relatório a ser avaliado (ex: `creditBureauScoreSummary.score`, `company.situation`, `pefin.totalAmount`).
+    - **Operador**, `GREATER_THAN`, `LESS_THAN`, `EQUALS`, `CONTAINS`, `NOT_CONTAINS`, `COUNT_GREATER_THAN`, entre outros.
+    - **Valor**, threshold ou lista de valores (ex: `400`, `"BAIXADA,SUSPENSA"`).
+    - **Parâmetros**, conforme a regra exigir (ex: `Category: "Trabalhista"` em regras `LAWSUITS_BY_COURT_TYPE`).
+    - **Status a aplicar**, `APPROVED`, `ALERT` ou `DENIED` quando a regra dispara.
+
+    O editor valida em tempo real: campo inexistente, operador inválido para o tipo do campo, parâmetros ausentes são bloqueados antes de salvar.
+  </Step>
+  <Step title="Configurar fontes de dados">
+    No painel lateral *Dados Consultados*, ative ou desative o que a política vai buscar:
+
+    - **Bureau** (qual bureau, cache, janela).
+    - **SCR**, se ativo, quantos meses de histórico (campo `scrMonths`).
+    - **Processos**, janela temporal (últimos 12, 24, 60 meses).
+    - **Vínculos societários**, níveis consultados (ROOT, FIRST_LEVEL, etc.).
+    - **Balanço e integrações externas**, via `externalIntegrationEnabled`.
+
+    Só o que estiver ativado aqui é coletado em runtime, isso afeta custo e latência da operação.
+  </Step>
+  <Step title="Fórmulas de precificação, opcional">
+    Ativar o bloco *Ações pós-política* para habilitar as três fórmulas:
+
+    - `periodFormula`, prazo.
+    - `interestFormula`, taxa.
+    - `amountFormula`, valor final aprovado.
+
+    Sintaxe Excel, catálogo e exemplos em [Precificação](/concepts/precificacao).
+  </Step>
+  <Step title="Mensagens ao tomador">
+    Customizar o texto mostrado em cada resultado final (`APPROVED`, `ALERT`, `DENIED`). Útil se você expõe o resultado diretamente ao cliente final em um fluxo self-service.
+  </Step>
+  <Step title="Salvar e validar">
+    Clicar em *Salvar*. O editor roda validações cruzadas:
+
+    - Toda regra tem campo, operador e threshold coerentes com o tipo de dado.
+    - Fontes referenciadas pelas regras estão ativadas no painel de dados.
+    - Fórmulas de precificação (se houver) parseiam.
+    - Pelo menos um grupo com pelo menos uma regra.
+  </Step>
+  <Step title="Testar em modo rascunho">
+    A política salva fica em estado `rascunho`, não aparece no dropdown do input sempre visível. Use *Testar* no cabeçalho para rodar contra um CPF/CNPJ conhecido e validar que as regras disparam como esperado.
+  </Step>
+  <Step title="Habilitar">
+    Toggle **Habilitada** no cabeçalho. A política passa a aparecer no dropdown do input sempre visível (topo do toolbox) ao digitar um documento compatível, para todos os usuários com permissão.
+  </Step>
+</Steps>
+
+## Estrutura mínima recomendada
+
+Toda política produção-ready tende a ter pelo menos três grupos:
+
+```text
+Política "Crédito PJ Giro 2026"
+
+├─ Grupo 1: Bloqueios cadastrais
+│   ├─ situation IN ["BAIXADA", "SUSPENSA", "INAPTA"] → DENIED
+│   └─ foundationDate < "2024-01-01" → DENIED (menos de 1 ano)
+
+├─ Grupo 2: Restritivos
+│   ├─ pefin.totalAmount > 50000 → DENIED
+│   ├─ pefin.count > 5 → DENIED
+│   └─ protests.count > 0 → ALERT
+
+└─ Grupo 3: Capacidade e score
+    ├─ creditBureauScoreSummary.score < 400 → DENIED
+    ├─ creditBureauScoreSummary.score < 650 → ALERT
+    ├─ scr.totalLosses > 0 → DENIED
+    └─ scr.expiredRatio > 0.1 → ALERT
+```
+
+E, se cabe precificação:
+
+```excel
+amountFormula = MIN(|#solicitado|valor|#|, |#faturamento|faturamento|#| * 0.3)
+interestFormula = IF(|#score|score|#| >= 800, 1.49, IF(|#score|score|#| >= 650, 1.99, 2.49))
+periodFormula = IF(|#anosAbertura|idade|#| >= 5, 36, 18)
+```
+
+## Versionamento
+
+Toda alteração em regras, fórmulas ou fontes gera uma nova versão em `PolicyChange` com autor, timestamp e diff. O histórico completo fica na aba *Histórico* da política. Operações antigas continuam rastreáveis à versão exata da política que rodou. Detalhes em [Operações](/concepts/operacoes).
+
+## Limitações e considerações
+
+- **Políticas duplicadas por tipo de documento.** Política PJ não roda em CPF e vice-versa. Para cobrir ambos, crie duas políticas paralelas.
+- **Número de regras por política.** Não há limite rígido, mas políticas com mais de 40 regras ficam difíceis de manter. Consolide em grupos lógicos e considere fatiar em duas políticas.
+- **Campos disponíveis dependem do nível de relatório.** Regra que usa SCR não funciona em política com nível `ESSENCIAL`. Valide o nível antes de montar.
+- **Política sem fórmula não precifica.** O resultado aprova ou nega, mas o toolbox entrega valor/prazo/taxa em branco. Ver [Precificação](/concepts/precificacao).
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Posso copiar uma política existente como base?">
+    Sim. Na lista de políticas, botão *Duplicar* gera cópia com todos os grupos, regras e fórmulas, sem histórico. Equivalente a clonar um template.
+  </Accordion>
+  <Accordion title="O que acontece se eu desabilitar uma política em uso?">
+    Ela some do dropdown de políticas que abre ao digitar um documento no input sempre visível, mas análises anteriores continuam rastreáveis. Reabilitar é instantâneo, sem perder histórico.
+  </Accordion>
+  <Accordion title="Posso mudar o tipo de documento de uma política PJ para PF depois?">
+    Não. Tipo de documento é imutável. Crie uma política PF nova a partir de *Duplicar* da PJ e ajuste os campos.
+  </Accordion>
+  <Accordion title="Como simular uma política sem ativá-la?">
+    Use *Testar* no modo rascunho antes de habilitar. Também dá para rodar backtest em lote via *Operações, Lote* apontando para a política em rascunho.
+  </Accordion>
+  <Accordion title="Posso ter mais de um score por política?">
+    Sim, via grupos. Cada grupo pode ter score próprio (`scoreApproved`, `scoreAlert`, `scoreDenied`) e o resultado final agrega conforme a configuração de *Score sintético* da política.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Editar Política" icon="pen-to-square" href="/toolbox/editar-politica">
+    Ajustar regras e fórmulas existentes.
+  </Card>
+  <Card title="Usar Templates" icon="sparkles" href="/toolbox/usar-templates">
+    Alternativa mais rápida do que criar do zero.
+  </Card>
+  <Card title="Precificação" icon="calculator" href="/concepts/precificacao">
+    Fórmulas, sintaxe, catálogo de funções.
+  </Card>
+  <Card title="Política (conceito)" icon="diagram-project" href="/concepts/politica-de-credito">
+    Modelo de dados e semântica de decisão.
+  </Card>
+</CardGroup>

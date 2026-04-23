@@ -1,0 +1,150 @@
+---
+title: "Usuários e Permissões"
+description: "Convidar, remover, atribuir papéis e configurar SSO (Google Workspace, Microsoft Azure AD)."
+icon: "users-gear"
+---
+
+<Info>
+  **Resumo:** a gestão de usuários no toolbox é feita em *Configurações, Usuários*. Cada usuário tem um **papel** (administrador, gestor de crédito, analista, somente leitura) que determina o que ele vê e faz. Organizações maiores podem plugar **SSO Google** ou **Microsoft Azure AD** para centralizar acesso no IdP corporativo.
+</Info>
+
+## Papéis disponíveis
+
+| Papel | Roda análise | Cria política | Edita política | Convida usuário | Integrações | Faturamento |
+| ----- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Administrador** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Gestor de Crédito** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Analista de Crédito** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Somente leitura** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+Papel é atribuído por organização. O mesmo e-mail pode ter papéis diferentes em organizações diferentes (comum em consultorias, auditorias, operação terceirizada).
+
+## Convidar um usuário
+
+<Steps>
+  <Step title="Abrir Configurações, Usuários">
+    Menu lateral, *Configurações*, aba *Usuários*.
+  </Step>
+  <Step title="Clicar em Convidar">
+    Botão *Convidar usuário* no topo da lista.
+  </Step>
+  <Step title="Preencher os dados">
+    - **E-mail** (obrigatório).
+    - **Nome** (opcional, preenchido pelo próprio usuário no primeiro acesso).
+    - **Papel** (obrigatório).
+  </Step>
+  <Step title="Enviar">
+    Clicar em *Enviar convite*. O usuário recebe e-mail de `noreply@gyramais.com.br` com link de ativação (válido por 7 dias).
+  </Step>
+  <Step title="Usuário ativa e configura senha">
+    Ao abrir o link, ele é direcionado para definir senha ou vincular via SSO (se configurado na organização).
+  </Step>
+</Steps>
+
+## Remover ou alterar papel
+
+Na lista de usuários:
+
+- **Alterar papel**: dropdown na linha do usuário. Mudança é imediata.
+- **Desativar**: usuário perde acesso mas histórico de análises dele permanece rastreável.
+- **Remover**: soft delete. Usuário não consegue mais logar, nem aparece em novos convites, mas registros antigos continuam.
+
+<Tip>
+  Preferir *Desativar* a *Remover*. Desativar é reversível com um clique; remover exige convite novo.
+</Tip>
+
+## Reenviar convite
+
+Se o usuário perdeu o e-mail ou o link expirou (7 dias), na lista de usuários pendentes há a ação *Reenviar convite*. Gera novo link e notifica por e-mail.
+
+## SSO: Google Workspace
+
+<Steps>
+  <Step title="Ir em Configurações, Organização, SSO">
+    Seção dedicada a autenticação corporativa.
+  </Step>
+  <Step title="Ativar Google SSO">
+    Toggle *Google Workspace*.
+  </Step>
+  <Step title="Configurar domínios permitidos">
+    Adicionar os domínios dos e-mails da organização (ex: `suaempresa.com.br`). Qualquer usuário com e-mail desses domínios pode tentar logar via Google.
+  </Step>
+  <Step title="Escolher papel padrão">
+    Usuários que logam via SSO pela primeira vez são criados automaticamente com o papel que você definir aqui (normalmente *Analista*).
+  </Step>
+</Steps>
+
+Depois de configurado, a tela de login do toolbox passa a mostrar o botão *Entrar com Google*. Usuários clicam, autenticam no Workspace, e entram direto.
+
+## SSO: Microsoft Azure AD (Entra ID)
+
+Configuração equivalente, via OIDC com Entra ID:
+
+<Steps>
+  <Step title="Registrar aplicação no Azure">
+    No portal Azure, *Entra ID, App registrations, New registration*. URL de callback: `https://toolbox.gyramais.com.br/api/auth/callback/azure-ad`.
+  </Step>
+  <Step title="Capturar credenciais">
+    Anotar `Tenant ID`, `Client ID` e gerar um `Client Secret`.
+  </Step>
+  <Step title="Colar no toolbox">
+    Em *Configurações, Organização, SSO*, seção *Microsoft Azure AD*, colar os três valores.
+  </Step>
+  <Step title="Escolher papel padrão e salvar">
+    Mesma lógica do Google: primeiro login via SSO cria o usuário com o papel que você definir.
+  </Step>
+</Steps>
+
+## 2FA
+
+Para usuários fora de SSO, o toolbox suporta **2FA opcional** via TOTP (Google Authenticator, 1Password, Authy). Cada usuário configura no próprio perfil.
+
+Administradores podem **exigir 2FA** para toda a organização em *Configurações, Organização, Segurança, Exigir 2FA*. Ao ativar, usuários sem 2FA configurado são forçados a configurar no próximo login.
+
+## Auditoria
+
+Toda ação relevante (login, convite, alteração de papel, edição de política, rodagem de análise) é registrada em log de auditoria, acessível em *Configurações, Auditoria* (somente administrador). Filtros por usuário, ação, período. Export em CSV.
+
+## Limitações e considerações
+
+- **Papéis são fixos**, não há papel customizado. Se o modelo não cabe, fale com o suporte para avaliar ajuste.
+- **Um usuário pode pertencer a várias organizações** (seleciona no login). Papel é independente por organização.
+- **SSO e senha coexistem.** Mesmo com SSO ativo, administradores ainda podem logar com senha como contingência (configurável).
+- **Convite expira em 7 dias.** Depois disso, precisa reenviar.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Posso ter vários administradores?">
+    Sim, não há limite. Recomendação: pelo menos 2 administradores, evitando dependência de pessoa única.
+  </Accordion>
+  <Accordion title="Como transfiro a administração para outra pessoa?">
+    Eleve o papel da nova pessoa para *Administrador*, confira que ela está ativa, e depois rebaixe ou remova o administrador anterior. Nunca remova o único administrador sem ter substituto.
+  </Accordion>
+  <Accordion title="Analista pode ver análises de outros analistas?">
+    Por padrão, sim: todas as análises da organização são visíveis para todos os analistas e gestores. Se precisa de isolamento por time/carteira, fale com o suporte.
+  </Accordion>
+  <Accordion title="SSO desativa o login por senha?">
+    Por padrão não. Os dois coexistem. Para forçar SSO-only, ativar em *Configurações, Organização, Segurança*.
+  </Accordion>
+  <Accordion title="Existe controle de sessão (logout forçado)?">
+    Sim. Administrador pode forçar logout de qualquer usuário em *Configurações, Usuários, ação Forçar logout*. Útil em caso de desligamento.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Primeiro Acesso" icon="door-open" href="/toolbox/primeiro-acesso">
+    Setup inicial da organização.
+  </Card>
+  <Card title="Webhooks e API Keys" icon="key" href="/toolbox/webhooks-e-api-keys">
+    Acesso programático.
+  </Card>
+  <Card title="Visão Geral do Toolbox" icon="compass" href="/toolbox/visao-geral">
+    O que cada papel vê no menu.
+  </Card>
+  <Card title="Criar Política" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Fluxo para gestor de crédito.
+  </Card>
+</CardGroup>

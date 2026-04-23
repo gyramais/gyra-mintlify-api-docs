@@ -1,0 +1,153 @@
+---
+title: "SCR e Open Finance"
+description: "Endividamento bancário oficial via Sistema de Informações de Crédito do Banco Central."
+icon: "building-columns"
+---
+
+<Info>
+  **Resumo:** o SCR (Sistema de Informações de Crédito) é a fonte **oficial do Banco Central** com o endividamento bancário do CPF ou CNPJ. Mostra quanto a pessoa ou empresa deve para bancos, em quais modalidades, se está em dia e qual a tendência ao longo do tempo.
+</Info>
+
+## O que é
+
+O SCR é a base de dados mantida pelo Banco Central do Brasil onde todas as instituições financeiras reguladas **precisam reportar** as operações de crédito dos seus clientes. Diferente de bureaus comerciais, o SCR é **obrigatório** e **oficial**: se uma empresa tem empréstimo em qualquer banco regulado, essa dívida aparece aqui.
+
+A GYRA+ acessa o SCR via Open Finance (antigo Open Banking), com o consentimento do titular dos dados.
+
+A fonte responde duas perguntas centrais:
+
+1. **Quanto esta pessoa ou empresa deve para bancos hoje?** (exposição total, vencida, em atraso)
+2. **Como esse endividamento evoluiu nos últimos meses?** (tendência, histórico)
+
+## De onde vem
+
+- **Tipo de fonte:** base oficial do Banco Central (via Open Finance).
+- **Cobertura geográfica:** Brasil (nacional, todas as instituições reguladas pelo BACEN).
+- **Natureza do dado:** oficial, reportado diretamente pelos bancos.
+- **Base legal:** Resolução BCB 4.571, regulamentação Open Finance, consentimento do titular.
+
+## Frequência de atualização
+
+| Componente | Atualização |
+| ---------- | ----------- |
+| Consulta na fonte | real-time ao rodar a análise |
+| Base de origem | bancos reportam ao SCR mensalmente (fechamento do mês) |
+| Janela entregue | até 12 meses de histórico mês a mês |
+
+Na prática: o SCR reflete a posição do mês anterior fechado. Uma operação de crédito tomada em março normalmente aparece no SCR após o dia 15 de abril.
+
+## Dados entregues
+
+O SCR aparece em duas seções do relatório: **HISTORY** (visão mensal) e **CATEGORIES** (breakdown por modalidade).
+
+### Resumo atual (`HISTORY.details`)
+
+| Campo | Tipo | Descrição | Exemplo |
+| ----- | ---- | --------- | ------- |
+| `totalRisk` | number | Exposição total a crédito (R$) | `450000.00` |
+| `totalExpired` | number | Total vencido agora (R$) | `15000.00` |
+| `totalLate` | number | Total em atraso (R$) | `0` |
+| `totalLosses` | number | Perdas registradas (prejuízo para o banco) | `0` |
+| `availableCreditLimit` | number | Limite aprovado disponível (R$) | `120000.00` |
+
+### Histórico mês a mês (`HISTORY.details.months[]`)
+
+| Campo | Tipo | Descrição |
+| ----- | ---- | --------- |
+| `yearMonth` | string | Ano/mês (YYYY-MM) |
+| `totalRisk` | number | Risco total no mês |
+| `toExpire` | number | A vencer |
+| `expired` | number | Vencido |
+| `late` | number | Em atraso |
+| `losses` | number | Perdas |
+
+### Por categoria (`CATEGORIES.details.months[].categories[]`)
+
+Detalha o endividamento por modalidade: capital de giro, cartão, conta garantida, desconto de recebíveis, financiamento de veículos, financiamento imobiliário, BNDES, risco sacado.
+
+Detalhes completos em [Seção SCR](/data/secao-scr).
+
+## Casos de uso
+
+<CardGroup cols={2}>
+  <Card title="Negar perda registrada" icon="ban">
+    Dívidas baixadas como prejuízo são sinal grave: o banco já deu a dívida como perdida.
+    **Regra sugerida:** `SCR_TOTAL_LOSSES > 0` : `DENIED`.
+  </Card>
+  <Card title="Alerta de deterioração" icon="trending-down">
+    Crescimento do `expired` mês a mês mesmo com `totalRisk` estável indica dificuldade crescente de honrar compromissos.
+  </Card>
+  <Card title="Capacidade de tomar mais crédito" icon="credit-card">
+    `availableCreditLimit` próximo de zero indica que o tomador está no limite da capacidade.
+  </Card>
+  <Card title="Concentração por modalidade" icon="chart-pie">
+    Tomador com 80% da dívida em cartão rotativo tem risco diferente de quem tem a mesma dívida em BNDES.
+  </Card>
+</CardGroup>
+
+## Como usar na política
+
+<Steps>
+  <Step title="Escolher o campo">
+    `scr.totalRisk`, `scr.totalExpired`, `scr.totalLosses` ou campos mensais de `scr.months[]`.
+  </Step>
+  <Step title="Definir o operador">
+    `GREATER_THAN` para cortes por valor absoluto, ou use as regras derivadas como `SCR_EXPIRED_RATIO` (razão sobre total).
+  </Step>
+  <Step title="Definir threshold">
+    Calibrar pelo porte típico dos seus clientes: o que é "muito" para microempresa não é para médio porte.
+  </Step>
+</Steps>
+
+Exemplo:
+
+```json
+{
+  "field": "scr.totalLosses",
+  "operator": "GREATER_THAN",
+  "value": 0,
+  "status": "DENIED"
+}
+```
+
+## Limitações e considerações
+
+- **Depende de consentimento via Open Finance** para PF. Sem consentimento, a seção vem vazia.
+- **Lag de até 45 dias** entre a operação e a aparição no SCR (fechamento mensal do banco + processamento BCB).
+- **Não cobre crédito não bancário:** fintechs não reguladas, cartões de loja, crediário interno não aparecem aqui.
+- **CNPJ com múltiplas filiais:** o SCR reporta por raiz do CNPJ (8 primeiros dígitos), não por filial.
+- **Disponibilidade:** seção disponível nos relatórios **COMPLETO** e **COMPLETO+**.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Por que veio vazio?">
+    Para PJ, pode ser empresa sem histórico bancário. Para PF, pode ser falta de consentimento ou empresa que só usa crédito não bancário.
+  </Accordion>
+  <Accordion title="Qual a diferença para os restritivos do bureau?">
+    SCR mostra a dívida **mesmo quando está em dia**, é visão do endividamento. Bureau mostra apenas o que **está em atraso ou foi ao protesto**, é visão de inadimplência.
+  </Accordion>
+  <Accordion title="Quantos meses de histórico são entregues?">
+    Por padrão 12 meses. Políticas com regras de tendência (ex: crescimento mês a mês) usam essa janela.
+  </Accordion>
+  <Accordion title="`totalRisk` é a dívida ou o limite?">
+    É o **saldo devedor** (dívida ativa). `availableCreditLimit` é o limite aprovado ainda disponível.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Seção SCR completa" icon="diagram-project" href="/data/secao-scr">
+    Todos os campos e exemplos de JSON.
+  </Card>
+  <Card title="Criar regra com SCR" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Passo a passo no Toolbox.
+  </Card>
+  <Card title="Bureau de Crédito" icon="chart-simple" href="/sources/bureau-credito">
+    Complementar ao SCR, visão de inadimplência.
+  </Card>
+  <Card title="PEFIN e REFIN" icon="triangle-exclamation" href="/sources/pefin-refin">
+    Pendências não bancárias.
+  </Card>
+</CardGroup>

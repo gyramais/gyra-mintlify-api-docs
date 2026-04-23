@@ -26,7 +26,7 @@ Todos os erros da API GYRA+ seguem o mesmo formato:
 
 ## Erros de autenticação (4xx)
 
-### 400 — Bad Request
+### 400, Bad Request
 
 | Mensagem | Causa | Solução |
 |----------|-------|---------|
@@ -35,28 +35,28 @@ Todos os erros da API GYRA+ seguem o mesmo formato:
 | `"Tipo de documento inválido."` | Campo `type` diferente de `CPF` ou `CNPJ` | Use exatamente `"CPF"` ou `"CNPJ"` (maiúsculo) |
 | `"policyId inválido."` | ID de política inexistente ou inativo | Consulte as políticas ativas com `GET /credit-policy/policy` |
 
-### 401 — Unauthorized
+### 401, Unauthorized
 
 | Mensagem | Causa | Solução |
 |----------|-------|---------|
 | `"Token de acesso inválido."` | Token JWT ausente, malformado ou expirado | Reautentique com `POST /auth/authenticate` |
 | `"Token expirado."` | JWT com mais de 24 horas | Gere um novo token |
 
-### 403 — Forbidden
+### 403, Forbidden
 
 | Mensagem | Causa | Solução |
 |----------|-------|---------|
 | `"Você não tem permissão para acessar este recurso."` | Organização sem acesso ao endpoint | Entre em contato com **atendimento@gyramais.com** |
 | `"Plano sem permissão para este tipo de relatório."` | Tipo de relatório não incluído no plano contratado | Verifique o plano ou contate o comercial |
 
-### 404 — Not Found
+### 404, Not Found
 
 | Mensagem | Causa | Solução |
 |----------|-------|---------|
 | `"Registro não encontrado."` | `reportId`, `sectionId` ou `webhookId` inexistente | Verifique se o ID está correto |
 | `"Política não encontrada."` | `policyId` inválido ou removido | Consulte políticas ativas |
 
-### 429 — Too Many Requests
+### 429, Too Many Requests
 
 | Mensagem | Causa | Solução |
 |----------|-------|---------|
@@ -66,11 +66,11 @@ Todos os erros da API GYRA+ seguem o mesmo formato:
 
 ## Erros de servidor (5xx)
 
-### 500 — Internal Server Error
+### 500, Internal Server Error
 
 Erro inesperado no servidor. Se persistir, entre em contato com **atendimento@gyramais.com** informando o `reportId` ou a requisição que falhou.
 
-### 503 — Service Unavailable
+### 503, Service Unavailable
 
 O serviço está temporariamente indisponível. Implemente retry com backoff. Acompanhe o status em [status.gyramais.com.br](https://status.gyramais.com.br).
 
@@ -116,7 +116,7 @@ Erros em integrações individuais **não invalidam o relatório**. Os dados dis
     Para erros 429 e 503, não tente novamente imediatamente. Use backoff: 1s, 2s, 4s, 8s... até um máximo de 60s.
   </Accordion>
   <Accordion title="Diferencie erros de cliente e servidor">
-    Erros 4xx são da sua aplicação — não tente novamente automaticamente. Corrija o payload. Erros 5xx são do servidor — faça retry.
+    Erros 4xx são da sua aplicação, não tente novamente automaticamente. Corrija o payload. Erros 5xx são do servidor, faça retry.
   </Accordion>
   <Accordion title="Registre sempre o reportId">
     Ao abrir chamado de suporte, o `reportId` é essencial para diagnóstico. Guarde em seus logs.

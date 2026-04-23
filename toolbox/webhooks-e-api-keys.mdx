@@ -1,0 +1,197 @@
+---
+title: "Webhooks e API Keys"
+description: "Gerar chaves de API, configurar webhooks, rotacionar segredos e validar assinatura."
+icon: "key"
+---
+
+<Info>
+  **Resumo:** para integrar a GYRA+ com seu backend, você precisa de **API Keys** (autenticação) e, opcionalmente, **Webhooks** (receber o resultado da análise em tempo real, sem polling). Ambos são configuráveis diretamente no toolbox, em *Configurações, Integrações*.
+</Info>
+
+## API Keys
+
+### Gerar
+
+<Steps>
+  <Step title="Ir em Configurações, API Keys">
+    Menu lateral, *Configurações*, aba *API Keys*.
+  </Step>
+  <Step title="Clicar em Nova chave">
+    Botão *Nova chave* no topo da lista.
+  </Step>
+  <Step title="Preencher">
+    - **Nome**, reconhecível internamente (ex: `backend-produção`, `n8n-staging`).
+    - **Escopo**, quais endpoints a chave pode acessar (padrão: todos os endpoints da organização).
+    - **Validade**, opcional. Chave sem validade expira nunca.
+  </Step>
+  <Step title="Copiar e guardar">
+    A chave é mostrada **uma única vez** depois de criada. Copie e armazene no seu gerenciador de segredos. Se perder, revogue e gere nova.
+  </Step>
+</Steps>
+
+### Usar
+
+Incluir em toda chamada HTTP:
+
+```bash
+Authorization: Bearer <sua-api-key>
+```
+
+Exemplo com `curl`:
+
+```bash
+curl -X POST https://api.gyramais.com.br/v2/report \
+  -H "Authorization: Bearer gyr_live_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "document": "43591367000130",
+    "policyId": "6612a7f30000000000000001"
+  }'
+```
+
+### Rotacionar
+
+Regra de ouro: rotacionar a cada 90 dias ou sempre que houver suspeita de vazamento.
+
+<Steps>
+  <Step title="Gerar nova chave">
+    Fluxo padrão de criação.
+  </Step>
+  <Step title="Atualizar no seu backend">
+    Subir a chave nova no gerenciador de segredos, fazer deploy.
+  </Step>
+  <Step title="Revogar a antiga">
+    Na lista, ação *Revogar*. Revogação é imediata: qualquer request com a chave antiga passa a retornar `401`.
+  </Step>
+</Steps>
+
+### Revogar
+
+Ação *Revogar* na lista. Chaves revogadas ficam registradas por 90 dias em log de auditoria (quem revogou, quando, último uso) e depois são apagadas.
+
+## Webhooks
+
+Permitem que a GYRA+ notifique seu backend quando um relatório muda de status (PROCESSING → COMPLETED), em vez de você ficar fazendo polling.
+
+### Configurar
+
+<Steps>
+  <Step title="Ir em Configurações, Integrações, Webhooks">
+    Aba dedicada dentro das integrações.
+  </Step>
+  <Step title="Clicar em Novo webhook">
+    Botão *Novo webhook*.
+  </Step>
+  <Step title="Preencher">
+    - **URL**, endpoint HTTPS do seu lado que vai receber o POST.
+    - **Eventos**, quais mudanças de status notificar (`report.completed`, `report.error`, `report.alert`, `batch.completed`).
+    - **Secret**, gerado automaticamente, usado para assinar o payload.
+  </Step>
+  <Step title="Testar">
+    Botão *Enviar evento de teste* dispara um POST com payload fake para a URL. Valide que seu endpoint retorna 2xx.
+  </Step>
+  <Step title="Salvar e ativar">
+    Salvar. Por padrão o webhook já fica ativo.
+  </Step>
+</Steps>
+
+### Estrutura do payload
+
+```json
+{
+  "event": "report.completed",
+  "reportId": "6612a7f30000000000000001",
+  "organizationId": "...",
+  "status": "APPROVED",
+  "document": "43591367000130",
+  "createdAt": "2026-04-23T14:30:00Z",
+  "payload": {
+    "amount": 80000,
+    "period": 24,
+    "interest": 1.99
+  }
+}
+```
+
+### Validar assinatura
+
+Todo POST traz o header `X-Gyra-Signature` com HMAC-SHA256 do body usando o `secret` do webhook. Validar no seu lado:
+
+```typescript
+import crypto from 'crypto';
+
+function verify(rawBody: string, signature: string, secret: string) {
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(rawBody)
+    .digest('hex');
+  return crypto.timingSafeEqual(
+    Buffer.from(expected),
+    Buffer.from(signature),
+  );
+}
+```
+
+**Nunca confiar** num payload com assinatura inválida. Rejeitar imediatamente com 401.
+
+### Retry e entrega
+
+- Primeira tentativa é imediata após o evento.
+- Se o seu endpoint retornar não-2xx ou timeout (10s), a GYRA+ retenta com **backoff exponencial**: 1min, 5min, 15min, 1h, 6h, 24h.
+- Após 6 falhas (24h+), o evento é marcado como `FAILED` e o webhook é **desativado automaticamente**, com notificação ao administrador.
+- Reativar manualmente na lista depois de corrigir.
+
+### Idempotência
+
+Cada POST traz `X-Gyra-Delivery-Id` único. Em caso de retry, o mesmo id é enviado. Use isso para deduplicar do seu lado.
+
+## Logs e debug
+
+Tanto API Keys quanto Webhooks têm tela de logs:
+
+- **API Keys**: últimas 500 requisições, status code, latência, endpoint. Útil para descobrir chave com falha de escopo.
+- **Webhooks**: últimos 100 envios, status code retornado, tentativa (primeira ou retry), payload enviado, resposta do seu endpoint. Click em linha expande o detalhe.
+
+## Limitações e considerações
+
+- **Rate limit por API Key**: padrão 100 requisições por minuto. Contratos enterprise podem subir. Chegando ao teto, retorna `429` com `Retry-After`.
+- **Webhook só aceita HTTPS.** HTTP puro é rejeitado.
+- **Payload máximo no webhook**: 1 MB. Para relatórios grandes (COMPLETO+ com muitos processos), o webhook entrega o resumo e um link assinado para o relatório completo.
+- **Secret não é recuperável**: se perder, gere novo webhook ou regenere o secret (invalida o antigo).
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Perdi minha API key, como recupero?">
+    Não tem como recuperar. Gere uma nova, atualize o backend, revogue a antiga.
+  </Accordion>
+  <Accordion title="Posso ter várias API Keys simultâneas?">
+    Sim, sem limite. Útil para separar ambientes (dev, staging, prod) ou integrações diferentes (backend próprio, n8n, Zapier, etc.).
+  </Accordion>
+  <Accordion title="Diferença entre webhook e polling?">
+    Webhook é push (GYRA+ te avisa). Polling é pull (você fica perguntando). Webhook é mais eficiente, mas exige endpoint público HTTPS. Polling funciona em qualquer setup, mas gasta mais requisição.
+  </Accordion>
+  <Accordion title="Webhook falhou e foi desativado, perco os eventos?">
+    Não. Os eventos ficam armazenados por 7 dias. Ao reativar o webhook, há a opção *Reenviar eventos pendentes* na tela de logs.
+  </Accordion>
+  <Accordion title="Como testar webhook em dev sem endpoint público?">
+    Use ferramentas como [webhook.site](https://webhook.site) para capturar, ou ngrok para expor localhost. O toolbox aceita qualquer URL HTTPS válida.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Webhooks (conceito)" icon="webhook" href="/concepts/webhooks-e-tempo-real">
+    Como a GYRA+ emite eventos ao longo do ciclo de vida.
+  </Card>
+  <Card title="Como Funciona a API" icon="code" href="/api-reference/como-funciona">
+    Arquitetura geral do endpoint.
+  </Card>
+  <Card title="Configurar Webhook (guia)" icon="gear" href="/guides/configurar-webhook">
+    Tutorial passo a passo ponta a ponta.
+  </Card>
+  <Card title="Integração n8n" icon="diagram-project" href="/docs/integracao-n8n">
+    Usar API key via n8n.
+  </Card>
+</CardGroup>

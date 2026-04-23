@@ -1,0 +1,145 @@
+---
+title: "Visão Geral do Toolbox"
+description: "Tour pelas seções principais da plataforma: input sempre visível, Política de Crédito, Análises, Lotes de Clientes, Configurações."
+icon: "compass"
+---
+
+<Info>
+  **Resumo:** o toolbox é organizado em torno de um **input sempre visível** no topo (ponto de entrada para qualquer análise) e um **menu lateral** com as áreas de configuração e gestão. Esta página é um mapa rápido: o que existe, para que serve e onde clicar.
+</Info>
+
+## Estrutura da tela
+
+```text
+┌─────────────────────────────────────────────────────────┐
+│  [INPUT SEMPRE VISÍVEL: digitar CPF/CNPJ]      [perfil] │
+├──────────┬──────────────────────────────────────────────┤
+│          │                                              │
+│  Menu    │                                              │
+│  lateral │            Conteúdo da seção                 │
+│          │                                              │
+│          │                                              │
+└──────────┴──────────────────────────────────────────────┘
+```
+
+Todo o toolbox gira em torno dessas duas áreas: o **input** dispara análises em qualquer momento; o **menu lateral** dá acesso a configurações, políticas e históricos.
+
+## O input sempre visível
+
+Ponto de entrada universal. Em qualquer tela, você pode:
+
+1. Digitar um **CPF ou CNPJ**, que o sistema identifica automaticamente.
+2. Selecionar a política no dropdown que abre abaixo (com a ação *tornar padrão* ao lado de cada uma).
+3. Apertar **Enter** para disparar a análise e ir direto para o relatório.
+4. Clicar no **+** no canto do input para iniciar um **Lote de Clientes** (análise em massa).
+
+Detalhes em [Rodar uma Análise](/toolbox/rodar-operacao).
+
+## Menu lateral: seções principais
+
+### Análises
+
+Histórico de todas as análises rodadas pelos usuários da organização. Filtros por documento, política, status, período, autor. Cada linha abre o relatório individual.
+
+### Lotes de Clientes
+
+Onde ficam os lotes criados pelo **+** do input. Cada lote mostra progresso do processamento, total de documentos, status agregado, e link para o XLS consolidado e relatórios individuais.
+
+### Política de Crédito
+
+Subdividida em:
+
+- **Políticas**, lista das políticas da organização (habilitadas e rascunhos). Aqui você cria, edita, habilita, desabilita.
+- **Templates**, catálogo de políticas prontas mantido pela GYRA+. Ponto de partida para organizações novas. Ver [Usar Templates](/toolbox/usar-templates).
+- **Produtos**, cadastro opcional de produtos financeiros vinculados às políticas (ex: Capital de Giro, Antecipação de Recebíveis).
+
+### Operações (feature opcional)
+
+Só aparece se a organização usa a feature de cadeias de políticas baseadas em relacionamentos (sócios, filiais, parentes). Detalhes em [Operações](/concepts/operacoes).
+
+### Insights (quando disponível)
+
+Relatório agregado por carteira: distribuição de status, concentração por CNAE, ticket médio, tendências. Depende do contrato.
+
+### Configurações
+
+- **Organização**, dados da sua organização, branding, domínios permitidos.
+- **Usuários**, convidar, remover, atribuir papéis. Ver [Gerenciar Usuários e Permissões](/toolbox/gerenciar-usuarios-permissoes).
+- **Integrações**, credenciais próprias de bureau (BYOC Serasa), integrações externas, webhooks.
+- **API Keys**, gerar e gerenciar chaves de acesso à API REST. Ver [Webhooks e API Keys](/toolbox/webhooks-e-api-keys).
+- **Faturamento**, consumo do mês, histórico de cobrança, contrato vigente.
+
+## Fluxos principais do dia a dia
+
+<CardGroup cols={2}>
+  <Card title="Analisar um documento" icon="play" href="/toolbox/rodar-operacao">
+    Input sempre visível, digitar, Enter.
+  </Card>
+  <Card title="Analisar em lote" icon="layer-group" href="/toolbox/rodar-operacao">
+    Clicar no + do input, colar lista, criar lote.
+  </Card>
+  <Card title="Criar ou ajustar política" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Política de Crédito, Políticas ou Templates.
+  </Card>
+  <Card title="Convidar usuário" icon="user-plus" href="/toolbox/gerenciar-usuarios-permissoes">
+    Configurações, Usuários.
+  </Card>
+  <Card title="Configurar webhook" icon="webhook" href="/toolbox/webhooks-e-api-keys">
+    Configurações, Integrações.
+  </Card>
+  <Card title="Ler um relatório" icon="chart-line" href="/toolbox/interpretar-resultado-operacao">
+    Clicar em qualquer linha na lista de Análises.
+  </Card>
+</CardGroup>
+
+## Papéis e o que cada um vê
+
+| Papel | Vê |
+| ----- | -- |
+| **Administrador** | Tudo. Usuários, políticas, integrações, faturamento. |
+| **Gestor de Crédito** | Políticas, templates, produtos, todas as análises. Não vê faturamento nem usuários. |
+| **Analista de Crédito** | Input de análise, análises próprias e da organização, relatórios. Não edita política. |
+| **Somente leitura** | Visualiza análises e relatórios, não roda novas análises. |
+
+Detalhamento em [Gerenciar Usuários e Permissões](/toolbox/gerenciar-usuarios-permissoes).
+
+## Atalhos e produtividade
+
+- **Busca global** (ícone de lupa no topo): procura por documento, nome, política ou lote.
+- **Política padrão** (marcada no próprio dropdown do input): pré-seleciona ao digitar um documento, um clique a menos por análise.
+- **Filtros salvos** na listagem de análises: útil para quem monitora carteira por produto ou período.
+- **Exportar** em PDF, JSON ou link público em qualquer relatório individual.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Abri o toolbox e está vazio, o que faço?">
+    Provavelmente a plataforma foi recém-provisionada. Vá em [Primeiro Acesso](/toolbox/primeiro-acesso) e siga os passos: ativar templates, configurar padrão, rodar primeira análise.
+  </Accordion>
+  <Accordion title="Não vejo o menu Operações.">
+    Operações é feature opcional. Se a organização não contratou, o menu não aparece. Para análise simples, basta o input no topo. Detalhes em [Operações](/concepts/operacoes).
+  </Accordion>
+  <Accordion title="Posso usar o toolbox no celular?">
+    O toolbox é otimizado para desktop. Funciona em tablet, mas o editor de políticas e a tela de relatório completo ficam melhor em tela grande.
+  </Accordion>
+  <Accordion title="Existe modo escuro?">
+    Não no momento. O toolbox segue o design system `gyra-design` com tema claro padrão.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Primeiro Acesso" icon="door-open" href="/toolbox/primeiro-acesso">
+    Configurar a plataforma do zero.
+  </Card>
+  <Card title="Rodar uma análise" icon="play" href="/toolbox/rodar-operacao">
+    Primeiro uso do input sempre visível.
+  </Card>
+  <Card title="Usar Templates" icon="sparkles" href="/toolbox/usar-templates">
+    Ativar políticas prontas.
+  </Card>
+  <Card title="Interpretar resultado" icon="chart-line" href="/toolbox/interpretar-resultado-operacao">
+    Ler o relatório com confiança.
+  </Card>
+</CardGroup>

@@ -1,0 +1,166 @@
+---
+title: "Processos Judiciais"
+description: "Ações como autor e réu em tribunais estaduais e federais, classificadas por tipo de vara."
+icon: "gavel"
+---
+
+<Info>
+  **Resumo:** a fonte de processos judiciais mostra **todas as ações** em que o CPF ou CNPJ figura como autor ou réu, nos tribunais brasileiros. Para crédito, o peso está nos processos como **réu**, classificados por tipo de vara (trabalhista, tributário, financeiro, cível, criminal, ambiental).
+</Info>
+
+## O que é
+
+Processos judiciais refletem **riscos legais** e **sinais de comportamento** do tomador. Exemplos:
+
+- Muitas ações trabalhistas em curto período: possível problema de gestão de pessoal.
+- Ações tributárias: indícios de pendências fiscais relevantes.
+- Ações financeiras (execução, cobrança): sinal forte de inadimplência com terceiros.
+- Ações criminais: dependendo da natureza, podem ser fator de bloqueio (ex: contratação executiva, compliance).
+
+A GYRA+ entrega os processos agregados e **detalhados**, permitindo políticas que olham tanto o total quanto por tipo de vara.
+
+## De onde vem
+
+- **Tipo de fonte:** tribunais estaduais e federais (consolidado por agregador).
+- **Cobertura geográfica:** Brasil (todas as UFs + justiça federal).
+- **Natureza do dado:** oficial, publicado nos diários e sistemas dos tribunais.
+- **Base legal:** publicidade dos atos judiciais (Constituição Federal, exceto segredo de justiça).
+
+## Frequência de atualização
+
+| Componente | Atualização |
+| ---------- | ----------- |
+| Consulta na fonte | real-time ao rodar a análise |
+| Base de origem | tribunais publicam diariamente (andamentos, novas ações) |
+| Janela coberta (COMPLETO+) | histórico desde **1990** |
+| Janela coberta (COMPLETO e ESSENCIAL) | desde **2014**, sempre com as últimas movimentações |
+
+Na prática: uma nova ação distribuída hoje costuma aparecer na nossa consulta em 1 a 3 dias úteis.
+
+## Dados entregues
+
+Detalhes completos em [Seção, Processos](/data/secao-processos). Estrutura resumida:
+
+### Resumo agregado
+
+| Campo | Tipo | Descrição | Exemplo |
+| ----- | ---- | --------- | ------- |
+| `count` | number | Total de processos encontrados | `8` |
+| `asPlaintiff` | number | Quantidade como autor | `3` |
+| `asDefendant` | number | Quantidade como réu | `5` |
+| `totalAmount` | number | Soma dos valores de causa conhecidos (R$) | `450000.00` |
+
+### Breakdown por tipo de vara
+
+Os processos são classificados em categorias:
+
+| Tipo de vara | Quando importa |
+| ------------ | -------------- |
+| **Cível** | Cobranças, danos morais, execução. |
+| **Trabalhista** | Ações de ex-funcionários, passivo trabalhista. |
+| **Tributário** | Execução fiscal, dívida ativa. |
+| **Financeiro** | Execução de dívida bancária, cobrança de credores. |
+| **Criminal** | Crimes em geral (ex: estelionato, lavagem). |
+| **Ambiental** | Infrações ambientais. |
+
+Cada tipo tem campos: quantidade, valor total, quantidade nos últimos 12 meses, detalhe do último processo.
+
+### Detalhamento por processo
+
+Cada processo entrega:
+
+| Campo | Descrição |
+| ----- | --------- |
+| `processNumber` | Número único CNJ |
+| `court` | Tribunal |
+| `courtType` | Tipo de vara classificada |
+| `role` | `AUTHOR` ou `DEFENDANT` |
+| `amount` | Valor da causa (quando informado) |
+| `distributionDate` | Data de distribuição |
+| `subject` | Assunto (ex: "Rescisão Contratual") |
+| `status` | Ativo / arquivado |
+
+## Casos de uso
+
+<CardGroup cols={2}>
+  <Card title="Passivo trabalhista relevante" icon="briefcase">
+    Empresas com mais de N ações trabalhistas nos últimos 12 meses podem indicar gestão problemática.
+    **Regra sugerida:** `LAWSUITS_COUNT_BY_COURT_TYPE > 3` + `Category: Trabalhista` : `ALERT`.
+  </Card>
+  <Card title="Execução financeira ativa" icon="scale-unbalanced">
+    Qualquer processo financeiro como réu em andamento é sinal forte de inadimplência.
+  </Card>
+  <Card title="Dívida ativa tributária" icon="building-columns">
+    Muitas execuções fiscais indicam empresa sem compliance tributário, risco de passivo a aparecer.
+  </Card>
+  <Card title="KYC e compliance" icon="shield-check">
+    Antecedentes criminais são fator de bloqueio em produtos sensíveis (contratação, compliance).
+  </Card>
+</CardGroup>
+
+## Como usar na política
+
+<Steps>
+  <Step title="Escolher a dimensão">
+    Quantidade? Valor total? Só por tipo de vara? Os campos mais usados são `LAWSUITS_COUNT_BY_COURT_TYPE` e `LAWSUITS_AMOUNT_BY_COURT_TYPE`.
+  </Step>
+  <Step title="Filtrar por categoria">
+    A maioria das políticas separa por vara (trabalhista, tributário, financeiro) porque o peso é diferente.
+  </Step>
+  <Step title="Calibrar threshold">
+    Uma ação trabalhista em 10 anos de empresa é diferente de 10 ações em 1 ano. Considere a taxa, não só o absoluto.
+  </Step>
+</Steps>
+
+Exemplo:
+
+```json
+{
+  "field": "LAWSUITS_AMOUNT_BY_COURT_TYPE",
+  "operator": "GREATER_THAN",
+  "value": 500000,
+  "params": { "Category": "Financeiro" },
+  "status": "DENIED"
+}
+```
+
+## Limitações e considerações
+
+- **Segredo de justiça:** processos sob sigilo não aparecem (nem para nós).
+- **Homonímia em PF:** nomes comuns podem confundir processos de pessoas diferentes. A GYRA+ filtra pelo CPF quando disponível, mas há casos residuais.
+- **Valor de causa:** nem todo processo tem valor informado, então `totalAmount` pode subestimar.
+- **Classificação automática:** `courtType` é inferido por heurística, casos ambíguos podem ser mal classificados.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Por que aparecem processos como autor?">
+    Porque uma empresa com 50 ações de cobrança contra clientes pode indicar perfil litigioso que afeta relacionamento comercial. Para política de crédito, normalmente só `DEFENDANT` importa.
+  </Accordion>
+  <Accordion title="Como tratar processo arquivado?">
+    Processos arquivados têm peso menor. Sugerimos regras que filtrem por `status: "ACTIVE"` quando quiser ignorar os encerrados.
+  </Accordion>
+  <Accordion title="Processos muito antigos pesam igual?">
+    Depende da política. Comumente filtramos por `distributionDate` nos últimos 24 a 60 meses para dar peso ao recente.
+  </Accordion>
+  <Accordion title="Qual nível de relatório inclui processos?">
+    Disponível a partir do relatório **ESSENCIAL**, com mais detalhe em **COMPLETO**.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Seção detalhada" icon="diagram-project" href="/data/secao-processos">
+    Campos completos e JSON de exemplo.
+  </Card>
+  <Card title="Criar regra por vara" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Passo a passo de regra por tipo de vara.
+  </Card>
+  <Card title="Protestos" icon="stamp" href="/sources/protestos">
+    Complementar a processos financeiros.
+  </Card>
+  <Card title="PEFIN e REFIN" icon="triangle-exclamation" href="/sources/pefin-refin">
+    Restritivos ativos.
+  </Card>
+</CardGroup>

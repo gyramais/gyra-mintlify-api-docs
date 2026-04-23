@@ -1,0 +1,191 @@
+---
+title: "Troubleshooting MCP"
+description: "Erros comuns ao usar o MCP da GYRA+: autenticação, conexão, tools não aparecendo, comportamento inesperado do agente."
+icon: "screwdriver-wrench"
+---
+
+<Info>
+  **Resumo:** esta página cataloga os problemas mais comuns ao configurar e usar o MCP da GYRA+, com diagnóstico e solução. Consulte por sintoma; se o seu caso não está listado, fale com o suporte em `suporte@gyramais.com.br`.
+</Info>
+
+## As tools não aparecem no cliente
+
+### Sintoma
+
+Você configurou o `mcpServers` em Claude Desktop (ou equivalente), reiniciou, e no chat o ícone de ferramentas não mostra as tools da GYRA+.
+
+### Diagnóstico
+
+<Steps>
+  <Step title="Verificar se o processo sobe">
+    Cheque logs do cliente. Em Claude Desktop: *Settings > Developer > Open Logs*. Procure linhas com `gyra` ou erros de spawn do `npx`.
+  </Step>
+  <Step title="Rodar o comando manual">
+    Num terminal:
+
+    ```bash
+    GYRA_API_KEY=gyr_live_... npx -y @gyramais/mcp-client --endpoint https://mcp.gyramais.com.br
+    ```
+
+    Se der erro de módulo não encontrado, é Node.js ausente ou versão antiga. Instale Node 18+.
+  </Step>
+  <Step title="Validar o JSON do config">
+    Erro comum: vírgula faltando, chaves sem aspas, escape errado no Windows. Passe o JSON num validador (jsonlint.com).
+  </Step>
+  <Step title="Reiniciar totalmente o cliente">
+    Claude Desktop às vezes mantém o MCP antigo em cache. Cmd+Q no macOS, e não só fechar a janela.
+  </Step>
+</Steps>
+
+## Erro 401, Unauthorized
+
+### Sintoma
+
+O agente tenta chamar uma tool e recebe `401 Unauthorized`.
+
+### Causas possíveis
+
+- **API Key inválida ou com typo**. Copie novamente do toolbox.
+- **API Key revogada**. Verifique em *Configurações, API Keys* se a chave ainda aparece como ativa.
+- **API Key de organização errada**. Chave é vinculada a uma organização; se você tem várias, confira qual está usando.
+
+### Solução
+
+Gerar nova chave em *Configurações, API Keys*, atualizar no config do cliente e reiniciar.
+
+## Erro 403, Forbidden
+
+### Sintoma
+
+Tool específica retorna `403`. Outras tools funcionam.
+
+### Causa
+
+Escopo da API Key não cobre o endpoint. Ex: chave somente leitura tentando `create_report`.
+
+### Solução
+
+Em *Configurações, API Keys*, edite os escopos da chave (ou crie uma nova com escopos completos).
+
+## Rate limit, 429 Too Many Requests
+
+### Sintoma
+
+Em conversas com muitas chamadas encadeadas, o agente recebe `429`.
+
+### Causa
+
+Limite padrão é 100 req/min por API Key. Encadeamentos longos (ex: varrer 500 relatórios) excedem.
+
+### Solução
+
+- **Esperar**: o cliente MCP respeita `Retry-After` e retoma automaticamente depois do intervalo.
+- **Pedir ao agente em batches**: *"processa 50 por vez e me avisa quando terminar cada bloco"*.
+- **Contrato enterprise**: limites mais altos disponíveis. Fale com o comercial.
+
+## Relatório fica em PROCESSING para sempre
+
+### Sintoma
+
+Depois de chamar `create_report`, o agente faz polling em `get_report` e o status nunca muda de `PROCESSING`.
+
+### Causas possíveis
+
+- **Fonte lenta** (SCR via Open Finance, por exemplo). Esperar até 2 minutos é normal.
+- **Fonte totalmente indisponível**: o status acaba em `ERROR`. Use `re_analyze_report` depois.
+- **Polling muito rápido**: se você instruir o agente a chamar `get_report` cada 1s, o 429 aparece sem progresso real.
+
+### Solução
+
+- Esperar **60 a 120 segundos** antes de assumir erro.
+- Se o status for `ERROR`, confirmar na resposta qual fonte falhou e reanalisar.
+- Em agentes autônomos, adotar **backoff**: 10s, 20s, 40s entre chamadas de `get_report`.
+
+## O modelo escolhe a tool errada
+
+### Sintoma
+
+Você pede "quantas análises negadas esta semana" e o modelo chama `list_reports` gigante em vez de `count_reports`.
+
+### Solução
+
+- **Modelo melhor**: Claude 3.5 Sonnet (ou equivalente) escolhe tool muito melhor que modelos pequenos.
+- **Prompt mais direto**: *"usa count_reports para me dar só o número"* força a escolha.
+- **Dividir a pergunta**: se a conversa tem muita ambiguidade, separar em passos explícitos.
+
+## O agente inventa dados
+
+### Sintoma
+
+O agente responde "a análise aprovou com score 750" mas na verdade não rodou tool alguma.
+
+### Causa
+
+Isso é alucinação do modelo, não falha do MCP. Algum cliente MCP por padrão deixa o modelo responder sem usar tools se ele "achar que sabe".
+
+### Solução
+
+- **No prompt**: *"sempre chame as tools da gyra para dados reais, nunca invente"*.
+- **Verificação visual**: todo cliente MCP mostra as tool calls na UI. Se você não viu chamada acontecer, o dado não é real.
+- **Modelos reasoning (o1, Claude Thinking)** costumam ser mais honestos sobre o que sabem.
+
+## Timeouts ou conexão instável
+
+### Sintoma
+
+Chamadas falham intermitentemente com timeout ou `ECONNRESET`.
+
+### Causas possíveis
+
+- Rede corporativa com firewall bloqueando SSE/WebSocket.
+- Proxy do seu ambiente não repassa headers.
+- ISP instável.
+
+### Solução
+
+- Testar em rede doméstica para isolar o firewall corporativo como causa.
+- Se for proxy, consultar a TI para liberar o host `mcp.gyramais.com.br`.
+- Para ambientes muito restritos, considerar usar a API REST direta em vez de MCP.
+
+## Múltiplas organizações confundindo o agente
+
+### Sintoma
+
+Você pertence a Org A e Org B, e o agente mistura dados.
+
+### Solução
+
+- API Key é por organização. Use uma config de MCP por organização, com nomes distintos (`gyra-orgA`, `gyra-orgB`).
+- No prompt: *"use o servidor gyra-orgA"* garante a escolha.
+
+## Logs e diagnóstico avançado
+
+### Claude Desktop
+
+- macOS: `~/Library/Logs/Claude/mcp*.log`
+- Windows: `%APPDATA%\Claude\logs\mcp*.log`
+
+### Cursor
+
+- *Settings > MCP > View Logs*.
+
+### Cliente próprio
+
+Suba o level do logger do SDK MCP para `debug` e cheque a troca de JSON-RPC com o servidor.
+
+## Ainda está com problema?
+
+<CardGroup cols={2}>
+  <Card title="Abrir chamado" icon="life-ring" href="mailto:suporte@gyramais.com.br">
+    suporte@gyramais.com.br, com log do cliente anexado.
+  </Card>
+  <Card title="FAQ" icon="circle-question" href="https://faq.gyramais.com.br/">
+    Base de conhecimento geral da GYRA+.
+  </Card>
+  <Card title="Instalação" icon="download" href="/mcp/instalacao">
+    Revisar o setup do zero.
+  </Card>
+  <Card title="API REST" icon="code" href="/api-reference/como-funciona">
+    Alternativa sem MCP em caso de bloqueio crônico.
+  </Card>
+</CardGroup>

@@ -1,0 +1,149 @@
+---
+title: "Rodar uma Análise"
+description: "Como rodar uma análise de crédito no toolbox pelo input sempre visível, individualmente ou em lote de clientes."
+icon: "play"
+---
+
+<Info>
+  **Resumo:** toda análise começa pelo **input sempre visível** no topo do toolbox. Você digita o CPF ou CNPJ, o sistema identifica o tipo de documento, abre o dropdown com as políticas (e operações, se houver) disponíveis e, ao apertar Enter, dispara o processamento. Em segundos o relatório está na tela. Para múltiplos documentos, há o fluxo de **Lote de Clientes**.
+</Info>
+
+## O input sempre visível
+
+No topo de todas as telas do toolbox fica o campo de análise. Ele é o ponto de entrada para qualquer consulta. O fluxo direto é:
+
+<Steps>
+  <Step title="Digitar o documento">
+    CPF (11 dígitos) ou CNPJ (14 dígitos). O toolbox identifica o tipo automaticamente, valida o dígito verificador e filtra a lista de políticas compatíveis. Documento inválido é sinalizado antes de você poder prosseguir.
+  </Step>
+  <Step title="Escolher a política no dropdown">
+    Logo abaixo do input abre um dropdown com as políticas ativas para o tipo de documento digitado. Se você tem **política padrão** marcada (via o próprio dropdown, ação *tornar padrão* ao lado do nome), ela já vem pré-selecionada.
+
+    Se a sua organização configurou alguma **operação** (feature opcional de cadeia com relacionamentos, ver [Operações](/concepts/operacoes)), ela também aparece no dropdown, distinguida como operação.
+  </Step>
+  <Step title="Apertar Enter">
+    Dispara o processamento e redireciona você direto para a tela do relatório. Não há outro clique.
+  </Step>
+  <Step title="Acompanhar o processamento">
+    A análise passa pelos estados:
+
+    - `PROCESSING`, coleta de dados em andamento.
+    - `EVALUATING`, política rodando sobre os dados coletados.
+    - `COMPLETED`, resultado disponível.
+
+    Tempo típico: 5 a 30 segundos, conforme as fontes consultadas. SCR via Open Finance em PF pode estender.
+  </Step>
+  <Step title="Ler o resultado">
+    Ao terminar, aparece status (`APPROVED`, `ALERT`, `DENIED`, `ERROR`), breakdown por regra e precificação, se houver. Guia em [Interpretar Resultado da Operação](/toolbox/interpretar-resultado-operacao).
+  </Step>
+</Steps>
+
+<Tip>
+  Se ao digitar o documento o dropdown vem vazio, é porque **nenhuma política compatível está habilitada** para aquele tipo. O gestor precisa ativar um template antes. Ver [Usar Templates](/toolbox/usar-templates).
+</Tip>
+
+## Lote de Clientes
+
+Para analisar múltiplos documentos de uma vez, não precisa planilha nem upload de arquivo. Tudo acontece pelo mesmo input:
+
+<Steps>
+  <Step title="Clicar no + do input">
+    No canto do input sempre visível há o botão **+**. Ele abre a tela de entrada em lote.
+  </Step>
+  <Step title="Colar ou digitar os documentos">
+    Copie uma coluna de CNPJs/CPFs de uma planilha, lista, e-mail, e cole na caixa. Também aceita digitação direta. O toolbox faz a **checagem em tempo real**, marca documentos válidos e separa os inválidos para você revisar.
+  </Step>
+  <Step title="Avançar">
+    Clicar em *Próximo*.
+  </Step>
+  <Step title="Nomear o lote e escolher a política">
+    Dê um nome reconhecível ao lote (ex: *Revisão carteira Abril 2026*) e selecione qual política será usada para todos os documentos do lote. Só políticas compatíveis com o tipo predominante aparecem na lista.
+  </Step>
+  <Step title="Criar lote">
+    Clicar em *Criar lote*. O processamento é engatilhado em background, em paralelo, e o lote aparece na seção **Lotes de Clientes** do menu lateral.
+  </Step>
+  <Step title="Acompanhar e baixar">
+    Ao terminar, o lote entrega:
+
+    - Um **arquivo XLS** com as principais informações agrupadas de cada documento (status, score, motivos, precificação).
+    - O XLS fica disponível para download na listagem de *Lotes de Clientes*.
+    - Cada **relatório individual** também é acessível na plataforma pelo link no próprio XLS ou pela listagem do lote.
+  </Step>
+</Steps>
+
+<Info>
+  O XLS consolidado é o formato pensado para gestor de carteira ou analista revisar um grande volume rapidamente. Para investigar um caso específico, abra o relatório individual.
+</Info>
+
+## Via API
+
+O fluxo equivalente por integração direta:
+
+```bash
+POST /v2/report
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "document": "43591367000130",
+  "policyId": "6612a7f30000000000000001",
+  "amount": 100000
+}
+```
+
+Resposta: objeto `Report` com id, que você pode consultar por polling ou receber via [webhook](/concepts/webhooks-e-tempo-real). Referência em [POST /v2/report](/api-reference/report-v2/post-v2report).
+
+## Reanálise
+
+Se um dado chegou errado ou com lag (ex: bureau sem retorno no primeiro momento), a tela do relatório tem o botão *Reanalisar*, que:
+
+- Reconsulta todas as fontes de dados.
+- Reavalia com a política na **versão atual**. Se a política foi editada entre as rodadas, o resultado pode mudar.
+- Mantém o mesmo id de operação/relatório-raiz, cria um novo `reportId` e registra ambos no histórico.
+
+## Limitações e considerações
+
+- **Documento inválido** é bloqueado antes do envio.
+- **Dropdown vazio** significa que não há política ativa para o tipo, gestor precisa habilitar.
+- **Fontes indisponíveis** no momento da consulta podem gerar `ERROR`. O relatório mostra qual fonte falhou; basta reanalisar depois.
+- **Concorrência do lote** é paralelizada, mas lotes muito grandes podem ser enfileirados conforme o contrato.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Por que o dropdown aparece vazio quando digito o documento?">
+    Porque nenhuma política compatível com o tipo de documento (PF ou PJ) está habilitada para a sua organização. O administrador ou gestor precisa ativar pelo menos um template em *Política de Crédito, Templates*. Ver [Usar Templates](/toolbox/usar-templates).
+  </Accordion>
+  <Accordion title="Qual a diferença entre política e operação no dropdown?">
+    **Política** é um conjunto de regras que roda sobre um documento. **Operação** é uma feature opcional para configurar cadeias de políticas baseadas em relacionamentos (sócios, filiais, parentes). Nem toda organização usa operação; quem usa pode ver em [Operações](/concepts/operacoes).
+  </Accordion>
+  <Accordion title="Como defino uma política padrão?">
+    No dropdown que abre ao digitar o documento, ao lado de cada política aparece a ação *tornar padrão*. Uma política padrão por tipo de documento, por usuário.
+  </Accordion>
+  <Accordion title="Posso rodar o mesmo documento duas vezes?">
+    Pode. Cada Enter gera uma análise nova com id próprio. Se você só quer atualizar os dados do relatório existente, use *Reanalisar* na tela do relatório.
+  </Accordion>
+  <Accordion title="Análise fica em PROCESSING há muito tempo, o que fazer?">
+    Mais de 2 minutos em `PROCESSING` é sinal de fonte lenta ou falha temporária. Aguarde 1 minuto a mais e, se continuar, rode de novo. Se o padrão se repetir, fale com o suporte.
+  </Accordion>
+  <Accordion title="Relatório consome contrato mesmo quando dá ERROR?">
+    Análises que terminam em `ERROR` antes da avaliação da política não contam. As que chegaram a rodar a política, mesmo com fonte parcial, contam normalmente.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Interpretar resultado" icon="chart-line" href="/toolbox/interpretar-resultado-operacao">
+    Status, breakdown por regra, precificação.
+  </Card>
+  <Card title="Operações (feature opcional)" icon="diagram-project" href="/concepts/operacoes">
+    Cadeia de políticas por relacionamento.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/concepts/webhooks-e-tempo-real">
+    Receber o resultado em tempo real no seu backend.
+  </Card>
+  <Card title="API de relatório" icon="code" href="/api-reference/report-v2/post-v2report">
+    Integração direta via HTTP.
+  </Card>
+</CardGroup>

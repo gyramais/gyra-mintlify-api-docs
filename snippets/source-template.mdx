@@ -1,0 +1,138 @@
+{/*
+  Template padrão para páginas em /sources/*.mdx
+
+  COMO USAR:
+  1. Copiar este arquivo como base de uma nova página de fonte.
+  2. Preencher todas as seções. Não deletar seções, se não houver conteúdo,
+     escrever explicitamente "Não aplicável para esta fonte." com motivo.
+  3. Nunca citar nome de provedor comercial. Ver snippets/fontes.mdx para o
+     vocabulário oficial.
+
+  Este arquivo serve de referência para autores e não deve ser importado em
+  páginas publicadas.
+*/}
+
+---
+title: "Nome da Fonte"
+description: "Descrição curta em uma frase, vai para o card e o SEO."
+icon: "database"
+---
+
+<Info>
+  **Resumo:** 1–2 frases que respondem "pra que serve esta fonte" no nível de negócio. Leitor com pressa só lê isto.
+</Info>
+
+## O que é
+
+Explicação conceitual em 2–4 parágrafos. Responder:
+
+- O que essa fonte descreve sobre a pessoa/empresa analisada?
+- Que pergunta de negócio ela responde?
+- Como ela se encaixa na decisão de crédito?
+
+Evitar jargão técnico. Evitar citar provedor.
+
+## De onde vem
+
+<Note>
+  Sempre neutralizar o provedor. Ver [glossário de fontes](/snippets/fontes).
+</Note>
+
+- **Tipo de fonte:** bureau de crédito / cadastro oficial / tribunal / cartório / BACEN / lista pública / etc.
+- **Cobertura geográfica:** Brasil (nacional) / estados específicos / global.
+- **Natureza do dado:** declarado, oficial, consolidado por terceiros, derivado.
+- **Base legal:** quando aplicável (LGPD, Lei do Cadastro Positivo, etc).
+
+## Frequência de atualização
+
+| Componente | Atualização |
+| ---------- | ----------- |
+| Consulta na fonte | real-time ao rodar a operação |
+| Cache interno GYRA+ | TTL de N horas/dias (quando houver) |
+| Base de origem | diária / semanal / mensal / em tempo real (descrever) |
+
+Explicar em 1 parágrafo o que significa na prática, ex: "um protesto feito hoje aparece na nossa consulta em até X horas."
+
+## Dados entregues
+
+Tabela completa dos campos retornados nesta seção. **Um campo por linha**, sem aninhar demais.
+
+| Campo | Tipo | Nulável | Descrição | Exemplo |
+| ----- | ---- | ------- | --------- | ------- |
+| `campoA` | `string` | não | O que representa | `"ATIVA"` |
+| `campoB` | `number` | sim | ... | `1234.56` |
+| `campoC.subCampo` | `string` | sim | ... | `"..."` |
+
+Para estruturas grandes, quebrar em sub-tabelas por subcampo raiz. Não criar tabelas com mais de ~15 linhas, fica ilegível e o RAG não lê bem.
+
+## Casos de uso
+
+Lista de 3–5 cenários reais em que essa fonte muda a decisão.
+
+<CardGroup cols={2}>
+  <Card title="Cenário 1, título curto" icon="target">
+    Descrição em 2–3 linhas. **Regra sugerida:** uma regra concreta de política que usa esta fonte.
+  </Card>
+  <Card title="Cenário 2" icon="shield">
+    ...
+  </Card>
+</CardGroup>
+
+## Como usar na política
+
+Mostrar como criar uma regra concreta a partir desta fonte:
+
+<Steps>
+  <Step title="Escolher o campo">
+    Qual campo dessa seção é usado. Ex: `sectionX.field`.
+  </Step>
+  <Step title="Definir o operador">
+    Qual operador faz sentido (igual, contém, maior que, soma nos últimos N dias).
+  </Step>
+  <Step title="Definir o threshold e o peso">
+    Valor de corte e impacto da regra na decisão final.
+  </Step>
+</Steps>
+
+Exemplo prático em JSON (ou screenshot do toolbox):
+
+```json
+{
+  "field": "sectionX.field",
+  "operator": "...",
+  "value": "...",
+  "weight": 20
+}
+```
+
+## Limitações e considerações
+
+- Campos que podem vir nulos e por quê.
+- Defasagem esperada.
+- Casos em que a fonte pode não retornar dado (ex: empresa recém-aberta, CPF sem histórico).
+- Custos extras se houver (ex: seção contratada à parte).
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Por que o campo X veio vazio?">
+    Resposta objetiva.
+  </Accordion>
+  <Accordion title="Com que frequência a GYRA+ consulta essa fonte?">
+    Resposta objetiva.
+  </Accordion>
+  <Accordion title="Posso desativar essa fonte na minha conta?">
+    Sim/Não, por quê e como.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Criar regra com esta fonte" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Passo a passo no toolbox.
+  </Card>
+  <Card title="Ver estrutura do relatório" icon="diagram-project" href="/data/estrutura-relatorio">
+    Como essa seção se encaixa no JSON completo.
+  </Card>
+</CardGroup>

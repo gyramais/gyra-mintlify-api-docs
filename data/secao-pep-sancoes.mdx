@@ -1,16 +1,16 @@
 ---
-title: Seção — PEP e Sanções
+title: Seção, PEP e Sanções
 description: Campos das seções de Pessoas Expostas Politicamente (PEP) e listas de sanções nacionais e internacionais.
 icon: "landmark"
 ---
 
-## PEP — Pessoas Expostas Politicamente
+## PEP, Pessoas Expostas Politicamente
 
 A seção `PEP` avalia se o documento está vinculado a cargos públicos, mandatos eletivos ou agentes políticos relevantes. Inclui também os sócios quando o documento for CNPJ.
 
 Disponível no relatório **COMPLETO** e **COMPLETO+**.
 
-### Campos do `details` — PEP (CNPJ)
+### Campos do `details`, PEP (CNPJ)
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
@@ -29,7 +29,7 @@ Disponível no relatório **COMPLETO** e **COMPLETO+**.
 | `donations[].candidate` | string | Candidato beneficiado |
 | `donations[].amount` | number | Valor doado (R$) |
 
-### Campos do `details` — PEP (CPF)
+### Campos do `details`, PEP (CPF)
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
@@ -39,11 +39,11 @@ Disponível no relatório **COMPLETO** e **COMPLETO+**.
 
 ---
 
-## SANCTIONS — Sanções Nacionais e Internacionais
+## SANCTIONS, Sanções Nacionais e Internacionais
 
 A seção `SANCTIONS` verifica o documento contra listas de sanções regulatórias nacionais e internacionais, cobrindo OFAC, CEIS, CEPIM e outras.
 
-### Campos do `details` — SANCTIONS
+### Campos do `details`, SANCTIONS
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
@@ -60,7 +60,7 @@ A seção `SANCTIONS` verifica o documento contra listas de sanções regulatór
 
 | Lista | País | Descrição |
 |-------|------|-----------|
-| OFAC | EUA | Office of Foreign Assets Control — sanções internacionais dos EUA |
+| OFAC | EUA | Office of Foreign Assets Control, sanções internacionais dos EUA |
 | CEIS | Brasil | Cadastro de Empresas Inidôneas e Suspensas |
 | CEPIM | Brasil | Cadastro de Entidades Privadas Sem Fins Lucrativos Impedidas |
 | CNEP | Brasil | Cadastro Nacional de Empresas Punidas |
@@ -68,7 +68,7 @@ A seção `SANCTIONS` verifica o documento contra listas de sanções regulatór
 
 ---
 
-## Exemplo de resposta — SANCTIONS
+## Exemplo de resposta, SANCTIONS
 
 ```json
 {

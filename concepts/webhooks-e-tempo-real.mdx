@@ -6,7 +6,7 @@ icon: "webhook"
 
 ## Por que usar webhooks
 
-O processamento de um relatório GYRA+ é assíncrono — consultas externas como Serasa, SCR e certidões levam tempo. Em vez de consultar `GET /report/:id` repetidamente, configure um webhook para receber o resultado **assim que estiver pronto**.
+O processamento de um relatório GYRA+ é assíncrono, consultas a bureaus de crédito, SCR/Open Finance e certidões levam tempo. Em vez de consultar `GET /report/:id` repetidamente, configure um webhook para receber o resultado **assim que estiver pronto**.
 
 Isso é a base de qualquer integração robusta com a GYRA+.
 
@@ -16,15 +16,15 @@ Isso é a base de qualquer integração robusta com a GYRA+.
 
 ```mermaid
 sequenceDiagram
-  participant Seu sistema
-  participant GYRA+ API
-  participant Integrações externas
+  participant S as Seu sistema
+  participant G as GYRA+ API
+  participant F as Fontes externas
 
-  Seu sistema->>GYRA+ API: POST /report
-  GYRA+ API-->>Seu sistema: { reportId, status: "PENDING" }
-  GYRA+ API->>Integrações externas: Consultas em paralelo
-  Integrações externas-->>GYRA+ API: Dados retornam
-  GYRA+ API->>Seu sistema: POST {seu webhook} com decisão final
+  S->>G: POST /report
+  G-->>S: { reportId, status: "PENDING" }
+  G->>F: Consultas em paralelo
+  F-->>G: Dados retornam
+  G->>S: POST {seu webhook} com decisão final
 ```
 
 1. Você cria o relatório com `POST /report`
@@ -92,7 +92,7 @@ Quando o relatório é concluído, a GYRA+ envia um `POST` para sua URL com o se
 
 <AccordionGroup>
   <Accordion title="Responda 200 imediatamente">
-    Seu endpoint de webhook deve responder `HTTP 200` o mais rápido possível — antes de qualquer processamento pesado. Processe o payload de forma assíncrona na sua fila interna.
+    Seu endpoint de webhook deve responder `HTTP 200` o mais rápido possível, antes de qualquer processamento pesado. Processe o payload de forma assíncrona na sua fila interna.
   </Accordion>
   <Accordion title="Use o externalId para rastrear">
     Ao criar o relatório, passe o `externalId` com o identificador do seu sistema (ID do pedido, ID do cliente, etc.). O webhook retornará esse campo, facilitando o vínculo com sua base de dados.

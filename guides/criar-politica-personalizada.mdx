@@ -1,6 +1,6 @@
 ---
 title: Criar uma Política de Crédito
-description: Configure os critérios de aprovação, alerta e negação de crédito do seu negócio — sem precisar escrever código.
+description: Configure os critérios de aprovação, alerta e negação de crédito do seu negócio, sem precisar escrever código.
 icon: "sliders"
 ---
 
@@ -12,7 +12,7 @@ icon: "sliders"
 
 ## O que é uma política de crédito?
 
-Pense numa política de crédito como um **conjunto de regras do jogo** que define quem pode e quem não pode fazer negócio com você — e em quais condições.
+Pense numa política de crédito como um **conjunto de regras do jogo** que define quem pode e quem não pode fazer negócio com você, e em quais condições.
 
 Na GYRA+, a política fica salva no sistema e é aplicada automaticamente toda vez que um relatório é gerado. O resultado final é sempre um de três status:
 
@@ -32,7 +32,7 @@ Na GYRA+, a política fica salva no sistema e é aplicada automaticamente toda v
 
 ## Pra que serve uma política personalizada?
 
-A GYRA+ já oferece **templates prontos** para os casos mais comuns. Use um template se você está começando — é mais rápido e já cobre a maioria dos cenários.
+A GYRA+ já oferece **templates prontos** para os casos mais comuns. Use um template se você está começando, é mais rápido e já cobre a maioria dos cenários.
 
 Crie uma política personalizada quando precisar:
 
@@ -64,7 +64,7 @@ Crie uma política personalizada quando precisar:
     Digite um nome descritivo (ex: "Crédito Distribuidor PJ 2024") e selecione se a política é para **CNPJ**, **CPF** ou **ambos**.
   </Step>
   <Step title="Configure os Grupos de Regras">
-    Cada grupo é um tema de análise (ex: "Financeiro", "Cadastral", "Processos"). Dentro de cada grupo, você adiciona as regras — veja a seção abaixo com todas as opções disponíveis.
+    Cada grupo é um tema de análise (ex: "Financeiro", "Cadastral", "Processos"). Dentro de cada grupo, você adiciona as regras, veja a seção abaixo com todas as opções disponíveis.
 
     Para cada grupo, defina as **pontuações de corte**:
     - Pontuação para **Aprovado** (ex: ≥ 70 pontos no grupo)
@@ -154,7 +154,7 @@ O score de 0 a 1000 representa o risco do cliente: **quanto maior, melhor**. Sco
 | `NOTARIES_AMOUNT` | Valor total em protestos (R$) | Teto de R$ para protestos |
 | `NOTARIES_LAST_DAYS` | Protestos recentes (em dias) | Alerta se protestou nos últimos 180 dias |
 
-### Histórico Bancário (SCR — Banco Central)
+### Histórico Bancário (SCR, Banco Central)
 
 | Regra | O que verifica | Uso típico |
 |-------|---------------|-----------|
@@ -194,13 +194,13 @@ O score de 0 a 1000 representa o risco do cliente: **quanto maior, melhor**. Sco
 
 <AccordionGroup>
   <Accordion title="Por onde começar? Use um template e ajuste aos poucos">
-    A maioria das empresas começa com o template de **Score Básico PJ** ou **Crédito B2B** e vai refinando as regras com o tempo. Não tente criar a política perfeita logo de início — calibre com dados reais.
+    A maioria das empresas começa com o template de **Score Básico PJ** ou **Crédito B2B** e vai refinando as regras com o tempo. Não tente criar a política perfeita logo de início, calibre com dados reais.
   </Accordion>
   <Accordion title="Regras de exclusão (bloqueio total) ficam em grupo separado">
-    Regras como "Negar se óbito" ou "Negar se falência" devem ficar em um grupo chamado "Exclusão" ou "Hard Rules", com resultado direto `DENIED` — independente de qualquer pontuação. Isso deixa a lógica mais clara e fácil de auditar.
+    Regras como "Negar se óbito" ou "Negar se falência" devem ficar em um grupo chamado "Exclusão" ou "Hard Rules", com resultado direto `DENIED`, independente de qualquer pontuação. Isso deixa a lógica mais clara e fácil de auditar.
   </Accordion>
   <Accordion title="Use o campo externalId para rastrear análises no seu sistema">
-    Ao solicitar um relatório, passe o `externalId` com o ID do cliente ou negócio no seu sistema. Assim, quando a decisão chegar pelo webhook, você sabe exatamente qual registro atualizar — sem precisar cruzar dados manualmente.
+    Ao solicitar um relatório, passe o `externalId` com o ID do cliente ou negócio no seu sistema. Assim, quando a decisão chegar pelo webhook, você sabe exatamente qual registro atualizar, sem precisar cruzar dados manualmente.
   </Accordion>
   <Accordion title="Calibre as faixas de risco com dados reais">
     Nas primeiras semanas de operação, observe a distribuição de scores dos seus clientes. Se a maioria está na faixa de "Alerta", talvez seus cortes estejam muito rígidos. Ajuste as Risk Bands a cada 30–60 dias no início.
@@ -215,7 +215,7 @@ O score de 0 a 1000 representa o risco do cliente: **quanto maior, melhor**. Sco
 
 ---
 
-## Para desenvolvedores — via API
+## Para desenvolvedores, via API
 
 Consulte as políticas ativas da sua organização:
 

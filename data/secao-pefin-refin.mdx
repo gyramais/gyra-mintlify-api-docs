@@ -1,16 +1,16 @@
 ---
-title: Seção — PEFIN e REFIN
+title: Seção, PEFIN e REFIN
 description: Campos das seções de pendências financeiras (PEFIN) e refinanciamentos (REFIN).
 icon: "triangle-exclamation"
 ---
 
-## PEFIN — Pendências Financeiras
+## PEFIN, Pendências Financeiras
 
 O PEFIN (Cadastro de Emitentes de Cheques sem Fundo) é o registro nacional de dívidas vencidas e não pagas com empresas e instituições financeiras.
 
 Disponível a partir do relatório **ESSENCIAL**.
 
-### Campos do `details` — PEFIN
+### Campos do `details`, PEFIN
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
@@ -21,7 +21,7 @@ Disponível a partir do relatório **ESSENCIAL**.
 | `calculatedRevenuePercentage` | number | % do faturamento comprometido |
 | `occurrences` | object[] | Lista detalhada de cada ocorrência |
 
-### Campos de cada ocorrência (`occurrences[]`) — PEFIN
+### Campos de cada ocorrência (`occurrences[]`), PEFIN
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
@@ -62,13 +62,13 @@ Disponível a partir do relatório **ESSENCIAL**.
 
 ---
 
-## REFIN — Refinanciamentos com Instituições Financeiras
+## REFIN, Refinanciamentos com Instituições Financeiras
 
 O REFIN registra dívidas renegociadas com bancos e instituições financeiras. Diferente do PEFIN, foca especificamente em dívidas de origem bancária que passaram por renegociação.
 
 Disponível a partir do relatório **ESSENCIAL**.
 
-### Campos do `details` — REFIN
+### Campos do `details`, REFIN
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
@@ -78,7 +78,7 @@ Disponível a partir do relatório **ESSENCIAL**.
 | `calculatedRevenuePercentage` | number | % do faturamento comprometido |
 | `occurrences` | object[] | Lista detalhada de cada ocorrência |
 
-### Campos de cada ocorrência (`occurrences[]`) — REFIN
+### Campos de cada ocorrência (`occurrences[]`), REFIN
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
@@ -95,8 +95,8 @@ Disponível a partir do relatório **ESSENCIAL**.
 | Situação | O que indica |
 |----------|-------------|
 | PEFIN + REFIN zerados | Sem restrições financeiras registradas |
-| PEFIN > 0, REFIN = 0 | Dívidas vencidas sem renegociação — risco ativo |
-| PEFIN = 0, REFIN > 0 | Dívidas foram renegociadas — histórico de dificuldade, mas em tratamento |
+| PEFIN > 0, REFIN = 0 | Dívidas vencidas sem renegociação, risco ativo |
+| PEFIN = 0, REFIN > 0 | Dívidas foram renegociadas, histórico de dificuldade, mas em tratamento |
 | PEFIN + REFIN altos | Comprometimento financeiro severo |
 
 <Tip>

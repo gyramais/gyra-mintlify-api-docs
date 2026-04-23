@@ -1,0 +1,145 @@
+---
+title: "Protestos"
+description: "Protestos cartorários ativos em todo o Brasil, por CPF ou CNPJ, com valor, cartório e data."
+icon: "file-circle-exclamation"
+---
+
+<Info>
+  **Resumo:** a fonte de protestos entrega a **lista consolidada de protestos ativos** em cartórios de todo o Brasil para um CPF ou CNPJ, com valor, data, cartório e UF. É um dos sinalizadores mais diretos de inadimplência comercial e costuma ser regra bloqueante em políticas conservadoras.
+</Info>
+
+## O que é
+
+Protesto é um ato cartorário que registra a inadimplência formal de um título (duplicata, nota promissória, cheque) após o credor levar ao cartório. É um mecanismo legal de cobrança: o devedor tem 3 dias úteis para pagar; se não paga, o protesto é lavrado e publicado.
+
+Em crédito, a seção de protestos responde:
+
+- O tomador tem protestos ativos?
+- Quantos, em que valor total?
+- Em qual UF e cartório?
+- Há quanto tempo?
+
+## De onde vem
+
+- **Tipo de fonte:** cartorial oficial, via agregador autorizado (IEPTB e bases conexas).
+- **Cobertura geográfica:** Brasil, todas as 27 UFs.
+- **Natureza do dado:** público (registros cartoriais são de consulta pública).
+- **Base legal:** dados públicos registrados em cartórios extrajudiciais.
+
+## Frequência de atualização
+
+| Componente | Atualização |
+| ---------- | ----------- |
+| Consulta na fonte | real-time ao rodar a análise |
+| Base do agregador | sincroniza com cartórios em ciclo de 24 a 48 h |
+| Janela histórica (ESSENCIAL / COMPLETO) | desde 2014, sempre com as últimas movimentações |
+| Janela histórica (COMPLETO+) | desde 1990 |
+| Cache interno | sem cache por padrão |
+
+Protesto lavrado hoje em cartório tipicamente aparece na nossa consulta em 1 a 3 dias.
+
+## Dados entregues
+
+| Campo | Descrição | Exemplo |
+| ----- | --------- | ------- |
+| `protests.count` | Quantidade de protestos ativos | `3` |
+| `protests.totalAmount` | Soma dos valores protestados | `45720.50` |
+| `protests.items[].date` | Data do protesto | `"2025-11-12"` |
+| `protests.items[].amount` | Valor do título | `15240.00` |
+| `protests.items[].registryOffice` | Nome do cartório | `"1º Tabelião de Protesto de Belo Horizonte"` |
+| `protests.items[].state` | UF | `"MG"` |
+| `protests.items[].city` | Município | `"Belo Horizonte"` |
+| `protests.items[].status` | Ativo ou quitado | `"ACTIVE"` / `"PAID"` |
+
+Protestos **quitados** aparecem com `status: "PAID"` e ficam registrados por um período, úteis para histórico mesmo depois de resolvidos.
+
+## Casos de uso
+
+<CardGroup cols={2}>
+  <Card title="Bloqueio por protesto ativo" icon="ban">
+    Negar concessão imediata quando há protesto ativo.
+    **Regra:** `protests.count > 0` : `DENIED`.
+  </Card>
+  <Card title="Alerta por valor total" icon="triangle-exclamation">
+    Tolerar protestos pequenos, alertar em valores relevantes.
+    **Regra:** `protests.totalAmount > 10000` : `ALERT`.
+  </Card>
+  <Card title="Histórico recente" icon="clock">
+    Considerar protestos mesmo quitados nos últimos 12 meses como sinal de instabilidade.
+  </Card>
+  <Card title="Concentração por UF" icon="map">
+    Protestos concentrados fora da UF de atuação da empresa são sinal de anomalia.
+  </Card>
+</CardGroup>
+
+## Como usar na política
+
+<Steps>
+  <Step title="Regra binária simples">
+    `protests.count > 0` : `DENIED`. Direto, conservador, funciona para crédito sensível.
+  </Step>
+  <Step title="Regra por valor">
+    Quando você aceita protesto pequeno (ex: erro operacional), use `protests.totalAmount > threshold`. Threshold comum: R$ 5.000 a R$ 20.000.
+  </Step>
+  <Step title="Regra por quantidade + valor">
+    Política mais refinada: `protests.count >= 3` ou `protests.totalAmount > 50000` : `DENIED`.
+  </Step>
+  <Step title="Regra de histórico quitado">
+    Via parâmetro temporal, considerar protestos `PAID` nos últimos N meses como `ALERT`.
+  </Step>
+</Steps>
+
+Exemplo:
+
+```json
+{
+  "field": "protests.count",
+  "operator": "GREATER_THAN",
+  "value": 0,
+  "status": "DENIED"
+}
+```
+
+## Limitações e considerações
+
+- **Defasagem cartorial**: um protesto pago hoje pode continuar listado como `ACTIVE` por alguns dias até o cartório atualizar.
+- **Falsos positivos por homônimo**: raros, mas podem ocorrer em CPF com nomes muito comuns. O cruzamento com outros dados do relatório costuma resolver.
+- **Cartórios fora da base**: alguns cartórios pequenos podem ter atraso maior na sincronização. Cobertura é alta (>95%) mas não 100%.
+- **Não distingue protesto de cheque de protesto de duplicata** na camada básica. A descrição textual está em `items[].description` mas não é campo estruturado.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Qual a diferença entre protesto e PEFIN/REFIN?">
+    **Protesto** é ato cartorário oficial de inadimplência de título. **PEFIN/REFIN** é restritivo comercial registrado em bureau (Serasa, Boa Vista) a partir de informação do credor, sem passar por cartório. Um mesmo inadimplemento pode aparecer nas duas fontes (ou só em uma). Ver [PEFIN e REFIN](/sources/pefin-refin).
+  </Accordion>
+  <Accordion title="Protesto quitado é bloqueio?">
+    Depende da política. Muitas tratam `PAID` como neutro, algumas tratam como `ALERT` se for recente. Configurável.
+  </Accordion>
+  <Accordion title="Protesto muito antigo conta?">
+    Em níveis ESSENCIAL e COMPLETO, a janela é desde 2014. Em COMPLETO+ vai até 1990, útil para due diligence histórica. A relevância prática de protestos antigos quitados é baixa; protestos antigos ainda ativos são sinal grave.
+  </Accordion>
+  <Accordion title="Como contestar um protesto falso?">
+    O processo é no cartório, não na GYRA+. Nós apenas consultamos. Se o cartório atualiza, nossa próxima consulta reflete. Uma reanálise 24-48h depois da correção no cartório costuma resolver.
+  </Accordion>
+  <Accordion title="Qual nível de relatório inclui protestos?">
+    Disponível a partir do **ESSENCIAL**. Janela desde 2014 com últimas movimentações; em **COMPLETO+**, desde 1990.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="PEFIN e REFIN" icon="triangle-exclamation" href="/sources/pefin-refin">
+    Restritivos comerciais via bureau.
+  </Card>
+  <Card title="Processos Judiciais" icon="gavel" href="/sources/processos-judiciais">
+    Ações como autor e réu.
+  </Card>
+  <Card title="Criar regra de protesto" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Passo a passo no Toolbox.
+  </Card>
+  <Card title="Seção detalhada" icon="file-lines" href="/data/secao-protestos">
+    JSON completo e campos.
+  </Card>
+</CardGroup>
