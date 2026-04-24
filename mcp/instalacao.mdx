@@ -1,18 +1,27 @@
 ---
 title: "Instalação do MCP"
-description: "Configurar o MCP Server da GYRA+ no Claude Desktop, Cursor, Claude Code e outros clientes MCP."
+description: "Conectar o MCP Server da GYRA+ no Claude.ai, Claude Desktop, Cursor, Claude Code e outros clientes MCP."
 icon: "download"
 ---
 
 <Info>
-  **Resumo:** o MCP da GYRA+ é hospedado pela GYRA+ como servidor remoto. Você só precisa configurar o **cliente** (Claude Desktop, Cursor, etc.) para apontar para o endpoint oficial e autenticar com uma API Key. Esta página cobre a configuração nos clientes mais comuns.
+  **Resumo:** o MCP da GYRA+ é hospedado pela GYRA+ em `https://mcp.gyramais.com.br`. Você só configura o **cliente** (Claude.ai, Claude Desktop, Cursor, etc.) e autentica com as credenciais (`clientId` + `clientSecret`) enviadas pelo suporte. Existem duas formas de conectar: **custom connector (OAuth)**, indicado para Claude.ai e Claude Desktop, e **stdio local**, indicado para Claude Code, Cursor, VS Code e SDKs próprios.
 </Info>
 
-## Pré-requisitos
+## Obter credenciais
 
-- Conta ativa no toolbox.
-- **API Key** gerada em *Configurações, API Keys* do toolbox. Ver [Webhooks e API Keys](/toolbox/webhooks-e-api-keys).
-- Cliente MCP instalado (Claude Desktop, Cursor, ou outro).
+As credenciais do MCP são as **mesmas credenciais de API** da sua organização: `clientId` e `clientSecret`. Não existe tela no toolbox para gerá-las. Solicite por e-mail:
+
+```text
+suporte@gyramais.com.br
+Assunto: Credenciais de API / MCP — [nome da organização]
+```
+
+O suporte responde com `clientId` e `clientSecret`. Guarde em cofre seguro (1Password, Vault, etc.) — elas dão acesso a todas as tools do MCP e endpoints da API REST.
+
+<Warning>
+  Credenciais não expiram sozinhas, mas podem ser revogadas e reemitidas pelo suporte a qualquer momento em caso de vazamento. Avise imediatamente se suspeitar de comprometimento.
+</Warning>
 
 ## Endpoint do servidor
 
@@ -20,119 +29,136 @@ icon: "download"
 https://mcp.gyramais.com.br
 ```
 
-## Claude Desktop (macOS e Windows)
+## Opção 1, Custom connector no Claude.ai ou Claude Desktop (recomendado)
+
+Fluxo via **OAuth**: você adiciona o endpoint uma única vez, clica em *Autenticar* e a GYRA+ abre uma página de login onde você informa o `clientId` e `clientSecret` recebidos do suporte. O Claude volta conectado.
 
 <Steps>
-  <Step title="Localizar o arquivo de configuração">
-    Abrir *Claude > Settings > Developer > Edit Config* ou editar direto:
+  <Step title="Abrir a tela de connectors">
+    - **Claude.ai**: *Settings > Connectors > Add custom connector*.
+    - **Claude Desktop**: *Settings > Connectors > Add custom connector*.
+  </Step>
+  <Step title="Adicionar o endpoint da GYRA+">
+    - **Name**: `GYRA+`
+    - **URL**: `https://mcp.gyramais.com.br`
 
-    - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-    - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+    Salvar.
   </Step>
-  <Step title="Adicionar o bloco do MCP da GYRA+">
-    ```json
-    {
-      "mcpServers": {
-        "gyra": {
-          "command": "npx",
-          "args": [
-            "-y",
-            "@gyramais/mcp-client",
-            "--endpoint",
-            "https://mcp.gyramais.com.br"
-          ],
-          "env": {
-            "GYRA_API_KEY": "gyr_live_sua_chave_aqui"
-          }
-        }
-      }
-    }
-    ```
+  <Step title="Autenticar">
+    Clicar em **Authenticate** ao lado do connector recém-adicionado. O Claude abre uma aba no navegador com a página de login da GYRA+.
   </Step>
-  <Step title="Reiniciar o Claude Desktop">
-    Fechar e abrir novamente. O ícone de ferramenta aparece no canto inferior da caixa de chat indicando tools disponíveis.
+  <Step title="Informar clientId e clientSecret">
+    Na página de login da GYRA+, cole as credenciais recebidas do suporte:
+
+    - **Client ID**
+    - **Client Secret**
+
+    Confirmar. Se as credenciais estiverem corretas, você é redirecionado de volta ao Claude com o connector marcado como conectado.
   </Step>
   <Step title="Testar">
-    Digite: *"liste minhas últimas 5 análises"*. O Claude escolherá `list_reports` e trará a resposta.
+    Na conversa, pergunte: *"liste minhas últimas 5 análises"*. O Claude escolhe `list_reports` e traz a resposta.
   </Step>
 </Steps>
 
-## Cursor
+## Opção 2, Stdio local (Claude Code, Cursor, VS Code, SDKs)
+
+Para clientes que rodam o MCP como **processo local via stdio**, use o pacote `@gyramais/mcp-server` (binário `gyra-mcp`) e passe as credenciais como variáveis de ambiente.
+
+### Variáveis de ambiente
+
+| Variável | Obrigatório | Descrição |
+| --- | --- | --- |
+| `GYRA_CLIENT_ID` | Sim (ou `GYRA_ACCESS_TOKEN`) | Client ID recebido do suporte. |
+| `GYRA_CLIENT_SECRET` | Sim (ou `GYRA_ACCESS_TOKEN`) | Client Secret recebido do suporte. O MCP troca por um JWT automaticamente e renova antes de expirar. |
+| `GYRA_ACCESS_TOKEN` | Alternativa | JWT obtido manualmente via `POST /auth/authenticate`. Estático, você é responsável por renovar. |
+| `GYRA_BASE_URL` | Não | Default `https://gyra-core.gyramais.com.br`. |
+| `GYRA_PROFILE` | Não | `external` (default) ou `internal`. Use `external` para uso normal. |
+
+Use **uma das duas opções**: `GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET` (recomendado, com renovação automática) **ou** `GYRA_ACCESS_TOKEN` (estático).
+
+### Claude Code (CLI)
+
+```bash
+claude mcp add gyra \
+  --command "npx -y @gyramais/mcp-server" \
+  --env GYRA_CLIENT_ID=seu_client_id \
+  --env GYRA_CLIENT_SECRET=seu_client_secret
+```
+
+Verificar:
+
+```bash
+claude mcp list
+```
+
+### Cursor
 
 <Steps>
   <Step title="Abrir settings">
     Cmd/Ctrl + Shift + J, aba *MCP*.
   </Step>
-  <Step title="Adicionar novo servidor">
-    Botão *Add new MCP server*.
-  </Step>
-  <Step title="Preencher">
+  <Step title="Add new MCP server">
     - **Name**: `gyra`
     - **Type**: `command`
-    - **Command**: `npx -y @gyramais/mcp-client --endpoint https://mcp.gyramais.com.br`
-    - **Env**: `GYRA_API_KEY=gyr_live_sua_chave_aqui`
+    - **Command**: `npx -y @gyramais/mcp-server`
+    - **Env**:
+      - `GYRA_CLIENT_ID=seu_client_id`
+      - `GYRA_CLIENT_SECRET=seu_client_secret`
   </Step>
   <Step title="Salvar e reiniciar o Cursor">
-    O Cursor reconhece as tools automaticamente.
+    As tools são reconhecidas automaticamente.
   </Step>
 </Steps>
 
-## Claude Code (CLI)
+### Claude Desktop, config manual via stdio
 
-<Steps>
-  <Step title="Instalar/atualizar o Claude Code">
-    Siga a documentação oficial em [claude.com/claude-code](https://claude.com/claude-code).
-  </Step>
-  <Step title="Registrar o MCP">
-    ```bash
-    claude mcp add gyra \
-      --command "npx -y @gyramais/mcp-client" \
-      --arg "--endpoint" --arg "https://mcp.gyramais.com.br" \
-      --env GYRA_API_KEY=gyr_live_sua_chave_aqui
-    ```
-  </Step>
-  <Step title="Verificar">
-    ```bash
-    claude mcp list
-    ```
+Se preferir configurar via arquivo em vez de usar o custom connector:
 
-    Deve listar `gyra` como ativo.
-  </Step>
-</Steps>
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
-## VS Code via Continue
-
-<Steps>
-  <Step title="Instalar a extensão Continue">
-    Marketplace do VS Code, procurar por *Continue*.
-  </Step>
-  <Step title="Abrir config.json do Continue">
-    `~/.continue/config.json` (ou pela UI).
-  </Step>
-  <Step title="Adicionar no array mcpServers">
-    ```json
-    {
-      "mcpServers": [
-        {
-          "name": "gyra",
-          "command": "npx",
-          "args": ["-y", "@gyramais/mcp-client", "--endpoint", "https://mcp.gyramais.com.br"],
-          "env": { "GYRA_API_KEY": "gyr_live_sua_chave_aqui" }
-        }
-      ]
+```json
+{
+  "mcpServers": {
+    "gyra": {
+      "command": "npx",
+      "args": ["-y", "@gyramais/mcp-server"],
+      "env": {
+        "GYRA_CLIENT_ID": "seu_client_id",
+        "GYRA_CLIENT_SECRET": "seu_client_secret"
+      }
     }
-    ```
-  </Step>
-  <Step title="Reload do VS Code">
-    Comando *Developer: Reload Window*.
-  </Step>
-</Steps>
+  }
+}
+```
 
-## Cliente customizado (SDK)
+Reiniciar totalmente o Claude Desktop (Cmd+Q no macOS).
 
-Se você está construindo um cliente próprio com os SDKs oficiais:
+### VS Code via Continue
 
-### Python
+`~/.continue/config.json`:
+
+```json
+{
+  "mcpServers": [
+    {
+      "name": "gyra",
+      "command": "npx",
+      "args": ["-y", "@gyramais/mcp-server"],
+      "env": {
+        "GYRA_CLIENT_ID": "seu_client_id",
+        "GYRA_CLIENT_SECRET": "seu_client_secret"
+      }
+    }
+  ]
+}
+```
+
+Recarregar a janela do VS Code.
+
+### Cliente customizado (SDK)
+
+**Python:**
 
 ```python
 from mcp import ClientSession, StdioServerParameters
@@ -140,8 +166,11 @@ from mcp.client.stdio import stdio_client
 
 params = StdioServerParameters(
     command="npx",
-    args=["-y", "@gyramais/mcp-client", "--endpoint", "https://mcp.gyramais.com.br"],
-    env={"GYRA_API_KEY": "gyr_live_sua_chave_aqui"},
+    args=["-y", "@gyramais/mcp-server"],
+    env={
+        "GYRA_CLIENT_ID": "seu_client_id",
+        "GYRA_CLIENT_SECRET": "seu_client_secret",
+    },
 )
 
 async with stdio_client(params) as (read, write):
@@ -151,7 +180,7 @@ async with stdio_client(params) as (read, write):
         print(tools)
 ```
 
-### TypeScript
+**TypeScript:**
 
 ```typescript
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -159,8 +188,11 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 
 const transport = new StdioClientTransport({
   command: 'npx',
-  args: ['-y', '@gyramais/mcp-client', '--endpoint', 'https://mcp.gyramais.com.br'],
-  env: { GYRA_API_KEY: 'gyr_live_sua_chave_aqui' },
+  args: ['-y', '@gyramais/mcp-server'],
+  env: {
+    GYRA_CLIENT_ID: 'seu_client_id',
+    GYRA_CLIENT_SECRET: 'seu_client_secret',
+  },
 });
 
 const client = new Client({ name: 'meu-cliente', version: '1.0' }, { capabilities: {} });
@@ -172,33 +204,37 @@ console.log(tools);
 
 ## Verificação rápida
 
-Depois de configurar, no cliente MCP:
+Depois de conectar, no cliente MCP:
 
-1. Pergunte: *"quais tools da gyra estão disponíveis?"* — deve listar `create_report`, `list_reports`, etc.
+1. Pergunte: *"quais tools da gyra estão disponíveis?"* — deve listar `create_report`, `list_reports`, `list_policies`, etc.
 2. Pergunte: *"quais políticas tenho ativas?"* — deve chamar `list_policies` e retornar a lista.
 
 Se as tools não aparecem, consulte [Troubleshooting](/mcp/troubleshooting).
 
-## Segurança da API Key
+## Segurança das credenciais
 
-- **Nunca commitar** o config do cliente em repositório público com a API Key.
-- Para compartilhar config entre times, usar variáveis de ambiente no shell do sistema operacional e referenciar no JSON como `${env:GYRA_API_KEY}` (suportado em Claude Desktop recente e no Cursor).
-- **Rotacionar** a chave a cada 90 dias. Ver [Webhooks e API Keys](/toolbox/webhooks-e-api-keys).
+- **Nunca commitar** config com `clientSecret` em repositório.
+- Em configs JSON, referenciar via variáveis de ambiente do sistema (`${env:GYRA_CLIENT_SECRET}`) quando o cliente suportar.
+- Em caso de vazamento, acione `suporte@gyramais.com.br` para reemissão — a credencial antiga é invalidada.
+- No fluxo OAuth (Opção 1), as credenciais ficam armazenadas de forma segura no cliente (Claude) e o MCP recebe apenas um token de sessão revogável.
 
 ## Perguntas frequentes
 
 <AccordionGroup>
-  <Accordion title="Preciso instalar alguma coisa além do cliente?">
-    O `npx @gyramais/mcp-client` é baixado on demand. Se seu ambiente não tem npm, instale o Node.js (18+).
+  <Accordion title="Posso usar a Opção 1 (custom connector) no Cursor ou Claude Code?">
+    Hoje o custom connector com OAuth é suportado no Claude.ai e Claude Desktop. Cursor, Claude Code e VS Code usam configuração stdio local (Opção 2).
+  </Accordion>
+  <Accordion title="Preciso instalar algo além do cliente?">
+    Para a Opção 2, `npx @gyramais/mcp-server` é baixado on demand. Se o ambiente não tem npm, instale Node.js 18+.
   </Accordion>
   <Accordion title="Funciona offline?">
-    Não. O MCP da GYRA+ é servidor remoto, exige internet. Se a conexão cai, o cliente mostra erro de tool call e o modelo comunica a falha.
+    Não. O MCP depende do backend da GYRA+, exige internet.
   </Accordion>
-  <Accordion title="Posso usar múltiplas API Keys no mesmo cliente?">
-    Sim, adicione múltiplas entradas em `mcpServers` com nomes diferentes (ex: `gyra-prod`, `gyra-staging`), cada uma apontando para uma chave.
+  <Accordion title="Posso conectar múltiplas organizações?">
+    Sim. Para stdio, adicione várias entradas em `mcpServers` com nomes distintos (ex: `gyra-orgA`, `gyra-orgB`) e credenciais específicas. Para custom connector, adicione múltiplos connectors no Claude, cada um com suas credenciais.
   </Accordion>
-  <Accordion title="O cliente MCP suporta HTTPS direto em vez de npx?">
-    Se o seu cliente MCP suporta transporte HTTP/SSE, você pode apontar direto para `https://mcp.gyramais.com.br/sse` com header `Authorization: Bearer <api-key>`. Consulte a doc do cliente específico.
+  <Accordion title="Como renovar o token manualmente?">
+    Se estiver usando `GYRA_ACCESS_TOKEN`, chame `POST /auth/authenticate` com headers `gyra-client-id` e `gyra-client-secret` e use o `accessToken` retornado. Usando `GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET` o MCP faz isso automaticamente.
   </Accordion>
 </AccordionGroup>
 
@@ -214,7 +250,7 @@ Se as tools não aparecem, consulte [Troubleshooting](/mcp/troubleshooting).
   <Card title="Troubleshooting" icon="wrench" href="/mcp/troubleshooting">
     Problemas comuns na instalação.
   </Card>
-  <Card title="API Keys" icon="key" href="/toolbox/webhooks-e-api-keys">
-    Gerar e rotacionar chave.
+  <Card title="API Keys e webhooks" icon="key" href="/toolbox/webhooks-e-api-keys">
+    Uso das credenciais na API REST.
   </Card>
 </CardGroup>

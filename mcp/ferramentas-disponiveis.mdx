@@ -12,11 +12,11 @@ icon: "toolbox"
 
 ### `authenticate`
 
-Autentica com e-mail e senha, retornando um token de sessão para uso subsequente.
+Troca `clientId` + `clientSecret` por um token de sessão (JWT). Geralmente **não precisa ser chamada manualmente**: o MCP autentica e renova o token automaticamente quando `GYRA_CLIENT_ID` e `GYRA_CLIENT_SECRET` estão configurados (ou via custom connector OAuth).
 
-- **Quando usa**: cliente sem API Key persistida, agente que gerencia múltiplas organizações.
-- **Parâmetros**: `email`, `password`, opcional `twoFactorCode`.
-- **Prompt típico**: *"autentica na gyra com meu e-mail"* (o agente pede a senha de forma segura).
+- **Quando usa**: agente que gerencia múltiplas organizações e precisa trocar de contexto on demand.
+- **Parâmetros**: `clientId`, `clientSecret`.
+- **Retorno**: `{ accessToken, expiresIn }`.
 
 ## Relatórios
 
@@ -144,7 +144,7 @@ O poder do MCP aparece quando o agente **encadeia** tools sem você precisar diz
 
 ## Limitações
 
-- **Tools são limitadas ao escopo da API Key.** Se a chave só lê, tentativas de criar relatório falham com erro claro.
+- **Tools disponíveis refletem o escopo contratado pela organização.** Features não contratadas retornam erro claro.
 - **Rate limit aplicável**: mesmas regras da API REST (100 req/min padrão). O cliente MCP retransmite 429 e o modelo espera.
 - **Payloads grandes**: relatórios COMPLETO+ podem exceder o limite de contexto do modelo. Use `get_report_section_by_type` em vez de `get_report` para buscar só o que precisa.
 

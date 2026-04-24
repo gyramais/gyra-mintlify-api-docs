@@ -24,19 +24,16 @@ A equipe retorna com o `clientId` e o `clientSecret`. Guarde o `clientSecret` no
 O `clientId` + `clientSecret` são trocados por um **token de acesso com validade de 24 horas**. Seu backend precisa renovar o token antes de expirar.
 
 ```bash
-curl -X POST https://gyra-core.gyramais.com.br/auth \
-  -H "Content-Type: application/json" \
-  -d '{
-    "clientId": "seu-client-id",
-    "clientSecret": "seu-client-secret"
-  }'
+curl -X POST https://gyra-core.gyramais.com.br/auth/authenticate \
+  -H "gyra-client-id: seu-client-id" \
+  -H "gyra-client-secret: seu-client-secret"
 ```
 
 Resposta:
 
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "expiresIn": 86400
 }
 ```
@@ -53,7 +50,7 @@ Exemplo com `curl`:
 
 ```bash
 curl -X POST https://gyra-core.gyramais.com.br/v2/report \
-  -H "Authorization: Bearer eyJhbGciOi..." \
+  -H "Authorization: Bearer <accessToken>" \
   -H "Content-Type: application/json" \
   -d '{
     "document": "43591367000130",

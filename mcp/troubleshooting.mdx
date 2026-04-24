@@ -24,7 +24,9 @@ Você configurou o `mcpServers` em Claude Desktop (ou equivalente), reiniciou, e
     Num terminal:
 
     ```bash
-    GYRA_API_KEY=gyr_live_... npx -y @gyramais/mcp-client --endpoint https://mcp.gyramais.com.br
+    GYRA_CLIENT_ID=seu_client_id \
+    GYRA_CLIENT_SECRET=seu_client_secret \
+    npx -y @gyramais/mcp-server
     ```
 
     Se der erro de módulo não encontrado, é Node.js ausente ou versão antiga. Instale Node 18+.
@@ -45,13 +47,13 @@ O agente tenta chamar uma tool e recebe `401 Unauthorized`.
 
 ### Causas possíveis
 
-- **API Key inválida ou com typo**. Copie novamente do toolbox.
-- **API Key revogada**. Verifique em *Configurações, API Keys* se a chave ainda aparece como ativa.
-- **API Key de organização errada**. Chave é vinculada a uma organização; se você tem várias, confira qual está usando.
+- **`clientId` ou `clientSecret` com typo**. Copie novamente do e-mail do suporte.
+- **Credenciais revogadas ou reemitidas**. Confirme com `suporte@gyramais.com.br` se as credenciais que você tem ainda estão ativas.
+- **Credenciais de organização errada**. As credenciais são vinculadas a uma organização; se você tem várias, confira qual está usando.
 
 ### Solução
 
-Gerar nova chave em *Configurações, API Keys*, atualizar no config do cliente e reiniciar.
+Solicitar reemissão via `suporte@gyramais.com.br`, atualizar `GYRA_CLIENT_ID` e `GYRA_CLIENT_SECRET` no config do cliente (ou reautenticar no custom connector do Claude) e reiniciar.
 
 ## Erro 403, Forbidden
 
@@ -61,11 +63,11 @@ Tool específica retorna `403`. Outras tools funcionam.
 
 ### Causa
 
-Escopo da API Key não cobre o endpoint. Ex: chave somente leitura tentando `create_report`.
+As credenciais da sua organização não têm permissão para o endpoint em questão (ex: organização sem a feature contratada, ou papel restrito).
 
 ### Solução
 
-Em *Configurações, API Keys*, edite os escopos da chave (ou crie uma nova com escopos completos).
+Acionar `suporte@gyramais.com.br` informando a tool que falhou — o suporte confirma o escopo contratado e ajusta se for o caso.
 
 ## Rate limit, 429 Too Many Requests
 
@@ -75,7 +77,7 @@ Em conversas com muitas chamadas encadeadas, o agente recebe `429`.
 
 ### Causa
 
-Limite padrão é 100 req/min por API Key. Encadeamentos longos (ex: varrer 500 relatórios) excedem.
+Limite padrão é 100 req/min por organização. Encadeamentos longos (ex: varrer 500 relatórios) excedem.
 
 ### Solução
 
@@ -155,7 +157,7 @@ Você pertence a Org A e Org B, e o agente mistura dados.
 
 ### Solução
 
-- API Key é por organização. Use uma config de MCP por organização, com nomes distintos (`gyra-orgA`, `gyra-orgB`).
+- As credenciais são por organização. Use uma config de MCP por organização, com nomes distintos (`gyra-orgA`, `gyra-orgB`).
 - No prompt: *"use o servidor gyra-orgA"* garante a escolha.
 
 ## Logs e diagnóstico avançado

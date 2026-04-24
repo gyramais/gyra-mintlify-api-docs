@@ -64,18 +64,19 @@ O protocolo é aberto, qualquer cliente MCP-compliant funciona. Os mais comuns:
 
 ## Autenticação
 
-Toda tool exige autenticação. Duas formas:
+Toda tool exige autenticação via **credenciais da organização** (`clientId` + `clientSecret`), as mesmas usadas na API REST. Duas formas de conectar:
 
-1. **API Key na configuração do cliente**: simples, usado em setups desktop.
-2. **`authenticate` tool**: o modelo chama a tool com e-mail e senha, recebe token de sessão. Mais versátil para agentes que se autenticam on demand.
+1. **Custom connector (OAuth)** no Claude.ai/Claude Desktop: você adiciona o endpoint, clica em *Authenticate* e informa `clientId` + `clientSecret` na página de login da GYRA+.
+2. **Stdio local** em Claude Code, Cursor, VS Code, SDKs: credenciais via variáveis de ambiente (`GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET`), com renovação automática de token.
 
-Geração de API Key em [Webhooks e API Keys](/toolbox/webhooks-e-api-keys).
+Credenciais são emitidas por `suporte@gyramais.com.br`. Detalhes em [Instalação](/mcp/instalacao).
 
 ## Segurança
 
-- O MCP Server **não armazena credenciais** do cliente. Elas ficam no cliente (Claude Desktop, Cursor, etc.).
-- Toda chamada é **auditada no toolbox** igual a qualquer chamada de API, com a mesma chave identificando a origem.
-- **Escopo da API Key** define o que o MCP pode fazer. Se a chave só pode ler, o MCP não conseguirá criar relatório, mesmo que o usuário peça.
+- No modo stdio, as credenciais (`clientId`/`clientSecret`) ficam no **cliente** (Claude Desktop, Cursor, etc.), nunca no servidor MCP.
+- No modo custom connector (OAuth), o Claude armazena as credenciais de forma cifrada e o servidor MCP recebe apenas um token de sessão revogável.
+- Toda chamada é **auditada no backend** como qualquer chamada de API, com as credenciais identificando a organização de origem.
+- O escopo disponível corresponde ao que a organização tem contratado. Features não contratadas retornam erro claro.
 
 ## Perguntas frequentes
 
