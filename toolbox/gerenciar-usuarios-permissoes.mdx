@@ -56,49 +56,11 @@ Na lista de usuários:
 
 Se o usuário perdeu o e-mail ou o link expirou (7 dias), na lista de usuários pendentes há a ação *Reenviar convite*. Gera novo link e notifica por e-mail.
 
-## SSO: Google Workspace
+## SSO
 
-<Steps>
-  <Step title="Ir em Configurações, Organização, SSO">
-    Seção dedicada a autenticação corporativa.
-  </Step>
-  <Step title="Ativar Google SSO">
-    Toggle *Google Workspace*.
-  </Step>
-  <Step title="Configurar domínios permitidos">
-    Adicionar os domínios dos e-mails da organização (ex: `suaempresa.com.br`). Qualquer usuário com e-mail desses domínios pode tentar logar via Google.
-  </Step>
-  <Step title="Escolher papel padrão">
-    Usuários que logam via SSO pela primeira vez são criados automaticamente com o papel que você definir aqui (normalmente *Analista*).
-  </Step>
-</Steps>
+**SSO Google Workspace** e **SSO Microsoft Azure AD (Entra ID)** já vêm habilitados por padrão no toolbox. A tela de login mostra os botões *Entrar com Google* e *Entrar com Microsoft*, e qualquer usuário da organização pode usar.
 
-Depois de configurado, a tela de login do toolbox passa a mostrar o botão *Entrar com Google*. Usuários clicam, autenticam no Workspace, e entram direto.
-
-## SSO: Microsoft Azure AD (Entra ID)
-
-Configuração equivalente, via OIDC com Entra ID:
-
-<Steps>
-  <Step title="Registrar aplicação no Azure">
-    No portal Azure, *Entra ID, App registrations, New registration*. URL de callback: `https://toolbox.gyramais.com.br/api/auth/callback/azure-ad`.
-  </Step>
-  <Step title="Capturar credenciais">
-    Anotar `Tenant ID`, `Client ID` e gerar um `Client Secret`.
-  </Step>
-  <Step title="Colar no toolbox">
-    Em *Configurações, Organização, SSO*, seção *Microsoft Azure AD*, colar os três valores.
-  </Step>
-  <Step title="Escolher papel padrão e salvar">
-    Mesma lógica do Google: primeiro login via SSO cria o usuário com o papel que você definir.
-  </Step>
-</Steps>
-
-## 2FA
-
-Para usuários fora de SSO, o toolbox suporta **2FA opcional** via TOTP (Google Authenticator, 1Password, Authy). Cada usuário configura no próprio perfil.
-
-Administradores podem **exigir 2FA** para toda a organização em *Configurações, Organização, Segurança, Exigir 2FA*. Ao ativar, usuários sem 2FA configurado são forçados a configurar no próximo login.
+Se você precisa **restringir o acesso apenas a SSO** (bloquear login por senha), entre em contato com `suporte@gyramais.com.br` para habilitar essa configuração específica.
 
 ## Auditoria
 
@@ -108,7 +70,7 @@ Toda ação relevante (login, convite, alteração de papel, edição de políti
 
 - **Papéis são fixos**, não há papel customizado. Se o modelo não cabe, fale com o suporte para avaliar ajuste.
 - **Um usuário pode pertencer a várias organizações** (seleciona no login). Papel é independente por organização.
-- **SSO e senha coexistem.** Mesmo com SSO ativo, administradores ainda podem logar com senha como contingência (configurável).
+- **SSO e senha coexistem por padrão.** Para forçar SSO-only, peça ao suporte.
 - **Convite expira em 7 dias.** Depois disso, precisa reenviar.
 
 ## Perguntas frequentes
@@ -124,7 +86,7 @@ Toda ação relevante (login, convite, alteração de papel, edição de políti
     Não. Analistas enxergam apenas as análises que eles próprios rodaram. Administradores e gestores de crédito veem todas as análises da organização.
   </Accordion>
   <Accordion title="SSO desativa o login por senha?">
-    Por padrão não. Os dois coexistem. Para forçar SSO-only, ativar em *Configurações, Organização, Segurança*.
+    Por padrão não, os dois coexistem. Para forçar SSO-only, entre em contato com `suporte@gyramais.com.br` que habilitamos essa configuração específica.
   </Accordion>
   <Accordion title="Existe controle de sessão (logout forçado)?">
     Sim. Administrador pode forçar logout de qualquer usuário em *Configurações, Usuários, ação Forçar logout*. Útil em caso de desligamento.
