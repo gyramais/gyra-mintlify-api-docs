@@ -59,6 +59,7 @@
           "toolbox/criar-politica",
           "toolbox/editar-politica",
           "toolbox/usar-templates",
+          "toolbox/solicitacoes",
           "toolbox/gerenciar-usuarios-permissoes",
           "toolbox/webhooks-e-api-keys"
         ]
