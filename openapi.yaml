@@ -53,12 +53,13 @@ paths:
       description: |
           Registra uma URL de webhook para receber notificacoes em tempo real.
           
-          Tipos de webhook disponiveis:
-          - REPORT: notificado quando um relatorio muda de status (PENDING → APPROVED/DENIED/ALERT)
-          - REPORT_FINISHED: notificado quando o processamento do relatorio finaliza
-          - REPORT_STATUS: notificado em cada mudanca de status intermediaria
-          - CREDIT_POLICY: notificado quando a politica de credito e avaliada
-          - OPTIN: notificado quando um opt-in e processado
+          Tipos de webhook disponiveis (um tipo por webhook, registre varios se precisar):
+          - REPORT: disparado a cada secao do relatorio concluida durante o processamento (granular)
+          - REPORT_FINISHED: disparado quando o processamento do relatorio finaliza completamente
+          - REPORT_STATUS: disparado quando um analista aprova ou rejeita o relatorio manualmente
+          - REPORT_EXPORTED: disparado quando a exportacao (PDF/XLS) de um relatorio e gerada (ou falha)
+          - CREDIT_POLICY: disparado quando a politica de credito e avaliada e o status muda
+          - OPERATION: disparado quando uma operacao (fluxo multi-relatorio) conclui
           
           O webhook recebe um POST na URL configurada com o payload do evento.
           Se apiKey for informada, sera enviada no header api-key da requisicao.
@@ -500,7 +501,6 @@ components:
       required:
         - type
         - url
-        - apiKey
     WebhookTypeEnum:
       type: string
       description: Type Webhook

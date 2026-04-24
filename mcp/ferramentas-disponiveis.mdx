@@ -100,16 +100,16 @@ Lista as políticas de crédito da organização.
 
 ### `create_webhook`
 
-Cria um webhook para receber notificações de eventos.
+Cria um webhook para receber notificações de eventos. Um webhook por tipo — registre vários se precisa escutar mais de um.
 
-- **Parâmetros**: `url`, `events[]`.
-- **Prompt típico**: *"configura webhook para report.completed apontando para https://meu-backend/gyra"*.
+- **Parâmetros**: `type` (`REPORT`, `REPORT_FINISHED`, `REPORT_STATUS`, `REPORT_EXPORTED`, `CREDIT_POLICY`, `OPERATION`), `url`, `apiKey` (opcional, enviado como header `api-key` nas chamadas).
+- **Prompt típico**: *"configura webhook REPORT_FINISHED apontando para https://meu-backend/gyra"*.
 
 ### `find_webhooks`
 
 Lista webhooks configurados.
 
-- **Parâmetros**: opcionais `active`, `event`.
+- **Parâmetros**: opcionais `webhookId`, `type`.
 - **Prompt típico**: *"quais webhooks eu tenho configurados?"*.
 
 ### `delete_webhook`
