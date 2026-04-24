@@ -82,13 +82,7 @@ Toda edição em uma política (não no template original) gera uma nova versão
 ## Desativar ou remover
 
 - **Desabilitar** (toggle no cabeçalho) retira a política do menu de operação, mas preserva histórico e permite reativar depois.
-- **Remover** marca a política como excluída (soft delete, campo `removed: true`). Não é possível rodar operações com ela e ela some da lista, mas operações antigas que usaram a política continuam rastreáveis.
-
-## Limitações e considerações
-
-- **Número ilimitado de políticas por organização**, mas o toolbox fica mais lento acima de 30 políticas ativas simultâneas. Consolide se possível.
-- **Clonar desvincula do template original.** Atualizações futuras do template não chegam na sua cópia.
-- **Templates são específicos por tipo de documento** (PF ou PJ). Não existe template híbrido.
+- **Remover** exclui a política: ela não pode mais ser usada em novas operações e some da lista, mas operações antigas que a utilizaram continuam rastreáveis.
 
 ## Perguntas frequentes
 

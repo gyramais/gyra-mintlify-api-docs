@@ -57,9 +57,11 @@ Subdividida em:
 
 Só aparece se a organização usa a feature de cadeias de políticas baseadas em relacionamentos (sócios, filiais, parentes). Detalhes em [Operações](/concepts/operacoes).
 
-### Insights (quando disponível)
+### GYRA Insights (IA no relatório)
 
-Relatório agregado por carteira: distribuição de status, concentração por CNAE, ticket médio, tendências. Depende do contrato.
+Insights são **pareceres gerados por IA** sobre seções específicas do relatório, disponíveis diretamente dentro da análise (não é um módulo separado). Hoje estão habilitados nas seções de **Processos** e **SCR**: ao clicar em *GYRA Insights* dentro dessas seções, o agente retorna uma análise interpretativa do conjunto — riscos relevantes, padrões de comportamento, pontos de atenção e recomendações — com base nos dados coletados para aquele CPF/CNPJ.
+
+Disponibilidade depende do plano contratado.
 
 ### Configurações
 
@@ -98,10 +100,9 @@ Relatório agregado por carteira: distribuição de status, concentração por C
 
 | Papel | Vê |
 | ----- | -- |
-| **Administrador** | Tudo. Usuários, políticas, integrações, webhooks. |
-| **Gestor de Crédito** | Políticas, templates, produtos, todas as análises. Não vê usuários. |
-| **Analista de Crédito** | Input de análise, análises próprias e da organização, relatórios. Não edita política. |
-| **Somente leitura** | Visualiza análises e relatórios, não roda novas análises. |
+| **Administrador** | Tudo. Usuários, políticas, integrações, webhooks, todas as análises da organização. |
+| **Gestor de Crédito** | Políticas, templates, produtos, todas as análises da organização. |
+| **Analista de Crédito** | Input de análise, apenas as análises que ele próprio rodou, relatórios. Não edita política. |
 
 Detalhamento em [Gerenciar Usuários e Permissões](/toolbox/gerenciar-usuarios-permissoes).
 

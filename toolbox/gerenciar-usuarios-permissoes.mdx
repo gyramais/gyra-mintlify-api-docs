@@ -5,17 +5,16 @@ icon: "users-gear"
 ---
 
 <Info>
-  **Resumo:** a gestão de usuários no toolbox é feita em *Configurações, Usuários*. Cada usuário tem um **papel** (administrador, gestor de crédito, analista, somente leitura) que determina o que ele vê e faz. Organizações maiores podem plugar **SSO Google** ou **Microsoft Azure AD** para centralizar acesso no IdP corporativo.
+  **Resumo:** a gestão de usuários no toolbox é feita em *Configurações, Usuários*. Cada usuário tem um **papel** (administrador, gestor de crédito, analista) que determina o que ele vê e faz. Organizações maiores podem plugar **SSO Google** ou **Microsoft Azure AD** para centralizar acesso no IdP corporativo.
 </Info>
 
 ## Papéis disponíveis
 
-| Papel | Roda análise | Cria política | Edita política | Convida usuário | Integrações | Faturamento |
-| ----- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Administrador** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Gestor de Crédito** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Analista de Crédito** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Somente leitura** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Papel | Roda análise | Cria política | Edita política | Convida usuário | Relatórios visíveis |
+| ----- | :---: | :---: | :---: | :---: | :---: |
+| **Administrador** | ✅ | ✅ | ✅ | ✅ | Todos da organização |
+| **Gestor de Crédito** | ✅ | ✅ | ✅ | ✅ | Todos da organização |
+| **Analista de Crédito** | ✅ | ❌ | ❌ | ✅ | Apenas os próprios |
 
 Papel é atribuído por organização. O mesmo e-mail pode ter papéis diferentes em organizações diferentes (comum em consultorias, auditorias, operação terceirizada).
 
@@ -47,7 +46,7 @@ Na lista de usuários:
 
 - **Alterar papel**: dropdown na linha do usuário. Mudança é imediata.
 - **Desativar**: usuário perde acesso mas histórico de análises dele permanece rastreável.
-- **Remover**: soft delete. Usuário não consegue mais logar, nem aparece em novos convites, mas registros antigos continuam.
+- **Remover**: usuário não consegue mais logar nem aparece em novos convites, mas registros antigos continuam rastreáveis.
 
 <Tip>
   Preferir *Desativar* a *Remover*. Desativar é reversível com um clique; remover exige convite novo.
@@ -122,7 +121,7 @@ Toda ação relevante (login, convite, alteração de papel, edição de políti
     Eleve o papel da nova pessoa para *Administrador*, confira que ela está ativa, e depois rebaixe ou remova o administrador anterior. Nunca remova o único administrador sem ter substituto.
   </Accordion>
   <Accordion title="Analista pode ver análises de outros analistas?">
-    Por padrão, sim: todas as análises da organização são visíveis para todos os analistas e gestores. Se precisa de isolamento por time/carteira, fale com o suporte.
+    Não. Analistas enxergam apenas as análises que eles próprios rodaram. Administradores e gestores de crédito veem todas as análises da organização.
   </Accordion>
   <Accordion title="SSO desativa o login por senha?">
     Por padrão não. Os dois coexistem. Para forçar SSO-only, ativar em *Configurações, Organização, Segurança*.
