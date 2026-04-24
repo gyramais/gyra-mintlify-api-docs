@@ -137,6 +137,9 @@ Uma vez ingerido o balanço, o relatório passa a trazer as seções contábeis 
   <Accordion title="Empresa sem faturamento presumido, o que fazer?">
     Campo pode vir nulo quando a inferência do bureau não tem confiança suficiente (empresa muito nova, atividade atípica). Tratar como `ALERT` em produtos médio ticket ou usar regra alternativa.
   </Accordion>
+  <Accordion title="Qual nível de relatório inclui dados financeiros?">
+    Faturamento e renda presumidos aparecem a partir do **ESSENCIAL** (junto com o bureau principal). Indicadores resumidos e percentuais derivados (PEFIN/REFIN/SCR proporcionais ao faturamento) entram no **COMPLETO**. Seções contábeis (Balanço, DRE, Indicadores) dependem de integração de balanço contratada e estão disponíveis nas variantes `_MAX` / `_MAX_PLUS` do relatório.
+  </Accordion>
 </AccordionGroup>
 
 ## Próximos passos

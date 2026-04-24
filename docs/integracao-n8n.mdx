@@ -94,7 +94,7 @@ Este workflow expõe um endpoint HTTP que o seu ERP ou CRM pode chamar para soli
 POST /webhook/gyra-solicitar-analise (seu n8n)
   → ⚙️ CONFIGURE AQUI (credenciais)
   → 🔐 Autenticar na GYRA+ (POST /auth/authenticate)
-  → 📄 Criar Relatório (POST /report)
+  → 📄 Criar Relatório (POST /v2/report)
   → ✅ Retornar { reportId, status: "PENDING" } ao chamador
 ```
 
@@ -134,10 +134,10 @@ POST /webhook/gyra-solicitar-analise (seu n8n)
 
 | Campo | Descrição | Onde encontrar |
 |-------|-----------|----------------|
-| `clientId` | Client ID da GYRA+ | Toolbox → Configurações → Integrações → API |
-| `clientSecret` | Client Secret da GYRA+ | Toolbox → Configurações → Integrações → API |
-| `policyId` | ID da sua política ativa | Toolbox → Políticas de Crédito → [sua política] → Copiar ID |
-| `reportType` | Tipo padrão de relatório | `SIMPLES`, `ESSENCIAL`, `COMPLETO` ou `COMPLETO_PLUS` |
+| `clientId` | Client ID da GYRA+ | Solicite por e-mail em `atendimento@gyramais.com` |
+| `clientSecret` | Client Secret da GYRA+ | Solicite por e-mail em `atendimento@gyramais.com` |
+| `policyId` | ID da sua política ativa | Toolbox → Políticas de Crédito → [sua política] → Copiar ID, ou `GET /credit-policy/policy` |
+| `reportType` | Tipo padrão de relatório (definido pela política) | A política já carrega o nível; este campo é informativo |
 | `apiBaseUrl` | URL base da API | `https://gyra-core.gyramais.com.br` (não altere) |
 
 ---
@@ -227,8 +227,8 @@ Perfeito para equipes financeiras e cooperativas que precisam de registro histó
 POST /webhook/gyra-decisao-sheets (GYRA+ → seu n8n)
   → ⚙️ CONFIGURE AQUI
   → 🔐 Autenticar na GYRA+
-  → 📑 Buscar Relatório Completo (GET /report/:id)
-  → 📊 Extrair Campos (razão social, PEFIN, protestos, processos, situação)
+  → 📑 Buscar Relatório Completo (GET /v2/report/:id)
+  → 📊 Extrair Campos (razão social, situação cadastral, processos; PEFIN/protestos só se a política estiver no nível COMPLETO ou superior)
   → 📊 Registrar nova linha no Google Sheets
   → 📧 Enviar E-mail HTML ao analista
 ```
@@ -254,8 +254,8 @@ POST /webhook/gyra-decisao-sheets (GYRA+ → seu n8n)
 
 | Campo | Descrição | Onde encontrar |
 |-------|-----------|----------------|
-| `clientId` | Client ID da GYRA+ | Toolbox → Integrações → API |
-| `clientSecret` | Client Secret da GYRA+ | Toolbox → Integrações → API |
+| `clientId` | Client ID da GYRA+ | Solicite por e-mail em `atendimento@gyramais.com` |
+| `clientSecret` | Client Secret da GYRA+ | Solicite por e-mail em `atendimento@gyramais.com` |
 | `emailDestino` | E-mail do analista de crédito |, |
 | `emailRemetente` | E-mail remetente configurado no SMTP |, |
 | `planilhaId` | ID da planilha Google Sheets | URL: `docs.google.com/spreadsheets/d/**ID**/edit` |

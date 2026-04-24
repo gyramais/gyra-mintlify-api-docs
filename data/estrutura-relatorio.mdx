@@ -32,7 +32,7 @@ Todo relatório retornado pela API tem a seguinte estrutura raiz:
 |-------|------|-----------|
 | `id` | string | ID do tipo |
 | `title` | string | Nome: `"Simples"`, `"Essencial"`, `"Completo"`, `"Completo+"` |
-| `value` | string | Valor: `GYRA_90`, `GYRA_180`, `GYRA_360`, `GYRA_360_PLUS` |
+| `value` | string | Valor do enum: `CUSTOMER_GYRA_90_COMPANY`/`_PERSON` (Simples), `CUSTOMER_GYRA_180_COMPANY`/`_PERSON` (Essencial), `CUSTOMER_GYRA_360_COMPANY`/`_PERSON` (Completo), `CUSTOMER_GYRA_360_PLUS_COMPANY`/`_PERSON` (Completo+). Também existem variantes `_MAX` e `_MAX_PLUS` para relatórios extendidos. |
 | `isPaid` | boolean | Se a consulta gerou cobrança adicional |
 
 ---
@@ -78,6 +78,10 @@ Cada elemento de `sections` tem:
 | `SUMMARY` | Resumo e insights principais | ESSENCIAL+ |
 | `RELATIONS` | Relacionamentos societários | ESSENCIAL+ |
 | `PROCESSES` | Processos judiciais (2014+ no ESSENCIAL e COMPLETO; 1980+ no COMPLETO+) | ESSENCIAL+ |
+| `SCORE` | Score sintético e componentes de risco | COMPLETO+ |
+| `SCR` | SCR Bacen consolidado (snapshot mais recente) | COMPLETO+ |
+| `HISTORY` | Histórico SCR mês a mês | COMPLETO+ |
+| `CATEGORIES` | SCR por categoria de uso | COMPLETO+ |
 | `PEFIN` | Pendências financeiras | COMPLETO+ |
 | `REFIN` | Refinanciamentos | COMPLETO+ |
 | `BAD_CHECK` | Cheques sem fundo | COMPLETO+ |
@@ -85,9 +89,10 @@ Cada elemento de `sections` tem:
 | `PEP` | Pessoas expostas politicamente | COMPLETO+ |
 | `SANCTIONS` | Sanções nacionais e internacionais | COMPLETO+ |
 | `CRIMINAL_RECORD` | Antecedentes criminais (CPF) | COMPLETO+ |
-| `HISTORY` | Histórico SCR (mês a mês) | COMPLETO+ |
-| `CATEGORIES` | SCR por categoria de uso | COMPLETO+ |
 | `CERTIFICATES` | Certidões em tempo real (parciais no COMPLETO, completas no COMPLETO+) | COMPLETO+ |
+| `DOMAINS` | Domínios web associados ao documento | COMPLETO+ |
+| `BUREAU_INQUIRY` | Consultas realizadas em bureaus de crédito | COMPLETO+ |
+| `LICENSES_AUTHORIZATIONS` | Licenças e autorizações (ANATEL, MTE, etc.) | COMPLETO+ |
 | `CREDIT_POLICY` | Resultado da política de crédito | Todos os tipos |
 
 ---
