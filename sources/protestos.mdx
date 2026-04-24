@@ -31,9 +31,6 @@ Em crédito, a seção de protestos responde:
 | Componente | Atualização |
 | ---------- | ----------- |
 | Consulta na fonte | real-time ao rodar a análise |
-| Base do agregador | sincroniza com cartórios em ciclo de 24 a 48 h |
-| Janela histórica (ESSENCIAL / COMPLETO) | desde 2014, sempre com as últimas movimentações |
-| Janela histórica (COMPLETO+) | desde 1990 |
 | Cache interno | sem cache por padrão |
 
 Protesto lavrado hoje em cartório tipicamente aparece na nossa consulta em 1 a 3 dias.
@@ -112,14 +109,14 @@ Exemplo:
   <Accordion title="Protesto quitado é bloqueio?">
     Depende da política. Muitas tratam `PAID` como neutro, algumas tratam como `ALERT` se for recente. Configurável.
   </Accordion>
-  <Accordion title="Protesto muito antigo conta?">
-    Em níveis ESSENCIAL e COMPLETO, a janela é desde 2014. Em COMPLETO+ vai até 1990, útil para due diligence histórica. A relevância prática de protestos antigos quitados é baixa; protestos antigos ainda ativos são sinal grave.
+  <Accordion title="Protesto quitado antigo conta?">
+    A relevância prática de protestos antigos quitados é baixa; protestos antigos ainda ativos são sinal grave. Configure a política conforme o apetite de risco.
   </Accordion>
   <Accordion title="Como contestar um protesto falso?">
     O processo é no cartório, não na GYRA+. Nós apenas consultamos. Se o cartório atualiza, nossa próxima consulta reflete. Uma reanálise 24-48h depois da correção no cartório costuma resolver.
   </Accordion>
   <Accordion title="Qual nível de relatório inclui protestos?">
-    Disponível a partir do **ESSENCIAL**. Janela desde 2014 com últimas movimentações; em **COMPLETO+**, desde 1990.
+    Disponível a partir do **COMPLETO**.
   </Accordion>
 </AccordionGroup>
 
