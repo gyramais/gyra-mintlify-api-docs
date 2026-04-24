@@ -20,8 +20,8 @@ icon: "layer-group"
 | **SCR / Open Finance** | Endividamento bancário real | Capacidade, concentração, atraso |
 | **PEP e Sanções** | Exposição política e listas restritivas | Compliance, KYC, PLD |
 | **Vínculos Societários** | QSA, sócios, filiais, grupo econômico | Análise de grupo, concentração |
-| **Demográfica** | Endereço, idade, região | Segmentação, scoring auxiliar |
-| **Financeira (PF)** | Indicadores de renda e perfil financeiro | Capacidade PF |
+| **Contatos e Localização** | Telefones, e-mails, endereços, mapa, fotos de fachada | Validação cadastral, anti-fraude, cobrança |
+| **Financeira** | Faturamento/renda presumidos, balanço, indicadores contábeis | Capacidade, limite proporcional ao faturamento |
 | **Veículos** | Propriedade de veículos (RENAVAM) | Patrimônio, colateral |
 | **Mídia e Reputação** | Exposição em mídia, sinais online | Due diligence reputacional |
 | **Benefícios Sociais** | Bolsa Família, BPC, Seguro Desemprego | Capacidade, segmentação PF |
@@ -32,10 +32,10 @@ Cada fonte tem página dedicada no menu lateral.
 
 | Nível | Cobertura | Latência típica |
 | ----- | --------- | --------------- |
-| **SIMPLES** | Cadastral, básico | 2 a 5 s |
-| **ESSENCIAL** | + Bureau, Protestos, PEFIN/REFIN, Processos, Vínculos 1º nível | 5 a 15 s |
-| **COMPLETO** | + SCR (com consentimento), Mídia, Demografia, Benefícios | 10 a 30 s |
-| **COMPLETO+** | + Processos desde 1980 e histórico estendido em fontes aplicáveis | 15 a 45 s |
+| **SIMPLES** | Cadastral + Contatos e Localização (mapa e fachada inclusos) | 2 a 5 s |
+| **ESSENCIAL** | + Bureau, Vínculos 1º nível, Processos (desde 2014) | 5 a 15 s |
+| **COMPLETO** | + PEFIN/REFIN, Bad Check, Protestos, SCR (com consentimento), PEP/Sanções, Criminal, Mídia, Benefícios, Certidões (parciais) | 10 a 30 s |
+| **COMPLETO+** | + Processos desde 1980, certidões completas, histórico estendido em fontes aplicáveis | 15 a 45 s |
 
 A janela histórica estendida do **COMPLETO+** (desde 1980) aplica-se especificamente a **processos judiciais**. No COMPLETO, processos cobrem desde 2014.
 
@@ -112,7 +112,7 @@ Detalhes em [Criar Política](/toolbox/criar-politica) e [Editar Política](/too
     Três razões possíveis: (1) fonte não foi habilitada na política; (2) fonte foi habilitada mas falhou na consulta; (3) documento não tem o dado (ex: CPF sem histórico de SCR).
   </Accordion>
   <Accordion title="Tem como ver quanto cada fonte custou?">
-    Sim. Em *Configurações, Faturamento*, há breakdown por fonte e por análise. Lotes mostram custo agregado.
+    A granularidade de custo por fonte/análise é fornecida pela equipe financeira da GYRA+ conforme contrato. Hoje não há tela no toolbox para esse breakdown.
   </Accordion>
   <Accordion title="E fontes que eu tenho contrato próprio?">
     Hoje o BYOC (bring your own credential) é suportado para Serasa. Outras fontes consumimos pelo contrato agregado da GYRA+.

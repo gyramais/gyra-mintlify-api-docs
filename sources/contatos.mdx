@@ -1,0 +1,135 @@
+---
+title: "Contatos e Localização"
+description: "Telefones, e-mails, endereços (atual e históricos), mapa do endereço e fotos de fachada, retornados em todos os níveis de relatório."
+icon: "address-book"
+---
+
+<Info>
+  **Resumo:** contatos e localização trazem **telefones, e-mails, endereços (atual e históricos), outros dados de contato encontrados**, além de **mapa do endereço** e **fotos da fachada**. Esses dados acompanham todo relatório da GYRA+ — **SIMPLES, ESSENCIAL, COMPLETO e COMPLETO+** — ao lado dos dados principais de cada item.
+</Info>
+
+## O que é
+
+Enquanto [Cadastral](/sources/cadastral) responde *quem é* o CPF ou CNPJ, esta seção responde *como encontrar* e *onde está* o tomador. Reúne todos os canais de contato conhecidos e a representação visual do endereço declarado.
+
+Responde:
+
+- Quais telefones, e-mails e endereços estão associados a este documento?
+- Há histórico de endereços anteriores?
+- Como é a fachada do endereço declarado? É um ponto comercial real?
+- O endereço existe geograficamente (mapa) e parece compatível com a atividade declarada?
+
+## Disponibilidade por nível
+
+Diferente de fontes como SCR ou Processos, contatos e localização aparecem em **todos os relatórios**:
+
+| Nível | Contatos principais | Mapa do endereço | Fotos de fachada |
+| ----- | :-----------------: | :--------------: | :--------------: |
+| SIMPLES | ✅ | ✅ | ✅ |
+| ESSENCIAL | ✅ | ✅ | ✅ |
+| COMPLETO | ✅ | ✅ | ✅ |
+| COMPLETO+ | ✅ | ✅ | ✅ |
+
+A profundidade do histórico (endereços anteriores, telefones/e-mails adicionais) tende a crescer em níveis maiores, mas o núcleo (contato atual + mapa + fachada) aparece desde o SIMPLES.
+
+## De onde vem
+
+- **Tipo de fonte:** bases públicas, agregadores contratados e serviços de mapa/imagem (Street View e equivalentes).
+- **Cobertura geográfica:** Brasil.
+- **Natureza do dado:** público para endereço oficial de CNPJ; LGPD para dados de contato de pessoa física e histórico.
+- **Base legal:** consentimento de negócio, finalidade de análise de crédito e prevenção a fraude.
+
+## Frequência de atualização
+
+| Componente | Atualização |
+| ---------- | ----------- |
+| Endereço oficial (CNPJ) | sincroniza com RFB em 24-48 h |
+| Endereço histórico (PF) | ciclo mensal na base agregada |
+| Telefones e e-mails | ciclo mensal |
+| Mapa e fotos de fachada | servidos pelo provedor na hora; imagem pode ter meses a anos de idade |
+
+## Dados entregues
+
+### CNPJ
+
+| Campo | Descrição |
+| ----- | --------- |
+| `address.street`, `number`, `complement` | Logradouro oficial |
+| `address.zipCode`, `city`, `state` | CEP, município, UF |
+| `address.isMatrix` | Matriz ou filial |
+| `addressHistory[]` | Endereços anteriores registrados |
+| `phones[]` | Telefones cadastrados (RFB + agregadores) |
+| `emails[]` | E-mails cadastrados (RFB + agregadores) |
+| `otherContacts[]` | Outros contatos encontrados em bases públicas/agregadas |
+| `location.map` | URL/coordenadas para render do mapa do endereço |
+| `location.facade[]` | Imagens de fachada encontradas para o endereço |
+
+### CPF
+
+| Campo | Descrição |
+| ----- | --------- |
+| `address` | Endereço atual |
+| `addressHistory[]` | Histórico de endereços com datas |
+| `phones[]` | Telefones associados |
+| `emails[]` | E-mails associados |
+| `otherContacts[]` | Outros contatos encontrados |
+| `location.map` | URL/coordenadas para o mapa do endereço |
+| `location.facade[]` | Imagens de fachada do endereço |
+
+## Casos de uso
+
+<CardGroup cols={2}>
+  <Card title="Validação de cadastro" icon="check-double">
+    Cruzar o que o cliente declarou no seu onboarding com os contatos retornados pelo relatório. Divergência exige re-verificação.
+  </Card>
+  <Card title="Inspeção visual do endereço" icon="camera">
+    Fotos de fachada e mapa ajudam a confirmar se o endereço declarado é um ponto comercial real, residência ou terreno vazio — útil em due diligence e anti-fraude.
+  </Card>
+  <Card title="Anti-fraude por mudanças" icon="triangle-exclamation">
+    Múltiplas mudanças de endereço ou telefone em janela curta podem indicar fraude em curso.
+  </Card>
+  <Card title="Contato para cobrança" icon="phone">
+    `phones[]`, `emails[]` e `otherContacts[]` alimentam sua plataforma de cobrança em caso de default.
+  </Card>
+</CardGroup>
+
+## Limitações e considerações
+
+- **Contatos podem estar desatualizados**: telefones e e-mails coletados de bases agregadas nem sempre estão ativos. São leads, não garantia.
+- **Fachada pode ser antiga**: imagens do provedor podem ter meses ou anos. Use como indicação, não como prova atual.
+- **Endereço declarado vs. operação real**: o endereço do cadastro é o informado à RFB. Contabilidades, holdings e e-commerces com galpão remoto podem ter endereço oficial diferente do ponto de operação.
+- **LGPD em PF**: tratamento de dados pessoais exige base legal adequada. Use o relatório apenas para as finalidades contratadas.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Posso usar telefones retornados para marketing?">
+    Depende da sua base legal e consentimento. O relatório é contratado para análise de crédito e prevenção a fraude; uso para marketing ativo requer nova base legal conforme LGPD.
+  </Accordion>
+  <Accordion title="A foto da fachada é tirada na hora da análise?">
+    Não. É a imagem mais recente disponível no provedor (ex: Street View). Pode estar defasada em meses ou anos.
+  </Accordion>
+  <Accordion title="Endereço do CNPJ bate com a operação real?">
+    Nem sempre. Muitas empresas declaram endereço de contabilidade ou matriz corporativa diferente do ponto de venda.
+  </Accordion>
+  <Accordion title="E se não houver imagem para o endereço?">
+    Regiões rurais, ruas recém-abertas ou numerações que o provedor não mapeou retornam apenas o mapa sem fachada. O campo volta vazio.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Cadastral" icon="id-card" href="/sources/cadastral">
+    Identidade oficial do documento.
+  </Card>
+  <Card title="Financeira" icon="sack-dollar" href="/sources/financeira">
+    Faturamento e indicadores de capacidade.
+  </Card>
+  <Card title="Mídia e Reputação" icon="eye" href="/sources/midia-reputacao">
+    Exposição pública e sinais online.
+  </Card>
+  <Card title="Criar política" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Regras de UF e segmentação.
+  </Card>
+</CardGroup>

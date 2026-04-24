@@ -77,10 +77,10 @@ A disponibilidade de cada seção depende do tipo de relatório (SIMPLES, ESSENC
     Sanções nacionais e internacionais: OFAC, listas de bloqueio, CEIS, CEPIM e outros registros regulatórios.
   </Card>
   <Card title="CERTIFICATES" icon="certificate">
-    Certidões emitidas em tempo real: PGFN, Receita Federal, FGTS, Estaduais. Disponível no relatório COMPLETO+.
+    Certidões emitidas em tempo real: PGFN, Receita Federal, FGTS, Estaduais. O relatório **COMPLETO** inclui um subconjunto de certidões; o **COMPLETO+** traz o conjunto completo.
   </Card>
   <Card title="LOCATION" icon="map-pin">
-    Localização com visualização de Street View e mapa. Valida endereço registrado e aponta inconsistências.
+    Telefones, e-mails, endereços, mapa e fotos de fachada do endereço declarado. Disponível em todos os níveis (SIMPLES, ESSENCIAL, COMPLETO, COMPLETO+).
   </Card>
 </CardGroup>
 
@@ -108,15 +108,15 @@ Mesmo com erro em uma integração, o relatório é gerado com os dados disponí
 | Seção | SIMPLES | ESSENCIAL | COMPLETO | COMPLETO+ |
 |-------|:-------:|:---------:|:--------:|:---------:|
 | BASIC_INFORMATION | ✅ | ✅ | ✅ | ✅ |
-| LOCATION | ✅ | ✅ | ✅ | ✅ |
+| LOCATION (contatos, mapa, fachada) | ✅ | ✅ | ✅ | ✅ |
 | SUMMARY | ❌ | ✅ | ✅ | ✅ |
 | RELATIONS | ❌ | ✅ | ✅ | ✅ |
-| PEFIN / REFIN | ❌ | ✅ | ✅ | ✅ |
-| BAD_CHECK | ❌ | ✅ | ✅ | ✅ |
+| PROCESSES | ❌ | ✅ (2014+) | ✅ (2014+) | ✅ (1980+) |
+| PEFIN / REFIN | ❌ | ❌ | ✅ | ✅ |
+| BAD_CHECK | ❌ | ❌ | ✅ | ✅ |
 | HISTORY / CATEGORIES (SCR) | ❌ | ❌ | ✅ | ✅ |
-| PROCESSES | ❌ | ❌ | ✅ (2014+) | ✅ (1980+) |
 | PROTESTS | ❌ | ❌ | ✅ | ✅ |
 | PEP / SANCTIONS | ❌ | ❌ | ✅ | ✅ |
-| CERTIFICATES | ❌ | ❌ | ❌ | ✅ |
-| CRIMINAL_RECORD | ❌ | ✅ | ✅ | ✅ |
+| CRIMINAL_RECORD | ❌ | ❌ | ✅ | ✅ |
+| CERTIFICATES | ❌ | ❌ | ✅ (parciais) | ✅ (completas) |
 | CREDIT_POLICY | ✅ | ✅ | ✅ | ✅ |

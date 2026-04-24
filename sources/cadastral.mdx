@@ -5,7 +5,7 @@ icon: "id-card"
 ---
 
 <Info>
-  **Resumo:** a fonte cadastral entrega os **dados oficiais de identidade** do CPF ou CNPJ: nome ou razão social, situação atual, endereço, data de nascimento ou abertura, CNAE, capital social. É a base de qualquer análise, serve para identificar o documento e detectar sinais de alerta cadastrais.
+  **Resumo:** a fonte cadastral entrega os **dados oficiais de identidade** do CPF ou CNPJ: nome ou razão social, situação atual, data de nascimento ou abertura, CNAE, capital social, porte e regime tributário. É a base de qualquer análise e serve para identificar o documento e detectar sinais de alerta cadastrais. Dados de **telefone, e-mail, endereço (atual e histórico), mapa e fachada** ficam na seção [Contatos e Localização](/sources/contatos) e acompanham todo relatório, inclusive o SIMPLES.
 </Info>
 
 ## O que é
@@ -62,7 +62,8 @@ Campos detalhados em [Seção, Informações Básicas](/data/secao-informacoes-b
 | `capital` | Capital social | `100000.00` |
 | `taxRegime` | Regime tributário | `"SIMPLES"`, `"LUCRO_REAL"`, `"LUCRO_PRESUMIDO"` |
 | `size` | Porte | `"ME"`, `"EPP"`, `"DEMAIS"` |
-| `address` | Endereço completo | `{...}` |
+
+Endereço, telefones, e-mails e demais dados de localização estão descritos em [Contatos e Localização](/sources/contatos).
 
 ### CPF (pessoa física)
 
@@ -96,8 +97,8 @@ Campos detalhados em [Seção, Informações Básicas](/data/secao-informacoes-b
   <Card title="Titular falecido" icon="triangle-exclamation">
     CPF com situação `TITULAR_FALECIDO` indica fraude em curso ou erro cadastral grave.
   </Card>
-  <Card title="Mudança recente de endereço" icon="house">
-    Alterações cadastrais recentes podem ser sinal de tentativa de evitar cobrança ou rastreamento.
+  <Card title="Recência da abertura ou alteração" icon="calendar-days">
+    Mudança recente de razão social ou abertura muito recente pode indicar tentativa de evitar histórico negativo.
   </Card>
 </CardGroup>
 
@@ -131,7 +132,6 @@ Exemplo:
 - **Atualização mensal:** a base cadastral é consolidada mensalmente, então alterações recentes (dias) podem ainda não ter refletido. Para estado atual, use [Certidões](/sources/certidoes) (Cartão CNPJ, situação CPF Receita Federal, etc.).
 - **Defasagem da Receita:** a Receita Federal demora a atualizar certos campos (ex: mudança de regime tributário). Dado pode estar correto mas desatualizado por semanas mesmo na fonte.
 - **CNPJs muito novos:** empresas recém-abertas podem não ter CNAEs secundários ou sócios completamente preenchidos.
-- **Endereço declarado vs real:** o endereço do cadastro é o declarado, não necessariamente onde a empresa opera.
 - **Nome social:** CPFs com nome social podem aparecer com nome civil em algumas consultas, reconciliação manual necessária em casos específicos.
 
 ## Perguntas frequentes
@@ -163,8 +163,8 @@ Exemplo:
   <Card title="Vínculos Societários" icon="diagram-project" href="/sources/vinculos-societarios">
     QSA, sócios e empresas relacionadas.
   </Card>
-  <Card title="Demográfica" icon="location-dot" href="/sources/demografica">
-    Endereço, contatos, detalhes de localização.
+  <Card title="Contatos e Localização" icon="address-book" href="/sources/contatos">
+    Telefones, e-mails, endereços, mapa e fotos de fachada.
   </Card>
   <Card title="Certidões" icon="stamp" href="/sources/certidoes">
     Situação em tempo real direto na fonte oficial.

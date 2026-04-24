@@ -40,7 +40,11 @@ A seção financeira do relatório é estruturada como um conjunto de **indicado
 
 ### Faturamento e renda presumidos
 
-No resumo do relatório, aparece o **faturamento presumido** para CNPJ e a **renda presumida** para CPF. Os valores vêm dos bureaus (ProScore, Serasa, Boa Vista ou combinação) conforme o nível do relatório contratado. Internamente, os campos principais do bureau são:
+No resumo do relatório, aparece o **faturamento presumido** para CNPJ e a **renda presumida** para CPF. Os valores vêm dos **bureaus contratados** (Serasa, Boa Vista, Quod, ProScore — nessa ordem de preferência quando há sobreposição) **ou de outras fontes** (inferência interna, dados cadastrais, declarações públicas) quando o bureau não entrega valor para aquele documento.
+
+Cada modelo tem **premissas distintas** — bases de treino, períodos considerados, setor, porte — e pode devolver valores diferentes para o mesmo CNPJ/CPF. Em casos de empresas com operação atípica (sazonal, exportação, grupo econômico complexo), a dispersão entre modelos pode ser relevante. Quando esses casos importam para a decisão, cruze com [SCR / Open Finance](/sources/scr-open-finance) ou com balanço real.
+
+Internamente, os campos principais são:
 
 - `presumedRevenueAmount` para CNPJ (faturamento anual estimado, em reais).
 - `presumedIncomeAmount` para CPF (renda mensal estimada, em reais).
@@ -119,7 +123,10 @@ Uma vez ingerido o balanço, o relatório passa a trazer as seções contábeis 
 
 <AccordionGroup>
   <Accordion title="Faturamento presumido vem pelo contrato padrão?">
-    O campo sai dos bureaus contratados (ProScore, Serasa, Boa Vista). O nível do relatório contratado define qual bureau popula o valor.
+    O campo sai dos bureaus contratados (Serasa, Boa Vista, Quod, ProScore) ou de outras fontes quando nenhum bureau entrega valor para o documento. O nível do relatório contratado e a combinação de bureaus ativos definem qual valor populou o campo.
+  </Accordion>
+  <Accordion title="Por que dois bureaus me dão valores diferentes para o mesmo CNPJ?">
+    Cada bureau tem modelo próprio, com premissas, bases e janelas de treino distintas. Divergências são normais, especialmente em empresas fora do padrão (sazonais, exportadoras, holding). Para precisão, combine com SCR ou balanço real.
   </Accordion>
   <Accordion title="Como ter balanço real no relatório?">
     Exige contratação da integração de balanço com a GYRA+. Sem ela, apenas o faturamento presumido do bureau aparece.
