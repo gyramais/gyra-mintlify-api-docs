@@ -27,7 +27,7 @@ Ainda não tem credenciais? Entre em contato com **atendimento@gyramais.com** e 
 
 ---
 
-## Passo 1 — Autenticar
+## Passo 1, Autenticar
 
 Gere seu token JWT enviando suas credenciais no header da requisição:
 
@@ -46,11 +46,11 @@ curl -X POST https://gyra-core.gyramais.com.br/auth/authenticate \
 }
 ```
 
-Guarde o `accessToken` — você vai usá-lo em todas as próximas requisições.
+Guarde o `accessToken`, você vai usá-lo em todas as próximas requisições.
 
 ---
 
-## Passo 2 — Criar o relatório
+## Passo 2, Criar o relatório
 
 Chame o endpoint `POST /report` com o documento e o `policyId` do template desejado:
 
@@ -93,11 +93,11 @@ curl -X POST https://gyra-core.gyramais.com.br/report \
 }
 ```
 
-O status `PENDING` é esperado — o processamento é assíncrono.
+O status `PENDING` é esperado, o processamento é assíncrono.
 
 ---
 
-## Passo 3 — Consultar o resultado
+## Passo 3, Consultar o resultado
 
 Use o `id` retornado para consultar o relatório após alguns segundos:
 
@@ -121,7 +121,7 @@ curl https://gyra-core.gyramais.com.br/report/64a3b2c1d4e5f6a7b8c9d0e1 \
 
 ---
 
-## Passo 4 — Interpretar a decisão
+## Passo 4, Interpretar a decisão
 
 | Campo | O que significa |
 |-------|-----------------|

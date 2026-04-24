@@ -1,22 +1,34 @@
 ---
 openapi: post /report/analyze
-title: Analisar relatório
-description: Informar decisão manual para um relatório
+title: Analisar Relatório Manualmente
+description: Registra uma decisão manual (aprovado/negado com justificativa) sobre um relatório existente.
 ---
 
 ### Quando usar
 
-Use este endpoint para disparar a etapa de análise de crédito com payload de processamento. Você pode usar em rotinas de processamento assistido, reprocessamento controlado ou fluxos em que a análise é acionada separadamente da criação inicial.
+Use este endpoint quando um usuário precisa **registrar manualmente** a decisão de um relatório, sobrescrevendo ou complementando o resultado automático da política. É a ação que um analista dispara no Toolbox ao aprovar/negar com justificativa (ex.: "aprovado por relacionamento comercial", "negado por política interna de risco").
+
+<Info>
+Esta chamada **não** reprocessa nem recoleta dados das fontes — ela apenas registra a decisão humana. Para refazer uma análise manual já existente, use `POST /report/re-analyze`.
+</Info>
 
 ### Autenticação
 
 Bearer JWT no header `Authorization`.
 
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `body` | `string` | `sim` | ID do relatório que receberá a análise manual. |
+| `approved` | `body` | `boolean` | `sim` | Decisão do analista: `true` para aprovar, `false` para negar. |
+| `commentary` | `body` | `string` | `sim` | Justificativa/parecer do analista sobre a decisão. |
+
 ### Corpo da requisição
 
 ```json
 {
-  "id": "string",
+  "id": "69a207bcdd0197828df9155a",
   "approved": true,
   "commentary": "Aprovado após análise manual."
 }
@@ -29,7 +41,7 @@ curl --location 'https://gyra-core.gyramais.com.br/report/analyze' \
 --header 'Authorization: Bearer abc123' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-  "id": "string",
+  "id": "69a207bcdd0197828df9155a",
   "approved": true,
   "commentary": "Aprovado após análise manual."
 }'
@@ -43,10 +55,10 @@ fetch("https://gyra-core.gyramais.com.br/report/analyze", {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-  "id": "string",
-  "approved": true,
-  "commentary": "Aprovado após análise manual."
-})
+    id: "69a207bcdd0197828df9155a",
+    approved: true,
+    commentary: "Aprovado após análise manual."
+  })
 })
   .then(res => res.json())
   .then(console.log)
@@ -57,10 +69,11 @@ import requests
 
 url = "https://gyra-core.gyramais.com.br/report/analyze"
 headers = {
-  "Authorization": "Bearer abc123"
+  "Authorization": "Bearer abc123",
+  "Content-Type": "application/json"
 }
 payload = {
-  "id": "string",
+  "id": "69a207bcdd0197828df9155a",
   "approved": True,
   "commentary": "Aprovado após análise manual."
 }

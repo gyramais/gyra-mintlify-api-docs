@@ -1,0 +1,116 @@
+---
+title: "O que é o MCP da GYRA+"
+description: "Servidor MCP (Model Context Protocol) que expõe a API da GYRA+ como ferramentas para agentes de IA, permitindo rodar análises, consultar relatórios e gerenciar webhooks via linguagem natural."
+icon: "plug"
+---
+
+<Info>
+  **Resumo:** MCP (Model Context Protocol) é o padrão aberto criado pela Anthropic para conectar LLMs a ferramentas externas. O **MCP Server da GYRA+** expõe a API da plataforma como tools que Claude, ChatGPT, Cursor ou qualquer cliente compatível podem chamar em linguagem natural. Isso permite rodar análises, consultar relatórios e configurar a plataforma por conversa.
+</Info>
+
+## O que é MCP
+
+Agentes de IA precisam de duas coisas para serem úteis: **conhecimento** (o que eles sabem, vem do treinamento) e **ferramentas** (o que eles podem fazer, vem de integrações). MCP padroniza a segunda parte: em vez de cada LLM ter seu próprio protocolo de tools, todos falam MCP.
+
+Um **MCP Server** publica um conjunto de ferramentas (tools) documentadas com schema JSON. Um **MCP Client** (Claude Desktop, Cursor, VS Code via Continue, LangChain, etc.) consome esse catálogo e expõe as tools ao modelo. Quando o usuário pede algo, o modelo decide qual tool chamar, com quais argumentos, e encadeia chamadas até concluir a tarefa.
+
+## O que o MCP da GYRA+ oferece
+
+O servidor MCP da GYRA+ expõe os fluxos principais da plataforma como tools:
+
+- **Rodar análises**: `create_report`
+- **Análise manual**: `analyze_report`, `re_analyze_report`
+- **Consultar relatórios**: `list_reports`, `get_report`, `count_reports`, `get_section`, `get_report_section_by_type`
+- **Políticas**: `list_policies`
+- **Webhooks**: `create_webhook`, `find_webhooks`, `delete_webhook`
+- **Export**: `export_report_sync`
+- **Autenticação**: `authenticate`
+
+Lista completa com schemas em [Ferramentas Disponíveis](/mcp/ferramentas-disponiveis).
+
+## Quando faz sentido usar
+
+<CardGroup cols={2}>
+  <Card title="Analistas em ferramenta conversacional" icon="comments">
+    Analista pergunta "roda essa análise pra mim" no Claude, o MCP traduz em `create_report` e devolve o resultado.
+  </Card>
+  <Card title="Agentes autônomos" icon="robot">
+    Worker monitora um e-mail, detecta CNPJs novos e dispara análises sem intervenção humana.
+  </Card>
+  <Card title="Prototipação rápida" icon="flask">
+    Testar integrações sem escrever backend. O agente vira um "cliente API" na conversa.
+  </Card>
+  <Card title="Análise em dataset" icon="table">
+    Agente lê uma planilha de CNPJs, cria lote, consulta resultado, escreve o de volta.
+  </Card>
+</CardGroup>
+
+## Quando **não** usar
+
+- **Integração de produção em alto volume**: use API REST direta. MCP tem overhead de modelo LLM no meio, não é o melhor path para milhares de requisições por minuto.
+- **Fluxos críticos sem humano**: LLM pode cometer erro de interpretação. Não use MCP para tarefas onde um erro é caro e não há review.
+- **Ambientes regulados sem auditoria**: toda chamada via MCP é mediada pelo modelo, o log de auditoria precisa ser pensado com cuidado.
+
+## Clientes MCP compatíveis
+
+O protocolo é aberto, qualquer cliente MCP-compliant funciona. Os mais comuns:
+
+- **Claude Desktop** (Anthropic), MacOS e Windows
+- **Cursor** (IDE)
+- **VS Code** via extensão Continue
+- **Claude Code** (CLI)
+- **LangChain**, **LlamaIndex** (frameworks de agentes)
+- **Implementações próprias** via SDK oficial (Python, TypeScript, Rust)
+
+## Autenticação
+
+Toda tool exige autenticação via **credenciais da organização** (`clientId` + `clientSecret`), as mesmas usadas na API REST. Duas formas de conectar:
+
+1. **Custom connector (OAuth)** no Claude.ai/Claude Desktop: você adiciona o endpoint, clica em *Authenticate* e informa `clientId` + `clientSecret` na página de login da GYRA+.
+2. **Stdio local** em Claude Code, Cursor, VS Code, SDKs: credenciais via variáveis de ambiente (`GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET`), com renovação automática de token.
+
+Credenciais são emitidas por `atendimento@gyramais.com`. Detalhes em [Instalação](/mcp/instalacao).
+
+## Segurança
+
+- No modo stdio, as credenciais (`clientId`/`clientSecret`) ficam no **cliente** (Claude Desktop, Cursor, etc.), nunca no servidor MCP.
+- No modo custom connector (OAuth), o Claude armazena as credenciais de forma cifrada e o servidor MCP recebe apenas um token de sessão revogável.
+- Toda chamada é **auditada no backend** como qualquer chamada de API, com as credenciais identificando a organização de origem.
+- O escopo disponível corresponde ao que a organização tem contratado. Features não contratadas retornam erro claro.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="MCP substitui a API REST?">
+    Não. Complementa. A REST é a fundação; MCP é uma camada de acesso via agente. Para automação de alto volume, continue usando REST direto.
+  </Accordion>
+  <Accordion title="Qual o custo de usar MCP?">
+    Do lado GYRA+, nenhum além das análises que o agente chama (cobradas normalmente pelo consumo padrão). Do lado do cliente LLM, custo do modelo (tokens) que você já paga à Anthropic/OpenAI/etc.
+  </Accordion>
+  <Accordion title="Preciso ser programador para configurar?">
+    Claude Desktop e Cursor aceitam configuração via JSON em um arquivo de settings. Ver [Instalação](/mcp/instalacao). Após instalar, o uso é 100% conversacional.
+  </Accordion>
+  <Accordion title="O MCP funciona com modelos locais (Ollama, etc.)?">
+    Sim, desde que o cliente seja MCP-compatível e o modelo tenha capacidade de tool calling. Modelos menores podem ter qualidade inferior na escolha de tools.
+  </Accordion>
+  <Accordion title="Dá pra rodar MCP self-hosted?">
+    O servidor MCP da GYRA+ é operado pela GYRA+. Você instala o **cliente** (Claude Desktop, etc.) e aponta para nosso endpoint. Não há instalação server-side do seu lado.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Instalação" icon="download" href="/mcp/instalacao">
+    Configurar Claude Desktop, Cursor ou outro cliente.
+  </Card>
+  <Card title="Ferramentas disponíveis" icon="toolbox" href="/mcp/ferramentas-disponiveis">
+    Catálogo completo de tools com schema.
+  </Card>
+  <Card title="Casos de uso" icon="lightbulb" href="/mcp/casos-de-uso">
+    Exemplos práticos de conversa.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/mcp/troubleshooting">
+    Problemas comuns e soluções.
+  </Card>
+</CardGroup>

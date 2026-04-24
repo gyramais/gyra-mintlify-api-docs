@@ -16,8 +16,8 @@ Headers obrigatórios: `gyra-client-secret`, `gyra-client-id`.
 
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
-| `gyra-client-secret` | `header` | `string` | `não` | client secret |
-| `gyra-client-id` | `header` | `string` | `não` | client id |
+| `gyra-client-id` | `header` | `string` | `sim` | Client ID da organização, recebido via suporte |
+| `gyra-client-secret` | `header` | `string` | `sim` | Client Secret da organização, recebido via suporte |
 
 <RequestExample>
 
@@ -57,8 +57,16 @@ print(response.json())
 
 ```json 200 OK
 {
-  "id": "string",
-  "status": "PROCESSING"
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiresIn": 86400,
+  "tokenType": "Bearer"
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Credenciais inválidas."
 }
 ```
 

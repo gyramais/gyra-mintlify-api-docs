@@ -1,0 +1,113 @@
+---
+title: "Solicitações: SCR e Face Match"
+description: "Coletar opt-in do cliente para consulta SCR ou validar identidade via Face Match com liveness, pelo próprio WhatsApp do cliente."
+icon: "clipboard-check"
+---
+
+<Info>
+  **Resumo:** a aba **Solicitações** é o lugar onde você dispara fluxos que exigem o envolvimento direto do cliente final — **opt-in de SCR** (autorização para a GYRA+ consultar o SCR do Banco Central em nome dele) e **Face Match** com liveness (validação de identidade em onboarding). As duas rodam via WhatsApp e ficam listadas aqui com status em tempo real.
+</Info>
+
+## Onde fica
+
+Menu lateral, **Solicitações**. A listagem mostra todos os clientes já solicitados, documento, tipo de solicitação, status e ações. Dois botões principais no topo direito:
+
+- **Criar solicitação**, dispara o fluxo pelo WhatsApp do cliente.
+- **Autorizar cliente**, registra uma autorização que você já coletou **fora da plataforma**.
+
+## Criar solicitação
+
+<Steps>
+  <Step title="Clicar em Criar solicitação">
+    Abre o formulário de nova solicitação.
+  </Step>
+  <Step title="Preencher os dados do cliente">
+    - **Documento** (CPF).
+    - **Nome completo**.
+    - **Telefone** (WhatsApp do cliente — é por onde ele vai receber o fluxo).
+    - **E-mail**.
+    - **Tipo**, `SCR` ou `Face Match`.
+  </Step>
+  <Step title="Criar">
+    Ao confirmar, o cliente recebe automaticamente uma mensagem no WhatsApp com o link para seguir o fluxo. O status da solicitação aparece na listagem e atualiza em tempo real conforme o cliente avança.
+  </Step>
+</Steps>
+
+## Tipo SCR: opt-in para consulta do Banco Central
+
+A consulta SCR (Sistema de Informações de Crédito do Banco Central) exige **autorização formal do titular**. O fluxo pelo WhatsApp resolve isso ponta a ponta:
+
+1. Cliente recebe a mensagem com o link.
+2. **Valida a identidade** via confirmação de e-mail; se não for possível, cai automaticamente para **Face Match com liveness**.
+3. **Assina o documento de autorização** para consulta ao SCR.
+4. A solicitação passa para status autorizado na listagem.
+
+A partir desse momento, a sua organização está liberada para consultar os dados de SCR daquele cliente em qualquer análise na GYRA+ (inclusive via `POST /v2/report` com política que tenha SCR habilitado). A autorização fica registrada para fins de auditoria.
+
+## Tipo Face Match: validação de identidade em onboarding
+
+Usado em fluxos de onboarding para confirmar que o cliente é quem diz ser, sem exigir presença física.
+
+1. Cliente recebe a mensagem com o link.
+2. **Captura do documento** (RG ou CNH).
+3. **Face Match com prova de vida (liveness)**.
+4. A plataforma responde se a identidade foi validada ou não — o resultado fica visível na listagem.
+
+## Autorizar cliente
+
+Botão **Autorizar Cliente** no topo da listagem. Use quando você **já coletou a autorização formal do cliente fora da plataforma** (contrato físico, assinatura eletrônica própria, consentimento registrado no seu fluxo) e só precisa registrar isso na GYRA+ para habilitar a consulta.
+
+<Warning>
+  Periodicamente a GYRA+ **audita** as autorizações registradas por esse caminho para confirmar que foram coletadas corretamente e em conformidade com a legislação aplicável (LGPD, Resolução Bacen sobre SCR, etc.). Use somente com autorização formal, documentada e revogável pelo titular a qualquer momento.
+</Warning>
+
+## Listagem e acompanhamento
+
+Toda solicitação criada fica na aba **Solicitações**, com:
+
+- Documento e nome do cliente.
+- Tipo (SCR ou Face Match).
+- Ícone de status por tipo (indicando pendente, autorizado, falhou).
+- Ações por linha (reenviar, reabrir detalhes, duplicar).
+
+Use os filtros **Ativo** e **Filtro** no topo da listagem para restringir a visão (ex: só solicitações pendentes de opt-in SCR).
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Quanto tempo o cliente tem para responder?">
+    O link enviado via WhatsApp não tem expiração dura, mas recomendamos reengajar o cliente se ele não responder em 24-48h. Na listagem, a ação *reenviar* dispara nova mensagem.
+  </Accordion>
+  <Accordion title="Posso solicitar SCR para CNPJ?">
+    SCR é por CPF. Para CNPJ, a consulta SCR precisa do opt-in dos sócios relevantes, não da empresa em si.
+  </Accordion>
+  <Accordion title="O cliente pode revogar a autorização depois?">
+    Sim. O titular pode revogar a qualquer momento. Em caso de revogação, a consulta deixa de ser permitida a partir daí. Consultas anteriores continuam válidas e auditáveis.
+  </Accordion>
+  <Accordion title="Face Match funciona com qualquer documento?">
+    Captura suporta RG e CNH. O liveness valida que é pessoa real presente na hora, não foto estática.
+  </Accordion>
+  <Accordion title="A autorização de SCR vale por quanto tempo?">
+    Vale enquanto o titular não revogar. Recomendamos revalidar periodicamente em operações de relacionamento de longo prazo.
+  </Accordion>
+  <Accordion title="Se eu usar Autorizar Cliente sem autorização formal, o que acontece?">
+    Você fica exposto a sanção regulatória e risco reputacional. A GYRA+ audita amostras e pode suspender o acesso à feature em caso de irregularidade confirmada. Use só com autorização formal, documentada.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="SCR (conceito e dado)" icon="building-columns" href="/sources/scr-open-finance">
+    O que o SCR entrega depois que a autorização sai.
+  </Card>
+  <Card title="Rodar uma Análise" icon="play" href="/toolbox/rodar-operacao">
+    Usar a autorização em uma análise de crédito.
+  </Card>
+  <Card title="Interpretar Resultado" icon="chart-line" href="/toolbox/interpretar-resultado-operacao">
+    Ler o relatório com a seção SCR populada.
+  </Card>
+  <Card title="Usuários e Permissões" icon="users-gear" href="/toolbox/gerenciar-usuarios-permissoes">
+    Quem pode criar e autorizar solicitações.
+  </Card>
+</CardGroup>

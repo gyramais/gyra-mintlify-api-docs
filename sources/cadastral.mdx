@@ -1,0 +1,172 @@
+---
+title: "Cadastral"
+description: "Dados cadastrais oficiais de pessoa física e jurídica: nome, situação, CNAE, endereço, data de abertura."
+icon: "id-card"
+---
+
+<Info>
+  **Resumo:** a fonte cadastral entrega os **dados oficiais de identidade** do CPF ou CNPJ: nome ou razão social, situação atual, data de nascimento ou abertura, CNAE, capital social, porte e regime tributário. É a base de qualquer análise e serve para identificar o documento e detectar sinais de alerta cadastrais. Dados de **telefone, e-mail, endereço (atual e histórico), mapa e fachada** ficam na seção [Contatos e Localização](/sources/contatos) e acompanham todo relatório, inclusive o SIMPLES.
+</Info>
+
+## O que é
+
+Os dados cadastrais são a **identidade oficial** do tomador: quem ele é segundo a Receita Federal (para CNPJ) ou base de registros civis (para CPF). Em crédito, a seção cadastral é sempre o ponto de partida: confirma que o documento existe, que está ativo e revela fatos mínimos sobre a empresa ou pessoa.
+
+Ela responde perguntas como:
+
+- Esta empresa existe e está ativa?
+- Há quanto tempo opera?
+- Qual o ramo de atividade (CNAE)?
+- O CPF tem mais de 18 anos? Está regular?
+- Houve mudança recente de endereço ou razão social?
+
+## De onde vem
+
+- **Tipo de fonte:** cadastro oficial.
+  - Para CNPJ: Receita Federal.
+  - Para CPF: base de registros civis consolidada.
+- **Cobertura geográfica:** Brasil (nacional).
+- **Natureza do dado:** oficial.
+- **Base legal:** dados públicos (CNPJ) e dados cadastrais sob LGPD (CPF).
+
+## Frequência de atualização
+
+| Componente | Atualização |
+| ---------- | ----------- |
+| Base cadastral da GYRA+ | **mensal** |
+| Base de origem | Receita Federal atualiza diariamente |
+| Cache por documento | reaproveitado dentro do mês corrente |
+
+Os dados cadastrais chegam à GYRA+ via **dump mensal** consolidado, então o dado exibido na análise pode ter até cerca de 30 dias de defasagem em relação à Receita Federal. Para a grande maioria das decisões de crédito isso é suficiente (razão social, CNAE e data de abertura mudam pouco), mas mudanças muito recentes — baixa de CNPJ nos últimos dias, alteração de endereço feita na semana — podem ainda não ter refletido.
+
+<Warning>
+  **Precisa de dado em tempo real?** Use as [Certidões](/sources/certidoes): elas consultam a fonte oficial na hora (Receita Federal, PGFN, Junta Comercial, etc.) e trazem a situação atualizada em segundos. Recomendadas quando a decisão depende de estado regulatório de hoje, como emissão de certidão negativa, ou quando o próprio fluxo operacional exige prova atual.
+</Warning>
+
+## Dados entregues
+
+Campos detalhados em [Seção, Informações Básicas](/data/secao-informacoes-basicas).
+
+### CNPJ (empresa)
+
+| Campo | Descrição | Exemplo |
+| ----- | --------- | ------- |
+| `businessName` | Razão social | `"ACME Ltda"` |
+| `tradeName` | Nome fantasia | `"ACME"` |
+| `cnpj` | Documento | `"43591367000130"` |
+| `situation` | Situação cadastral | `"ATIVA"`, `"BAIXADA"`, `"SUSPENSA"`, `"INAPTA"`, `"NULA"` |
+| `situationDate` | Data da situação atual | `"2020-05-10"` |
+| `foundationDate` | Data de abertura | `"2015-03-22"` |
+| `mainCnae` | CNAE principal | `{ "code": "62.01-5-00", "description": "..." }` |
+| `secondaryCnaes` | CNAEs secundários | `[...]` |
+| `capital` | Capital social | `100000.00` |
+| `taxRegime` | Regime tributário | `"SIMPLES"`, `"LUCRO_REAL"`, `"LUCRO_PRESUMIDO"` |
+| `size` | Porte | `"ME"`, `"EPP"`, `"DEMAIS"` |
+
+Endereço, telefones, e-mails e demais dados de localização estão descritos em [Contatos e Localização](/sources/contatos).
+
+### CPF (pessoa física)
+
+| Campo | Descrição |
+| ----- | --------- |
+| `name` | Nome completo |
+| `cpf` | Documento |
+| `birthDate` | Data de nascimento |
+| `motherName` | Nome da mãe |
+| `situation` | Situação cadastral: `REGULAR`, `SUSPENSA`, `CANCELADA`, `TITULAR_FALECIDO`, `PENDENTE` |
+| `age` | Idade atual |
+| `gender` | Gênero declarado |
+
+## Casos de uso
+
+<CardGroup cols={2}>
+  <Card title="Bloquear situação irregular" icon="ban">
+    Empresa baixada, suspensa, inapta ou nula não deveria tomar crédito.
+    **Regra sugerida:** `COMPANY_SITUATION IN ["BAIXADA", "SUSPENSA", "INAPTA", "NULA"]` : `DENIED`.
+  </Card>
+  <Card title="Idade mínima de empresa" icon="calendar">
+    Evitar emprestar para empresas recém-abertas sem histórico.
+    **Regra sugerida:** `COMPANY_OPENING_TIME < 1 ano` : `DENIED` ou `ALERT`.
+  </Card>
+  <Card title="CPF irregular" icon="id-badge">
+    Situação cadastral do CPF diferente de `REGULAR` é motivo de bloqueio.
+  </Card>
+  <Card title="CNAE de alto risco" icon="industry">
+    Alguns produtos não atendem certos setores (ex: MEI para crédito empresarial grande). Filtre por `mainCnae`.
+  </Card>
+  <Card title="Titular falecido" icon="triangle-exclamation">
+    CPF com situação `TITULAR_FALECIDO` indica fraude em curso ou erro cadastral grave.
+  </Card>
+  <Card title="Recência da abertura ou alteração" icon="calendar-days">
+    Mudança recente de razão social ou abertura muito recente pode indicar tentativa de evitar histórico negativo.
+  </Card>
+</CardGroup>
+
+## Como usar na política
+
+<Steps>
+  <Step title="Começar pelos campos de situação">
+    `COMPANY_SITUATION` e `PERSON_SITUATION` deveriam ser as primeiras regras de qualquer política: são bloqueios óbvios e baratos de avaliar.
+  </Step>
+  <Step title="Adicionar regras de idade">
+    `COMPANY_OPENING_TIME` e `PERSON_AGE` são segundo filtro fundamental.
+  </Step>
+  <Step title="Camada opcional de segmentação">
+    Filtros por CNAE, porte, regime tributário para alinhar ao produto que você oferece.
+  </Step>
+</Steps>
+
+Exemplo:
+
+```json
+{
+  "field": "company.situation",
+  "operator": "CONTAINS",
+  "value": "INAPTA,BAIXADA,SUSPENSA,NULA",
+  "status": "DENIED"
+}
+```
+
+## Limitações e considerações
+
+- **Atualização mensal:** a base cadastral é consolidada mensalmente, então alterações recentes (dias) podem ainda não ter refletido. Para estado atual, use [Certidões](/sources/certidoes) (Cartão CNPJ, situação CPF Receita Federal, etc.).
+- **Defasagem da Receita:** a Receita Federal demora a atualizar certos campos (ex: mudança de regime tributário). Dado pode estar correto mas desatualizado por semanas mesmo na fonte.
+- **CNPJs muito novos:** empresas recém-abertas podem não ter CNAEs secundários ou sócios completamente preenchidos.
+- **Nome social:** CPFs com nome social podem aparecer com nome civil em algumas consultas, reconciliação manual necessária em casos específicos.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Por que a razão social veio diferente do que cadastrei?">
+    A fonte entrega o nome **oficial na Receita**. Se você cadastrou o nome fantasia, `tradeName` provavelmente bate, mas `businessName` é o registro formal.
+  </Accordion>
+  <Accordion title="O que é 'INAPTA'?">
+    Situação em que o CNPJ deixou de cumprir obrigações acessórias (ex: não entregou declarações). Indica empresa com problemas de compliance fiscal, tratar como bloqueio.
+  </Accordion>
+  <Accordion title="CNPJ baixado pode voltar a operar?">
+    Não. Uma vez baixado, o CNPJ é encerrado. Nunca conceder crédito para CNPJ baixado.
+  </Accordion>
+  <Accordion title="Qual nível de relatório inclui cadastral?">
+    Disponível em **todos** os relatórios, desde o **SIMPLES**. É a base de qualquer análise.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Seção detalhada" icon="diagram-project" href="/data/secao-informacoes-basicas">
+    Todos os campos e JSON de exemplo.
+  </Card>
+  <Card title="Criar regra de situação" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Passo a passo no Toolbox.
+  </Card>
+  <Card title="Vínculos Societários" icon="diagram-project" href="/sources/vinculos-societarios">
+    QSA, sócios e empresas relacionadas.
+  </Card>
+  <Card title="Contatos e Localização" icon="address-book" href="/sources/contatos">
+    Telefones, e-mails, endereços, mapa e fotos de fachada.
+  </Card>
+  <Card title="Certidões" icon="stamp" href="/sources/certidoes">
+    Situação em tempo real direto na fonte oficial.
+  </Card>
+</CardGroup>

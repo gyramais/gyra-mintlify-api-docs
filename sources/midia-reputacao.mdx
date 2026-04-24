@@ -1,0 +1,136 @@
+---
+title: "Mídia e Reputação"
+description: "Menções em mídia, adverse media, sinais reputacionais online e exposição pública para CPF e CNPJ."
+icon: "newspaper"
+---
+
+<Info>
+  **Resumo:** a fonte de mídia e reputação rastreia a **exposição pública** do tomador em veículos de imprensa, redes sociais e fontes abertas, com foco em **adverse media** (menções em contexto negativo: escândalos, investigações, litígios, corrupção). Usada em due diligence e compliance reforçado.
+</Info>
+
+## O que é
+
+Due diligence moderna não para em bureau e cartório: uma matéria de jornal sobre fraude, ação policial, investigação pode ser decisiva para recusar uma operação, mesmo com cadastro limpo. A fonte de mídia automatiza essa varredura.
+
+Responde:
+
+- O tomador aparece em notícias? Em que contexto?
+- Alguma das menções é adverse media (contexto negativo)?
+- Qual a severidade e recência?
+- Redes sociais e presença online?
+
+## De onde vem
+
+- **Tipo de fonte:** agregadores de mídia brasileira e internacional, fontes abertas (OSINT), redes sociais públicas.
+- **Cobertura geográfica:** foco Brasil, com detecção de menções internacionais para nomes e empresas de projeção.
+- **Natureza do dado:** público (mídia publicada).
+- **Base legal:** fontes abertas, finalidade de compliance e prevenção a fraude.
+
+## Frequência de atualização
+
+| Componente | Atualização |
+| ---------- | ----------- |
+| Varredura de portais de notícia | diária |
+| Adverse media flagging | tempo real a partir da publicação indexada |
+| Redes sociais públicas | semanal (snapshot) |
+
+## Dados entregues
+
+| Campo | Descrição | Exemplo |
+| ----- | --------- | ------- |
+| `media.mentionsCount` | Total de menções detectadas | `12` |
+| `media.adverseCount` | Menções classificadas como adverse | `2` |
+| `media.items[].title` | Título da matéria | `"Empresa é investigada por..."` |
+| `media.items[].source` | Veículo | `"Folha de S.Paulo"` |
+| `media.items[].publishedAt` | Data | `"2024-11-22"` |
+| `media.items[].url` | Link | `"https://..."` |
+| `media.items[].sentiment` | Classificação | `"ADVERSE"`, `"NEUTRAL"`, `"POSITIVE"` |
+| `media.items[].categories[]` | Categorias | `["FRAUD_INVESTIGATION"]` |
+| `online.profilesFound[]` | Perfis públicos vinculados | `[{ platform: "linkedin", url: "..." }]` |
+
+## Categorias de adverse media
+
+Classificação automática com revisão humana em casos limítrofes:
+
+- `FRAUD_INVESTIGATION` — investigação por fraude
+- `MONEY_LAUNDERING` — suspeita ou denúncia de lavagem
+- `CORRUPTION` — corrupção, propina
+- `TAX_EVASION` — evasão fiscal
+- `ENVIRONMENTAL_VIOLATION` — autuação ambiental grave
+- `LABOR_VIOLATION` — autuação trabalhista grave (trabalho análogo à escravidão, etc.)
+- `ORGANIZED_CRIME` — ligação com organização criminosa
+- `CRIMINAL_CONVICTION` — condenação criminal
+- `OFAC_RELATED` — menção relacionada a sanções
+- `OTHER_ADVERSE` — outros contextos adversos
+
+## Casos de uso
+
+<CardGroup cols={2}>
+  <Card title="Due diligence em onboarding" icon="magnifying-glass">
+    Antes de aceitar cliente novo, checar se há adverse media. Hit grave pode ser bloqueio.
+  </Card>
+  <Card title="KYC reforçado em PEP" icon="shield-halved">
+    Para PEPs, mídia é complemento obrigatório do DDR.
+  </Card>
+  <Card title="Monitoramento contínuo" icon="radar">
+    Reanalisar clientes ativos periodicamente para capturar menções novas.
+  </Card>
+  <Card title="Proteção reputacional" icon="building-shield">
+    Evitar associação pública com nomes em escândalo recente.
+  </Card>
+</CardGroup>
+
+## Como usar na política
+
+<Steps>
+  <Step title="Regra por adverse média recente">
+    `media.adverseCount > 0` em janela de 12 meses : `ALERT` ou `DENIED`, dependendo do apetite.
+  </Step>
+  <Step title="Filtro por categoria">
+    Categorias críticas (`MONEY_LAUNDERING`, `ORGANIZED_CRIME`) podem ser bloqueio automático; outras (`LABOR_VIOLATION`) podem ser alerta.
+  </Step>
+  <Step title="Combinar com PEP/Sanções">
+    Hit em adverse media + PEP é combinação que acelera escalação para comitê de compliance.
+  </Step>
+</Steps>
+
+## Limitações e considerações
+
+- **Homônimos**: menção a "João Silva" não é necessariamente o seu João Silva. A GYRA+ cruza nome com documento e contexto, mas falso positivo acontece em nomes muito comuns.
+- **Classificação de sentimento é heurística**: pode classificar como adverse uma matéria neutra sobre o setor do tomador. Sempre revisar o link antes de decidir bloqueio.
+- **Cobertura de mídia regional**: portais pequenos podem não estar indexados. Cobertura de imprensa nacional de alto alcance é forte.
+- **Redes sociais privadas** (perfis fechados) não aparecem: só o que é público.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Uma matéria positiva diminui o score?">
+    Não. A fonte sinaliza `POSITIVE`, mas o score e a decisão de crédito dependem das regras da política, não da mídia isolada.
+  </Accordion>
+  <Accordion title="Posso configurar o que é adverse na minha organização?">
+    A classificação base é padrão. Políticas podem escolher quais categorias tratar como `DENIED` ou `ALERT`.
+  </Accordion>
+  <Accordion title="E se a matéria for claramente falsa (fake news)?">
+    Relatório traz o link; a revisão humana é responsabilidade de quem opera. Se precisar contestar, a contestação é no veículo que publicou, não na GYRA+.
+  </Accordion>
+  <Accordion title="Qual nível de relatório inclui mídia?">
+    Disponível a partir do **COMPLETO**. Em COMPLETO+, a janela de busca é estendida e inclui fontes internacionais.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="PEP e Sanções" icon="shield-halved" href="/sources/pep-sancoes">
+    Checagem complementar obrigatória em compliance.
+  </Card>
+  <Card title="Processos Judiciais" icon="gavel" href="/sources/processos-judiciais">
+    Ações formais correspondentes a notícias.
+  </Card>
+  <Card title="Criar política KYC" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Configurar adverse media como bloqueio.
+  </Card>
+  <Card title="Vínculos Societários" icon="diagram-project" href="/sources/vinculos-societarios">
+    Mídia sobre sócios também importa.
+  </Card>
+</CardGroup>

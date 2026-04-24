@@ -1,0 +1,148 @@
+---
+title: "Vínculos Societários"
+description: "QSA, sócios, filiais, grupo econômico e relacionamentos de parentesco mapeados a partir de um CPF ou CNPJ."
+icon: "diagram-project"
+---
+
+<Info>
+  **Resumo:** a fonte de vínculos societários mapeia quem se conecta a um CPF ou CNPJ: sócios diretos (QSA), participações em outras empresas, filiais, grupo econômico e parentes quando relevante. É a base para análises de concentração, risco de grupo, conflito de interesse e suporte à feature opcional de **Operações** (cadeia de políticas por relacionamento).
+</Info>
+
+## O que é
+
+Em crédito e compliance, olhar apenas para o documento tomador não basta. Uma empresa pode parecer saudável mas ter sócio com restritivos graves; um CPF pode ter participação em dezenas de empresas inativas. Mapear vínculos revela **risco que o documento isolado esconde**.
+
+A seção responde:
+
+- Quem são os sócios da empresa? Quanto cada um detém?
+- Em quais outras empresas esses sócios participam?
+- Existem filiais? Matriz?
+- Há grupo econômico (empresas com sócios ou endereço em comum)?
+- Para PF: cônjuge, pais, filhos com relevância para a análise?
+
+## De onde vem
+
+- **Tipo de fonte:** bases públicas (Receita Federal, Juntas Comerciais) e bases proprietárias agregadas.
+- **Cobertura geográfica:** Brasil.
+- **Natureza do dado:** público (QSA) + derivado (grupo econômico inferido por cruzamento).
+- **Base legal:** dados públicos da RFB e Juntas Comerciais; LGPD para dados de PF relacionada.
+
+## Frequência de atualização
+
+| Componente | Atualização |
+| ---------- | ----------- |
+| QSA direto | real-time, sincronizado com RFB em ciclo de 24-48 h |
+| Participações cruzadas | diária |
+| Grupo econômico inferido | diária |
+| Parentesco (PF) | conforme base de origem |
+
+## Níveis de profundidade
+
+A política define até que nível buscar:
+
+| Nível | O que traz |
+| ----- | ---------- |
+| `ROOT` | Apenas o documento consultado |
+| `FIRST_LEVEL` | + sócios diretos e filiais diretas |
+| `SECOND_LEVEL` | + empresas onde os sócios têm participação |
+| `THIRD_LEVEL` | + sócios dessas empresas (raro, caro) |
+
+Quanto mais fundo, maior o custo e a latência. Recomendação: usar `FIRST_LEVEL` como padrão, subir apenas quando o produto exige (ex: crédito grande ticket, M&A).
+
+## Dados entregues
+
+| Campo | Descrição |
+| ----- | --------- |
+| `partners[].document` | CPF/CNPJ do sócio |
+| `partners[].name` | Nome ou razão social |
+| `partners[].role` | Qualificação (ex: sócio administrador) |
+| `partners[].sharePercent` | % de participação |
+| `partners[].entryDate` | Data de entrada no QSA |
+| `branches[]` | Filiais do CNPJ (outros estabelecimentos) |
+| `participations[]` | Empresas onde a pessoa/empresa participa |
+| `economicGroup[]` | Empresas identificadas como parte do mesmo grupo |
+| `relatives[]` | Parentes próximos (PF), quando disponível |
+
+## Casos de uso
+
+<CardGroup cols={2}>
+  <Card title="Risco de sócio" icon="user-shield">
+    Analisar cada sócio no mesmo nível do tomador: score, processos, protestos. Sócio com restritivo grave é bandeira.
+  </Card>
+  <Card title="Concentração em grupo" icon="layer-group">
+    Crédito concedido a várias empresas do mesmo grupo soma. Mapear grupo evita overexposure.
+  </Card>
+  <Card title="Empresa de sócio laranja" icon="triangle-exclamation">
+    Sócio pessoa física com 50+ participações em empresas inativas é sinal clássico de fraude.
+  </Card>
+  <Card title="Due diligence de M&A" icon="magnifying-glass-chart">
+    Nível THIRD_LEVEL mapeia rede completa, útil em auditoria e investigação.
+  </Card>
+  <Card title="PEP por parentesco" icon="shield-halved">
+    PEP pode estar no cônjuge do tomador. Cruzamento com [PEP e Sanções](/sources/pep-sancoes).
+  </Card>
+  <Card title="Cadeia de políticas (Operações)" icon="diagram-project">
+    A feature de [Operações](/concepts/operacoes) roda política no sócio automaticamente a partir do vínculo mapeado aqui.
+  </Card>
+</CardGroup>
+
+## Como usar na política
+
+<Steps>
+  <Step title="Ativar vínculos no painel de dados">
+    No editor da política, painel *Dados Consultados*, ativar *Vínculos Societários* com a profundidade desejada (começar em `FIRST_LEVEL`).
+  </Step>
+  <Step title="Regras sobre QSA">
+    Ex: `partners.count < 1` : `DENIED` (empresa sem sócios é anomalia); `partners.count > 20` : `ALERT` (fragmentação incomum).
+  </Step>
+  <Step title="Regras de concentração">
+    Se você já tem o tomador em carteira, regra externa (no seu backend) pode cruzar `economicGroup` com posição atual.
+  </Step>
+  <Step title="Feature Operações (opcional)">
+    Se contratada, configurar cadeia para rodar política específica sobre sócios e retornar como subrelatório. Ver [Operações](/concepts/operacoes).
+  </Step>
+</Steps>
+
+## Limitações e considerações
+
+- **QSA defasado**: alterações no QSA (entrada/saída de sócio) podem demorar semanas para refletir na RFB, e portanto na nossa consulta.
+- **Grupo econômico é inferido**: o "grupo" não é declarado oficialmente. A GYRA+ infere por cruzamento (sócios comuns, endereço compartilhado). Pode haver falso positivo.
+- **Parentes não-declarados**: a base de parentesco cobre casos mais comuns (pais, filhos, cônjuges), mas pode ter gaps.
+- **Sócio estrangeiro**: sócios sem CPF (pessoa jurídica estrangeira, fundos) aparecem com documento parcial ou nulo.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Quanto maior o nível, maior o custo?">
+    Sim. `FIRST_LEVEL` é barato, `SECOND_LEVEL` multiplica por N (número de sócios), `THIRD_LEVEL` multiplica por N*M. Usar com critério.
+  </Accordion>
+  <Accordion title="O relatório do sócio roda automaticamente?">
+    Não no fluxo simples. No fluxo simples, a seção traz os dados dos vínculos (nome, documento, %). Para rodar política completa nos sócios, usar a feature de [Operações](/concepts/operacoes).
+  </Accordion>
+  <Accordion title="Sócio oculto aparece?">
+    Apenas o QSA formalizado aparece. Sócio oculto (beneficiário final não declarado) exige investigação manual ou produtos específicos de KYC avançado.
+  </Accordion>
+  <Accordion title="Empresa unipessoal (EIRELI / SLU) tem QSA?">
+    Sim, com um único sócio. O relatório traz normalmente.
+  </Accordion>
+  <Accordion title="Qual nível de relatório inclui vínculos?">
+    Disponível a partir do **ESSENCIAL** em `FIRST_LEVEL`. Níveis mais profundos exigem COMPLETO ou COMPLETO+.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Operações (feature)" icon="diagram-project" href="/concepts/operacoes">
+    Cadeia de políticas por relacionamento.
+  </Card>
+  <Card title="PEP e Sanções" icon="shield-halved" href="/sources/pep-sancoes">
+    Checar sócios contra listas restritivas.
+  </Card>
+  <Card title="Cadastral" icon="id-card" href="/sources/cadastral">
+    Dados básicos de cada sócio identificado.
+  </Card>
+  <Card title="Criar regra de QSA" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Passo a passo no Toolbox.
+  </Card>
+</CardGroup>

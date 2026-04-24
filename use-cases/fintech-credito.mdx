@@ -62,7 +62,7 @@ Para capital de giro (CNPJ), adicione:
 Quando uma solicitação chega no seu sistema de originação:
 
 ```javascript
-// No seu backend — quando solicitação é recebida
+// No seu backend, quando solicitação é recebida
 async function processarSolicitacao(solicitacao) {
   const report = await gyraApi.post('/report', {
     document: solicitacao.cpfOuCnpj,

@@ -1,0 +1,160 @@
+---
+title: "Financeira"
+description: "Faturamento declarado, indicadores contábeis, integrações de balanço e sinais de capacidade financeira para CNPJ e CPF."
+icon: "sack-dollar"
+---
+
+<Info>
+  **Resumo:** a fonte financeira entrega **indicadores de capacidade e saúde econômica** do tomador: para PJ, faturamento estimado, balanço (quando integrado), regime tributário, porte; para PF, indicadores de renda inferida. É fonte fundamental para calibrar o valor aprovado e a taxa na precificação.
+</Info>
+
+## O que é
+
+Crédito só faz sentido se a operação cabe no bolso do tomador. Protestos e score dizem se ele **pagou bem no passado**; a fonte financeira tenta responder se ele **tem como pagar no futuro**. Combinada com [SCR](/sources/scr-open-finance), dá a visão mais próxima de capacidade real.
+
+Responde:
+
+- Qual o faturamento da empresa? Cresceu ou caiu?
+- Qual o balanço declarado (quando disponível)?
+- Regime tributário, porte, sinais de saúde econômica?
+- Para PF: faixa de renda inferida?
+
+## De onde vem
+
+- **Tipo de fonte:** combinação de dados públicos (RFB, Simples Nacional, Junta Comercial) + integrações externas opcionais (balanço via ERP, Contabilizei, Omie) + inferências estatísticas.
+- **Cobertura geográfica:** Brasil.
+- **Natureza do dado:** misto público + inferido + contratado.
+- **Base legal:** dados públicos + consentimento específico para integrações externas.
+
+## Frequência de atualização
+
+| Componente | Atualização |
+| ---------- | ----------- |
+| Porte, regime tributário (dados cadastrais) | mensal (via base cadastral) |
+| Faturamento/renda presumidos (bureau) | conforme bureau (mensal em média) |
+| Balanço via integração externa | real-time conforme webhook do ERP |
+
+## Dados entregues
+
+A seção financeira do relatório é estruturada como um conjunto de **indicadores resumidos** (no *Resumo*) mais, quando disponível, **seções contábeis detalhadas** (*Balanço Patrimonial*, *DRE*, *Custos Detalhados*, *Indicadores Financeiros*, *Previsão Custo-Lucro*).
+
+### Faturamento e renda presumidos
+
+No resumo do relatório, aparece o **faturamento presumido** para CNPJ e a **renda presumida** para CPF. Os valores vêm dos **bureaus contratados** (Serasa, Boa Vista, Quod, ProScore — nessa ordem de preferência quando há sobreposição) **ou de outras fontes** (inferência interna, dados cadastrais, declarações públicas) quando o bureau não entrega valor para aquele documento.
+
+Cada modelo tem **premissas distintas** — bases de treino, períodos considerados, setor, porte — e pode devolver valores diferentes para o mesmo CNPJ/CPF. Em casos de empresas com operação atípica (sazonal, exportação, grupo econômico complexo), a dispersão entre modelos pode ser relevante. Quando esses casos importam para a decisão, cruze com [SCR / Open Finance](/sources/scr-open-finance) ou com balanço real.
+
+Internamente, os campos principais são:
+
+- `presumedRevenueAmount` para CNPJ (faturamento anual estimado, em reais).
+- `presumedIncomeAmount` para CPF (renda mensal estimada, em reais).
+
+Ambos ficam expostos nas fórmulas de política como `SUMMARY_PRESUMED_BILLING`.
+
+### Balanço e indicadores contábeis (quando há integração)
+
+Quando o CNPJ tem balanço disponível (upload manual ou integração com ERP/contabilidade parceira), o relatório ganha seções específicas:
+
+- **Balanço Patrimonial** (`BALANCE_SHEET`): ativo total, passivo total, patrimônio líquido e quebra por circulante/não circulante.
+- **DRE** (`DRE`): receita, custos, margens e resultado do período.
+- **Custos Detalhados** (`DETAILED_COSTS`): quebra dos principais grupos de custo.
+- **Indicadores Financeiros** (`FINANCIAL_INDICATORS`): liquidez, endividamento, margens, giro.
+- **Gráfico do Balanço** (`BALANCE_SHEET_CHART`): evolução dos principais agregados.
+- **Previsão Custo-Lucro** (`COST_PROFIT_FORECAST`): projeção curta com base nos últimos períodos.
+- **Fornecedores e Clientes** (`SUPPLIERS_CLIENTS`): concentração, quando o ERP expõe essa informação.
+- **Insights e Recomendações Financeiras** (`FINANCIAL_INSIGHTS`, `FINANCIAL_RECOMMENDATIONS`): comentários gerados sobre os números.
+
+O formato exato das seções contábeis é estruturado por período (ano-mês), com agregados em reais. Cada seção é montada por um translator específico em `gyra-report` — o schema detalhado de cada uma aparece quando o relatório é retornado e é documentado em [Seções do Relatório](/concepts/secoes).
+
+### Regime e porte
+
+Porte (`ME`, `EPP`, `DEMAIS`) e regime tributário vêm da [Cadastral](/sources/cadastral) e alimentam regras de segmentação por perfil de empresa.
+
+## Casos de uso
+
+<CardGroup cols={2}>
+  <Card title="Limite por % do faturamento" icon="calculator">
+    Regra clássica: aprovar no máximo X% do faturamento anual presumido na fórmula de `amountFormula`.
+  </Card>
+  <Card title="Capacidade mínima" icon="chart-simple">
+    Bloquear quando `SUMMARY_PRESUMED_BILLING` fica abaixo do mínimo do produto.
+  </Card>
+  <Card title="Saúde via balanço" icon="heart-pulse">
+    Com seção de balanço disponível, usar indicadores contábeis como liquidez e endividamento em regras de alerta.
+  </Card>
+  <Card title="Renda PF" icon="user-tag">
+    Segmentar produto por faixa de renda presumida: cartão PF, consignado, consórcio.
+  </Card>
+</CardGroup>
+
+## Como usar na política
+
+<Steps>
+  <Step title="Faturamento como regra + variável de fórmula">
+    `SUMMARY_PRESUMED_BILLING` entra como regra (ex: mínimo absoluto) e como variável na fórmula de `amountFormula` para cap proporcional.
+  </Step>
+  <Step title="Balanço como bônus opcional">
+    Quando o tomador tem integração de balanço ativa (ERP conectado), usar indicadores contábeis das seções específicas para refinar taxa e prazo.
+  </Step>
+  <Step title="Renda PF para produtos de pessoa física">
+    `presumedIncomeAmount` (exposto como `SUMMARY_PRESUMED_BILLING` também em PF) alimenta segmentação e limites em cartão e crédito PF.
+  </Step>
+</Steps>
+
+Exemplo de fórmula aprovando até 3 meses de faturamento, cap no solicitado:
+
+```excel
+MIN(|#amount|valor solicitado|#|, |#SUMMARY_PRESUMED_BILLING|faturamento anual|#| / 12 * 3)
+```
+
+## Integrações externas (balanço)
+
+A GYRA+ pode ingerir balanço via integrações com ERPs/contabilidades parceiras ou upload de arquivo, habilitadas por contrato específico. Consulte o time comercial para as integrações disponíveis no seu plano.
+
+Uma vez ingerido o balanço, o relatório passa a trazer as seções contábeis detalhadas (`BALANCE_SHEET`, `DRE`, `FINANCIAL_INDICATORS`, etc.).
+
+## Limitações e considerações
+
+- **Faturamento e renda presumidos são inferências** dos bureaus, com margem de erro. Empresas com operação atípica (sazonal, exportação, grupo econômico complexo) podem ter estimativa defasada.
+- **Balanço depende de contratação e ingestão**. Sem integração contratada, as seções contábeis não aparecem no relatório.
+- **Renda PF precisa é difícil**: a GYRA+ não acessa holerite individual sem consentimento específico (Open Finance PF). Para precisão, usar [SCR / Open Finance](/sources/scr-open-finance).
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Faturamento presumido vem pelo contrato padrão?">
+    O campo sai dos bureaus contratados (Serasa, Boa Vista, Quod, ProScore) ou de outras fontes quando nenhum bureau entrega valor para o documento. O nível do relatório contratado e a combinação de bureaus ativos definem qual valor populou o campo.
+  </Accordion>
+  <Accordion title="Por que dois bureaus me dão valores diferentes para o mesmo CNPJ?">
+    Cada bureau tem modelo próprio, com premissas, bases e janelas de treino distintas. Divergências são normais, especialmente em empresas fora do padrão (sazonais, exportadoras, holding). Para precisão, combine com SCR ou balanço real.
+  </Accordion>
+  <Accordion title="Como ter balanço real no relatório?">
+    Exige contratação da integração de balanço com a GYRA+. Sem ela, apenas o faturamento presumido do bureau aparece.
+  </Accordion>
+  <Accordion title="Renda PF precisa de consentimento?">
+    A renda presumida dos bureaus é inferência estatística e não requer consentimento individual. Renda precisa requer SCR/Open Finance com consentimento do titular.
+  </Accordion>
+  <Accordion title="Empresa sem faturamento presumido, o que fazer?">
+    Campo pode vir nulo quando a inferência do bureau não tem confiança suficiente (empresa muito nova, atividade atípica). Tratar como `ALERT` em produtos médio ticket ou usar regra alternativa.
+  </Accordion>
+  <Accordion title="Qual nível de relatório inclui dados financeiros?">
+    Faturamento e renda presumidos aparecem a partir do **ESSENCIAL** (junto com o bureau principal). Indicadores resumidos e percentuais derivados (PEFIN/REFIN/SCR proporcionais ao faturamento) entram no **COMPLETO**. Seções contábeis (Balanço, DRE, Indicadores) dependem de integração de balanço contratada e estão disponíveis nas variantes `_MAX` / `_MAX_PLUS` do relatório.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="SCR / Open Finance" icon="building-columns" href="/sources/scr-open-finance">
+    Capacidade via endividamento bancário real.
+  </Card>
+  <Card title="Precificação" icon="calculator" href="/concepts/precificacao">
+    Fórmulas usando faturamento e balanço.
+  </Card>
+  <Card title="Bureau de Crédito" icon="chart-line" href="/sources/bureau-credito">
+    Score e restritivos, complementar a capacidade.
+  </Card>
+  <Card title="Criar política PJ" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Regras de faturamento e fórmulas.
+  </Card>
+</CardGroup>

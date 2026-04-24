@@ -1,0 +1,157 @@
+---
+title: "Bureau de Crédito"
+description: "Score sintético, histórico de restritivos e endividamento."
+icon: "chart-simple"
+---
+
+<Info>
+  **Resumo:** o Bureau de Crédito fornece o **score sintético** (0 a 1000) que resume o risco de inadimplência da pessoa ou empresa analisada, junto com restritivos ativos e sinais de fragilidade financeira.
+</Info>
+
+## O que é
+
+Bureau de crédito é um agregador comercial que consolida informações financeiras de pessoas físicas e jurídicas: pendências, protestos, consultas recentes, histórico de crédito e modelos estatísticos de score. É a fonte mais usada em concessão de crédito no Brasil.
+
+A GYRA+ é **agnóstica quanto ao bureau**: o dado do bureau entra como mais um ponto no mesmo emaranhado de fontes (cadastral, judicial, SCR, protestos). Você escolhe o bureau que melhor se encaixa ao seu perfil, segmento e custo por análise, e a plataforma consome a resposta no mesmo formato.
+
+Integramos com os principais bureaus do mercado brasileiro:
+
+- **Serasa**, cobertura ampla, o mais usado em operações com varejo e fintechs.
+- **Boa Vista (Equifax)**, tradicional em crédito PJ, forte em cadastro positivo.
+- **ProScore**, alternativa com modelos próprios, comum como segunda opinião.
+
+### Credencial própria no Serasa
+
+Para clientes que já têm contrato direto com o Serasa, o toolbox permite **configurar a sua própria credencial de produção** (BYOC) em *Configurações, Integrações*. Isso mantém o custo por consulta no contrato que você já negociou com o bureau, a GYRA+ apenas orquestra a chamada.
+
+Para habilitar, solicite as credenciais de produção ao time de suporte do Serasa e cole no toolbox. Para Boa Vista e ProScore, o consumo ocorre pelo contrato agregado da GYRA+.
+
+## De onde vem
+
+- **Tipo de fonte:** bureau comercial de crédito (privado).
+- **Cobertura geográfica:** Brasil (nacional).
+- **Natureza do dado:** consolidado por terceiro (agrega dados de credores, cartórios, consulta a outros bureaus).
+- **Base legal:** Lei do Cadastro Positivo (Lei 12.414/2011) e LGPD.
+
+## Frequência de atualização
+
+| Componente | Atualização |
+| ---------- | ----------- |
+| Consulta na fonte | real-time ao rodar a análise |
+| Cache interno GYRA+ | sem cache (cada análise consulta novamente) |
+| Base de origem | os credores reportam ao bureau com frequência variável (dias a semanas) |
+
+Na prática: um restritivo registrado hoje costuma aparecer em 1 a 7 dias na consulta, dependendo de quanto tempo leva para o credor reportar ao bureau.
+
+## Dados entregues
+
+Os dados do bureau aparecem em três lugares do relatório:
+
+### Score sintético
+
+| Campo | Tipo | Descrição | Exemplo |
+| ----- | ---- | --------- | ------- |
+| `creditBureauScoreSummary.score` | number | Score de 0 a 1000 | `720` |
+| `creditBureauScoreSummary.class` | string | Faixa de risco: `A`, `B`, `C`, `D`, `E` | `"B"` |
+| `creditBureauScoreSummary.description` | string | Descrição textual do risco | `"Baixo risco"` |
+| `creditBureauScoreSummary.provider` | string | Bureau que gerou o score (quando aplicável) | `"SERASA"` |
+
+### Restritivos (Pefin e Refin)
+
+Detalhes completos em [Seção, PEFIN e REFIN](/data/secao-pefin-refin). Resumo:
+
+- `count`, quantidade de ocorrências
+- `totalAmount`, valor total devido
+- `firstOccurrenceDate` / `lastOccurrenceDate`, janela temporal
+- `occurrences[]`, detalhamento por credor
+
+### Protestos
+
+Também vêm parcialmente do bureau, detalhe em [Seção Protestos](/data/secao-protestos).
+
+## Casos de uso
+
+<CardGroup cols={2}>
+  <Card title="Corte rápido por score" icon="chart-line">
+    Negar abaixo de um score mínimo (ex: < 400) para filtrar alto risco antes de rodar outras fontes.
+    **Regra sugerida:** `creditBureauScoreSummary.score < 400` : `DENIED`.
+  </Card>
+  <Card title="Alerta para score borderline" icon="triangle-exclamation">
+    Marcar casos com score na zona cinzenta (ex: 500 a 650) para revisão manual.
+  </Card>
+  <Card title="Segunda opinião" icon="users">
+    Usar o bureau complementar quando o principal retorna sem histórico (CPF novo, empresa recém-aberta).
+  </Card>
+  <Card title="Validação de porte" icon="building">
+    Combinar score + valor de Pefin + % de comprometimento de faturamento para calibrar limite.
+  </Card>
+</CardGroup>
+
+## Como usar na política
+
+<Steps>
+  <Step title="Escolher o campo">
+    `creditBureauScoreSummary.score` é o ponto de partida típico.
+  </Step>
+  <Step title="Definir o operador">
+    `LESS_THAN` para corte de aprovação, `GREATER_THAN` para corte de aprovação automática.
+  </Step>
+  <Step title="Definir threshold e ação">
+    Ex: abaixo de 400 : `DENIED`; entre 400 e 650 : `ALERT`; acima de 650 : `APPROVED`.
+  </Step>
+</Steps>
+
+Exemplo:
+
+```json
+{
+  "field": "creditBureauScoreSummary.score",
+  "operator": "LESS_THAN",
+  "value": 400,
+  "status": "DENIED"
+}
+```
+
+## Limitações e considerações
+
+- **CPF/CNPJ sem histórico:** bureaus retornam score zero ou ausente para documentos novos. Tratar esse caso como `ALERT`, não como `DENIED`.
+- **Score não é binário:** dois documentos com mesmo score podem ter histórias muito diferentes. Use score como triagem, não como decisão final.
+- **Defasagem entre credor e bureau:** a dívida registrada hoje pelo credor só vai aparecer no bureau depois que ele reportar, pode levar dias.
+- **Custo:** consultar bureau tem custo por análise. Para casos simples que não precisam de score, configure sua política sem o bureau.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Por que o score veio zerado?">
+    Geralmente porque o CPF/CNPJ não tem histórico suficiente no bureau. Novos documentos (empresa aberta há menos de 6 meses, CPF recém-emitido) costumam não ter score calculável.
+  </Accordion>
+  <Accordion title="Posso usar apenas o bureau complementar?">
+    Sim, mas o principal tem cobertura maior. O complementar é recomendado como segunda opinião, não como substituto.
+  </Accordion>
+  <Accordion title="A GYRA+ usa o nosso score customizado?">
+    Por padrão entregamos o score do bureau como está. Se seu plano incluir score customizado da GYRA+, ele aparece num campo separado.
+  </Accordion>
+  <Accordion title="Como forçar reconsulta (fura cache)?">
+    Não há cache: toda análise dispara nova consulta ao bureau. Se quiser uma foto nova, basta rodar o relatório novamente.
+  </Accordion>
+  <Accordion title="Qual nível de relatório inclui bureau de crédito?">
+    Disponível a partir do **ESSENCIAL** (score sintético do bureau principal). No **COMPLETO** entram restritivos detalhados (PEFIN, REFIN, Bad Check) e o bureau complementar como segunda opinião.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Criar regra por score" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Passo a passo no Toolbox.
+  </Card>
+  <Card title="Estrutura do relatório" icon="diagram-project" href="/data/estrutura-relatorio">
+    Onde o score aparece no JSON.
+  </Card>
+  <Card title="PEFIN e REFIN" icon="triangle-exclamation" href="/sources/pefin-refin">
+    Restritivos detalhados.
+  </Card>
+  <Card title="SCR e Open Finance" icon="building-columns" href="/sources/scr-open-finance">
+    Endividamento oficial do BACEN.
+  </Card>
+</CardGroup>

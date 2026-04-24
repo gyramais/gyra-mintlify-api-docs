@@ -1,0 +1,130 @@
+---
+openapi: get /v2/report/{id}
+title: Consultar Relatório (v2)
+description: Consulta um relatório pelo ID usando a estrutura de resposta revisada da v2.
+---
+
+<Endpoint
+  method="GET"
+  path="/v2/report/{id}"
+  headers={[
+    {
+      name: "Authorization",
+      type: "string",
+      required: true,
+      description: "Token JWT no formato Bearer. Exemplo: `Bearer abc123`"
+    }
+  ]}
+  pathParameters={[
+    {
+      name: "id",
+      type: "string",
+      required: true,
+      description: "ID do relatório"
+    }
+  ]}
+  responses={{
+    200: {
+      contentType: "application/json",
+      body: {
+        id: "69a207bcdd0197828df9155a",
+        status: { id: "6614758260513064a5af1046", value: "PENDING" },
+        document: "43**********30",
+        policyId: "69a1fbb06a44799c9c440d2d",
+        organizationId: "65eb4989a4a87b9a94d1920f",
+        createdAt: "2026-02-27T21:08:11.938Z",
+        updatedAt: "2026-02-27T21:09:39.455Z"
+      }
+    },
+    401: {
+      contentType: "application/json",
+      body: {
+        code: 401,
+        message: "Token de acesso inválido."
+      }
+    }
+  }}
+/>
+
+### Quando usar
+
+Use este endpoint para acompanhar o ciclo de vida de um relatório específico e obter o resultado consolidado. Use após criar um relatório para fazer polling de status ou para buscar os dados finais antes de tomar decisão de crédito.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID do relatório retornado em `POST /v2/report`. |
+| `tabType` | `query` | `string` | `não` | Tipo do relatório (filtra o conjunto de seções retornadas). |
+| `details` | `query` | `boolean` | `não` | Define se os detalhes das seções devem ser retornados. Use `false` para resposta enxuta. |
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/v2/report/69a207bcdd0197828df9155a' \
+--header 'Authorization: Bearer abc123'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/v2/report/69a207bcdd0197828df9155a", {
+  method: "GET",
+  headers: {
+    Authorization: "Bearer abc123"
+  }
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/v2/report/69a207bcdd0197828df9155a"
+headers = {"Authorization": "Bearer abc123"}
+
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+
+</RequestExample>
+
+<Tip>
+O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo inclui todas as seções (`sections[]`) com dados por fonte, regras aplicadas e decisão consolidada.
+</Tip>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "id": "69a207bcdd0197828df9155a",
+  "status": {
+    "id": "6614758260513064a5af1046",
+    "value": "PENDING"
+  },
+  "document": "43**********30",
+  "policyId": "69a1fbb06a44799c9c440d2d",
+  "organizationId": "65eb4989a4a87b9a94d1920f",
+  "createdAt": "2026-02-27T21:08:11.938Z",
+  "updatedAt": "2026-02-27T21:09:39.455Z"
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+```json 404 Not Found
+{
+  "code": 404,
+  "message": "Report not found"
+}
+```
+
+</ResponseExample>

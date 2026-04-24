@@ -1,0 +1,122 @@
+---
+title: "Usar Templates de Política"
+description: "Ativar um template direto ou clonar e customizar para criar a sua política. Catálogo e mecânica de versionamento."
+icon: "sparkles"
+---
+
+<Info>
+  **Resumo:** templates são políticas prontas mantidas pela GYRA+ como ponto de partida. Como a plataforma chega **crua** (sem política ativa), ativar templates é o primeiro passo antes de qualquer operação. Há duas rotas: **ativar direto** (usa as regras padrão) ou **clonar e customizar** (ajusta ao seu risco). O catálogo conceitual está em [Templates de Política](/concepts/templates-de-politica).
+</Info>
+
+## Pré-requisitos
+
+- Estar logado com papel de **administrador** ou **gestor de crédito**.
+- Ter feito os passos 1 e 2 do [Primeiro Acesso](/toolbox/primeiro-acesso).
+
+## Onde fica
+
+No menu lateral: **Política de Crédito, Templates**. A aba lista todos os templates disponíveis agrupados por vertical (Crédito, Cartão, Vendas a Prazo, RH, Compliance, Capital de Giro).
+
+## Opção A, ativar o template direto
+
+Use quando as regras padrão do template já atendem ao seu caso.
+
+<Steps>
+  <Step title="Abrir o template no catálogo">
+    Entrar em *Política de Crédito, Templates*, clicar no card do template desejado para ver as regras, fórmulas e resumo da política.
+  </Step>
+  <Step title="Ativar">
+    No cabeçalho da tela do template, toggle **Ativar para a minha organização**. A política aparece imediatamente na aba *Política de Crédito, Políticas*, habilitada, com o mesmo nome do template.
+  </Step>
+  <Step title="Conferir disponibilidade no input de análise">
+    No **input sempre visível** no topo do toolbox, digitar um documento compatível (CPF ou CNPJ conforme o template) e validar que a política aparece no dropdown que abre abaixo do campo.
+  </Step>
+</Steps>
+
+<Tip>
+  Templates ativados continuam recebendo atualizações da GYRA+ quando a GYRA+ publica nova versão do template. Se você não quer esse comportamento, use a opção B.
+</Tip>
+
+## Opção B, clonar e customizar
+
+Use quando você precisa ajustar thresholds, adicionar regras específicas, mudar mensagem ao usuário final ou trocar fórmulas de precificação.
+
+<Steps>
+  <Step title="Abrir o template no catálogo">
+    Mesmo passo da opção A.
+  </Step>
+  <Step title="Criar política a partir do template">
+    Clicar em **Criar política a partir deste template**. A GYRA+ gera uma cópia independente, sem vínculo com o template original.
+  </Step>
+  <Step title="Customizar">
+    Ajustar:
+
+    - **Regras** (adicionar, remover, mudar thresholds, trocar `DENIED`/`ALERT`/`APPROVED`). Ver [Editar Política](/toolbox/editar-politica).
+    - **Fórmulas de precificação** (`periodFormula`, `interestFormula`, `amountFormula`). Ver [Precificação](/concepts/precificacao).
+    - **Dados consultados** (ativar ou desativar SCR, configurar bureau, janela de processos).
+    - **Mensagens** mostradas ao tomador em cada status.
+  </Step>
+  <Step title="Salvar com o nome que quiser">
+    No cabeçalho, edite o nome para algo reconhecível internamente (ex: *Antecipação Recebíveis, tier A*, *Cartão PF Varejo 2026*). Clicar em *Salvar*.
+  </Step>
+  <Step title="Habilitar">
+    Toggle **Habilitada** no cabeçalho. Até esse passo a política está salva mas não aparece no dropdown ao digitar um documento. Só políticas habilitadas ficam disponíveis.
+  </Step>
+</Steps>
+
+## Como usuários enxergam a política habilitada
+
+Assim que a política é habilitada, ela passa a aparecer no **dropdown do input sempre visível** (topo do toolbox) para todos os usuários da organização que têm permissão de rodar análise. A filtragem é automática conforme o documento digitado:
+
+| Documento digitado | Políticas que aparecem |
+| ------------------ | ---------------------- |
+| CPF (11 dígitos)   | Todas as políticas PF habilitadas |
+| CNPJ (14 dígitos)  | Todas as políticas PJ habilitadas |
+
+Cada usuário pode marcar uma **política padrão para PF e outra para PJ** diretamente no dropdown, via a ação *tornar padrão* que aparece ao lado de cada política. Com o padrão configurado, a política já aparece pré-selecionada ao digitar o documento, economizando um clique por análise.
+
+## Versionamento
+
+Toda edição em uma política (não no template original) gera uma nova versão registrada em `PolicyChange`, com diff, autor e timestamp. Isso permite auditar mudanças e ver o histórico completo na aba *Histórico* da política. Detalhes em [Operações](/concepts/operacoes).
+
+## Desativar ou remover
+
+- **Desabilitar** (toggle no cabeçalho) retira a política do menu de operação, mas preserva histórico e permite reativar depois.
+- **Remover** exclui a política: ela não pode mais ser usada em novas operações e some da lista, mas operações antigas que a utilizaram continuam rastreáveis.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Qual a diferença entre 'ativar template direto' e 'criar política a partir do template'?">
+    **Ativar direto** reutiliza o template como a sua política, continua recebendo atualizações da GYRA+. **Criar política** clona o template em uma política independente, desvinculada. Customização total só é possível na segunda opção.
+  </Accordion>
+  <Accordion title="Posso customizar um template ativado direto?">
+    Apenas parcialmente (habilitação on/off, mensagens). Para ajustar regras e fórmulas, faça clone com a opção B.
+  </Accordion>
+  <Accordion title="Posso ter mais de uma política ativa do mesmo template?">
+    Sim, via opção B (clonar). Crie quantas cópias quiser, cada uma com nome e ajustes próprios. Exemplo: *Capital de Giro Tier A* e *Capital de Giro Tier B*, ambas clonadas do mesmo template.
+  </Accordion>
+  <Accordion title="Como saber quais templates a GYRA+ recomenda para o meu segmento?">
+    Cada template no catálogo traz o ícone do segmento sugerido (fintech, varejo, distribuidora, factoring, RH). Veja também [Casos de Uso](/use-cases/fintech-credito) para exemplos reais.
+  </Accordion>
+  <Accordion title="Onde vejo todas as fontes que um template consulta?">
+    No próprio card do template, seção *Dados Analisados*. Para detalhes de cada fonte, ver [Fontes de Dados](/sources/visao-geral).
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Catálogo conceitual" icon="file-lines" href="/concepts/templates-de-politica">
+    Lista completa e para que serve cada template.
+  </Card>
+  <Card title="Criar política do zero" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Quando nenhum template serve como base.
+  </Card>
+  <Card title="Editar política" icon="pen-to-square" href="/toolbox/editar-politica">
+    Ajustes granulares em regras e fórmulas.
+  </Card>
+  <Card title="Rodar uma análise" icon="play" href="/toolbox/rodar-operacao">
+    Testar a política habilitada ponta a ponta.
+  </Card>
+</CardGroup>

@@ -1,0 +1,107 @@
+---
+title: "Usuários e Permissões"
+description: "Convidar, remover, atribuir papéis e configurar SSO (Google Workspace, Microsoft Azure AD)."
+icon: "users-gear"
+---
+
+<Info>
+  **Resumo:** a gestão de usuários no toolbox é feita em *Configurações, Usuários*. Cada usuário tem um **papel** (administrador, gestor de crédito, analista) que determina o que ele vê e faz. Organizações maiores podem plugar **SSO Google** ou **Microsoft Azure AD** para centralizar acesso no IdP corporativo.
+</Info>
+
+## Papéis disponíveis
+
+| Papel | Roda análise | Cria política | Edita política | Convida usuário | Relatórios visíveis |
+| ----- | :---: | :---: | :---: | :---: | :---: |
+| **Administrador** | ✅ | ✅ | ✅ | ✅ | Todos da organização |
+| **Gestor de Crédito** | ✅ | ✅ | ✅ | ✅ | Todos da organização |
+| **Analista de Crédito** | ✅ | ❌ | ❌ | ✅ | Apenas os próprios |
+
+Papel é atribuído por organização. O mesmo e-mail pode ter papéis diferentes em organizações diferentes (comum em consultorias, auditorias, operação terceirizada).
+
+## Convidar um usuário
+
+<Steps>
+  <Step title="Abrir Configurações, Usuários">
+    Menu lateral, *Configurações*, aba *Usuários*.
+  </Step>
+  <Step title="Clicar em Convidar">
+    Botão *Convidar usuário* no topo da lista.
+  </Step>
+  <Step title="Preencher os dados">
+    - **E-mail** (obrigatório).
+    - **Nome** (opcional, preenchido pelo próprio usuário no primeiro acesso).
+    - **Papel** (obrigatório).
+  </Step>
+  <Step title="Enviar">
+    Clicar em *Enviar convite*. O usuário recebe e-mail de `noreply@gyramais.com.br` com link de ativação (válido por 7 dias).
+  </Step>
+  <Step title="Usuário ativa e configura senha">
+    Ao abrir o link, ele é direcionado para definir senha ou vincular via SSO (se configurado na organização).
+  </Step>
+</Steps>
+
+## Remover ou alterar papel
+
+Na lista de usuários:
+
+- **Alterar papel**: dropdown na linha do usuário. Mudança é imediata.
+- **Desativar**: usuário perde acesso mas histórico de análises dele permanece rastreável.
+- **Remover**: usuário não consegue mais logar nem aparece em novos convites, mas registros antigos continuam rastreáveis.
+
+<Tip>
+  Preferir *Desativar* a *Remover*. Desativar é reversível com um clique; remover exige convite novo.
+</Tip>
+
+## Reenviar convite
+
+Se o usuário perdeu o e-mail ou o link expirou (7 dias), na lista de usuários pendentes há a ação *Reenviar convite*. Gera novo link e notifica por e-mail.
+
+## SSO
+
+**SSO Google Workspace** e **SSO Microsoft Azure AD (Entra ID)** já vêm habilitados por padrão no toolbox. A tela de login mostra os botões *Entrar com Google* e *Entrar com Microsoft*, e qualquer usuário da organização pode usar.
+
+Se você precisa **restringir o acesso apenas a SSO** (bloquear login por senha), entre em contato com `atendimento@gyramais.com` para habilitar essa configuração específica.
+
+## Limitações e considerações
+
+- **Papéis são fixos**, não há papel customizado. Se o modelo não cabe, fale com o suporte para avaliar ajuste.
+- **Um usuário pode pertencer a várias organizações** (seleciona no login). Papel é independente por organização.
+- **SSO e senha coexistem por padrão.** Para forçar SSO-only, peça ao suporte.
+- **Convite expira em 7 dias.** Depois disso, precisa reenviar.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Posso ter vários administradores?">
+    Sim, não há limite. Recomendação: pelo menos 2 administradores, evitando dependência de pessoa única.
+  </Accordion>
+  <Accordion title="Como transfiro a administração para outra pessoa?">
+    Eleve o papel da nova pessoa para *Administrador*, confira que ela está ativa, e depois rebaixe ou remova o administrador anterior. Nunca remova o único administrador sem ter substituto.
+  </Accordion>
+  <Accordion title="Analista pode ver análises de outros analistas?">
+    Não. Analistas enxergam apenas as análises que eles próprios rodaram. Administradores e gestores de crédito veem todas as análises da organização.
+  </Accordion>
+  <Accordion title="SSO desativa o login por senha?">
+    Por padrão não, os dois coexistem. Para forçar SSO-only, entre em contato com `atendimento@gyramais.com` que habilitamos essa configuração específica.
+  </Accordion>
+  <Accordion title="Existe controle de sessão (logout forçado)?">
+    Sim. Administrador pode forçar logout de qualquer usuário em *Configurações, Usuários, ação Forçar logout*. Útil em caso de desligamento.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Primeiro Acesso" icon="door-open" href="/toolbox/primeiro-acesso">
+    Setup inicial da organização.
+  </Card>
+  <Card title="Webhooks e API Keys" icon="key" href="/toolbox/webhooks-e-api-keys">
+    Acesso programático.
+  </Card>
+  <Card title="Visão Geral do Toolbox" icon="compass" href="/toolbox/visao-geral">
+    O que cada papel vê no menu.
+  </Card>
+  <Card title="Criar Política" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Fluxo para gestor de crédito.
+  </Card>
+</CardGroup>

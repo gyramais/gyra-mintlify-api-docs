@@ -1,0 +1,233 @@
+---
+title: "Webhooks e API Keys"
+description: "Como obter credenciais de API e configurar webhooks para receber eventos em tempo real."
+icon: "key"
+---
+
+<Info>
+  **Resumo:** para integrar a GYRA+ com seu backend, você precisa de **credenciais de API** (`clientId` + `clientSecret`) e, opcionalmente, de **webhooks** para receber o resultado da análise sem polling. As credenciais são solicitadas via suporte; os webhooks são configurados pela própria API.
+</Info>
+
+## API Keys
+
+### Obter credenciais
+
+Não existe tela de criação de API Keys no toolbox. Para obter credenciais de acesso à API, envie um e-mail para `atendimento@gyramais.com` informando:
+
+- Organização e ambiente de uso (produção, staging, etc.).
+- Nome reconhecível da integração (ex: `backend-produção`, `n8n-staging`).
+
+A equipe retorna com o `clientId` e o `clientSecret`. Guarde o `clientSecret` no seu gerenciador de segredos, ele não é recuperável depois.
+
+### Gerar token
+
+O `clientId` + `clientSecret` são trocados por um **token de acesso com validade de 24 horas**. Seu backend precisa renovar o token antes de expirar.
+
+```bash
+curl -X POST https://gyra-core.gyramais.com.br/auth/authenticate \
+  -H "gyra-client-id: seu-client-id" \
+  -H "gyra-client-secret: seu-client-secret"
+```
+
+Resposta:
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiresIn": 86400
+}
+```
+
+### Usar
+
+Incluir o token em toda chamada HTTP:
+
+```bash
+Authorization: Bearer <token>
+```
+
+Exemplo com `curl`:
+
+```bash
+curl -X POST https://gyra-core.gyramais.com.br/v2/report \
+  -H "Authorization: Bearer <accessToken>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "document": "43591367000130",
+    "policyId": "6612a7f30000000000000001"
+  }'
+```
+
+## Webhooks
+
+Permitem que a GYRA+ notifique seu backend quando algo relevante acontece (relatório concluído, política avaliada, exportação gerada, decisão manual de analista), em vez de você ficar fazendo polling.
+
+<Note>
+  Webhooks são configurados **via API**, não há tela no toolbox para gerenciá-los. Os endpoints são `POST /webhook`, `GET /webhook`, `DELETE /webhook/:id`.
+</Note>
+
+### Tipos de evento
+
+Cada webhook é registrado para **um único tipo**. Se você quer receber mais de um tipo, registre webhooks separados (mesma URL ou URLs diferentes).
+
+| Tipo | Quando dispara |
+| ---- | -------------- |
+| `REPORT` | A cada atualização de seção durante o processamento do relatório (granular, muitos disparos por relatório). |
+| `REPORT_FINISHED` | Relatório totalmente processado: todas as integrações concluíram e o resultado final está disponível. |
+| `REPORT_STATUS` | Analista humano aprovou ou rejeitou manualmente o relatório (via `analyze` ou `re-analyze`). |
+| `REPORT_EXPORTED` | Exportação (PDF ou XLS) do relatório foi gerada e está disponível por URL, ou falhou. |
+| `CREDIT_POLICY` | Política de crédito foi avaliada e o status mudou (resultado final do motor de regras). |
+| `OPERATION` | Operação (fluxo multi-relatório com cadeia de políticas) concluiu com status final. |
+
+### Configurar
+
+```bash
+curl -X POST https://gyra-core.gyramais.com.br/webhook \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "REPORT_FINISHED",
+    "url": "https://seu-sistema.com/webhooks/gyra",
+    "apiKey": "opcional-chave-enviada-no-header-api-key"
+  }'
+```
+
+Parâmetros:
+- `type` (obrigatório): um dos tipos da tabela acima.
+- `url` (obrigatório): endpoint HTTPS que vai receber o `POST`.
+- `apiKey` (opcional): se informado, a GYRA+ envia esse valor no header `api-key` de cada requisição, útil para o seu endpoint validar origem.
+
+### Estrutura do payload
+
+Todo webhook entrega um POST com o formato:
+
+```json
+{
+  "organizationId": "6612a7f30000000000000001",
+  "webhookType": "REPORT_FINISHED",
+  "data": { ... }
+}
+```
+
+O conteúdo de `data` varia por tipo:
+
+**`REPORT_FINISHED`**
+```json
+{
+  "content": {
+    "reportId": "6612a7f30000000000000001",
+    "policyId": "6612a7f30000000000000010",
+    "isFinalized": true,
+    "finalizedAt": "2026-04-23T14:30:45Z",
+    "errors": { "sections": ["PROCESSES"] }
+  },
+  "compress": false
+}
+```
+
+**`REPORT`** (seção individual concluída)
+```json
+{
+  "content": { "...dados da seção..." },
+  "compress": false
+}
+```
+O envelope externo também traz `sectionTypeId` e `integration`.
+
+**`REPORT_STATUS`** (decisão manual do analista)
+```json
+{
+  "reportId": "6612a7f30000000000000001",
+  "analysis": {
+    "userId": "user-id-ou-'Política de crédito'",
+    "userName": "Nome do analista",
+    "status": "REPORT_APPROVED",
+    "date": "2026-04-23T14:35:00Z"
+  },
+  "lastAnalysis": { "..." }
+}
+```
+
+**`REPORT_EXPORTED`**
+```json
+{
+  "reportId": "6612a7f30000000000000001",
+  "exportUrl": "https://...assinado...",
+  "exportedAt": "2026-04-23T14:40:00Z"
+}
+```
+Em caso de falha, `exportUrl` vem `null` e o payload inclui `error`.
+
+**`CREDIT_POLICY`**
+```json
+{
+  "content": {
+    "reportId": "6612a7f30000000000000001",
+    "policyId": "6612a7f30000000000000010",
+    "version": 3,
+    "status": "APPROVED",
+    "risk": "LOW",
+    "score": 720,
+    "date": "2026-04-23T14:30:45Z"
+  }
+}
+```
+
+**`OPERATION`**
+```json
+{
+  "operationId": "6612a7f30000000000000100",
+  "operationResultId": "6612a7f30000000000000101",
+  "document": "43591367000130",
+  "status": "APPROVED"
+}
+```
+
+### Retry
+
+A GYRA+ faz até **3 tentativas** de entrega com backoff exponencial (1s, ~2s, ~5s). Se o seu endpoint retornar `429` com header `Retry-After`, a GYRA+ respeita o tempo antes de tentar de novo. Depois disso, o envio é descartado — planeje idempotência e fallback com polling em `GET /v2/report/:id` para eventuais perdas.
+
+### Boas práticas
+
+- **Responda 2xx rapidamente** e processe o payload de forma assíncrona na sua fila interna.
+- **Use `externalId`** no `POST /v2/report` para amarrar o webhook de volta ao seu pedido/cliente.
+- **Escolha o tipo certo**: `REPORT_FINISHED` para a maioria dos fluxos (uma entrega por relatório), `REPORT` só se você precisa reagir seção a seção.
+- **Fallback com polling** em `GET /v2/report/:id` caso o seu endpoint fique indisponível.
+
+## Restringir acesso via SSO-only
+
+Por padrão, SSO (Google e Microsoft) convive com login por senha. Se você quer **forçar SSO-only** na sua organização, entre em contato com `atendimento@gyramais.com` para habilitar essa configuração.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Perdi meu clientSecret, como recupero?">
+    Não tem como recuperar. Envie e-mail para `atendimento@gyramais.com` pedindo novas credenciais.
+  </Accordion>
+  <Accordion title="Posso ter várias credenciais simultâneas?">
+    Sim. Útil para separar ambientes (dev, staging, prod) ou integrações diferentes. Peça ao suporte quantas precisar.
+  </Accordion>
+  <Accordion title="Diferença entre webhook e polling?">
+    Webhook é push (GYRA+ te avisa quando o relatório fica pronto). Polling é pull (você consulta `GET /v2/report/:id` até concluir). Webhook é mais eficiente, mas exige endpoint público HTTPS.
+  </Accordion>
+  <Accordion title="Como testar webhook em dev sem endpoint público?">
+    Use ferramentas como [webhook.site](https://webhook.site) para capturar o POST, ou ngrok para expor o seu localhost.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Webhooks (conceito)" icon="webhook" href="/concepts/webhooks-e-tempo-real">
+    Como a GYRA+ emite eventos ao longo do ciclo de vida.
+  </Card>
+  <Card title="Como Funciona a API" icon="code" href="/api-reference/como-funciona">
+    Arquitetura geral dos endpoints.
+  </Card>
+  <Card title="MCP da GYRA+" icon="plug" href="/mcp/o-que-e">
+    Usar as credenciais via agente de IA.
+  </Card>
+  <Card title="Rodar uma análise" icon="play" href="/toolbox/rodar-operacao">
+    Primeira análise ponta a ponta.
+  </Card>
+</CardGroup>

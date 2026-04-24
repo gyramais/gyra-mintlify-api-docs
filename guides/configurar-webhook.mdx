@@ -6,7 +6,7 @@ icon: "webhook"
 
 ## Por que configurar um webhook
 
-Sem webhook, você precisa chamar `GET /report/:id` repetidamente até o relatório ficar pronto. Com webhook, a GYRA+ avisa você assim que o resultado estiver disponível — mais eficiente, mais confiável.
+Sem webhook, você precisa chamar `GET /report/:id` repetidamente até o relatório ficar pronto. Com webhook, a GYRA+ avisa você assim que o resultado estiver disponível, mais eficiente, mais confiável.
 
 ---
 
@@ -17,7 +17,7 @@ Sem webhook, você precisa chamar `GET /report/:id` repetidamente até o relató
 
 ---
 
-## Passo 1 — Crie seu endpoint
+## Passo 1, Crie seu endpoint
 
 Seu servidor precisa de um endpoint que aceite `POST` e responda `200` rapidamente.
 
@@ -51,7 +51,7 @@ Nunca processe o payload de forma síncrona antes de responder `200`. Se o seu s
 
 ---
 
-## Passo 2 — Registre a URL
+## Passo 2, Registre a URL
 
 ```bash
 curl -X POST https://gyra-core.gyramais.com.br/webhook \
@@ -74,7 +74,7 @@ curl -X POST https://gyra-core.gyramais.com.br/webhook \
 
 ---
 
-## Passo 3 — Teste o recebimento
+## Passo 3, Teste o recebimento
 
 Crie um relatório e monitore se o webhook chega:
 
@@ -134,4 +134,4 @@ curl -X DELETE https://gyra-core.gyramais.com.br/webhook/{id} \
 | Usar `externalId` para rastrear | Facilita o vínculo com seu sistema sem consultar a API |
 | Implementar idempotência | O mesmo `reportId` pode chegar mais de uma vez em casos de retry |
 | Ter fallback com `GET /report/:id` | Para casos em que o webhook falha por indisponibilidade temporária |
-| Usar HTTPS com certificado válido | Requisito de segurança — HTTP não é aceito |
+| Usar HTTPS com certificado válido | Requisito de segurança, HTTP não é aceito |

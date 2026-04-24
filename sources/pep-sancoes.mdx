@@ -1,0 +1,150 @@
+---
+title: "PEP e Sanções"
+description: "Exposição política (PEP), listas de sanções nacionais e internacionais, CEIS, CNEP, OFAC e equivalentes."
+icon: "shield-halved"
+---
+
+<Info>
+  **Resumo:** a fonte de PEP e Sanções cruza o CPF ou CNPJ com **bases de exposição política e listas restritivas** (nacionais e internacionais). É peça obrigatória em políticas de compliance, KYC e PLD/FT para fintechs, bancos, corretoras e qualquer regulado.
+</Info>
+
+## O que é
+
+**PEP (Pessoa Exposta Politicamente)** é classificação regulatória (Resolução COAF, Circular BCB 3.978) para pessoas que exercem ou exerceram cargo, emprego ou função pública relevante — políticos, diplomatas, juízes superiores, executivos de estatais — nos últimos 5 anos, incluindo familiares próximos e representantes.
+
+**Sanções** são listas oficiais de pessoas e entidades com restrição imposta por autoridade competente, por envolvimento com corrupção, terrorismo, lavagem de dinheiro, tráfico ou descumprimento contratual com órgão público.
+
+## Bases cobertas
+
+### Nacionais
+
+| Base | O que lista |
+| ---- | ----------- |
+| **CEIS** (Cadastro de Empresas Inidôneas e Suspensas) | Empresas impedidas de contratar com administração pública federal |
+| **CNEP** (Cadastro Nacional de Empresas Punidas) | Empresas sancionadas por atos lesivos à administração pública (Lei Anticorrupção) |
+| **CEPIM** (Cadastro de Entidades Privadas Sem Fins Lucrativos Impedidas) | ONGs impedidas de receber recursos federais |
+| **Lista TSE** | Candidatos e eleitos em cargos públicos |
+| **PEPs COAF** | Lista consolidada de PEPs conforme Resolução COAF |
+
+### Internacionais
+
+| Base | O que lista |
+| ---- | ----------- |
+| **OFAC SDN** (EUA) | Lista de pessoas e entidades sancionadas pelo Departamento do Tesouro americano |
+| **UN Sanctions** | Lista consolidada de sanções do Conselho de Segurança da ONU |
+| **EU Sanctions** | Sanções adotadas pela União Europeia |
+| **UK HMT** | Tesouro do Reino Unido |
+| **Interpol Red Notices** | Alertas vermelhos da Interpol (busca e captura internacional) |
+| **World Bank Ineligible Firms** | Empresas inelegíveis para contratos do Banco Mundial |
+
+## De onde vem
+
+- **Tipo de fonte:** bases oficiais públicas agregadas e normalizadas.
+- **Cobertura geográfica:** Brasil + principais jurisdições internacionais.
+- **Natureza do dado:** público.
+- **Base legal:** dados públicos, consulta para fins de compliance, previsto em regulação (COAF, BCB, Lei Anticorrupção).
+
+## Frequência de atualização
+
+| Base | Atualização |
+| ---- | ----------- |
+| CEIS, CNEP, CEPIM | diária |
+| PEPs COAF | mensal (ciclo de publicação do COAF) |
+| OFAC, UN, EU | diária, conforme publicação das autoridades |
+| Interpol | contínua |
+
+Cache interno de até 24h para bases que mudam pouco; real-time em consultas que pedem freshness.
+
+## Dados entregues
+
+| Campo | Descrição | Exemplo |
+| ----- | --------- | ------- |
+| `pep.isPep` | É PEP? | `true` / `false` |
+| `pep.level` | Grau de exposição | `"DIRECT"`, `"RELATIVE"`, `"REPRESENTATIVE"` |
+| `pep.role` | Cargo/função exercida | `"Deputado Federal"` |
+| `pep.startDate` / `endDate` | Período do exercício | `"2019-02-01"` / `null` |
+| `sanctions.hasHits` | Aparece em alguma lista? | `true` / `false` |
+| `sanctions.lists[].name` | Nome da lista | `"OFAC SDN"` |
+| `sanctions.lists[].reason` | Motivo ou categoria | `"Narcotics Trafficking"` |
+| `sanctions.lists[].addedAt` | Quando foi incluído | `"2023-08-15"` |
+
+## Casos de uso
+
+<CardGroup cols={2}>
+  <Card title="Bloqueio por sanção" icon="ban">
+    Qualquer hit em lista de sanção internacional é bloqueio obrigatório.
+    **Regra:** `sanctions.hasHits = true` : `DENIED`.
+  </Card>
+  <Card title="Due diligence reforçada em PEP" icon="magnifying-glass">
+    PEP não é bloqueio automático; exige DDR (diligência reforçada) conforme COAF.
+    **Regra:** `pep.isPep = true` : `ALERT`.
+  </Card>
+  <Card title="Empresa em CEIS/CNEP" icon="building-shield">
+    Contratação de PJ sancionada pelo poder público é risco reputacional e contratual.
+    **Regra:** aparece em CEIS ou CNEP : `DENIED` ou `ALERT`.
+  </Card>
+  <Card title="Monitoramento contínuo" icon="radar">
+    Reanalisar periodicamente clientes ativos para pegar inclusões novas em listas.
+  </Card>
+</CardGroup>
+
+## Como usar na política
+
+<Steps>
+  <Step title="Sanções como bloqueio absoluto">
+    Para qualquer produto regulado, `sanctions.hasHits = true` deveria ser `DENIED` sem exceção. É risco legal, não apenas de crédito.
+  </Step>
+  <Step title="PEP como alerta">
+    PEP entra em `ALERT` e deve acionar processo de DDR no seu fluxo (coleta de documentos adicionais, aprovação em comitê, registro reforçado).
+  </Step>
+  <Step title="CEIS/CNEP como bloqueio para PJ">
+    Empresas em CEIS/CNEP vão como `DENIED` em políticas conservadoras, ou `ALERT` com DDR em políticas flexíveis.
+  </Step>
+  <Step title="Rodar em toda análise">
+    PEP e Sanções são leves (baixa latência) e devem estar habilitadas em todas as políticas, inclusive SIMPLES quando o regulatório exigir.
+  </Step>
+</Steps>
+
+## Limitações e considerações
+
+- **Homônimos em PEP**: nomes comuns podem gerar match incorreto. A camada da GYRA+ cruza nome + CPF/CNPJ, reduzindo (não eliminando) falso positivo.
+- **Listagem em PEP não é pejorativa**: ser PEP é fato factual, não indicativo de conduta. A obrigação é de DDR, não de recusa.
+- **Atraso em listas internacionais**: OFAC publica atualizações várias vezes por semana; nossa sincronização é diária. Em operações de altíssima sensibilidade, considerar consulta direta ao OFAC além do relatório.
+- **Não substitui Compliance**: a fonte é suporte, não decisão final. Operação regulada exige processo humano de KYC/PLD além da consulta automatizada.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="PEP é motivo para recusar crédito?">
+    Regulatoriamente, não. PEP exige DDR (diligência reforçada): documentação adicional, aprovação em nível superior, monitoramento contínuo. Recusa automática por PEP pode ser questionada como discriminatória. Cada organização define o tratamento na política.
+  </Accordion>
+  <Accordion title="O CPF caiu em sanção OFAC, posso liberar mesmo assim?">
+    Não para clientes com exposição aos EUA ou dólar. OFAC é extraterritorial e sanciona terceiros que operam com pessoas listadas. Liberar pode expor sua organização a sanções secundárias.
+  </Accordion>
+  <Accordion title="CEIS/CNEP zera em quanto tempo?">
+    Depende da sanção aplicada. Algumas duram 2 anos (suspensão temporária), outras podem ser permanentes. A fonte mostra `endDate` quando disponível.
+  </Accordion>
+  <Accordion title="Famílias de PEP também aparecem?">
+    Sim. `pep.level = "RELATIVE"` identifica familiares próximos conforme critério COAF. Nível de exigência de DDR é definido pela sua política.
+  </Accordion>
+  <Accordion title="Qual nível de relatório inclui PEP e sanções?">
+    Disponível a partir do **COMPLETO**. Não está incluso em SIMPLES nem ESSENCIAL. Organizações reguladas que precisam de PEP/Sanções como gating de KYC devem usar políticas em nível COMPLETO ou superior.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Seção detalhada" icon="file-lines" href="/data/secao-pep-sancoes">
+    Campos, JSON e estrutura completa.
+  </Card>
+  <Card title="Vínculos Societários" icon="diagram-project" href="/sources/vinculos-societarios">
+    Cruzar PEP com sócios e grupo econômico.
+  </Card>
+  <Card title="Processos Judiciais" icon="gavel" href="/sources/processos-judiciais">
+    Complemento natural em due diligence.
+  </Card>
+  <Card title="Criar política KYC" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
+    Configurar regras de compliance.
+  </Card>
+</CardGroup>

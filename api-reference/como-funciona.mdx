@@ -9,7 +9,7 @@ O fluxo padrão é simples:
 
 ```mermaid
 flowchart TD
-  A["Usuário dispara<br>POST /report"] --> B["Entrada: CPF ou CNPJ + policyId"]
+  A["Usuário dispara<br>POST /v2/report"] --> B["Entrada: CPF ou CNPJ + policyId"]
   B --> C["GYRA+ Toolbox API"]
   C --> D["Integrações externas"]
   D --> D1["Certidões"]
@@ -21,7 +21,7 @@ flowchart TD
   E --> F["Aplicação da política<br>(score e regras automatizadas)"]
   F --> G["Criação do relatório e decisão"]
 
-  G --> H1["GET /report/{id}"]
+  G --> H1["GET /v2/report/{id}"]
   G --> H2["Webhook com decisão<br><sub>Enviado em tempo real</sub>"]
   G --> H3["Painel Toolbox<br><sub>Renderização via WebSocket</sub>"]
 
@@ -31,7 +31,7 @@ flowchart TD
 
 ## Eventos em tempo real
 
-Após o envio do documento via `POST /report`, o relatório é processado de forma assíncrona. O resultado pode ser consultado de duas maneiras:
+Após o envio do documento via `POST /v2/report`, o relatório é processado de forma assíncrona. O resultado pode ser consultado de duas maneiras:
 
 - 🔔 **Webhook:** se configurado, a GYRA+ enviará um POST para o seu endpoint com o status atualizado.
 - 📡 **Toolbox:** se você estiver logado no painel, o status do relatório aparece automaticamente via WebSocket sem precisar atualizar a página.

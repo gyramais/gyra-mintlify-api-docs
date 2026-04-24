@@ -6,7 +6,7 @@ icon: "webhook"
 
 ## Por que usar webhooks
 
-O processamento de um relatório GYRA+ é assíncrono — consultas externas como Serasa, SCR e certidões levam tempo. Em vez de consultar `GET /report/:id` repetidamente, configure um webhook para receber o resultado **assim que estiver pronto**.
+O processamento de um relatório GYRA+ é assíncrono, consultas a bureaus de crédito, SCR/Open Finance e certidões levam tempo. Em vez de consultar `GET /report/:id` repetidamente, configure um webhook para receber o resultado **assim que estiver pronto**.
 
 Isso é a base de qualquer integração robusta com a GYRA+.
 
@@ -16,15 +16,15 @@ Isso é a base de qualquer integração robusta com a GYRA+.
 
 ```mermaid
 sequenceDiagram
-  participant Seu sistema
-  participant GYRA+ API
-  participant Integrações externas
+  participant S as Seu sistema
+  participant G as GYRA+ API
+  participant F as Fontes externas
 
-  Seu sistema->>GYRA+ API: POST /report
-  GYRA+ API-->>Seu sistema: { reportId, status: "PENDING" }
-  GYRA+ API->>Integrações externas: Consultas em paralelo
-  Integrações externas-->>GYRA+ API: Dados retornam
-  GYRA+ API->>Seu sistema: POST {seu webhook} com decisão final
+  S->>G: POST /report
+  G-->>S: { reportId, status: "PENDING" }
+  G->>F: Consultas em paralelo
+  F-->>G: Dados retornam
+  G->>S: POST {seu webhook} com decisão final
 ```
 
 1. Você cria o relatório com `POST /report`
@@ -34,33 +34,47 @@ sequenceDiagram
 
 ---
 
+## Tipos de evento
+
+Cada webhook é registrado para **um único tipo** de evento. Para escutar mais de um, registre webhooks separados.
+
+| Tipo | Quando dispara |
+| ---- | -------------- |
+| `REPORT` | A cada seção do relatório concluída durante o processamento (granular). |
+| `REPORT_FINISHED` | Relatório totalmente processado e finalizado. |
+| `REPORT_STATUS` | Analista aprovou ou rejeitou manualmente o relatório. |
+| `REPORT_EXPORTED` | Exportação (PDF/XLS) do relatório foi gerada (ou falhou). |
+| `CREDIT_POLICY` | Política de crédito foi avaliada e o status mudou. |
+| `OPERATION` | Operação (fluxo multi-relatório) concluiu com status final. |
+
 ## Payload do webhook
 
-Quando o relatório é concluído, a GYRA+ envia um `POST` para sua URL com o seguinte payload:
+Todo disparo é um `POST` com envelope:
 
 ```json
 {
-  "reportId": "64a3b2c1d4e5f6a7b8c9d0e1",
-  "document": "43591367000130",
-  "type": "CNPJ",
-  "status": "APPROVED",
-  "policyStatus": "APPROVED",
-  "score": 720,
-  "externalId": "pedido-123",
-  "createdAt": "2025-03-01T10:30:00.000Z",
-  "completedAt": "2025-03-01T10:30:45.000Z"
+  "organizationId": "64a3b2c1d4e5f6a7b8c9d0e1",
+  "webhookType": "REPORT_FINISHED",
+  "data": { ... }
 }
 ```
 
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `reportId` | string | ID do relatório na GYRA+ |
-| `document` | string | CPF ou CNPJ consultado |
-| `type` | string | `CPF` ou `CNPJ` |
-| `status` | string | Status geral: `APPROVED`, `DENIED`, `ALERT` |
-| `policyStatus` | string | Resultado da política de crédito |
-| `score` | number | Score final (0–1000) |
-| `externalId` | string | Identificador do seu sistema (se enviado no `POST /report`) |
+O conteúdo de `data` depende do tipo. Exemplo para `REPORT_FINISHED`:
+
+```json
+{
+  "content": {
+    "reportId": "64a3b2c1d4e5f6a7b8c9d0e1",
+    "policyId": "6612a7f30000000000000010",
+    "isFinalized": true,
+    "finalizedAt": "2025-03-01T10:30:45.000Z",
+    "errors": { "sections": ["PROCESSES"] }
+  },
+  "compress": false
+}
+```
+
+Estrutura de `data` para os demais tipos e exemplos completos em [Webhooks e API Keys](/toolbox/webhooks-e-api-keys#estrutura-do-payload).
 
 ---
 
@@ -76,10 +90,12 @@ Quando o relatório é concluído, a GYRA+ envia um `POST` para sua URL com o se
       -H "Authorization: Bearer {token}" \
       -H "Content-Type: application/json" \
       -d '{
-        "url": "https://seu-sistema.com/webhooks/gyra",
-        "events": ["report.completed"]
+        "type": "REPORT_FINISHED",
+        "url": "https://seu-sistema.com/webhooks/gyra"
       }'
     ```
+
+    Um webhook por `type`. Para escutar múltiplos eventos, registre um por tipo.
   </Step>
   <Step title="Teste o recebimento">
     Crie um relatório de teste e valide que o payload chegou corretamente no seu endpoint.
@@ -92,7 +108,7 @@ Quando o relatório é concluído, a GYRA+ envia um `POST` para sua URL com o se
 
 <AccordionGroup>
   <Accordion title="Responda 200 imediatamente">
-    Seu endpoint de webhook deve responder `HTTP 200` o mais rápido possível — antes de qualquer processamento pesado. Processe o payload de forma assíncrona na sua fila interna.
+    Seu endpoint de webhook deve responder `HTTP 200` o mais rápido possível, antes de qualquer processamento pesado. Processe o payload de forma assíncrona na sua fila interna.
   </Accordion>
   <Accordion title="Use o externalId para rastrear">
     Ao criar o relatório, passe o `externalId` com o identificador do seu sistema (ID do pedido, ID do cliente, etc.). O webhook retornará esse campo, facilitando o vínculo com sua base de dados.
@@ -107,12 +123,6 @@ Quando o relatório é concluído, a GYRA+ envia um `POST` para sua URL com o se
 
 ---
 
-## Referência de eventos
+## Retry
 
-| Evento | Descrição |
-|--------|-----------|
-| `report.completed` | Relatório concluído (aprovado, negado ou alerta) |
-
-<Note>
-Mais eventos serão adicionados em versões futuras da API. Acompanhe o [Changelog](/reference/changelog) para novidades.
-</Note>
+A GYRA+ tenta entregar cada evento até **3 vezes** com backoff exponencial (1s, ~2s, ~5s). Se o seu endpoint retornar `429` com `Retry-After`, a GYRA+ respeita esse tempo. Após as tentativas, o evento é descartado — mantenha fallback com polling em `GET /v2/report/:id` para eventuais perdas e planeje idempotência no seu lado.

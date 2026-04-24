@@ -1,0 +1,130 @@
+---
+title: "Interpretar Resultado de Operação"
+description: "Status, score, breakdown por regra, precificação e motivos para aprovar, alertar ou negar."
+icon: "chart-line"
+---
+
+<Info>
+  **Resumo:** o resultado de uma operação responde três perguntas: a política **aprovou**? Se sim, **em que condições** (prazo, taxa, valor)? Se não, **qual regra** bloqueou? Esta página é o guia para ler a tela de resultado e a estrutura de saída.
+</Info>
+
+## Anatomia da tela de resultado
+
+A tela é dividida em cinco áreas:
+
+1. **Cabeçalho**, documento, nome, política usada, status final.
+2. **Decisão**, `APPROVED`, `ALERT`, `DENIED` ou `ERROR`, com cor destacada.
+3. **Precificação**, se a política tiver fórmulas (prazo, taxa, valor final aprovado).
+4. **Breakdown por regra**, cada regra da política listada com resultado individual, threshold configurado e valor real encontrado.
+5. **Relatório completo**, todas as seções de dados coletados (cadastral, processos, bureau, SCR, etc.).
+
+## Status possíveis
+
+| Status | Significado | Ação sugerida |
+| ------ | ----------- | ------------- |
+| `APPROVED` | Todas as regras aprovaram ou os gatilhos de alerta não são bloqueantes. | Seguir com a operação no termo precificado. |
+| `ALERT` | Nenhuma regra bloqueou, mas alguma levantou sinal de atenção. | Revisar manualmente antes de liberar; reforçar colateral. |
+| `DENIED` | Ao menos uma regra marcada como bloqueante disparou. | Recusar. Ver motivo no breakdown. |
+| `ERROR` | Falha técnica na coleta ou avaliação, política não rodou. | Reanalisar após checar fonte indisponível. |
+
+Conceitos por trás da decisão em [Score e Decisão](/concepts/score-e-decisao).
+
+## Breakdown por regra
+
+Cada regra da política aparece com quatro colunas:
+
+| Coluna | Descrição | Exemplo |
+| ------ | --------- | ------- |
+| Regra | Nome da regra na política | `Score bureau >= 400` |
+| Threshold | Valor ou condição configurada | `>= 400` |
+| Valor real | Valor encontrado no relatório | `720` |
+| Resultado | `APPROVED`, `ALERT` ou `DENIED` da regra individual | ✅ `APPROVED` |
+
+**Convenção de cor:**
+
+- **Verde** (`APPROVED`): regra passou.
+- **Amarelo** (`ALERT`): regra sinalizou mas não bloqueia.
+- **Vermelho** (`DENIED`): regra bloqueou, este é o motivo de negação.
+
+Ao clicar em uma regra, você vê o campo exato consultado (ex: `creditBureauScoreSummary.score`), a origem do dado (bureau, cadastral, SCR) e o trecho do JSON do relatório que gerou o valor.
+
+## Precificação
+
+Se a política tem fórmulas configuradas, aparece na área de precificação:
+
+| Campo | Descrição | Exemplo |
+| ----- | --------- | ------- |
+| `amount` | Valor final aprovado em R$ | `80000.00` |
+| `period` | Prazo em meses (ou dias, conforme o produto) | `24` |
+| `interest` | Taxa (mensal ou anual, conforme configuração da política) | `1.99` |
+
+Se o valor aprovado for menor que o solicitado, a tela mostra ambos lado a lado e indica qual fórmula aplicou o haircut. Mecânica completa em [Precificação](/concepts/precificacao).
+
+## Relatório completo
+
+Abaixo das áreas de decisão, o relatório completo com tudo que a GYRA+ coletou. Navegue pelas abas laterais:
+
+- **Cadastral**, situação, CNAE, data de abertura, endereço. Ver [Cadastral](/sources/cadastral).
+- **Processos Judiciais**, ações como autor e réu, por tipo de vara. Ver [Processos Judiciais](/sources/processos-judiciais).
+- **PEFIN / REFIN**, restritivos ativos. Ver [PEFIN e REFIN](/sources/pefin-refin).
+- **Bureau**, score e breakdown. Ver [Bureau de Crédito](/sources/bureau-credito).
+- **SCR**, endividamento bancário mês a mês. Ver [SCR e Open Finance](/sources/scr-open-finance).
+- **Vínculos societários**, QSA e grupo econômico. Ver [Vínculos Societários](/sources/vinculos-societarios).
+- **Outras seções** conforme o nível do relatório contratado.
+
+## Exportar o resultado
+
+No menu de **três pontos** ao lado do nome da empresa, no topo do relatório, você escolhe entre três opções:
+
+- **PDF**, layout pronto para arquivo regulatório ou compartilhamento com o tomador.
+- **XLS**, planilha com os dados do relatório para ingestão em sistemas próprios, conciliação ou análise manual.
+- **PDF + XLS**, os dois formatos juntos.
+
+Em qualquer opção, a GYRA+ gera um **link com validade de 7 dias**. Depois de expirar, volte ao mesmo menu de três pontos e regenere o link — o conteúdo do relatório segue disponível no toolbox indefinidamente; o que expira é só o download.
+
+Uma vez gerados, os arquivos também aparecem como **ícones de PDF e XLS** no cabeçalho do relatório e na listagem de Análises, para abrir com um clique sem passar pelo menu novamente.
+
+## Histórico e reanálise
+
+Na aba *Histórico* da operação:
+
+- Lista de reanálises (`reportId` de cada rodada, status, timestamp).
+- Diff do relatório entre versões (ex: score subiu de 560 para 720 entre a primeira rodada e a reanálise de hoje).
+- Diff da política (se a política foi editada entre rodadas, mostra o que mudou).
+
+## Casos comuns
+
+<AccordionGroup>
+  <Accordion title="Aprovado mas com alerta: posso confiar?">
+    `ALERT` significa "passou, mas a regra disse para olhar". Usar como gatilho para revisão manual ou para aplicar colateral extra. Ao longo do tempo, calibre os thresholds de alerta com base no que converge em default.
+  </Accordion>
+  <Accordion title="Negado: onde vejo exatamente qual regra bloqueou?">
+    No breakdown, a regra marcada em vermelho é a que bloqueou. Se múltiplas vermelhas, todas contribuíram (uma política pode ter várias regras com status `DENIED`, qualquer uma basta para negar).
+  </Accordion>
+  <Accordion title="Score alto mas política negou, por quê?">
+    Score é só uma das regras. Se a política também consulta PEFIN, SCR ou situação cadastral, qualquer uma pode bloquear mesmo com score bom. A lógica é E, não OU: basta uma regra bloquear para o resultado ser `DENIED`.
+  </Accordion>
+  <Accordion title="Precificação veio zerada em um aprovado, por quê?">
+    A política não tem fórmulas configuradas. Sem `periodFormula`, `interestFormula` ou `amountFormula`, a área de precificação fica vazia. Configurar em [Precificação](/concepts/precificacao).
+  </Accordion>
+  <Accordion title="Por que aparece 'dado indisponível' em alguma regra?">
+    A fonte não retornou dado para aquela regra (ex: PF sem consentimento Open Finance, CNPJ muito novo sem histórico). O comportamento padrão é `ALERT`, mas cada regra pode ser configurada para tratar ausência como `DENIED` ou `APPROVED`.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Score e Decisão" icon="scale-balanced" href="/concepts/score-e-decisao">
+    Como a decisão final é calculada.
+  </Card>
+  <Card title="Operações (conceito)" icon="diagram-project" href="/concepts/operacoes">
+    Modelo de versionamento e níveis.
+  </Card>
+  <Card title="Editar política" icon="pen-to-square" href="/toolbox/editar-politica">
+    Calibrar thresholds a partir de casos reais.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/concepts/webhooks-e-tempo-real">
+    Receber o resultado em tempo real.
+  </Card>
+</CardGroup>

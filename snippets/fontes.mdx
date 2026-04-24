@@ -1,0 +1,43 @@
+{/*
+  Glossário oficial de fontes de dados da GYRA+.
+
+  REGRA: nenhuma documentação pública deve citar o nome comercial do provedor.
+  Sempre referir à fonte pelo seu nome neutro abaixo.
+
+  Este snippet é apenas referência interna para autores da documentação.
+  Não é renderizado em nenhuma página, é guia de estilo.
+*/}
+
+# Glossário de Fontes de Dados (uso interno)
+
+Ao escrever docs, sempre usar os nomes neutros da coluna "Nome público". O nome comercial do provedor nunca deve aparecer em página pública.
+
+| Categoria | Nome público (usar sempre) | Descrição curta |
+| --------- | -------------------------- | ---------------- |
+| Bureau de crédito | **Bureau de Crédito Principal** | Score de crédito, histórico de restritivos, endividamento |
+| Bureau de crédito alternativo | **Bureau de Crédito Complementar** | Score alternativo usado como segunda opinião |
+| Cadastral PF/PJ | **Fonte Cadastral** | Dados cadastrais oficiais (nome, razão social, situação, CNAE) |
+| Processos judiciais | **Fonte de Processos Judiciais** | Ações como autor/réu em tribunais estaduais e federais |
+| Protestos | **Fonte de Protestos** | Protestos em cartórios por UF |
+| Dívidas ativas | **Fonte PEFIN/REFIN** | Pendências financeiras e refinanciamentos |
+| Open Finance / SCR | **Fonte SCR e Open Finance** | Dados do Sistema de Informações de Crédito do BACEN |
+| PEP e sanções | **Fonte de PEP e Sanções** | Pessoas expostas politicamente, listas de sanções nacionais e internacionais |
+| Vínculos societários | **Fonte de Vínculos Societários** | QSA, participações societárias, grupo econômico |
+| Contatos e localização | **Fonte de Contatos e Localização** | Endereços, telefones, e-mails, mapa e fotos de fachada |
+| Dados financeiros declarados | **Fonte Financeira** | Faturamento, balanço, dados contábeis declarados ou extraídos |
+| Veículos | **Fonte de Veículos** | Placas, frotas, restrições veiculares |
+| Mídia e reputação | **Fonte de Mídia e Reputação** | Menções em mídia, risco reputacional, adverse media |
+| Benefícios sociais | **Fonte de Benefícios Sociais** | Programas sociais e vínculos governamentais |
+
+## Vocabulário proibido em docs públicas
+
+Nunca escrever: nomes de provedores contratados (inclui mas não limita a: Serasa, Boavista/Boa Vista, Proscore, BDC, BigDataCorp, SCloud, Quod, Neoway, Equifax, nomes de APIs contratadas, nomes de produtos de bureau).
+
+Quando um campo de API tiver nome histórico que contenha nome de provedor (ex: `serasaScoreSummary`), documentar usando o nome do campo mas descrever em texto neutro (ex: "Score entregue pelo Bureau de Crédito Principal"), nunca expandir o que significa o prefixo.
+
+## Campos de resumo
+
+| Campo (API) | Descrição pública |
+| ----------- | ----------------- |
+| `creditBureauScoreSummary` | Score sintético do Bureau de Crédito Principal |
+| `alternativeBureauScoreSummary` | Score do Bureau de Crédito Complementar (quando contratado) |
