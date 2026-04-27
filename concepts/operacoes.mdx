@@ -29,8 +29,8 @@ Uma operação tem três blocos:
 | Nível | O que é analisado |
 | ----- | ------------------ |
 | `ROOT` | O documento principal (CPF ou CNPJ da solicitação). |
-| `ASSOCIATES` | Sócios/representantes do CNPJ-raiz. |
-| `FIRST_LEVEL` | Vínculos de 1º nível (empresas onde os sócios também figuram). |
+| `ASSOCIATES` | Sócios/representantes do `ROOT`. |
+| `FIRST_LEVEL` | Sócios ou participações societárias que o `ROOT` possui. |
 | `SECOND_LEVEL` | Vínculos de 2º nível. |
 | `THIRD_LEVEL` | Vínculos de 3º nível. |
 | `BRANCH_OFFICE` | Filiais do CNPJ-raiz (mesma matriz). |

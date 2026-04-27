@@ -109,14 +109,22 @@ Mesmo com erro em uma integração, o relatório é gerado com os dados disponí
 |-------|:-------:|:---------:|:--------:|:---------:|
 | BASIC_INFORMATION | ✅ | ✅ | ✅ | ✅ |
 | LOCATION (contatos, mapa, fachada) | ✅ | ✅ | ✅ | ✅ |
-| SUMMARY | ❌ | ✅ | ✅ | ✅ |
-| RELATIONS | ❌ | ✅ | ✅ | ✅ |
+| Faturamento / Renda | ✅ | ✅ | ✅ | ✅ |
+| RELATIONS | ✅ (1º nível) | ✅ (até 3º nível, parentesco, filiais e mesmo endereço) | ✅ (até 3º nível, parentesco, filiais e mesmo endereço) | ✅ (até 3º nível, parentesco, filiais e mesmo endereço) |
+| Alterações cadastrais | ❌ | ✅ | ✅ | ✅ |
 | PROCESSES | ❌ | ✅ (2014+) | ✅ (2014+) | ✅ (1980+) |
-| PEFIN / REFIN | ❌ | ❌ | ✅ | ✅ |
-| BAD_CHECK | ❌ | ❌ | ✅ | ✅ |
-| HISTORY / CATEGORIES (SCR) | ❌ | ❌ | ✅ | ✅ |
-| PROTESTS | ❌ | ❌ | ✅ | ✅ |
 | PEP / SANCTIONS | ❌ | ❌ | ✅ | ✅ |
+| CERTIFICATES (PGFN, Receita, IBAMA, TST, CNJ, MTE, SEFAZ, FGTS) | ❌ | ❌ | ✅ | ✅ |
 | CRIMINAL_RECORD | ❌ | ❌ | ✅ | ✅ |
-| CERTIFICATES | ❌ | ❌ | ✅ (parciais) | ✅ (completas) |
+| Licenças operacionais (ANTT, ANATEL, ANVISA, ANP) | ❌ | ❌ | ❌ | ✅ |
+| Beneficiário social (programas do governo) | ❌ | ❌ | ❌ | ✅ |
+| SUMMARY | ✅ | ✅ | ✅ | ✅ |
 | CREDIT_POLICY | ✅ | ✅ | ✅ | ✅ |
+
+### Dados adicionais (opcionais, em qualquer tipo)
+
+| Seção | Conteúdo |
+|-------|----------|
+| **Bureaus** | Pefin/Refin, protestos, CCF, dívidas vencidas, score, limite, quantidade de consultas e faturamento/renda presumidos |
+| **SCR** (HISTORY / CATEGORIES) | Endividamento por faixa e produtos, limites e relacionamentos bancários |
+| **Balanço Patrimonial e DRE** | Score, limites, indicadores, extração de dados e análise qualitativa |

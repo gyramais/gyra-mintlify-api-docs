@@ -27,7 +27,7 @@ Policy
 │   ├── scoreAlert            → Pontuação para alerta
 │   ├── scoreDenied           → Pontuação para negação
 │   └── PolicyRuleSettingJoin[]
-│       ├── operationType     → Como as regras se combinam (AND, ADD, SUB...)
+│       ├── operationType     → Como as regras se combinam (sempre AND)
 │       ├── statusToApply     → Resultado se a condição for verdadeira
 │       └── PolicyRuleSetting → Regra configurada com seus parâmetros
 └── Risk[]                    → Faixas de score final → status final
@@ -67,16 +67,28 @@ Você pode usar um template como ponto de partida e personalizar as regras, peso
 
 ## Como as regras são combinadas
 
-Dentro de um grupo, as regras podem ser combinadas de formas diferentes usando o campo `operationType`:
+Cada **condição** dentro de um grupo é formada por uma ou mais regras. As combinações possíveis são:
 
-| Operador | Comportamento |
-|----------|---------------|
-| `NONE` | Regra avaliada de forma independente |
-| `AND` | Todas as regras do grupo devem ser verdadeiras |
-| `ADD` | Soma os scores das regras |
-| `SUB` | Subtrai o score |
-| `DIV` | Divide o score |
-| `MULT` | Multiplica o score |
+| Combinação | Comportamento |
+|------------|---------------|
+| `AND` | **Ambas** as regras devem ser satisfeitas para gerar a ação (`APPROVED`, `ALERT` ou `DENIED`) |
+| `OR` | **Uma única** regra satisfeita já gera a ação (`APPROVED`, `ALERT` ou `DENIED`) |
+
+### Score da condição
+
+O score é uma dimensão separada da combinação de regras. Para cada **status final** de uma condição há um valor que é somado ao score acumulado:
+
+- `APPROVED` → soma um valor positivo (ex.: `+30 pts`)
+- `ALERT` → soma um valor negativo leve (ex.: `-50 pts`)
+- `DENIED` → soma um valor negativo forte (ex.: `-100 pts`)
+
+A política parte de **1000 pts** e, após somar os deltas de todas as condições, gera o **score final**:
+
+- Faixa válida: **1 a 1000 pts**
+- Se o total exceder `1000`, mantém-se o limite superior `1000`
+- Se ficar abaixo de `1`, mantém-se o limite inferior `1`
+
+A faixa em que o score final cair determina o `statusToApply` configurado em `Risk[]`.
 
 ---
 

@@ -12,16 +12,15 @@ icon: "magnifying-glass-chart"
 
 Quando você pede uma análise, via Toolbox, API ou MCP, a GYRA+ executa quatro etapas:
 
-1. **Coleta:** consulta em paralelo todas as fontes configuradas (cadastrais, bureaus de crédito, SCR/Open Finance, processos, protestos, PEP/sanções, etc).
+1. **Coleta:** consulta em paralelo todas as fontes configuradas (cadastrais, bureaus de crédito, SCR, processos, protestos, PEP/sanções, etc).
 2. **Consolidação:** normaliza e monta o [relatório](/concepts/relatorio) em seções padronizadas.
 3. **Avaliação:** aplica a [política de crédito](/concepts/politica-de-credito) configurada: cada regra lê um campo do relatório, compara com um threshold e contribui para o score e a decisão.
 4. **Decisão:** retorna status final, score, lista de regras disparadas e o JSON completo do relatório.
 
-Tudo isso é **auditável**: você vê exatamente qual campo veio de qual fonte, qual regra disparou, qual peso teve e como o score foi somado.
+Tudo isso é **auditável**: você vê exatamente qual campo foi avaliado, qual regra disparou, qual peso teve e como o score foi somado.
 
 ## O que ela não faz
 
-- **Não substitui decisão humana em casos limítrofes.** `ALERT` existe justamente para marcar o caso como "revisão manual".
 - **Não é consultoria financeira.** A GYRA+ entrega dados e aplica a política que você definiu, o julgamento do apetite de risco é seu.
 - **Não garante que o tomador vai pagar.** Crédito tem risco residual sempre; a análise reduz, não elimina.
 - **Não altera o dado da fonte.** Se a base de origem está defasada, a GYRA+ entrega o que foi publicado lá.
@@ -49,8 +48,9 @@ Para o fluxo assíncrono completo, ver [Webhooks e Tempo Real](/concepts/webhook
 A GYRA+ suporta análise de:
 
 - **Pessoa física (CPF):** individual, normalmente para crédito pessoal, cartão, consignado, locação, contratação de RH.
+- **PF + vínculos:** analisa o CPF e, em cascata, parentes e empresas relacionadas. Esse fluxo é modelado via [Operação](/concepts/operacoes).
 - **Pessoa jurídica (CNPJ):** individual, para crédito PJ, vendas a prazo, cartão corporativo, KYC.
-- **PJ + vínculos:** analisa o CNPJ-raiz e, em cascata, sócios, filiais, parentes ou empresas no mesmo endereço. Esse fluxo é modelado via [Operação](/concepts/operacoes).
+- **PJ + vínculos:** analisa o CNPJ completo e, em cascata, sócios, filiais, parentes ou empresas no mesmo endereço. Esse fluxo é modelado via [Operação](/concepts/operacoes).
 
 ## Resultado
 
@@ -62,7 +62,7 @@ A resposta de uma análise sempre inclui:
 | `policyStatus` | Decisão vinda da política de crédito aplicada. |
 | `score` | Valor sintético de 0 a 1000 (quando a política usa score). |
 | `document` / `type` | Documento analisado e se é CPF ou CNPJ. |
-| Seções do relatório | JSON detalhado com cada fonte consultada. |
+| Seções do relatório | JSON detalhado com os dados de cada seção (sem detalhamento da fonte de origem). |
 
 Para entender como `score` e `status` são calculados, ver [Score e Decisão](/concepts/score-e-decisao).
 
