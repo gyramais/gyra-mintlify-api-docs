@@ -63,7 +63,12 @@ A disponibilidade de cada seção depende do tipo de relatório (SIMPLES, ESSENC
     Protestos em cartório com abrangência nacional. Valor, quantidade, período e cartório de origem.
   </Card>
   <Card title="CRIMINAL_RECORD" icon="fingerprint">
-    Antecedentes criminais (disponível apenas para CPF).
+    Antecedentes criminais (disponível apenas para CPF, nos relatórios **COMPLETO** e **COMPLETO+**). Inclui também **mandados de prisão (CNJ)**, atualizados mensalmente:
+
+    - **Situação X (vermelho):** mandado **ativo** encontrado no mês.
+    - **Situação ! (amarelo):** existiu mandado no passado, mas não há mandado ativo no mês atual.
+
+    Esses dados aparecem na UI dentro de *Antecedente Criminal* e também na seção *Antecedentes criminais* do PDF do relatório.
   </Card>
 </CardGroup>
 
