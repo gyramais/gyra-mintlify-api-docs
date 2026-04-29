@@ -8,6 +8,17 @@ A seção `PROTESTS` traz os protestos em cartório registrados para o documento
 
 Disponível no relatório **COMPLETO** e **COMPLETO+**.
 
+## Como os dados são coletados
+
+Os dados de protestos são coletados sempre que um **Bureau** está definido na política. A GYRA+ adota a seguinte hierarquia de fontes:
+
+1. **Cenprot (prioritário)** — por padrão, a GYRA+ busca os dados de protestos diretamente no Cenprot. Quando disponíveis, são esses os dados exibidos e usados na avaliação das regras.
+2. **Bureau definido na política (fallback)** — caso o Cenprot esteja **fora do ar** ou retorne dados **incompletos** (ex.: instabilidades da API ou sobrecarga de chamadas), a GYRA+ utiliza os dados do bureau configurado.
+
+<Note>
+O Cenprot é **sempre prioritário** quando disponível, tanto na exibição quanto na avaliação das regras. O fallback para o bureau é automático e transparente quando há indisponibilidade.
+</Note>
+
 ---
 
 ## Campos do `details`

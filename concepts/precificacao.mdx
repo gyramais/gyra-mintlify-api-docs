@@ -16,8 +16,8 @@ Cada política tem três fórmulas independentes:
 
 | Fórmula | Campo | O que calcula |
 | ------- | ----- | ------------- |
-| **Prazo** | `periodFormula` | Número de meses (ou dias, conforme o produto) do contrato |
-| **Taxa de juros** | `interestFormula` | Taxa mensal ou anual aplicada à operação |
+| **Prazo** | `periodFormula` | Número de **meses** do contrato |
+| **Taxa de juros** | `interestFormula` | Taxa **mensal** aplicada à operação |
 | **Valor final** | `amountFormula` | Valor efetivo aprovado (pode ser menor que o valor solicitado) |
 
 As três são opcionais. Política que não define fórmula entrega o valor solicitado na operação sem transformação.
@@ -28,11 +28,12 @@ As três são opcionais. Política que não define fórmula entrega o valor soli
   <Step title="Abrir a política no toolbox">
     Em *Política de Crédito, editar* a política onde você quer configurar precificação.
   </Step>
-  <Step title="Ativar Pós-Avaliação">
-    A precificação roda **após** a avaliação das regras ter retornado `APPROVED`. No editor de política, ative o bloco *Ações pós-política* (campo `postPolicyActionsEnabled`).
-  </Step>
   <Step title="Preencher uma, duas ou as três fórmulas">
     Cada campo aceita uma expressão no estilo Excel. Validação automática impede salvar uma fórmula mal formada.
+
+    <Note>
+    A precificação **sempre roda**, independentemente do status final da política. Como todas as variáveis usadas pelas fórmulas já estão consolidadas após a coleta de dados, a fórmula é executada — não depende de `APPROVED`.
+    </Note>
   </Step>
   <Step title="Rodar uma operação de teste">
     A fórmula é avaliada no momento da operação e o resultado aparece no payload de saída (`amount`, `period`, `interest`).
@@ -50,34 +51,37 @@ As três são opcionais. Política que não define fórmula entrega o valor soli
 | `=` `<>` `<` `>` `<=` `>=` | Comparação | `score >= 600` |
 | `&` | Concatenação de texto | `"PREFIXO-" & id` |
 
-### Como referenciar variáveis da política
+### Como referenciar variáveis e fórmulas
 
-A fórmula pode puxar qualquer variável definida na política (valor solicitado, score, faturamento, campos do relatório) usando a sintaxe de **menção**:
+Dentro do editor, dois caracteres especiais ativam o autocomplete:
 
-```text
-|#<id>|<nome visível>|#|
-```
+| Prefixo | Para que serve |
+| ------- | -------------- |
+| `#` | Buscar uma **variável disponível** na política (valor solicitado, score, faturamento, campos do relatório, etc.) |
+| `=` | Usar uma **fórmula** (referenciar o resultado de outra fórmula calculada na mesma avaliação ou inserir uma função) |
 
-Exemplo, se a política tem uma variável chamada `valorSolicitado` com id `abc123`:
+Ao digitar `#` ou `=` no editor, o toolbox abre uma lista buscável com as opções compatíveis. Ao escolher, a referência é inserida como um *chip* clicável.
+
+**Exemplo**, referenciando a variável `valorSolicitado` e aplicando 80%:
 
 ```excel
-|#abc123|valorSolicitado|#| * 0.8
+#valorSolicitado * 0.8
 ```
 
-No editor do toolbox a menção aparece como um *chip* clicável, internamente ela é a string acima. Ao salvar, a GYRA+ resolve cada menção para o valor real antes de calcular.
+**Exemplo**, reaproveitando o resultado de outra fórmula da mesma política:
 
-Também é possível referenciar o resultado de outra fórmula calculada na mesma avaliação:
-
-```text
-|=<id>|<nome>|=|
+```excel
+=amountFormula * #taxa
 ```
+
+Internamente as referências são resolvidas para os valores reais antes do cálculo.
 
 ## Fórmulas de exemplo
 
 ### 1. Valor aprovado limitado a 30% do faturamento
 
 ```excel
-MIN(|#solicitado|valor solicitado|#|, |#faturamento|faturamento mensal|#| * 0.3)
+MIN(#solicitado, #faturamento * 0.3)
 ```
 
 Aprova o que foi pedido, desde que não ultrapasse 30% do faturamento mensal informado.
@@ -85,9 +89,9 @@ Aprova o que foi pedido, desde que não ultrapasse 30% do faturamento mensal inf
 ### 2. Taxa de juros condicional ao score
 
 ```excel
-IF(|#score|score bureau|#| >= 800, 1.49,
-IF(|#score|score bureau|#| >= 650, 1.99,
-IF(|#score|score bureau|#| >= 500, 2.49, 2.99)))
+IF(#score >= 800, 1.49,
+IF(#score >= 650, 1.99,
+IF(#score >= 500, 2.49, 2.99)))
 ```
 
 Escalona a taxa mensal conforme a faixa do score.
@@ -95,8 +99,8 @@ Escalona a taxa mensal conforme a faixa do score.
 ### 3. Prazo máximo baseado em anos de abertura
 
 ```excel
-IF(|#anosAbertura|anos de abertura|#| >= 5, 36,
-IF(|#anosAbertura|anos de abertura|#| >= 2, 18, 12))
+IF(#anosAbertura >= 5, 36,
+IF(#anosAbertura >= 2, 18, 12))
 ```
 
 Empresa com 5+ anos: até 36 meses. Entre 2 e 5: até 18. Abaixo de 2: 12 meses.
@@ -104,7 +108,7 @@ Empresa com 5+ anos: até 36 meses. Entre 2 e 5: até 18. Abaixo de 2: 12 meses.
 ### 4. Valor com haircut por protesto
 
 ```excel
-|#solicitado|valor|#| * IF(|#protestos|qtde protestos|#| > 0, 0.5, 1)
+#solicitado * IF(#protestos > 0, 0.5, 1)
 ```
 
 Aplica 50% de haircut caso haja qualquer protesto ativo.
@@ -173,7 +177,7 @@ Também visível no toolbox na tela de detalhe da operação, aba *Precificaçã
 
 ## Limitações e considerações
 
-- **Fórmulas rodam só quando política aprova.** Se a política negar, `pricing` vem vazio.
+- **Fórmulas sempre rodam.** Como dependem apenas das variáveis disponíveis após a coleta, a fórmula é executada independentemente do `policyStatus` final.
 - **Sem efeitos colaterais.** Fórmulas são puras: não fazem chamadas HTTP, não gravam em banco, não disparam eventos. Se precisar de efeito colateral, use webhook na operação.
 - **Variável inexistente retorna erro.** Se uma menção apontar para variável que não está mais na política, a validação falha ao salvar.
 - **Precisão numérica.** Seguimos precisão de ponto flutuante IEEE 754 do JavaScript. Para valores monetários, sempre arredondar ao final com `ROUND(..., 2)`.
@@ -195,7 +199,7 @@ Também visível no toolbox na tela de detalhe da operação, aba *Precificaçã
     Sim. Toda edição em `periodFormula`, `interestFormula` ou `amountFormula` é registrada em `PolicyChange`, com diff entre versões, autor e timestamp. Ver [Operações](/concepts/operacoes) para detalhes de versionamento.
   </Accordion>
   <Accordion title="Qual nível de relatório habilita precificação?">
-    Precificação funciona em qualquer nível de relatório, desde que a política esteja com *Ações pós-política* ativadas. Os campos que a fórmula pode consultar variam com o nível: fórmulas que usam SCR, por exemplo, só funcionam em COMPLETO ou COMPLETO+.
+    Precificação funciona em qualquer nível de relatório. Os campos que a fórmula pode consultar variam com o nível: fórmulas que usam SCR, por exemplo, só funcionam em COMPLETO ou COMPLETO+.
   </Accordion>
 </AccordionGroup>
 

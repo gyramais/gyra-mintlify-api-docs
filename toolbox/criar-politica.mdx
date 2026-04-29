@@ -80,11 +80,8 @@ Se o caso é próximo de algum template, **sempre prefira clonar** pela opção 
     - Fórmulas de precificação (se houver) parseiam.
     - Pelo menos um grupo com pelo menos uma regra.
   </Step>
-  <Step title="Testar em modo rascunho">
-    A política salva fica em estado `rascunho`, não aparece no dropdown do input sempre visível. Use *Testar* no cabeçalho para rodar contra um CPF/CNPJ conhecido e validar que as regras disparam como esperado.
-  </Step>
   <Step title="Habilitar">
-    Toggle **Habilitada** no cabeçalho. A política passa a aparecer no dropdown do input sempre visível (topo do toolbox) ao digitar um documento compatível, para todos os usuários com permissão.
+    Toggle **Habilitada** no cabeçalho. A política só pode ser usada quando está habilitada — enquanto desabilitada, ela não aparece no dropdown do input sempre visível e não pode ser executada. Após habilitar, ela passa a aparecer no dropdown ao digitar um documento compatível, para todos os usuários com permissão.
   </Step>
 </Steps>
 
@@ -126,7 +123,6 @@ Toda alteração em regras, fórmulas ou fontes gera uma nova versão em `Policy
 ## Limitações e considerações
 
 - **Políticas duplicadas por tipo de documento.** Política PJ não roda em CPF e vice-versa. Para cobrir ambos, crie duas políticas paralelas.
-- **Número de regras por política.** Não há limite rígido, mas políticas com mais de 40 regras ficam difíceis de manter. Consolide em grupos lógicos e considere fatiar em duas políticas.
 - **Campos disponíveis dependem do nível de relatório.** Regra que usa SCR não funciona em política com nível `ESSENCIAL`. Valide o nível antes de montar.
 - **Política sem fórmula não precifica.** O resultado aprova ou nega, mas o toolbox entrega valor/prazo/taxa em branco. Ver [Precificação](/concepts/precificacao).
 
@@ -143,7 +139,7 @@ Toda alteração em regras, fórmulas ou fontes gera uma nova versão em `Policy
     Não. Tipo de documento é imutável. Crie uma política PF nova a partir de *Duplicar* da PJ e ajuste os campos.
   </Accordion>
   <Accordion title="Como simular uma política sem ativá-la?">
-    Use *Testar* no modo rascunho antes de habilitar. Também dá para rodar backtest em lote via *Operações, Lote* apontando para a política em rascunho.
+    Não há um modo de teste no toolbox: enquanto a política não está habilitada, ela não pode ser executada. Para validar o comportamento, habilite-a em um ambiente de homologação ou crie uma política paralela apenas para experimentação.
   </Accordion>
   <Accordion title="Posso ter mais de um score por política?">
     Sim, via grupos. Cada grupo pode ter score próprio (`scoreApproved`, `scoreAlert`, `scoreDenied`) e o resultado final agrega conforme a configuração de *Score sintético* da política.

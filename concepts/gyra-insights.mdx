@@ -1,0 +1,78 @@
+---
+title: "GYRA Insights"
+description: "Agentes de IA da GYRA+ que analisam o contexto da empresa ou pessoa consultada e entregam pareceres especializados sobre seções específicas do relatório."
+icon: "sparkles"
+---
+
+<Info>
+  **Resumo:** GYRA Insights é um dos **diferenciais** da plataforma. São **agentes de IA proprietários** da GYRA+ que avaliam o contexto da empresa ou pessoa que está sendo consultada e geram, dentro de seções específicas do relatório, **uma análise no nível de um especialista** (jurídico, financeiro, etc.). Em vez de apenas listar dados, o relatório passa a **explicar o que esses dados significam** para a decisão de crédito.
+</Info>
+
+## O que é
+
+Cada GYRA Insight é um agente de IA treinado para um domínio específico. Quando o relatório é gerado, o agente:
+
+1. **Lê o contexto** da empresa ou pessoa analisada (porte, setor, perfil de risco, histórico).
+2. **Avalia a seção** correspondente do relatório (processos jurídicos, endividamento bancário, categorias SCR, etc.).
+3. **Devolve um parecer** redigido por um "especialista virtual" do domínio, com leitura crítica dos pontos de atenção, padrões relevantes e implicações para a análise de crédito.
+
+O resultado aparece **dentro da própria seção** que ele analisa, com destaque visual, lado a lado com os dados brutos.
+
+## Por que é um diferencial
+
+| Sem GYRA Insights | Com GYRA Insights |
+| ----------------- | ----------------- |
+| Você recebe **dados crus** (lista de processos, valores, datas) e precisa interpretar manualmente | Você recebe **dados crus + parecer especialista** explicando o que esses dados representam para o risco |
+| Tempo de análise alto, depende de analista experiente | Triagem mais rápida, com base já contextualizada |
+| Decisões inconsistentes entre analistas | Leitura padronizada por agente, com mesma régua entre relatórios |
+
+<Tip>
+GYRA Insights **não substitui** o analista de crédito — é um copiloto. Ele organiza o que importa primeiro, com o olhar de um especialista, para o humano focar no julgamento de apetite e nos casos limítrofes.
+</Tip>
+
+## Seções com GYRA Insights
+
+Atualmente, três seções do relatório suportam GYRA Insights:
+
+<CardGroup cols={2}>
+  <Card title="Processos Jurídicos" icon="gavel">
+    Especialista **jurídico**: avalia natureza dos processos, partes envolvidas, valores, riscos de execução, padrões de inadimplência e exposição relevante para a análise de crédito.
+  </Card>
+  <Card title="Categorias SCR" icon="chart-pie">
+    Especialista **financeiro**: avalia o mix de produtos bancários contratados (capital de giro, financiamento, cartão, conta garantida, etc.), concentração por modalidade e o que isso indica sobre o perfil de uso de crédito.
+  </Card>
+  <Card title="Histórico de Endividamento SCR" icon="chart-line">
+    Especialista **financeiro**: avalia a evolução mês a mês do endividamento bancário, tendência (crescimento, estagnação, redução), inadimplência e sinais de estresse financeiro.
+  </Card>
+</CardGroup>
+
+## Onde aparece
+
+- **No toolbox**, dentro da própria seção analisada, em um bloco destacado (*GYRA Insight*).
+- **No JSON do relatório**, junto com os dados da seção, em um campo `insight` com o texto do parecer.
+- **No PDF exportado**, integrado ao corpo da seção correspondente.
+
+## Disponibilidade
+
+| Seção | Tipos de relatório |
+| ----- | ------------------ |
+| Processos Jurídicos | ESSENCIAL, COMPLETO e COMPLETO+ |
+| Categorias SCR | Disponível com dado adicional **SCR** habilitado |
+| Histórico de Endividamento SCR | Disponível com dado adicional **SCR** habilitado |
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Seções do Relatório" icon="layout-panel-top" href="/concepts/secoes">
+    Catálogo completo das seções e o que cada uma entrega.
+  </Card>
+  <Card title="Relatório" icon="file-chart-column" href="/concepts/relatorio">
+    Como o relatório é estruturado e onde os Insights se encaixam.
+  </Card>
+  <Card title="Análise de Crédito" icon="magnifying-glass-chart" href="/concepts/analise-de-credito">
+    Como GYRA+ chega à decisão final.
+  </Card>
+  <Card title="Score e Decisão" icon="circle-check" href="/concepts/score-e-decisao">
+    ScoreCard, condições e faixas de risco.
+  </Card>
+</CardGroup>

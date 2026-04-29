@@ -31,7 +31,7 @@ No topo de todas as telas do toolbox fica o campo de análise. Ele é o ponto de
     - `EVALUATING`, política rodando sobre os dados coletados.
     - `COMPLETED`, resultado disponível.
 
-    Tempo típico: 5 a 30 segundos, conforme as fontes consultadas. SCR via Open Finance em PF pode estender.
+    Tempo típico: 5 a 30 segundos, conforme as fontes consultadas.
   </Step>
   <Step title="Ler o resultado">
     Ao terminar, aparece status (`APPROVED`, `ALERT`, `DENIED`, `ERROR`), breakdown por regra e precificação, se houver. Guia em [Interpretar Resultado da Operação](/toolbox/interpretar-resultado-operacao).
@@ -95,11 +95,16 @@ Resposta: objeto `Report` com id, que você pode consultar por polling ou recebe
 
 ## Reanálise
 
-Se um dado chegou errado ou com lag (ex: bureau sem retorno no primeiro momento), a tela do relatório tem o botão *Reanalisar*, que:
+A reanálise existe para casos em que um relatório foi gerado com **dados incompletos ou com erro** em alguma fonte, e ainda **não fechou** com decisão final (`APPROVED` ou `DENIED`).
 
-- Reconsulta todas as fontes de dados.
-- Reavalia com a política na **versão atual**. Se a política foi editada entre as rodadas, o resultado pode mudar.
-- Mantém o mesmo id de operação/relatório-raiz, cria um novo `reportId` e registra ambos no histórico.
+**Como funciona:**
+
+- Ao gerar o relatório novamente para o mesmo documento (pelo input ou pela API), o relatório existente é **reprocessado** caso ainda **não esteja `APPROVED` ou `DENIED`**. Os dados que estavam com erro ou parciais podem então ser revistos.
+- Se o relatório já fechou com status final (`APPROVED` ou `DENIED`), ele **não é atualizado** — uma nova chamada gera um relatório distinto.
+
+<Note>
+Não há um botão "Reanalisar" no toolbox. A reanálise acontece automaticamente ao se solicitar uma nova análise para o mesmo documento, dentro das condições acima.
+</Note>
 
 ## Limitações e considerações
 
@@ -121,7 +126,7 @@ Se um dado chegou errado ou com lag (ex: bureau sem retorno no primeiro momento)
     No dropdown que abre ao digitar o documento, ao lado de cada política aparece a ação *tornar padrão*. Uma política padrão por tipo de documento, por usuário.
   </Accordion>
   <Accordion title="Posso rodar o mesmo documento duas vezes?">
-    Pode. Cada Enter gera uma análise nova com id próprio. Se você só quer atualizar os dados do relatório existente, use *Reanalisar* na tela do relatório.
+    Pode. Se o relatório anterior ainda não fechou com `APPROVED` ou `DENIED`, ele é **reprocessado** (reanálise). Se já fechou, uma nova chamada gera um relatório distinto.
   </Accordion>
   <Accordion title="Análise fica em PROCESSING há muito tempo, o que fazer?">
     Mais de 2 minutos em `PROCESSING` é sinal de fonte lenta ou falha temporária. Aguarde 1 minuto a mais e, se continuar, rode de novo. Se o padrão se repetir, fale com o suporte.

@@ -40,12 +40,23 @@ Bearer JWT no header `Authorization`.
 | `id` | `path` | `string` | `sim` | ID do relatório a exportar. |
 | `format` | `query` | `string` | `não` | Formato do arquivo: `pdf`, `excel` ou `both`. Padrão: `pdf`. |
 | `type` | `query` | `string` | `não` | Tipo de export: `REPORT` (completo) ou `REPORT_MINIFIED` (resumido). Padrão: `REPORT`. |
+| `sectionOrder` | `query` | `string[]` | `não` | Lista ordenada de seções a serem incluídas no PDF. Cada seção é informada repetindo o parâmetro (ex.: `sectionOrder=LOCATION&sectionOrder=SUMMARY&sectionOrder=PEFIN`). Define **quais** seções aparecem e **em que ordem**. Se omitido, o relatório é exportado no layout **default** do sistema. Para a lista completa de seções suportadas, consulte o serviço `gyra-core`. |
+
+<Note>
+O parâmetro `sectionOrder` é **opcional**. Quando não enviado, o relatório é exportado no formato padrão do sistema. Quando enviado, o PDF contém apenas as seções listadas, exatamente na ordem informada.
+</Note>
 
 <RequestExample>
 
-```bash cURL
+```bash cURL (default)
 curl --location 'https://gyra-core.gyramais.com.br/report/export-sync/69a207bcdd0197828df9155a?format=pdf' \
 --header 'Authorization: Bearer abc123'
+```
+
+```bash cURL (com sectionOrder)
+curl --request GET \
+  --url 'https://gyra-core.gyramais.com.br/report/export-sync/69a207bcdd0197828df9155a?type=REPORT&sectionOrder=LOCATION&sectionOrder=SUMMARY&sectionOrder=PEFIN' \
+  --header 'Authorization: Bearer abc123'
 ```
 
 ```javascript JavaScript
