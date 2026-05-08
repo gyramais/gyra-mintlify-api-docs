@@ -9,7 +9,7 @@ lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** a fonte de processos judiciais mostra **todas as ações** em que o CPF ou CNPJ figura como autor ou réu, nos tribunais brasileiros. Para crédito, o peso está nos processos como **réu**, classificados por tipo de vara (cível, trabalhista, tributária, financeiro, criminal, ambiental, administrativa, eleitoral, previdenciária e Outros).
+  **Resumo:** a fonte de processos judiciais mostra **todas as ações** em que o CPF ou CNPJ figura como autor ou réu, nos tribunais brasileiros. Para crédito, o peso está nos processos como **réu**, classificados por tipo de vara (cível, trabalhista, tributária, financeira, criminal, ambiental, administrativa, eleitoral, previdenciária e outros).
 </Info>
 
 ## O que é
@@ -56,7 +56,7 @@ Detalhes completos em [Seção, Processos](/data/secao-processos). Estrutura res
 
 ### Breakdown por tipo de vara
 
-A GYRA+ normaliza o `courtType` de cada processo em **dez categorias canônicas**. Os raw vindos dos tribunais (que variam muito em terminologia) caem em uma destas — não há passthrough do valor original.
+A GYRA+ normaliza o campo `type` de cada processo em **dez categorias canônicas**. Os raw vindos dos tribunais (que variam muito em terminologia) caem em uma destas — não há passthrough do valor original.
 
 | Código | Tipo de vara | Quando importa |
 | ------ | ------------ | -------------- |

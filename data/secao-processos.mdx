@@ -17,7 +17,7 @@ A seção `PROCESSES` traz os processos judiciais do documento analisado e, quan
 
 ## Tipos de processos normalizados
 
-O `courtType` de cada processo é classificado em uma das **dez categorias canônicas** abaixo. A normalização é determinística: o raw vindo dos tribunais é mapeado por palavras-chave para uma destas categorias — não há passthrough do valor original.
+O campo `type` de cada processo é classificado em uma das **dez categorias canônicas** abaixo. A normalização é determinística: o raw vindo dos tribunais é mapeado por palavras-chave para uma destas categorias — não há passthrough do valor original.
 
 | Código | Descrição |
 |--------|-----------|
@@ -30,7 +30,7 @@ O `courtType` de cada processo é classificado em uma das **dez categorias canô
 | `ADMINISTRATIVA` | Administrativas. |
 | `ELEITORAL` | Eleitorais. |
 | `PREVIDENCIARIA` | Previdenciárias e assistenciais. |
-| `OUTROS` | Tipo não foi possível mapear com confiança. Comum em processos antigos, classificações neutras (ex.: "cumprimento de sentença") ou raw inconsistente. |
+| `OUTROS` | O tipo não pôde ser mapeado com confiança. Comum em processos antigos, classificações neutras (ex.: "cumprimento de sentença") ou raw inconsistente. |
 
 <Note>
 **Recomendação para `OUTROS`:** sempre crie uma regra de alerta sobre quantidade ou valor de processos `OUTROS`. Como agrupa o que não foi possível classificar (especialmente processos antigos), pode haver passivo relevante. Use o alerta para migrar o relatório para análise manual em vez de aprovar/negar automaticamente.

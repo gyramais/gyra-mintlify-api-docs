@@ -48,7 +48,8 @@
           "concepts/score",
           "concepts/decisao-automatica",
           "concepts/precificacao",
-          "concepts/webhooks-e-tempo-real"
+          "concepts/webhooks-e-tempo-real",
+          "concepts/glossario"
         ]
       },
       {
@@ -166,7 +167,7 @@
   "redirects": [
     {
       "source": "/concepts/score-e-decisao",
-      "destination": "/concepts/score"
+      "destination": "/concepts/decisao-automatica"
     }
   ]
 }
