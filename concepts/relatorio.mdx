@@ -2,13 +2,27 @@
 title: O que é um Relatório
 description: Entenda o conceito central da GYRA+, o relatório de crédito e como ele é gerado.
 icon: "file-chart-column"
+surface: conceito
+domain: relatorio
+audience: ambos
+lang: nao-tecnica
 ---
+
+<Note>
+**Esta página descreve o Relatório, a análise de crédito de um CPF ou CNPJ individual.** Para criar um relatório na plataforma, ver [Rodar uma Análise](/toolbox/rodar-operacao). Para criar via API, ver [Criar Relatório](/api-reference/report-v2/post-v2report). Não confundir com [Operação](/concepts/operacoes), que é o workflow que pode gerar vários relatórios encadeados.
+</Note>
 
 ## Visão geral
 
 Um **relatório** é o produto principal da GYRA+. Ele reúne, em um único objeto estruturado, todas as informações relevantes para a análise de crédito de uma pessoa física (CPF) ou jurídica (CNPJ).
 
 Cada relatório é gerado a partir de um CPF ou CNPJ combinado com uma [Política de Crédito](/concepts/politica-de-credito). A política determina quais fontes serão consultadas, quais regras serão aplicadas e qual a decisão final.
+
+### Como criar um relatório
+
+**Na plataforma**: no Toolbox, abra Operações, clique em "Nova operação", informe o CPF ou CNPJ, selecione a política de crédito que define como a análise será feita, escolha o tipo de relatório e confirme. Ver [Rodar uma Análise](/toolbox/rodar-operacao).
+
+**Via API**: enviar `POST /report` com o documento, o `policyId` da política e o tipo. Ver [Criar Relatório](/api-reference/report-v2/post-v2report).
 
 ---
 
@@ -28,11 +42,44 @@ flowchart LR
 | Status | Descrição |
 |--------|-----------|
 | `PENDING` | Relatório criado, consultas em andamento |
-| `APPROVED` | Política avaliada, resultado: aprovado |
-| `DENIED` | Política avaliada, resultado: negado |
-| `ALERT` | Política avaliada, requer revisão manual |
+| `APPROVED` | Relatório aprovado |
+| `DENIED` | Relatório negado |
+| `ALERT` | Relatório requer revisão manual |
 
 O processamento é **assíncrono**. Após o `POST /report`, você recebe o resultado via [webhook](/concepts/webhooks-e-tempo-real) ou consulta com `GET /report/:id`.
+
+---
+
+## Status do relatório × Status da política
+
+O relatório tem **duas dimensões de status**, que costumam ser confundidas:
+
+| Campo | O que representa | Quem altera |
+|-------|------------------|-------------|
+| `status` (status do relatório) | Decisão final registrada no relatório. É o estado oficial usado para exibir o resultado, disparar webhooks `REPORT_STATUS` e responder a consumidores downstream. | Pode ser definido pela política (automático) **ou** por um analista humano via Toolbox / `POST /report/analyze`. |
+| `policyStatus` (status da política) | Resultado da avaliação automática das regras da política de crédito sobre os dados do relatório. | Sempre calculado pela política. |
+
+`policyStatus` **sempre** é calculado, mas ele só vira o `status` do relatório se a política estiver configurada para isso.
+
+### Configuração na política: "Usar resultado da política no relatório"
+
+Cada política de crédito tem a opção **"Usar resultado da política no relatório"**:
+
+- **Ligada (modo automático):** o `policyStatus` é copiado para o `status` do relatório assim que a política é avaliada. O relatório já chega `APPROVED`, `DENIED` ou `ALERT` sem precisar de ação humana.
+- **Desligada (modo manual):** a política calcula o `policyStatus` normalmente (e ele fica visível no relatório como referência), mas o `status` do relatório só muda quando um analista decide via UI ou API. Útil quando a política é usada como apoio à mesa de crédito, e não como decisor final.
+
+### Fazendo análise manual
+
+Independentemente do modo da política, é sempre possível sobrescrever ou complementar a decisão:
+
+- **Pelo Toolbox:** abra o relatório, leia o parecer e os indicadores, e use os botões de aprovar/negar com justificativa.
+- **Pela API:** use [`POST /report/analyze`](/api-reference/report/post-reportanalyze) para registrar a primeira análise manual e [`POST /report/re-analyze`](/api-reference/report/post-reportre-analyze) para refazê-la se chegar nova informação.
+
+A análise manual altera o `status` do relatório e dispara o webhook `REPORT_STATUS`. O `policyStatus` original é preservado para auditoria — você consegue ver tanto o que a política decidiu quanto o que o analista decidiu.
+
+<Tip>
+Use modo automático para fluxos de alto volume (onboarding, checkout) onde a política expressa todo o apetite de risco. Use modo manual quando a decisão exige julgamento humano (mesa de crédito B2B, due diligence, casos sensíveis).
+</Tip>
 
 ---
 
