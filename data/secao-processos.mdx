@@ -1,13 +1,40 @@
 ---
 title: Seção, Processos Judiciais (PROCESSES)
-description: Campos da seção de processos com cobertura de ações civis, trabalhistas, criminais e financeiras.
+description: Campos da seção de processos com cobertura de ações cíveis, trabalhistas, tributárias, criminais, financeiras, ambientais, administrativas, eleitorais, previdenciárias e Outros.
 icon: "gavel"
+surface: dados
+domain: dados-relatorio
+audience: integrador
+lang: tecnica
 ---
 
 A seção `PROCESSES` traz os processos judiciais do documento analisado e, quando CNPJ, também dos sócios.
 
 - **Relatório COMPLETO**: processos desde 2014
 - **Relatório COMPLETO+**: processos desde 1980
+
+---
+
+## Tipos de processos normalizados
+
+O campo `type` de cada processo é classificado em uma das **dez categorias canônicas** abaixo. A normalização é determinística: o raw vindo dos tribunais é mapeado por palavras-chave para uma destas categorias — não há passthrough do valor original.
+
+| Código | Descrição |
+|--------|-----------|
+| `CIVEL` | Cíveis em geral (cobranças, danos, consumidor, saúde, infância, educação, marítimo, internacional). |
+| `TRABALHISTA` | Trabalhistas. |
+| `TRIBUTARIA` | Tributárias e fazenda pública (execução fiscal, dívida ativa). |
+| `FINANCEIRO` | Execução de dívida bancária, cobrança por instituição financeira. |
+| `CRIMINAL` | Penais e criminais. |
+| `AMBIENTAL` | Ambientais. |
+| `ADMINISTRATIVA` | Administrativas. |
+| `ELEITORAL` | Eleitorais. |
+| `PREVIDENCIARIA` | Previdenciárias e assistenciais. |
+| `OUTROS` | O tipo não pôde ser mapeado com confiança. Comum em processos antigos, classificações neutras (ex.: "cumprimento de sentença") ou raw inconsistente. |
+
+<Note>
+**Recomendação para `OUTROS`:** sempre crie uma regra de alerta sobre quantidade ou valor de processos `OUTROS`. Como agrupa o que não foi possível classificar (especialmente processos antigos), pode haver passivo relevante. Use o alerta para migrar o relatório para análise manual em vez de aprovar/negar automaticamente.
+</Note>
 
 ---
 
@@ -58,7 +85,7 @@ A seção `PROCESSES` traz os processos judiciais do documento analisado e, quan
 | `id` | string | ID do processo |
 | `number` | string | Número do processo (CNJ) |
 | `court` | string | Tribunal |
-| `type` | string | Natureza: `CIVEL`, `LABOR`, `CRIMINAL`, `FINANCIAL`, `ENVIRONMENT` |
+| `type` | string | Natureza canônica do processo. Um de: `CIVEL`, `TRABALHISTA`, `TRIBUTARIA`, `FINANCEIRO`, `CRIMINAL`, `AMBIENTAL`, `ADMINISTRATIVA`, `ELEITORAL`, `PREVIDENCIARIA`, `OUTROS`. |
 | `role` | string | Posição: `PASSIVE` (réu) ou `ACTIVE` (autor) |
 | `amount` | number | Valor da causa (R$) |
 | `distributedAt` | string | Data de distribuição (YYYY-MM-DD) |
@@ -94,7 +121,7 @@ A seção `PROCESSES` traz os processos judiciais do documento analisado e, quan
       {
         "number": "1234567-89.2022.5.02.0001",
         "court": "2ª Vara do Trabalho de São Paulo",
-        "type": "LABOR",
+        "type": "TRABALHISTA",
         "role": "PASSIVE",
         "amount": 45000.00,
         "distributedAt": "2022-03-15",

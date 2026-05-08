@@ -45,9 +45,11 @@
           "concepts/operacoes",
           "concepts/secoes",
           "concepts/gyra-insights",
-          "concepts/score-e-decisao",
+          "concepts/score",
+          "concepts/decisao-automatica",
           "concepts/precificacao",
-          "concepts/webhooks-e-tempo-real"
+          "concepts/webhooks-e-tempo-real",
+          "concepts/glossario"
         ]
       },
       {
@@ -161,5 +163,11 @@
         ]
       }
     ]
-  }
+  },
+  "redirects": [
+    {
+      "source": "/concepts/score-e-decisao",
+      "destination": "/concepts/decisao-automatica"
+    }
+  ]
 }

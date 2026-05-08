@@ -1,0 +1,51 @@
+---
+title: Score
+description: Indicador numérico de risco entre 1 e 1000 calculado pela política de crédito durante a análise de um relatório.
+icon: "gauge-high"
+surface: conceito
+domain: score
+audience: ambos
+lang: nao-tecnica
+---
+
+<Note>
+**Esta página descreve o Score, um indicador numérico de risco.** O Score é insumo da Política de Crédito, não é a Política em si. Para entender como decisões automáticas são tomadas, ver [Decisão Automática](/concepts/decisao-automatica). Para entender o conjunto de regras que produz o Score, ver [Política de Crédito](/concepts/politica-de-credito).
+</Note>
+
+## O que é o Score
+
+O Score é um número entre 1 e 1000 calculado pela Gyra+ ao final de cada análise de relatório. Quanto maior o Score, menor o risco.
+
+O Score é sempre o resultado da política de crédito que foi escolhida no momento de criar o relatório. Não existe Score Gyra+ "puro", desconectado de uma política. A mesma pessoa analisada com duas políticas diferentes pode ter dois Scores diferentes.
+
+---
+
+## Como o Score é calculado
+
+A análise parte de 1000 pontos. Cada condição da política avalia as informações do CPF ou CNPJ e adiciona ou subtrai pontos com base no resultado:
+
+| Resultado da condição | Efeito típico |
+|---|---|
+| Aprovado | Soma alguns pontos (ex: +30) |
+| Alerta | Subtrai pontos moderadamente (ex: −50) |
+| Negado | Subtrai muitos pontos (ex: −200) |
+
+A soma de todas as condições é mantida entre 1 e 1000.
+
+---
+
+## Onde ver o Score na plataforma
+
+Na tela do relatório, o Score aparece em destaque junto com a decisão final. Detalhamento das condições que somaram ou subtraíram aparece na seção "Política de Crédito" do relatório, com cada condição, regras avaliadas e contribuição em pontos.
+
+---
+
+## Score Gyra+ vs Score de bureau
+
+Os relatórios também trazem scores de bureaus de crédito (Serasa, Boa Vista, Quod) quando o tipo de relatório inclui essas fontes. Esses são scores externos, calculados pelos próprios bureaus, e podem ser usados como insumo dentro de uma condição da sua política. Não confundir com o Score Gyra+, que é o número final calculado pela política.
+
+---
+
+## Para integradores
+
+Em respostas da API, o Score Gyra+ aparece dentro do resultado da política no relatório, junto com `policyStatus` e a lista de condições avaliadas. Ver [Seção: Política de Crédito](/data/secao-politica-credito) para a estrutura completa.

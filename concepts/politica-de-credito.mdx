@@ -2,7 +2,15 @@
 title: Política de Crédito
 description: Entenda como as políticas de crédito funcionam e como elas controlam as decisões automáticas da GYRA+.
 icon: "shield-check"
+surface: conceito
+domain: politica
+audience: ambos
+lang: nao-tecnica
 ---
+
+<Note>
+**Esta página descreve a Política de Crédito, o conjunto de regras que controla decisões automáticas.** A Política produz o [Score](/concepts/score) durante a análise e usa as faixas de risco para chegar à [Decisão Automática](/concepts/decisao-automatica). Não confundir Política com Score: a Política é o conjunto de regras; o Score é o número final calculado por essas regras.
+</Note>
 
 ## O que é uma Política de Crédito
 
@@ -46,6 +54,19 @@ Policy
 | `DENIED` | 4 | Negado automaticamente |
 | `ALERT` | 5 | Requer revisão manual |
 | `NOT_APPLIED` | 8 | Regra não aplicável ao documento |
+
+Esse é o `policyStatus` retornado em todo relatório. Se ele deve ou não virar o `status` do relatório depende da configuração da política — veja [Status do relatório × Status da política](/concepts/relatorio#status-do-relat%C3%B3rio-status-da-pol%C3%ADtica).
+
+---
+
+## Decisão automática vs. análise manual
+
+Cada política tem a opção **"Usar resultado da política no relatório"**:
+
+- **Ligada:** o resultado da política (`policyStatus`) é aplicado automaticamente ao `status` do relatório. Ideal para fluxos de alto volume (onboarding, checkout, crédito massificado).
+- **Desligada:** a política calcula o `policyStatus` como referência, mas o `status` do relatório fica `PENDING` até um analista decidir pela UI do Toolbox ou via [`POST /report/analyze`](/api-reference/report/post-reportanalyze). Ideal para mesa de crédito, due diligence e casos que exigem julgamento humano.
+
+Mesmo com a opção ligada, a análise manual continua possível e sobrescreve o `status` do relatório, preservando o `policyStatus` original para auditoria.
 
 ---
 

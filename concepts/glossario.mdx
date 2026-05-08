@@ -1,0 +1,249 @@
+---
+title: Glossário
+description: Termos canônicos da Gyra+. Fonte única de verdade ao falar de Relatório, Política, Score, Operação, Seção, Webhook e Autorização.
+icon: "book"
+surface: conceito
+domain: dados-relatorio
+audience: ambos
+lang: nao-tecnica
+noindex: true
+sitemap: false
+---
+
+## Como ler este glossário
+
+Cada termo aparece com:
+
+- **Definição:** uma frase em linguagem de plataforma.
+- **Na plataforma:** rótulo exato que aparece nas telas do Toolbox.
+- **Na API:** nome do campo equivalente, para integradores.
+- **Não confundir com:** termos próximos que costumam ser misturados.
+
+<Note>
+Quando explicar qualquer termo, prefira a definição da Plataforma. A versão de API só entra se a pessoa estiver perguntando explicitamente sobre integração, código, endpoint ou webhook.
+</Note>
+
+---
+
+## Relatório
+
+**Definição:** Documento de análise de crédito gerado pela Gyra+ para um CPF ou CNPJ. Reúne dados de várias fontes, aplica uma política de crédito e devolve uma decisão.
+
+**Na plataforma:** "Relatório" ou "Operação" (na lista de operações).
+
+**Na API:** `report`, com identificador `reportId`.
+
+**Não confundir com:** [Operação](#operacao), que é um workflow maior que pode gerar vários relatórios em cascata.
+
+---
+
+## Política de Crédito
+
+**Definição:** Conjunto de regras que define como a Gyra+ avalia um CPF ou CNPJ e qual decisão tomar (aprovar, negar, marcar para análise manual). Cada relatório usa uma política.
+
+**Na plataforma:** "Política de crédito" ou "Política de decisão".
+
+**Na API:** `policy`, com identificador `policyId`.
+
+**Não confundir com:**
+- [Score](#score), que é um número de risco. A Política usa o Score como uma das entradas, mas não é o Score.
+- [Decisão automática](#decisao-automatica), que é o resultado da política em um relatório específico.
+
+---
+
+## Score
+
+**Definição:** Indicador numérico de risco entre 1 e 1000 calculado por uma política de crédito durante a análise. Quanto maior, menor o risco. O Score parte de 1000 e cada condição da política soma ou subtrai pontos.
+
+**Na plataforma:** "Score" ou "Pontuação".
+
+**Na API:** `score` no resultado da política dentro do relatório.
+
+**Não confundir com:**
+- [Política de Crédito](#politica-de-credito), que é o conjunto de regras que produz o Score, e não o Score em si.
+- Score de bureau (Serasa, Boa Vista, Quod), que é um insumo externo. O Score Gyra+ é a pontuação final calculada pela política.
+
+---
+
+## Decisão automática
+
+**Definição:** Resultado final que a política de crédito atribui ao relatório. Os estados possíveis são: aprovada, negada, alerta (precisa análise manual), não executada, pendente ou não aplicável.
+
+**Na plataforma:** Aparece como "Status" do relatório (ver [Status do relatório vs Status da política](#status-do-relatorio-vs-status-da-politica)).
+
+**Na API:** `policyStatus`, com valores `APPROVED`, `DENIED`, `ALERT`, `NOT_EXECUTED`, `PENDING`, `NOT_APPLICABLE`.
+
+**Não confundir com:** [Análise manual](#analise-manual), que é a decisão registrada por um operador depois que o caso ficou em alerta ou em modo manual.
+
+---
+
+## Status do relatório vs Status da política
+
+Dois campos diferentes que costumam ser confundidos. Estão sempre presentes no relatório.
+
+| Campo | O que é | Quem altera |
+|---|---|---|
+| Status do relatório (`status`) | Decisão final oficial. É o que aparece em destaque na lista de operações e o que dispara a notificação `REPORT_STATUS`. | Pode ser preenchido automaticamente pela política ou registrado por um operador via análise manual. |
+| Status da política (`policyStatus`) | Resultado calculado pela política de crédito sobre os dados coletados. Sempre é calculado. | Sempre a política. |
+
+A relação entre os dois depende de uma configuração da política chamada **"Usar resultado da política no relatório"**:
+
+- **Ligada (modo automático):** o `policyStatus` vira o `status` do relatório imediatamente. Útil em fluxos de alto volume (onboarding, checkout).
+- **Desligada (modo manual):** o `policyStatus` fica visível como referência, mas o `status` do relatório só muda quando um operador decide. Útil para mesa de crédito, due diligence e casos sensíveis.
+
+Mesmo no modo automático, a análise manual sobrescreve o `status` (e o `policyStatus` original é preservado para auditoria).
+
+---
+
+## Análise manual
+
+**Definição:** Decisão registrada por um operador da mesa de crédito sobre um relatório. Pode ser usada para revisar casos em alerta, refinar uma decisão automática ou ser o passo único quando a política está em modo manual.
+
+**Na plataforma:** Botões "Aprovar", "Negar" ou "Refazer análise" na tela do relatório, com campo de justificativa.
+
+**Na API:** `POST /report/analyze` (primeira análise) e `POST /report/re-analyze` (substituir uma análise anterior).
+
+**Não confundir com:** [Decisão automática](#decisao-automatica), que é gerada pela política sem intervenção humana. As duas convivem no mesmo relatório.
+
+---
+
+## Operação
+
+**Definição:** Workflow em cascata que analisa não só o CPF ou CNPJ principal, mas também sócios, filiais, endereços relacionados e parentes, em uma sequência configurável. Cada operação pode gerar múltiplos relatórios.
+
+**Na plataforma:** "Operação" (cada item na lista de operações é uma operação completa).
+
+**Na API:** `operation`.
+
+**Não confundir com:** [Relatório](#relatorio). Um Relatório é a análise de uma única entidade. Uma Operação pode encadear vários relatórios.
+
+---
+
+## Seção
+
+**Definição:** Bloco temático de informações dentro de um relatório. Exemplos: Informações Básicas, Resumo, PEFIN/REFIN, Processos, Protestos, PEP e Sanções, SCR, Política de Crédito.
+
+**Na plataforma:** "Aba" ou "Seção" dentro da tela do relatório.
+
+**Na API:** `section`, com identificador `sectionType`.
+
+---
+
+## Webhook (Notificação automática)
+
+**Definição:** Mecanismo que faz a Gyra+ avisar seu sistema quando algo acontece (relatório pronto, decisão registrada, exportação concluída, operação finalizada). Evita ter que ficar consultando a Gyra+ de tempos em tempos para saber se já terminou.
+
+**Na plataforma:** "Notificação automática" ou "Webhook" (na tela de configuração de integrações).
+
+**Na API:** `webhook`, configurado via `POST /webhook`. Tipos disponíveis: `REPORT`, `REPORT_FINISHED`, `REPORT_STATUS`, `REPORT_EXPORTED`, `CREDIT_POLICY`, `OPERATION`.
+
+**Não confundir com:** Endpoint da Gyra+. O webhook é uma URL do seu lado que a Gyra+ chama. O endpoint é uma URL da Gyra+ que você chama.
+
+---
+
+## Autorização (Solicitação)
+
+**Definição:** Pedido feito a um cliente final para que ele autorize consultas regulamentadas (SCR do Banco Central) ou validações de identidade (Face Match). Sem autorização, essas consultas não rodam.
+
+**Na plataforma:** "Solicitações" no menu lateral.
+
+**Na API:** endpoints específicos de autorização.
+
+**Não confundir com:** Permissão de usuário (ver [Usuário e Permissão](#usuario-e-permissao)), que controla o que cada pessoa pode fazer dentro do Toolbox.
+
+---
+
+## Template de Política
+
+**Definição:** Política pronta, testada pela Gyra+, que pode ser ativada como está ou clonada para servir de base a uma política personalizada. Cobre cenários comuns como abertura de conta, background check de fornecedores e financiamento empresarial.
+
+**Na plataforma:** "Templates" na seção de Política de Crédito.
+
+**Na API:** acessível via consulta de políticas. Templates aparecem na mesma listagem.
+
+---
+
+## Tipo de Relatório
+
+**Definição:** Profundidade da análise. Define quais fontes são consultadas e quanto histórico é trazido. A Gyra+ tem quatro tipos: SIMPLES, ESSENCIAL, COMPLETO e COMPLETO+.
+
+**Na plataforma:** "Tipo de relatório" no momento de criar o relatório.
+
+**Na API:** campo `type` no payload de criação.
+
+| Tipo | Para quê serve |
+|---|---|
+| SIMPLES | Qualificação rápida de lead |
+| ESSENCIAL | Crédito de ticket baixo |
+| COMPLETO | Crédito B2B padrão |
+| COMPLETO+ | Operações de risco alto, com histórico longo |
+
+---
+
+## Faixa de Risco
+
+**Definição:** Tabela dentro da política que mapeia intervalos de Score para uma decisão automática. Por exemplo: 1 a 400 = Negar, 401 a 700 = Alerta, 701 a 1000 = Aprovar.
+
+**Na plataforma:** "Faixas de risco" dentro da configuração da política.
+
+**Na API:** parte da estrutura da política.
+
+---
+
+## Condição (da política)
+
+**Definição:** Bloco de uma política que agrupa uma ou mais regras e atribui pontos quando o resultado é aprovado, alerta ou negado. A condição tem uma pontuação única, independente de quantas regras a compõem.
+
+**Na plataforma:** "Condição" ou "Bloco de regras" no editor de política.
+
+**Na API:** `condition` na estrutura da política.
+
+---
+
+## Regra (da política)
+
+**Definição:** Critério individual avaliado dentro de uma condição. Exemplo: "tem protesto ativo", "score Serasa abaixo de X", "PEP encontrado".
+
+**Na plataforma:** "Regra" no editor de condições.
+
+**Na API:** `rule`.
+
+---
+
+## Bureau
+
+**Definição:** Empresa terceira que fornece dados de crédito (Serasa, Boa Vista, Quod, SCR Bacen). A Gyra+ consulta bureaus durante a análise; o operador não precisa saber quais foram, basta escolher o tipo de relatório.
+
+**Na plataforma:** Aparece como "Fonte" nos detalhes de cada seção.
+
+**Na API:** `source` em cada seção.
+
+---
+
+## Usuário e Permissão
+
+**Definição:** Cada pessoa da empresa que acessa o Toolbox tem um usuário com um conjunto de permissões. As permissões controlam o que aparece no menu, quais relatórios podem ser vistos e se pode aprovar/negar manualmente.
+
+**Na plataforma:** "Usuários e Permissões" no menu de configurações.
+
+**Na API:** gerenciado via Auth.
+
+---
+
+## SCR e Open Finance
+
+**Definição:** Fonte oficial do Banco Central com o histórico de crédito bancário do CPF ou CNPJ. Requer autorização do cliente final antes da consulta.
+
+**Na plataforma:** Disponível como uma seção do relatório quando há autorização.
+
+**Na API:** seção `SCR` no relatório.
+
+---
+
+## Face Match
+
+**Definição:** Validação de identidade comparando uma selfie do cliente final com a foto do documento oficial. Faz parte do fluxo de Solicitações.
+
+**Na plataforma:** "Solicitação de Face Match".
+
+**Na API:** integrada ao fluxo de autorizações.

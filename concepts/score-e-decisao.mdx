@@ -1,152 +1,18 @@
 ---
 title: Score e Decisão Automática
-description: Como a GYRA+ calcula o score, avalia as regras e chega a uma decisão de crédito usando ScoreCard e Faixas de Risco.
+description: Esta página foi dividida em duas para evitar confusão entre Score e Decisão Automática.
 icon: "circle-check"
+surface: conceito
+domain: score
+audience: ambos
+lang: nao-tecnica
 ---
 
-## Como funciona a decisão automática
+<Warning>
+Esta página foi substituída por duas páginas separadas:
 
-A GYRA+ não retorna apenas dados brutos: aplica a sua política de crédito sobre esses dados e entrega uma **decisão automática** (`APPROVED`, `DENIED` ou `ALERT`) junto com o raciocínio completo.
+- [**Score**](/concepts/score) — o indicador numérico de risco (1 a 1000) calculado pela política durante a análise.
+- [**Decisão Automática**](/concepts/decisao-automatica) — o resultado final da política sobre o relatório (aprovada, negada, alerta) e a configuração modo automático vs manual.
 
-A política pode operar em dois modos:
-
-1. **Sem ScoreCard** — a decisão é puramente regra-a-regra: se uma regra reprova, o status final é `DENIED`.
-2. **Com ScoreCard (Faixas de Risco ativas)** — cada condição contribui com uma pontuação para um score final de 0–1000, e a faixa em que ele cai define o status final, podendo **inverter** o resultado individual de uma regra.
-
-<Note>
-Para usar o ScoreCard é necessário **ativar Faixas de Risco** na política. Sem isso, a política funciona apenas pelo modo direto regra-a-regra.
-</Note>
-
----
-
-## Estrutura: Condições, Regras e Pontuação
-
-Uma política é organizada em **condições** (também chamadas de blocos). Cada condição agrupa **uma ou mais regras** e tem três pontuações configuradas pelo usuário, uma para cada status final possível da condição:
-
-| Status final da condição | Pontuação |
-|--------------------------|-----------|
-| Aprovado | valor configurado pelo usuário (geralmente positivo, ex.: `+30`) |
-| Alerta | valor configurado pelo usuário (geralmente negativo leve, ex.: `-50`) |
-| Reprovado | valor configurado pelo usuário (geralmente negativo forte, ex.: `-200`) |
-
-### Como o status final da condição é definido
-
-A condição olha o status individual de cada regra e aplica uma **prioridade fixa**: `Reprovada > Alerta > Aprovada`.
-
-| Situação | Status final da condição |
-|----------|--------------------------|
-| Todas as regras aprovadas | **Aprovada** |
-| 1 regra em alerta + restante aprovada | **Alerta** |
-| 1 regra reprovada + restante aprovada ou em alerta | **Reprovada** |
-
-<Note>
-A pontuação da condição é **única**, ou seja, vinculada ao status final do bloco e **não acumula por regra**. Se a condição vale `-200 pts` em caso de reprovação, ela soma `-200` independentemente de uma única regra ou várias regras terem reprovado.
-</Note>
-
----
-
-## Cálculo do score final
-
-```
-score inicial: 1000
-       ↓
-+ soma das pontuações de todas as condições (positivas, negativas ou zero)
-       ↓
-score final (clampeado em [1, 1000])
-```
-
-Regras de clamp:
-
-- Se o resultado for **menor que 1**, o score final é `1`.
-- Se o resultado for **maior que 1000**, o score final é `1000`.
-
-**Exemplo:**
-
-```
-Condição A (Aprovada)  → +30
-Condição B (Alerta)    → -50
-Condição C (Reprovada) → -200
-Condição D (Aprovada)  → +30
-
-score final = 1000 + 30 - 50 - 200 + 30 = 810
-```
-
----
-
-## Faixas de Risco
-
-Cada faixa de risco corresponde a um intervalo dentro de `0–1000` e mapeia esse intervalo para um status final: `APPROVED`, `ALERT` ou `DENIED`.
-
-**Exemplo de configuração:**
-
-| Faixa | Score | Status final |
-|-------|-------|--------------|
-| Baixo risco | 700 – 1000 | `APPROVED` |
-| Risco moderado | 400 – 699 | `ALERT` |
-| Alto risco | 0 – 399 | `DENIED` |
-
-<Tip>
-A faixa pode **inverter** o resultado regra-a-regra. Se uma regra reprovou, mas o score final caiu em uma faixa configurada como `APPROVED`, o `policyStatus` final é `APPROVED`.
-</Tip>
-
----
-
-## O campo `CREDIT_POLICY` no relatório
-
-A seção `CREDIT_POLICY` do relatório expõe o resultado completo da avaliação: todas as condições, as regras avaliadas, seus status individuais, a pontuação contribuída por cada condição e o score final.
-
-```json
-{
-  "policyStatus": "APPROVED",
-  "score": 810,
-  "conditions": [
-    {
-      "name": "Cadastral",
-      "status": "APPROVED",
-      "scoreContribution": 30,
-      "rules": [
-        {
-          "rule": "COMPANY_OPENING_TIME",
-          "status": "APPROVED",
-          "value": 48,
-          "condition": "GREATER_THAN 12 meses"
-        },
-        {
-          "rule": "COMPANY_SITUATION",
-          "status": "APPROVED",
-          "value": "Ativa"
-        }
-      ]
-    },
-    {
-      "name": "Restritivos",
-      "status": "ALERT",
-      "scoreContribution": -50,
-      "rules": [
-        {
-          "rule": "PEFIN_AMOUNT",
-          "status": "ALERT",
-          "value": 2
-        }
-      ]
-    }
-  ]
-}
-```
-
----
-
-## Interpretando o resultado
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `policyStatus` | string | Decisão final: `APPROVED`, `DENIED` ou `ALERT` (vinda da faixa de risco quando ScoreCard ativo) |
-| `score` | number | Score final (1–1000) calculado pelo ScoreCard |
-| `conditions[].status` | string | Status final da condição (Aprovada, Alerta ou Reprovada) |
-| `conditions[].scoreContribution` | number | Pontuação somada/subtraída ao score por essa condição |
-| `conditions[].rules[].status` | string | Resultado individual de cada regra |
-| `conditions[].rules[].value` | any | Valor extraído dos dados para a regra |
-
-<Tip>
-O status `ALERT` não é uma negação. Significa que a análise identificou pontos que merecem atenção. Configure seus webhooks para tratar os três status de forma diferente no seu sistema.
-</Tip>
+A divisão foi feita porque Score e Decisão Automática são conceitos diferentes que costumavam ser misturados.
+</Warning>

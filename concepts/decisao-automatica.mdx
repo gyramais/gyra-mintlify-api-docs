@@ -1,0 +1,83 @@
+---
+title: Decisão Automática
+description: Como a Política de Crédito avalia regras e produz a decisão final do relatório (aprovar, negar, alerta).
+icon: "circle-check"
+surface: conceito
+domain: politica
+audience: ambos
+lang: nao-tecnica
+---
+
+<Note>
+**Esta página descreve a Decisão Automática, o resultado que a Política de Crédito atribui ao relatório.** A Decisão Automática usa o [Score](/concepts/score) como uma das entradas. Para entender como a política é configurada, ver [Política de Crédito](/concepts/politica-de-credito).
+</Note>
+
+## O que é a decisão automática
+
+Toda vez que um relatório é gerado, a política de crédito escolhida avalia as informações coletadas e atribui um status à análise. Esse status é a decisão automática.
+
+A decisão automática fica registrada no relatório como `policyStatus` (status da política). Se ela vai virar o status final do relatório ou ficar apenas como referência depende de como a política está configurada (ver [Modo automático vs modo manual](#modo-automatico-vs-modo-manual)).
+
+---
+
+## Status possíveis
+
+| Status | O que significa |
+|---|---|
+| Aprovada (`APPROVED`) | A política considerou o caso aceitável. |
+| Negada (`DENIED`) | A política recusou automaticamente. |
+| Alerta (`ALERT`) | A política indicou que o caso precisa de análise manual. |
+| Não executada (`NOT_EXECUTED`) | O relatório ainda não foi avaliado por uma política. |
+| Pendente (`PENDING`) | A análise está em andamento. |
+| Não aplicável (`NOT_APPLICABLE`) | A política existe mas não se aplica ao caso (por exemplo, política de PJ aplicada a CPF). |
+
+---
+
+## Como a política chega à decisão
+
+A política avalia condições, soma pontos e produz um Score. Em seguida, compara o Score com as faixas de risco configuradas para escolher o status.
+
+Por exemplo, com a faixa de risco abaixo:
+
+| Score | Decisão |
+|---|---|
+| 1 a 400 | Negada |
+| 401 a 700 | Alerta |
+| 701 a 1000 | Aprovada |
+
+Um relatório que terminou com Score 850 recebe automaticamente `policyStatus: APPROVED`.
+
+---
+
+## Override por condição crítica
+
+Algumas condições podem forçar uma decisão independente do Score. Por exemplo, "presença em lista de sanções" pode forçar `DENIED` mesmo que o Score esteja alto. Essas condições são configuradas no editor de política.
+
+---
+
+## Modo automático vs modo manual
+
+Cada política tem um toggle chamado **"Usar resultado da política no relatório"** que define se a decisão automática vira o status do relatório:
+
+- **Ligada (modo automático):** o `policyStatus` é copiado para o `status` do relatório assim que a política é avaliada. O relatório já chega `APPROVED`, `DENIED` ou `ALERT` sem precisar de ação humana. Útil em fluxos de alto volume (onboarding, checkout).
+- **Desligada (modo manual):** a política calcula o `policyStatus` normalmente (e ele fica visível no relatório como referência), mas o `status` do relatório só muda quando um operador decide via Toolbox ou via [`POST /report/analyze`](/api-reference/report/post-reportanalyze). Útil quando a política é apoio à mesa de crédito, não decisor final.
+
+A análise manual sempre pode sobrescrever o `status`, mesmo no modo automático. O `policyStatus` original é preservado para auditoria. Ver [O que é um Relatório](/concepts/relatorio#status-do-relat%C3%B3rio-status-da-pol%C3%ADtica) para detalhes.
+
+---
+
+## Decisão automática vs análise manual
+
+A decisão automática é o que a política decide sozinha. Quando o `policyStatus` é `ALERT` (ou quando a política está em modo manual), o caso fica disponível para um operador da mesa de crédito revisar e registrar uma decisão manual. A análise manual não altera o `policyStatus` original; ela altera o `status` do relatório, com autoria e timestamp.
+
+---
+
+## Onde ver na plataforma
+
+O `status` aparece em destaque na lista de operações e na tela do relatório. O detalhamento de quais condições contribuíram para a decisão fica na seção "Política de Crédito" do relatório, junto com o `policyStatus` original.
+
+---
+
+## Para integradores
+
+Na API, a decisão automática vem como `policyStatus` no relatório. O detalhamento das condições e contribuições de pontos vem na seção `CREDIT_POLICY`. Ver [Seção: Política de Crédito](/data/secao-politica-credito).

@@ -2,10 +2,14 @@
 title: "Processos Judiciais"
 description: "Ações como autor e réu em tribunais estaduais e federais, classificadas por tipo de vara."
 icon: "gavel"
+surface: conceito
+domain: fontes
+audience: ambos
+lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** a fonte de processos judiciais mostra **todas as ações** em que o CPF ou CNPJ figura como autor ou réu, nos tribunais brasileiros. Para crédito, o peso está nos processos como **réu**, classificados por tipo de vara (trabalhista, tributário, financeiro, cível, criminal, ambiental).
+  **Resumo:** a fonte de processos judiciais mostra **todas as ações** em que o CPF ou CNPJ figura como autor ou réu, nos tribunais brasileiros. Para crédito, o peso está nos processos como **réu**, classificados por tipo de vara (cível, trabalhista, tributária, financeira, criminal, ambiental, administrativa, eleitoral, previdenciária e outros).
 </Info>
 
 ## O que é
@@ -52,18 +56,26 @@ Detalhes completos em [Seção, Processos](/data/secao-processos). Estrutura res
 
 ### Breakdown por tipo de vara
 
-Os processos são classificados em categorias:
+A GYRA+ normaliza o campo `type` de cada processo em **dez categorias canônicas**. Os raw vindos dos tribunais (que variam muito em terminologia) caem em uma destas — não há passthrough do valor original.
 
-| Tipo de vara | Quando importa |
-| ------------ | -------------- |
-| **Cível** | Cobranças, danos morais, execução. |
-| **Trabalhista** | Ações de ex-funcionários, passivo trabalhista. |
-| **Tributário** | Execução fiscal, dívida ativa. |
-| **Financeiro** | Execução de dívida bancária, cobrança de credores. |
-| **Criminal** | Crimes em geral (ex: estelionato, lavagem). |
-| **Ambiental** | Infrações ambientais. |
+| Código | Tipo de vara | Quando importa |
+| ------ | ------------ | -------------- |
+| `CIVEL` | **Cível** | Cobranças, danos morais, execução, consumidor, saúde, infância, educação, marítimo. |
+| `TRABALHISTA` | **Trabalhista** | Ações de ex-funcionários, passivo trabalhista. |
+| `TRIBUTARIA` | **Tributária** | Execução fiscal, dívida ativa, fazenda pública. |
+| `FINANCEIRO` | **Financeiro** | Execução de dívida bancária, cobrança de credores. Inclui cíveis reclassificados quando há banco como parte. |
+| `CRIMINAL` | **Criminal** | Penal em geral (ex.: estelionato, lavagem). |
+| `AMBIENTAL` | **Ambiental** | Infrações ambientais. |
+| `ADMINISTRATIVA` | **Administrativa** | Ações em varas administrativas. |
+| `ELEITORAL` | **Eleitoral** | Justiça eleitoral. |
+| `PREVIDENCIARIA` | **Previdenciária** | INSS, benefícios, ações assistenciais. |
+| `OUTROS` | **Outros** | Processos cujo tipo não foi possível mapear com confiança — comum em processos antigos, com classificação processual neutra (ex.: "cumprimento de sentença") ou raw inconsistente do tribunal. |
 
 Cada tipo tem campos: quantidade, valor total, quantidade nos últimos 12 meses, detalhe do último processo.
+
+<Warning>
+**Sempre crie regra para `OUTROS`.** Como `OUTROS` agrupa o que não foi possível classificar (especialmente processos antigos e tribunais com nomenclatura atípica), pode haver passivo relevante escondido aí. Recomendamos uma regra de **alerta** sobre quantidade ou valor de processos `OUTROS` que migre o relatório para análise manual quando o volume for não-trivial — em vez de aprovar/negar automaticamente como se fossem ruído.
+</Warning>
 
 ### Detalhamento por processo
 
@@ -95,6 +107,9 @@ Cada processo entrega:
   </Card>
   <Card title="KYC e compliance" icon="shield-check">
     Antecedentes criminais são fator de bloqueio em produtos sensíveis (contratação, compliance).
+  </Card>
+  <Card title="Alerta para Outros" icon="circle-question">
+    Processos antigos costumam cair em `OUTROS`. Adicione uma regra de alerta sobre quantidade/valor para que esses casos não passem batido e sejam revisados manualmente.
   </Card>
 </CardGroup>
 

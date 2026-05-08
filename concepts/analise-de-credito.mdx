@@ -2,6 +2,10 @@
 title: "Análise de Crédito"
 description: "O que é a análise de crédito na GYRA+ e como ela chega à decisão final."
 icon: "magnifying-glass-chart"
+surface: conceito
+domain: relatorio
+audience: ambos
+lang: nao-tecnica
 ---
 
 <Info>
@@ -58,8 +62,8 @@ A resposta de uma análise sempre inclui:
 
 | Campo | O que é |
 | ----- | ------- |
-| `status` | Decisão final: `APPROVED`, `DENIED`, `ALERT`. |
-| `policyStatus` | Decisão vinda da política de crédito aplicada. |
+| `status` | Status do relatório: `PENDING`, `APPROVED`, `DENIED`, `ALERT`. Pode vir da política (modo automático) ou de análise manual. Ver [Status do relatório × Status da política](/concepts/relatorio#status-do-relat%C3%B3rio-status-da-pol%C3%ADtica). |
+| `policyStatus` | Decisão vinda da política de crédito aplicada. Sempre calculado, mesmo quando a política está em modo manual. |
 | `score` | Valor sintético de 0 a 1000 (quando a política usa score). |
 | `document` / `type` | Documento analisado e se é CPF ou CNPJ. |
 | Seções do relatório | JSON detalhado com os dados de cada seção (sem detalhamento da fonte de origem). |
