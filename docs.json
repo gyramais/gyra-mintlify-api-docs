@@ -45,6 +45,7 @@
           "concepts/operacoes",
           "concepts/secoes",
           "concepts/gyra-insights",
+          "concepts/analise-financeira",
           "concepts/score",
           "concepts/decisao-automatica",
           "concepts/precificacao",
@@ -81,6 +82,7 @@
           "sources/vinculos-societarios",
           "sources/contatos",
           "sources/financeira",
+          "sources/inteligencia-pagamentos",
           "sources/certidoes",
           "sources/midia-reputacao",
           "sources/beneficios-sociais"

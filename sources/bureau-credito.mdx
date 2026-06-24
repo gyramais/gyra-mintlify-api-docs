@@ -73,6 +73,24 @@ Detalhes completos em [Seção, PEFIN e REFIN](/data/secao-pefin-refin). Resumo:
 
 Também vêm parcialmente do bureau, detalhe em [Seção Protestos](/data/secao-protestos).
 
+### Comportamental (Cadastro Positivo)
+
+O **Cadastro Positivo** vem hoje do **Bureau Boa Vista** e já está incluído na **consulta normal** que os clientes contratam, **sem custo adicional**. Diferente dos restritivos (que mostram o que deu errado), o cadastro positivo descreve o **comportamento de pagamento** do documento. Esses dados aparecem na **aba Comportamental** do relatório.
+
+Os dados **diferem entre PF e PJ**:
+
+- **Comum a PF e PJ:**
+  - **Score / probabilidade do Cadastro Positivo**: probabilidade de o documento manter os pagamentos em dia (com mensagem descritiva, ex.: "é provável que 96% das pessoas com esse comportamento paguem suas contas nos próximos 6 meses").
+  - **Pagamento pontual**: indicador de pagamentos em dia, com pontuação mensal.
+  - **Pagamento em atraso por faixa**: 6-15, 16-30, 31-60 e acima de 60 dias, mais o **atraso médio** em dias.
+  - **Comprometimento futuro** e **crédito obtido**: pontuações que indicam o nível de comprometimento e o crédito tomado ao longo do tempo.
+- **PF (CPF):** inclui também **indicadores de comportamento de consumo** e o **status do consumidor** no Cadastro Positivo.
+- **PJ (CNPJ):** inclui **faturamento presumido** (estimado a partir de informações comportamentais e cadastrais) e **indicadores de sócios e relacionamentos** (participações em outras empresas, com sinalização de débito/fraude).
+
+<Note>
+  A ingestão do Boa Vista está migrando para integração via **REST API**, que passa a trazer o Cadastro Positivo de PF e PJ na aba Comportamental. Como faz parte da consulta padrão do Boa Vista, não há cobrança adicional.
+</Note>
+
 ## Casos de uso
 
 <CardGroup cols={2}>

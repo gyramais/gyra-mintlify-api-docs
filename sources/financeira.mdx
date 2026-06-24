@@ -25,10 +25,10 @@ Responde:
 
 ## De onde vem
 
-- **Tipo de fonte:** combinação de dados públicos (RFB, Simples Nacional, Junta Comercial) + integrações externas opcionais (balanço via ERP, Contabilizei, Omie) + inferências estatísticas.
+- **Tipo de fonte:** combinação de dados públicos (RFB, Simples Nacional, Junta Comercial) + balanço enviado por upload de PDF + inferências estatísticas.
 - **Cobertura geográfica:** Brasil.
-- **Natureza do dado:** misto público + inferido + contratado.
-- **Base legal:** dados públicos + consentimento específico para integrações externas.
+- **Natureza do dado:** misto público + inferido + declarado (balanço enviado).
+- **Base legal:** dados públicos + balanço fornecido pelo próprio usuário.
 
 ## Frequência de atualização
 
@@ -36,11 +36,11 @@ Responde:
 | ---------- | ----------- |
 | Porte, regime tributário (dados cadastrais) | mensal (via base cadastral) |
 | Faturamento/renda presumidos (bureau) | conforme bureau (mensal em média) |
-| Balanço via integração externa | real-time conforme webhook do ERP |
+| Balanço via upload de PDF | sob demanda, quando você envia o arquivo |
 
 ## Dados entregues
 
-A seção financeira do relatório é estruturada como um conjunto de **indicadores resumidos** (no *Resumo*) mais, quando disponível, **seções contábeis detalhadas** (*Balanço Patrimonial*, *DRE*, *Custos Detalhados*, *Indicadores Financeiros*, *Previsão Custo-Lucro*).
+A seção financeira do relatório é estruturada como um conjunto de **indicadores resumidos** (no *Resumo*) mais, quando disponível, **seções contábeis detalhadas** (*Balanço Patrimonial*, *DRE*, *Indicadores Financeiros*).
 
 ### Faturamento e renda presumidos
 
@@ -55,17 +55,18 @@ Internamente, os campos principais são:
 
 Ambos ficam expostos nas fórmulas de política como `SUMMARY_PRESUMED_BILLING`.
 
-### Balanço e indicadores contábeis (quando há integração)
+### Balanço e indicadores contábeis
 
-Quando o CNPJ tem balanço disponível (upload manual ou integração com ERP/contabilidade parceira), o relatório ganha seções específicas:
+Quando o CNPJ tem balanço disponível, o relatório ganha seções contábeis completas. O balanço é fornecido por **upload de PDF**: envie no input da análise ou pelo menu *Enviar balanço* do relatório. A GYRA+ extrai, padroniza, calcula os indicadores e gera parecer por IA. Esse é o fluxo completo de **[Análise Financeira](/concepts/analise-financeira)**, que detalha o passo a passo, todos os indicadores com fórmulas, a comparação multi-período e a exportação.
+
+Com o balanço enviado, o relatório passa a trazer seções específicas:
 
 - **Balanço Patrimonial** (`BALANCE_SHEET`): ativo total, passivo total, patrimônio líquido e quebra por circulante/não circulante.
 - **DRE** (`DRE`): receita, custos, margens e resultado do período.
 - **Custos Detalhados** (`DETAILED_COSTS`): quebra dos principais grupos de custo.
 - **Indicadores Financeiros** (`FINANCIAL_INDICATORS`): liquidez, endividamento, margens, giro.
 - **Gráfico do Balanço** (`BALANCE_SHEET_CHART`): evolução dos principais agregados.
-- **Previsão Custo-Lucro** (`COST_PROFIT_FORECAST`): projeção curta com base nos últimos períodos.
-- **Fornecedores e Clientes** (`SUPPLIERS_CLIENTS`): concentração, quando o ERP expõe essa informação.
+- **Fornecedores e Clientes** (`SUPPLIERS_CLIENTS`): concentração, quando a informação está disponível.
 - **Insights e Recomendações Financeiras** (`FINANCIAL_INSIGHTS`, `FINANCIAL_RECOMMENDATIONS`): comentários gerados sobre os números.
 
 O formato exato das seções contábeis é estruturado por período (ano-mês), com agregados em reais. Cada seção é montada por um translator específico em `gyra-report` — o schema detalhado de cada uma aparece quando o relatório é retornado e é documentado em [Seções do Relatório](/concepts/secoes).
@@ -98,7 +99,7 @@ Porte (`ME`, `EPP`, `DEMAIS`) e regime tributário vêm da [Cadastral](/sources/
     `SUMMARY_PRESUMED_BILLING` entra como regra (ex: mínimo absoluto) e como variável na fórmula de `amountFormula` para cap proporcional.
   </Step>
   <Step title="Balanço como bônus opcional">
-    Quando o tomador tem integração de balanço ativa (ERP conectado), usar indicadores contábeis das seções específicas para refinar taxa e prazo.
+    Quando o balanço do tomador foi enviado (upload de PDF), usar indicadores contábeis das seções específicas para refinar taxa e prazo.
   </Step>
   <Step title="Renda PF para produtos de pessoa física">
     `presumedIncomeAmount` (exposto como `SUMMARY_PRESUMED_BILLING` também em PF) alimenta segmentação e limites em cartão e crédito PF.
@@ -111,16 +112,16 @@ Exemplo de fórmula aprovando até 3 meses de faturamento, cap no solicitado:
 MIN(|#amount|valor solicitado|#|, |#SUMMARY_PRESUMED_BILLING|faturamento anual|#| / 12 * 3)
 ```
 
-## Integrações externas (balanço)
+## Como enviar o balanço
 
-A GYRA+ pode ingerir balanço via integrações com ERPs/contabilidades parceiras ou upload de arquivo, habilitadas por contrato específico. Consulte o time comercial para as integrações disponíveis no seu plano.
+O balanço entra por **upload de PDF**: anexe o arquivo no input da análise (junto com o CNPJ) ou pelo menu *Enviar balanço* (3 pontinhos) de um relatório já gerado. Você pode selecionar só as páginas relevantes (economia de tokens) e enviar vários arquivos. O passo a passo completo, a mecânica multi-período e a lista de indicadores estão em **[Análise Financeira](/concepts/analise-financeira)**.
 
-Uma vez ingerido o balanço, o relatório passa a trazer as seções contábeis detalhadas (`BALANCE_SHEET`, `DRE`, `FINANCIAL_INDICATORS`, etc.).
+Uma vez enviado o balanço, o relatório passa a trazer as seções contábeis detalhadas (`BALANCE_SHEET`, `DRE`, `FINANCIAL_INDICATORS`, etc.).
 
 ## Limitações e considerações
 
 - **Faturamento e renda presumidos são inferências** dos bureaus, com margem de erro. Empresas com operação atípica (sazonal, exportação, grupo econômico complexo) podem ter estimativa defasada.
-- **Balanço depende de contratação e ingestão**. Sem integração contratada, as seções contábeis não aparecem no relatório.
+- **Balanço depende de envio**. Sem o upload do PDF do balanço, as seções contábeis não aparecem no relatório, fica só o faturamento presumido.
 - **Renda PF precisa é difícil**: a GYRA+ não acessa holerite individual sem consentimento específico (Open Finance PF). Para precisão, usar [SCR / Open Finance](/sources/scr-open-finance).
 
 ## Perguntas frequentes
@@ -133,7 +134,7 @@ Uma vez ingerido o balanço, o relatório passa a trazer as seções contábeis 
     Cada bureau tem modelo próprio, com premissas, bases e janelas de treino distintas. Divergências são normais, especialmente em empresas fora do padrão (sazonais, exportadoras, holding). Para precisão, combine com SCR ou balanço real.
   </Accordion>
   <Accordion title="Como ter balanço real no relatório?">
-    Exige contratação da integração de balanço com a GYRA+. Sem ela, apenas o faturamento presumido do bureau aparece.
+    Faça o **upload do PDF do balanço** (no input da análise ou pelo menu *Enviar balanço*), que é self-service. Sem isso, apenas o faturamento presumido do bureau aparece. Ver [Análise Financeira](/concepts/analise-financeira).
   </Accordion>
   <Accordion title="Renda PF precisa de consentimento?">
     A renda presumida dos bureaus é inferência estatística e não requer consentimento individual. Renda precisa requer SCR/Open Finance com consentimento do titular.
@@ -142,13 +143,16 @@ Uma vez ingerido o balanço, o relatório passa a trazer as seções contábeis 
     Campo pode vir nulo quando a inferência do bureau não tem confiança suficiente (empresa muito nova, atividade atípica). Tratar como `ALERT` em produtos médio ticket ou usar regra alternativa.
   </Accordion>
   <Accordion title="Qual nível de relatório inclui dados financeiros?">
-    Faturamento e renda presumidos aparecem a partir do **ESSENCIAL** (junto com o bureau principal). Indicadores resumidos e percentuais derivados (PEFIN/REFIN/SCR proporcionais ao faturamento) entram no **COMPLETO**. Seções contábeis (Balanço, DRE, Indicadores) dependem de integração de balanço contratada e estão disponíveis nas variantes `_MAX` / `_MAX_PLUS` do relatório.
+    Faturamento e renda presumidos aparecem a partir do **ESSENCIAL** (junto com o bureau principal). Indicadores resumidos e percentuais derivados (PEFIN/REFIN/SCR proporcionais ao faturamento) entram no **COMPLETO**. Seções contábeis (Balanço, DRE, Indicadores) aparecem quando há balanço enviado por **upload de PDF** (self-service, ver [Análise Financeira](/concepts/analise-financeira)).
   </Accordion>
 </AccordionGroup>
 
 ## Próximos passos
 
 <CardGroup cols={2}>
+  <Card title="Análise Financeira" icon="file-invoice-dollar" href="/concepts/analise-financeira">
+    Extração de balanço por PDF, indicadores e parecer IA.
+  </Card>
   <Card title="SCR / Open Finance" icon="building-columns" href="/sources/scr-open-finance">
     Capacidade via endividamento bancário real.
   </Card>

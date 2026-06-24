@@ -34,38 +34,57 @@ Responde:
 
 | Componente | Atualização |
 | ---------- | ----------- |
-| Varredura de portais de notícia | diária |
+| Varredura de portais de notícia | tempo real |
 | Adverse media flagging | tempo real a partir da publicação indexada |
-| Redes sociais públicas | semanal (snapshot) |
 
-## Dados entregues
+## Seção Exposição em Mídia (`MEDIA_EXPOSURE`)
 
-| Campo | Descrição | Exemplo |
-| ----- | --------- | ------- |
-| `media.mentionsCount` | Total de menções detectadas | `12` |
-| `media.adverseCount` | Menções classificadas como adverse | `2` |
-| `media.items[].title` | Título da matéria | `"Empresa é investigada por..."` |
-| `media.items[].source` | Veículo | `"Folha de S.Paulo"` |
-| `media.items[].publishedAt` | Data | `"2024-11-22"` |
-| `media.items[].url` | Link | `"https://..."` |
-| `media.items[].sentiment` | Classificação | `"ADVERSE"`, `"NEUTRAL"`, `"POSITIVE"` |
-| `media.items[].categories[]` | Categorias | `["FRAUD_INVESTIGATION"]` |
-| `online.profilesFound[]` | Perfis públicos vinculados | `[{ platform: "linkedin", url: "..." }]` |
+A seção de mídia é uma **inteligência proprietária da GYRA+**: um screening que varre as fontes de mídia, **identifica as principais notícias** sobre o documento, **classifica o sentimento** de cada uma e consolida tudo em **scores por tipo de exposição**. Mostramos as **últimas 10 notícias** em uma lista descritiva.
 
-## Categorias de adverse media
+Disponível no relatório **COMPLETO** e **COMPLETO+**.
 
-Classificação automática com revisão humana em casos limítrofes:
+### Scores por tipo de exposição
 
-- `FRAUD_INVESTIGATION` — investigação por fraude
-- `MONEY_LAUNDERING` — suspeita ou denúncia de lavagem
-- `CORRUPTION` — corrupção, propina
-- `TAX_EVASION` — evasão fiscal
-- `ENVIRONMENTAL_VIOLATION` — autuação ambiental grave
-- `LABOR_VIOLATION` — autuação trabalhista grave (trabalho análogo à escravidão, etc.)
-- `ORGANIZED_CRIME` — ligação com organização criminosa
-- `CRIMINAL_CONVICTION` — condenação criminal
-- `OFAC_RELATED` — menção relacionada a sanções
-- `OTHER_ADVERSE` — outros contextos adversos
+Cada tipo é classificado em uma escala de **A a H** (A = intensidade alta; H = baixa ou nenhuma), considerando os últimos 6 meses:
+
+| Campo | Tipo | Descrição |
+| ----- | ---- | --------- |
+| `mediaExposureLevel` | string (A-H) | **Nível de exposição**: intensidade da presença do documento na mídia |
+| `celebrityLevel` | string (A-H) | **Nível de celebridade**: presença positiva / popularidade |
+| `unpopularityLevel` | string (A-H) | **Nível de impopularidade**: presença negativa |
+
+### Sentimento consolidado
+
+| Campo | Tipo | Descrição |
+| ----- | ---- | --------- |
+| `sentimentTotals` | object | Contagem agregada de notícias por sentimento: `{ positive, negative, neutral }` |
+| `timeline[]` | object[] | Evolução mensal do sentimento: `{ ym: "YYYY-MM", positive, negative, neutral }` |
+| `totalNews` | number | Total de notícias encontradas |
+| `totalNewsOnLast7Days` … `totalNewsOnLast365Days` | number | Volume de notícias por janela (7, 30, 90, 180, 365 dias) |
+
+### Últimas 10 notícias (`newsItems[]`)
+
+Lista descritiva das notícias mais recentes, no formato novo da inteligência própria:
+
+| Campo | Tipo | Descrição |
+| ----- | ---- | --------- |
+| `title` | string | Título da notícia |
+| `sourceName` | string | Veículo / fonte |
+| `url` | string | Link para a matéria |
+| `categories[]` | string[] | Categorias da notícia |
+| `publicationDate` | string | Data de publicação (ISO) |
+| `sentimentLabel` | string | Sentimento da notícia (ver classificação abaixo) |
+
+### Classificação de sentimento (`sentimentLabel`)
+
+A IA classifica cada notícia e a GYRA+ agrupa em quatro rótulos de exibição:
+
+| Rótulo exibido | Valores internos |
+| -------------- | ---------------- |
+| **Positiva** | `POSITIVE`, `SLIGHTLY_POSITIVE` |
+| **Negativa** | `NEGATIVE`, `SLIGHTLY_NEGATIVE` |
+| **Neutra** | `NEUTRAL`, `POLARIZED` |
+| **Outros** | `UNDEFINED` |
 
 ## Casos de uso
 
@@ -87,14 +106,14 @@ Classificação automática com revisão humana em casos limítrofes:
 ## Como usar na política
 
 <Steps>
-  <Step title="Regra por adverse média recente">
-    `media.adverseCount > 0` em janela de 12 meses : `ALERT` ou `DENIED`, dependendo do apetite.
+  <Step title="Regra por presença negativa">
+    Usar o **nível de impopularidade** (`unpopularityLevel`) ou o volume de notícias negativas (`sentimentTotals.negative`) para sinalizar `ALERT` ou `DENIED`, conforme o apetite.
   </Step>
-  <Step title="Filtro por categoria">
-    Categorias críticas (`MONEY_LAUNDERING`, `ORGANIZED_CRIME`) podem ser bloqueio automático; outras (`LABOR_VIOLATION`) podem ser alerta.
+  <Step title="Atenção a alta exposição">
+    Documento com `mediaExposureLevel` alto (A/B) merece revisão manual das notícias antes de aprovar ticket relevante.
   </Step>
   <Step title="Combinar com PEP/Sanções">
-    Hit em adverse media + PEP é combinação que acelera escalação para comitê de compliance.
+    Sentimento negativo recente em mídia + PEP é combinação que acelera escalação para comitê de compliance.
   </Step>
 </Steps>
 

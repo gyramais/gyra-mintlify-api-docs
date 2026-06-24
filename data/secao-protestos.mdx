@@ -1,6 +1,6 @@
 ---
 title: Seção, Protestos (PROTESTS)
-description: Campos da seção de protestos em cartório com cobertura nacional.
+description: Campos da seção de protestos em cartório, com fonte configurável entre o bureau da análise e o Cenprot (cobertura nacional).
 icon: "stamp"
 surface: dados
 domain: dados-relatorio
@@ -8,19 +8,19 @@ audience: integrador
 lang: tecnica
 ---
 
-A seção `PROTESTS` traz os protestos em cartório registrados para o documento, com cobertura nacional.
+A seção `PROTESTS` traz os protestos em cartório registrados para o documento. A **fonte** dos dados é configurável na política, e isso afeta a abrangência geográfica do retorno.
 
 Disponível no relatório **COMPLETO** e **COMPLETO+**.
 
 ## Como os dados são coletados
 
-Os dados de protestos são coletados sempre que um **Bureau** está definido na política. A GYRA+ adota a seguinte hierarquia de fontes:
+Os dados de protestos podem vir de duas fontes, escolhidas na política de crédito:
 
-1. **Cenprot (prioritário)** — por padrão, a GYRA+ busca os dados de protestos diretamente no Cenprot. Quando disponíveis, são esses os dados exibidos e usados na avaliação das regras.
-2. **Bureau definido na política (fallback)** — caso o Cenprot esteja **fora do ar** ou retorne dados **incompletos** (ex.: instabilidades da API ou sobrecarga de chamadas), a GYRA+ utiliza os dados do bureau configurado.
+1. **Bureau selecionado na análise (padrão):** por padrão, os protestos são consultados no **mesmo bureau** escolhido para a análise (Serasa, Boa Vista, ProScore etc.). A abrangência depende do **acordo comercial de cada bureau com os cartórios**: nem todo bureau tem convênio de alcance nacional, então a cobertura pode ser **parcial** (regional ou limitada a um conjunto de cartórios).
+2. **Protestos Cenprot (fonte adicional, opcional):** para garantir **cobertura nacional**, basta selecionar **Protestos Cenprot** como fonte adicional de dados na edição da política de crédito. O Cenprot consolida os protestos de cartórios de todo o Brasil. Essa opção tem **custo adicional** por consulta.
 
 <Note>
-O Cenprot é **sempre prioritário** quando disponível, tanto na exibição quanto na avaliação das regras. O fallback para o bureau é automático e transparente quando há indisponibilidade.
+A estrutura de campos (`count`, `totalAmount`, `protests[]` etc.) é a mesma independentemente da fonte. O que muda é a **abrangência**: o bureau cobre o que o convênio dele alcança; o Cenprot garante alcance nacional. Quando o Cenprot está habilitado, são os dados dele que populam a seção e são avaliados pelas regras.
 </Note>
 
 ---

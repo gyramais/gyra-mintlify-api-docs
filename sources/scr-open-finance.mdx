@@ -44,32 +44,41 @@ Na prática: o SCR reflete a posição do mês anterior fechado. Uma operação 
 
 O SCR aparece em duas seções do relatório: **HISTORY** (visão mensal) e **CATEGORIES** (breakdown por modalidade).
 
-### Resumo atual (`HISTORY.details`)
-
-| Campo | Tipo | Descrição | Exemplo |
-| ----- | ---- | --------- | ------- |
-| `totalRisk` | number | Exposição total a crédito (R$) | `450000.00` |
-| `totalExpired` | number | Total vencido agora (R$) | `15000.00` |
-| `totalLate` | number | Total em atraso (R$) | `0` |
-| `totalLosses` | number | Perdas registradas (prejuízo para o banco) | `0` |
-| `availableCreditLimit` | number | Limite aprovado disponível (R$) | `120000.00` |
-
-### Histórico mês a mês (`HISTORY.details.months[]`)
+### Série para o gráfico (`HISTORY.data.graphicInfo[]`)
 
 | Campo | Tipo | Descrição |
 | ----- | ---- | --------- |
-| `yearMonth` | string | Ano/mês (YYYY-MM) |
-| `totalRisk` | number | Risco total no mês |
-| `toExpire` | number | A vencer |
-| `expired` | number | Vencido |
-| `late` | number | Em atraso |
-| `losses` | number | Perdas |
+| `formattedYearMonth` | string | Mês/ano (MM/YYYY) |
+| `totalRisk` | number | Risco total no mês (R$) |
+| `totalResponsabilityAmount` | number | Responsabilidade total no mês (R$) |
+| `creditLimitAmount` | number | Limites de crédito no mês (R$) |
+
+### Detalhe por faixa de prazo (`HISTORY.data.riskDetails`)
+
+`riskDetails.expired[]` e `riskDetails.toExpire[]` trazem, por mês, a carteira **vencida** e **a vencer** quebrada por faixa (30, 31-60, 61-90, 91-180, 181-360 e acima de 360 dias), além de `totalRisk`, `totalResponsabilityAmount`, `creditLimitAmount` e o prejuízo (`lossAmountTo12Months`, `lossAmountMoreThan12Months`). Estrutura completa em [Seção SCR](/data/secao-scr).
 
 ### Por categoria (`CATEGORIES.details.months[].categories[]`)
 
 Detalha o endividamento por modalidade: capital de giro, cartão, conta garantida, desconto de recebíveis, financiamento de veículos, financiamento imobiliário, BNDES, risco sacado.
 
-Detalhes completos em [Seção SCR](/data/secao-scr).
+### Resumo consolidado do SCR (campos adicionais)
+
+O resumo de cada mês passou a expor **mais dimensões** da exposição de crédito, com destaque para:
+
+| Campo | Descrição |
+| ----- | --------- |
+| `institutionQuantity` | **Quantidade de relacionamentos**: número de instituições financeiras com operações de crédito do documento |
+| `transactionsQuantity` | Quantidade de operações de crédito |
+| `totalResponsabilityAmount` | Responsabilidade total (R$) |
+| `coObligationsAmount` | Coobrigações (R$) |
+| `onLendingAmount` | Repasses (R$) |
+| `vendorIndirectRiskAmount` | Risco indireto, vendor (R$) |
+| `lossAmount` | Prejuízo, com quebra até 12 meses / acima de 12 meses (R$) |
+| `creditLimitAmount` | Limites de crédito, com quebra até 360 dias / acima de 360 dias (R$) |
+| Carteira a vencer / vencida por faixa de prazo | Buckets de 30 a 360+ dias para a vencer e vencido |
+| Operações sob judice / em discordância | Valor e quantidade |
+
+A lista completa de campos está em [Seção SCR](/data/secao-scr#resumo-consolidado-do-scr-summary).
 
 ## Casos de uso
 

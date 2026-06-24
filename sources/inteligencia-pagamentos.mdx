@@ -1,0 +1,127 @@
+---
+title: "Inteligência de Pagamentos (Núclea)"
+description: "Indicadores de fluxo transacionado, predição, concentração e liquidez de PJ via Núclea (Conecta360), ativados como fonte adicional na política de crédito."
+icon: "money-bill-transfer"
+surface: conceito
+domain: fontes
+audience: ambos
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** a Inteligência de Pagamentos traz indicadores da **Núclea (Conecta360)** sobre o **fluxo financeiro transacionado** de uma empresa (boleto, TED e cartão): quanto recebeu e pagou nos últimos 12 meses, projeção de transações, concentração de pagadores/fornecedores e liquidez. São dados **PJ (CNPJ)** e funcionam como **fontes adicionais** selecionadas na edição da política de crédito (mesmo modelo do Cenprot), com **custo adicional** por indicador contratado. Os indicadores aparecem na **aba Comportamental** do relatório, e o **valor histórico transacionado (recebimento e pagamento)** também aparece em destaque na **visão geral**.
+</Info>
+
+## O que é
+
+Balanço e SCR contam a história contábil e bancária. A Inteligência de Pagamentos olha o **fluxo real de transações** da empresa no mercado (boletos, TED, cartão), via Núclea. É a leitura mais próxima da movimentação efetiva: quanto entra, quanto sai, com que concentração e com que previsibilidade.
+
+Responde:
+
+- Quanto a empresa **transacionou** (recebeu e pagou) nos últimos 12 meses?
+- Qual a **projeção** de transações para os próximos 12 meses?
+- O fluxo é **concentrado** em poucos pagadores/fornecedores?
+- Qual a **liquidez** dos recebíveis e pagamentos no vencimento?
+
+## Como ativar
+
+Cada indicador da Núclea é um **add-on**: você o seleciona como **fonte adicional de dados** na **edição da política de crédito** (mesmo fluxo do [Protestos Cenprot](/sources/protestos#como-escolher-a-fonte)). Só os add-ons ativados são consultados e cobrados.
+
+- **Escopo:** somente **PJ (CNPJ)**.
+- **Custo:** adicional por add-on contratado.
+- **Uso:** todos os indicadores ficam disponíveis como **variáveis na política**, tanto em **regras** quanto em **fórmulas** de precificação, limite e prazo.
+
+## Dados entregues
+
+São **12 indicadores** Núclea (PJ). A janela indica a temporalidade do dado: **12M** (acumulado/12 meses) ou **1M** (último mês).
+
+### Em destaque: Valor Histórico Transacionado
+
+Os dois indicadores de valor histórico são o cabeçalho da seção e os únicos que também aparecem na **visão geral** do relatório:
+
+| Indicador | O que mede | Janela |
+| --------- | ---------- | ------ |
+| **Valor Histórico Transacionado PJ · Recebimento** (Boleto, Cartão, TED) | Valor recebido nos últimos 12 meses (R$) | 12M |
+| **Valor Histórico Transacionado PJ · Pagamento** (Boleto, TED) | Valor pago nos últimos 12 meses (R$) | 12M |
+
+### Predição
+
+| Indicador | O que mede | Janela |
+| --------- | ---------- | ------ |
+| **Predição de Valor Transacionado PJ · Recebimento** (Boleto, TED, Cartão) | Projeção do valor a **receber** (R$) | 1M |
+| **Predição de Valor Transacionado PJ · Pagamento** (Boleto, TED) | Projeção do valor a **pagar** (R$) | 1M |
+
+### Concentração
+
+| Indicador | O que mede | Janela |
+| --------- | ---------- | ------ |
+| **Concentração PJ · Recebimento** (percentual ponderado, boleto) | Concentração do maior **pagador** no total recebido | 12M |
+| **Concentração PJ · Pagamento** (percentual ponderado, boleto) | Concentração do maior **fornecedor** no total pago | 12M |
+
+### Liquidez
+
+| Indicador | O que mede | Janela |
+| --------- | ---------- | ------ |
+| **Liquidez Vencimento PJ · Recebimento** (valor nominal, pagador PJ/PF) | Liquidez no vencimento dos **recebíveis** | 12M |
+| **Liquidez Vencimento PJ · Pagamento** (valor nominal, recebedor PJ/PF) | Liquidez no vencimento dos **pagamentos** | 12M |
+| **Liquidez Geral dos Sacados PJ · Pagamento** (mercado) | Liquidez geral dos sacados em pagamentos de boletos no mercado | 1M |
+| **Share de Relacionamento por Faixas de Liquidez · Recebidos** | Share de relacionamento por faixas de liquidez em boletos recebidos | 1M |
+
+### Autoliquidação
+
+Indicadores em **faixa textual** (ex.: "Entre 0% e 10%"), úteis em operações de recebíveis/factoring:
+
+| Indicador | O que mede | Janela |
+| --------- | ---------- | ------ |
+| **Autoliquidação PJ · Cedente = Sacado** | Autoliquidação quando **cedente e sacado** são a mesma entidade | 12M |
+| **Autoliquidação PJ · Sacado Sócio** | Autoliquidação quando o **sacado é sócio** do cedente | 12M |
+
+<Note>
+  A maioria dos indicadores é apurada no **nível raiz** do CNPJ (Radical); o *Share de Relacionamento por Faixas de Liquidez* é apurado no nível **Completo** do CNPJ.
+</Note>
+
+## Onde aparece no relatório
+
+- **Aba Comportamental:** a Inteligência de Pagamentos é exibida junto ao comportamento financeiro do tomador.
+- **Visão geral:** apenas o **Valor Histórico Transacionado** (recebimento e pagamento) é promovido para o resumo do relatório, em destaque.
+
+## Como usar na política
+
+<Steps>
+  <Step title="Ativar os add-ons">
+    Na edição da política, selecione os indicadores Núclea desejados como fontes adicionais. Só os ativados são consultados e cobrados.
+  </Step>
+  <Step title="Capacidade por fluxo real">
+    Use o **Valor Histórico Transacionado** (recebimento) como base de limite (ex.: cap por múltiplo do transacionado nos últimos 12 meses), no lugar ou em complemento ao faturamento presumido.
+  </Step>
+  <Step title="Risco de concentração">
+    Use **Concentração PJ · Recebimento/Pagamento** para penalizar dependência de poucos pagadores/fornecedores.
+  </Step>
+  <Step title="Previsibilidade">
+    Use a **Predição de Valor Transacionado** para antecipar a capacidade futura de pagamento.
+  </Step>
+</Steps>
+
+## Limitações e considerações
+
+- **Somente PJ.** Os indicadores Núclea não se aplicam a CPF.
+- **Custo adicional.** Cada add-on é contratado e cobrado separadamente, como fonte adicional na política.
+- **Pode vir nulo.** Indicadores de liquidez no vencimento podem retornar vazio quando não há histórico suficiente.
+- **Concentração é fração.** Os indicadores de concentração vêm como fração crua (0 a 1), não em pontos percentuais.
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Protestos Cenprot" icon="stamp" href="/sources/protestos#como-escolher-a-fonte">
+    Outra fonte adicional selecionável na política.
+  </Card>
+  <Card title="SCR / Open Finance" icon="building-columns" href="/sources/scr-open-finance">
+    Endividamento bancário, complementar ao fluxo transacionado.
+  </Card>
+  <Card title="Análise Financeira" icon="file-invoice-dollar" href="/concepts/analise-financeira">
+    Balanço e DRE para a visão contábil.
+  </Card>
+  <Card title="Editar política" icon="wand-magic-sparkles" href="/toolbox/editar-politica">
+    Ativar fontes adicionais de dados.
+  </Card>
+</CardGroup>
