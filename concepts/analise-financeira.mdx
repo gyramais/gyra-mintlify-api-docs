@@ -1,0 +1,310 @@
+---
+title: "Análise Financeira (Balanços e DRE)"
+description: "Extração automática de balanços e DRE a partir de PDFs, com indicadores calculados, análise por IA, comparação multi-período e exportação para planilha, API e MCP."
+icon: "file-invoice-dollar"
+surface: conceito
+domain: relatorio
+audience: ambos
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** a Análise Financeira transforma um **PDF de balanço patrimonial e DRE** em dados estruturados, padronizados e acionáveis. Você envia um ou mais arquivos (no input da análise ou pelo menu do relatório, podendo selecionar só as páginas relevantes), e a GYRA+ extrai as demonstrações, **padroniza para um formato único**, calcula **mais de 30 indicadores financeiros**, gera **parecer e recomendações por IA**, e compara **múltiplos períodos** lado a lado. Todos os números e indicadores ficam disponíveis como **variáveis na política de crédito** para automação, e podem ser **exportados em planilha** ou consumidos via **API e MCP**.
+</Info>
+
+## O que é
+
+Faturamento presumido e score dizem se o tomador **pagou bem no passado**. O balanço diz se ele **tem estrutura para pagar no futuro**: liquidez, alavancagem, rentabilidade, geração de caixa. O problema sempre foi operacional, balanço chega em PDF, em layouts diferentes a cada contador, e ler manualmente é lento e sujeito a erro.
+
+A Análise Financeira resolve isso de ponta a ponta:
+
+1. **Extrai** as linhas do balanço e da DRE direto do PDF, mesmo com layouts heterogêneos.
+2. **Padroniza** tudo para uma estrutura única (mesmo plano de contas para qualquer empresa).
+3. **Calcula** os indicadores financeiros automaticamente, com fórmula explícita.
+4. **Interpreta** os números com agentes de IA (parecer, pontos de atenção, recomendação de crédito e limites).
+5. **Compara** os períodos disponíveis, com variação período a período.
+6. **Disponibiliza** tudo como variável de política, planilha, API e MCP.
+
+<Note>
+  A Análise Financeira é complementar à fonte [Financeira](/sources/financeira) (faturamento e renda presumidos) e ao [SCR / Open Finance](/sources/scr-open-finance) (endividamento bancário real). Juntas, formam a visão de capacidade mais completa da plataforma.
+</Note>
+
+## Como enviar os balanços
+
+Há dois momentos para enviar os arquivos, e em ambos você controla **quais páginas** e **quantos arquivos**.
+
+<Steps>
+  <Step title="No input da análise, junto com o documento">
+    No input sempre visível, ao digitar o **CNPJ** e escolher a política, você pode **anexar o PDF do balanço** ali mesmo, antes de disparar a análise. O relatório já nasce com a extração financeira em processamento. Apenas arquivos **PDF** são aceitos.
+  </Step>
+  <Step title="Depois do relatório, pelo menu (3 pontinhos)">
+    Em um relatório de **empresa (CNPJ)** já gerado, abra o menu de ações (ícone de **3 pontinhos**) no topo e selecione **Enviar balanço**. Isso abre o fluxo de upload sem precisar refazer a análise.
+  </Step>
+  <Step title="Selecionar as páginas (economia de tokens)">
+    Ao subir o PDF, a plataforma mostra as **miniaturas de cada página**. Você marca **apenas as páginas que contêm o balanço e a DRE** e deixa de fora capa, pareceres, notas explicativas e anexos irrelevantes. Enviar só o que importa **reduz o custo de processamento** (menos tokens) e melhora a precisão. Há um atalho **Selecionar todas as páginas** (com limite indicado) quando o documento é curto.
+  </Step>
+  <Step title="Enviar múltiplos arquivos">
+    O upload aceita **vários PDFs de uma vez** (botão *Adicionar arquivo*). Útil quando cada exercício veio em um arquivo separado, ou quando o balanço e a DRE estão em documentos distintos. Todos são processados juntos e consolidados na mesma análise.
+  </Step>
+  <Step title="Iniciar a importação">
+    Confirme em **Iniciar importação**. O processamento roda em background; quando termina, você recebe um **e-mail** e a aba de Análise Financeira aparece preenchida no relatório.
+  </Step>
+</Steps>
+
+<Tip>
+  Regra prática de seleção de páginas: marque a página do **Balanço Patrimonial** (Ativo e Passivo) e a da **DRE**. Se o documento traz vários exercícios em páginas diferentes, marque todas as que tiverem números. Quanto mais enxuto o envio, mais rápido e barato o processamento.
+</Tip>
+
+## Mecânica de processamento
+
+O que acontece entre o upload e a aba pronta:
+
+1. **Leitura do PDF**: a extração lê tabelas e valores, inclusive em documentos escaneados (via leitura visual) e em layouts não padronizados.
+2. **Padronização**: cada linha do PDF é mapeada para uma **estrutura padrão única** de Ativo, Passivo, Patrimônio Líquido e DRE (ver [Formato padrão](#formato-padrao)). Isso é o que permite comparar empresas e períodos com plano de contas diferente.
+3. **Validação e reparo**: a extração confere a consistência contábil (ex.: Ativo = Passivo + PL). Quando há divergência, tenta reparar e sinaliza as ressalvas, em vez de silenciar o problema.
+4. **Cálculo de indicadores**: os indicadores são calculados **no momento da extração**, com fórmula registrada, garantindo que planilha, tela, API e MCP mostrem exatamente os mesmos números.
+5. **Análise por IA**: agentes geram parecer, pontos de atenção, recomendação de crédito e limites sugeridos.
+
+### Suporte a múltiplos períodos
+
+Quando o PDF (ou o conjunto de PDFs) contém **mais de um exercício**, a plataforma detecta e separa cada período automaticamente. Para cada período ela mantém:
+
+- O balanço e a DRE padronizados daquele período.
+- Todos os indicadores recalculados para aquele período.
+- A **variação** em relação ao período anterior, tanto absoluta quanto percentual.
+
+Isso alimenta tanto os indicadores de tendência (ex.: **crescimento médio da receita**, **evolução da dívida**) quanto a leitura comparativa na tela.
+
+## A aba de Análise Financeira
+
+No relatório de CNPJ, a aba **Análise financeira** organiza o resultado em camadas, do parecer ao detalhe.
+
+### Insights (parecer e recomendações por IA)
+
+- **Score GYRA+IA**: um score de crédito derivado dos fundamentos do balanço, com nível de risco (baixo, médio, alto) sinalizado por cor.
+- **Resumo Executivo**: o **parecer de IA**, com a leitura qualitativa dos números (alavancagem, solvência, rentabilidade, eficiência, crescimento) em linguagem de analista.
+- **Pontos de Atenção e Risco**: os sinais que merecem cautela, destacados (ex.: queda de receita, dependência de estoques, prejuízos acumulados).
+- **Recomendações & Limites**: **limites sugeridos** por modalidade (crédito com garantia, crédito sem garantia, antecipação de recebíveis, compra a prazo, onboarding/KYC), cada um com status (aprovado/negado) e valor quando aplicável.
+
+### Indicadores comparativos por período
+
+Os indicadores são apresentados **lado a lado entre os períodos**, com a variação destacada. Você vê, por exemplo, a liquidez corrente evoluindo de um exercício para o outro e o percentual de variação, em vez de um número isolado.
+
+### Tabela comparativa de balanço e DRE
+
+Uma **tabela comparativa** reúne as **principais linhas do balanço e da DRE** (Ativo total, Passivo total, Patrimônio líquido, Receita líquida, EBITDA, Lucro líquido, entre outras) com uma coluna por período, para leitura rápida da trajetória.
+
+### Abas por período
+
+Além da visão comparativa, há **uma aba para cada período isolado**, com o balanço, a DRE e os indicadores completos daquele exercício. Útil para auditar um ano específico em detalhe.
+
+<a id="campos" />
+
+## Formato padrão
+
+Toda demonstração é normalizada para a mesma estrutura, independentemente de como veio no PDF. Esse é o **formato padrão** entregue, com a descrição de cada campo do balanço e da DRE.
+
+<a id="campos-balanco" />
+
+### Campos do Balanço Patrimonial
+
+| Campo | Bloco | Descrição |
+| ----- | ----- | --------- |
+| **Ativo Circulante** | Ativo | Bens e direitos realizáveis em até 12 meses |
+| Disponibilidades | Ativo Circulante | Caixa, bancos e aplicações de liquidez imediata |
+| Clientes / Grupo | Ativo Circulante | Contas a receber de clientes e de empresas do grupo |
+| Créditos | Ativo Circulante | Demais créditos de curto prazo |
+| Estoques | Ativo Circulante | Mercadorias, produtos, matérias-primas |
+| Outros Créditos | Ativo Circulante | Adiantamentos, impostos a recuperar e afins |
+| **Ativo Não Circulante** | Ativo | Bens e direitos realizáveis acima de 12 meses |
+| Realizável a Longo Prazo | Ativo Não Circulante | Créditos e direitos de longo prazo |
+| Investimentos | Ativo Não Circulante | Participações societárias e investimentos permanentes |
+| Imobilizado | Ativo Não Circulante | Imóveis, máquinas, veículos, instalações |
+| Diferido | Ativo Não Circulante | Gastos diferidos a amortizar |
+| **Passivo Circulante** | Passivo | Obrigações vencíveis em até 12 meses |
+| Obrigações Financeiras | Passivo Circulante | Empréstimos e financiamentos de curto prazo |
+| Obrigações Operacionais | Passivo Circulante | Fornecedores, salários, impostos e afins |
+| **Passivo Não Circulante** | Passivo | Obrigações vencíveis acima de 12 meses |
+| Obrigações Financeiras LP | Passivo Não Circulante | Empréstimos e financiamentos de longo prazo |
+| Obrigações Operacionais LP | Passivo Não Circulante | Obrigações operacionais de longo prazo |
+| Resultados de Exercícios Futuros | Passivo Não Circulante | Receitas diferidas |
+| **Patrimônio Líquido** | Passivo | Capital próprio da empresa |
+| Capital Integralizado | Patrimônio Líquido | Capital efetivamente aportado pelos sócios |
+| Reservas | Patrimônio Líquido | Reservas de lucros e de capital |
+| Lucros ou Prejuízos Acumulados | Patrimônio Líquido | Resultados retidos de exercícios anteriores |
+
+<a id="campos-dre" />
+
+### Campos da DRE (Demonstrativo de Resultados)
+
+A DRE é entregue na ordem de apuração do resultado:
+
+| Campo | Descrição |
+| ----- | --------- |
+| **Receita Operacional Bruta** | Faturamento total antes de deduções |
+| **Receita Operacional Líquida** | Receita após impostos, devoluções e abatimentos |
+| **Custo dos Produtos Vendidos** | Custo direto do que foi vendido (CPV/CMV) |
+| **Resultado Bruto** | Receita Líquida menos CPV |
+| **Despesas Operacionais** | Despesas com vendas, administrativas e gerais |
+| **Resultado Financeiro** | Receitas menos despesas financeiras |
+| **Resultado Operacional** | Resultado das operações antes do não operacional |
+| **Resultado Não Operacional** | Receitas e despesas fora da atividade-fim |
+| **Lucro Antes do IR** | Resultado antes de imposto de renda e contribuição |
+| **Resultado Líquido do Exercício** | Lucro ou prejuízo final do período |
+
+<Note>
+  Como o plano de contas é o mesmo para qualquer empresa, dá para comparar tomadores diferentes e construir regras de política que valem para toda a carteira, sem depender do layout do contador.
+</Note>
+
+<a id="indicadores" />
+
+## Indicadores calculados
+
+A plataforma calcula os indicadores abaixo automaticamente, com a **fórmula registrada** em cada um. Estão agrupados por família. As variações entre períodos (absoluta e %) são calculadas para todos.
+
+### Liquidez
+
+| Indicador | Fórmula | O que mede |
+| --------- | ------- | ---------- |
+| **Liquidez Corrente** | Ativo Circulante / Passivo Circulante | Capacidade de pagar obrigações de curto prazo com ativos de curto prazo |
+| **Liquidez Seca** | (Ativo Circulante − Estoques) / Passivo Circulante | Liquidez de curto prazo excluindo estoques (ativos mais líquidos) |
+| **Liquidez Geral** | (Ativo Circulante + Ativo Não Circulante) / (Passivo Circulante + Passivo Não Circulante) | Capacidade total de honrar todas as obrigações |
+
+### Rentabilidade e margens
+
+| Indicador | Fórmula | O que mede |
+| --------- | ------- | ---------- |
+| **EBITDA** | Resultado Operacional + Depreciação + Amortização | Geração operacional de caixa antes de juros, impostos e não-caixa |
+| **Margem EBITDA** | EBITDA / Receita Operacional Líquida | Eficiência operacional como % da receita |
+| **Margem Líquida** | Resultado Líquido / Receita Operacional Líquida | Lucratividade final como % da receita |
+| **Margem Operacional (EBIT)** | Resultado Operacional / Receita Operacional Líquida | Lucratividade operacional antes de juros e impostos |
+| **Custo sobre Receita** | Custo dos Produtos Vendidos / Receita Operacional Líquida | Peso do custo de produção sobre a receita |
+
+### Retorno
+
+| Indicador | Fórmula | O que mede |
+| --------- | ------- | ---------- |
+| **ROA (Retorno sobre o Ativo)** | Resultado Líquido / Ativo Total | Eficiência do ativo total em gerar lucro |
+| **ROE (Retorno sobre o PL)** | Resultado Líquido / Patrimônio Líquido | Retorno gerado para o capital dos sócios |
+| **Retorno sobre Investimento** | Resultado Líquido / Ativo Total | Retorno sobre o ativo investido (na implementação atual usa a mesma base do ROA) |
+| **Retorno sobre Capital** | Resultado Líquido / Capital Integralizado | Retorno sobre o capital integralizado |
+
+### Eficiência e atividade
+
+| Indicador | Fórmula | O que mede |
+| --------- | ------- | ---------- |
+| **Giro do Ativo** | Receita Operacional Líquida / Ativo Total | Receita gerada por real de ativo |
+| **Faturamento Médio Mensal** | Receita Operacional Líquida / 12 | Receita média mensal para projeção |
+| **Prazo Médio de Recebimento (PMR)** | (Contas a Receber / Receita Líquida) × 30 | Dias médios para converter vendas em caixa |
+
+### Endividamento e alavancagem
+
+| Indicador | Fórmula | O que mede |
+| --------- | ------- | ---------- |
+| **Dívida Líquida** | (Obrigações Financeiras + Obrigações Financeiras LP) − Disponibilidades | Endividamento financeiro líquido de caixa |
+| **Dívida Líquida / EBITDA** | Dívida Líquida / EBITDA | Capacidade de servir a dívida com geração de caixa |
+| **Endividamento Geral** | Exigível Total / Ativo Total | Quanto do ativo está financiado por terceiros |
+| **Exigível Total / PL** | Exigível Total / Patrimônio Líquido | Obrigações totais frente ao capital dos sócios |
+| **Passivo / EBITDA** | Passivo Total / EBITDA | Capacidade de cobrir o passivo total com geração de caixa |
+| **Empréstimos CP / Exigível Total** | Obrigações Financeiras / Exigível Total | Parcela da dívida vencível em até 12 meses |
+| **Empréstimos LP / Exigível Total** | Obrigações Financeiras LP / Exigível Total | Parcela da dívida vencível acima de 12 meses |
+| **Empréstimos Totais / Exigível Total** | (Obrigações Financeiras + Obrigações Financeiras LP) / Exigível Total | Dívida financeira como parcela de todas as obrigações |
+| **Composição do Endividamento (CP) / Exigível Total** | Passivo Circulante / Exigível Total | Peso do passivo circulante no total de obrigações |
+| **Composição do Endividamento, Circulante** | Passivo Circulante / Passivo Total | Estrutura de curto prazo do passivo |
+| **Composição do Endividamento, Não Circulante** | Passivo Não Circulante / Passivo Total | Estrutura de longo prazo do passivo |
+
+<Note>
+  Convenções das fórmulas: **Exigível Total** = Passivo Circulante + Passivo Não Circulante; **Obrigações Financeiras** (CP) e **Obrigações Financeiras LP** são os empréstimos e financiamentos; **Disponibilidades** = caixa e aplicações de liquidez imediata; **Passivo Total** = total do passivo (Exigível Total + Patrimônio Líquido).
+</Note>
+
+### Estrutura do ativo
+
+| Indicador | Fórmula | O que mede |
+| --------- | ------- | ---------- |
+| **Imobilização do PL** | (Imobilizado + Diferido) / Patrimônio Líquido | Quanto do capital próprio está aplicado em ativo fixo |
+| **Imobilização dos Recursos de Longo Prazo (RLP)** | (Imobilizado + Diferido) / (PL + Passivo Não Circulante) | Casamento entre ativo fixo e financiamento de longo prazo |
+
+### Cobertura
+
+| Indicador | Fórmula | O que mede |
+| --------- | ------- | ---------- |
+| **Cobertura de Juros** | EBITDA / Despesas Financeiras | Quantas vezes a geração de caixa cobre o serviço da dívida |
+
+### Crescimento e evolução (entre períodos)
+
+| Indicador | Fórmula | O que mede |
+| --------- | ------- | ---------- |
+| **Crescimento Médio da Receita** | (Receita Atual − Receita Anterior) / Receita Anterior | Trajetória da receita período a período |
+| **Evolução da Dívida** | Dívida Total Atual − Dívida Total Anterior | Movimento de alavancagem ou desalavancagem |
+
+## Variáveis na política de crédito
+
+Todos os números do balanço e da DRE, e **todos os indicadores acima**, ficam disponíveis como **variáveis dentro da política de crédito**. Isso significa que você automatiza decisões e precificação diretamente sobre os fundamentos contábeis, por exemplo:
+
+- Bloquear quando **Liquidez Corrente < 1** ou **PL negativo**.
+- Alertar quando **Dívida Líquida / EBITDA > 3**.
+- Limitar o valor aprovado a um múltiplo do **EBITDA** ou do **Faturamento Médio Mensal** na fórmula de `amountFormula`.
+- Ajustar a taxa pela **Margem EBITDA** ou pela **Cobertura de Juros**.
+- Usar o **Score GYRA+IA** e o **nível de risco** como gate de aprovação.
+
+Combinados com os operadores e as fórmulas de [Precificação](/concepts/precificacao), os indicadores viram regras de aprovação, alerta e bloqueio sem intervenção manual. Ver [Política de Crédito](/concepts/politica-de-credito) e [Criar política personalizada](/guides/criar-politica-personalizada).
+
+## Exportação, API e MCP
+
+A análise é entregue em **formato padrão** e fica acessível por três caminhos:
+
+<CardGroup cols={3}>
+  <Card title="Planilha completa" icon="file-excel">
+    Exporte uma **planilha** com todo o trabalho: balanço e DRE padronizados, tabela de indicadores por período e a análise comparativa. Ideal para o comitê de crédito revisar fora da plataforma.
+  </Card>
+  <Card title="API" icon="code">
+    Consuma o relatório e a seção financeira via [API de relatório](/api-reference/report-v2/get-v2report), com os mesmos números calculados na extração.
+  </Card>
+  <Card title="MCP" icon="plug">
+    Acesse os dados e indicadores por linguagem natural via [MCP Server](/mcp/o-que-e), para análises e automações em ferramentas de IA.
+  </Card>
+</CardGroup>
+
+## Limitações e considerações
+
+- **Qualidade do PDF importa.** Documentos limpos e em formato padrão extraem mais rápido e com mais precisão. PDFs escaneados ou com layout incomum levam mais tempo e podem gerar ressalvas de validação.
+- **Selecione as páginas certas.** Enviar o documento inteiro (com notas, pareceres e anexos) encarece o processamento sem ganho. Marque só balanço e DRE.
+- **Indicadores de tendência exigem mais de um período.** Crescimento da receita, evolução da dívida e as variações só aparecem quando há pelo menos dois exercícios.
+- **A análise é apoio à decisão.** O parecer e os limites sugeridos pela IA orientam, mas a régua final é a política de crédito da sua organização.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Preciso de integração com ERP para usar?">
+    Não. O caminho de **upload de PDF** (no input ou pelo menu *Enviar balanço*) é self-service. A integração com ERP/contabilidade é um caminho alternativo de ingestão, quando contratado. Ver [Financeira](/sources/financeira).
+  </Accordion>
+  <Accordion title="Posso enviar vários anos de uma vez?">
+    Sim. Envie um PDF com vários exercícios ou **vários arquivos**, um por ano. A plataforma detecta e separa cada período, com a comparação entre eles.
+  </Accordion>
+  <Accordion title="Por que selecionar páginas?">
+    Para **economizar tokens** e acelerar. Enviar só as páginas do balanço e da DRE reduz o custo de processamento e melhora a precisão da extração.
+  </Accordion>
+  <Accordion title="Quanto tempo leva?">
+    O processamento roda em background e costuma levar de alguns segundos a poucos minutos, conforme a qualidade e o tamanho do documento. Você recebe um **e-mail** quando fica pronto.
+  </Accordion>
+  <Accordion title="Os indicadores entram nas regras automáticas?">
+    Sim. Todos os números e indicadores são **variáveis da política de crédito**, usados em regras de aprovação, alerta e bloqueio e nas fórmulas de precificação.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Fonte Financeira" icon="sack-dollar" href="/sources/financeira">
+    Faturamento e renda presumidos, complementares ao balanço.
+  </Card>
+  <Card title="Precificação" icon="calculator" href="/concepts/precificacao">
+    Fórmulas usando indicadores do balanço.
+  </Card>
+  <Card title="GYRA Insights" icon="sparkles" href="/concepts/gyra-insights">
+    Os agentes de IA que geram o parecer.
+  </Card>
+  <Card title="Rodar uma análise" icon="play" href="/toolbox/rodar-operacao">
+    Anexar o balanço no input da análise.
+  </Card>
+</CardGroup>

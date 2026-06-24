@@ -12,6 +12,20 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ---
 
+## Junho 2026
+
+### Análise Financeira por PDF e Protestos Cenprot
+
+**Novidades**
+- **Análise Financeira (Balanços e DRE):** envie o balanço em **PDF** no input da análise (junto com o CNPJ) ou pelo menu *Enviar balanço* do relatório. A plataforma extrai e padroniza balanço e DRE, calcula **mais de 30 indicadores** (liquidez, rentabilidade, retorno, endividamento, eficiência, cobertura, crescimento e fluxo de caixa), gera **parecer e recomendações por IA**, e compara **múltiplos períodos**. No envio dá para **selecionar páginas** (economia de tokens) e mandar **vários arquivos**. Resultado exportável em **planilha** e acessível por **API** e **MCP**. Ver [Análise Financeira](/concepts/analise-financeira).
+- **Protestos com fonte configurável:** por padrão, os protestos vêm do **bureau da análise** (cobertura conforme o convênio de cada bureau com os cartórios, que pode não ser nacional). Para **cobertura nacional garantida**, ative **Protestos Cenprot** como fonte adicional na edição da política, com **custo adicional** por consulta. Ver [Protestos](/sources/protestos#como-escolher-a-fonte).
+- **SCR com mais campos:** o resumo do SCR passou a expor novas dimensões da exposição de crédito, com destaque para a **quantidade de relacionamentos** (`institutionQuantity`, número de instituições) e a **quantidade de operações** (`transactionsQuantity`), além de **coobrigações**, **repasses**, **risco indireto (vendor)**, **prejuízo** (com quebra até/acima de 12 meses), **limites de crédito** (até/acima de 360 dias) e **operações sob judice / em discordância**. Ver [Seção SCR](/data/secao-scr#resumo-consolidado-do-scr-summary).
+- **Exposição em Mídia (inteligência proprietária):** nova seção `MEDIA_EXPOSURE` (relatórios **COMPLETO** e **COMPLETO+**) com screening próprio da GYRA+ que identifica as principais notícias, classifica o **sentimento** (positiva/negativa/neutra/outros) e gera **scores por tipo** (exposição, celebridade, impopularidade, escala A-H), além das **últimas 10 notícias** em lista descritiva. Ver [Mídia e Reputação](/sources/midia-reputacao#secao-exposicao-em-midia-media-exposure).
+- **Aba Comportamental (Cadastro Positivo Boa Vista):** o relatório ganhou a aba **Comportamental** com o **Cadastro Positivo** do Boa Vista, já incluso na consulta padrão **sem custo adicional**, com dados de comportamento de pagamento distintos para **PF** e **PJ**. Ver [Bureau de Crédito](/sources/bureau-credito#comportamental-cadastro-positivo).
+- **Inteligência de Pagamentos (Núclea):** novos indicadores de **fluxo transacionado** (PJ) via Núclea/Conecta360, ativados como **fontes adicionais** na política (modelo Cenprot, custo adicional): valor histórico transacionado (recebimento e pagamento, em destaque na visão geral), predição, concentração de pagadores/fornecedores, liquidez no vencimento e autoliquidação. Aparecem na aba **Comportamental**. Ver [Inteligência de Pagamentos](/sources/inteligencia-pagamentos).
+
+---
+
 ## Abril 2026
 
 ### CNJ — Mandados de Prisão em Antecedente Criminal

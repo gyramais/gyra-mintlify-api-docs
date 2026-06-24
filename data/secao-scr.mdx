@@ -16,60 +16,102 @@ Disponível no relatório **COMPLETO** e **COMPLETO+**.
 
 ## HISTORY, Histórico mês a mês
 
-A seção `HISTORY` mostra o endividamento bancário do documento mês a mês, permitindo identificar tendências de crescimento ou redução da dívida ao longo do tempo.
+A seção `HISTORY` mostra o endividamento bancário do documento mês a mês, permitindo identificar tendências de crescimento ou redução da dívida ao longo do tempo. A seção é entregue em dois blocos: `graphicInfo` (série para o gráfico) e `riskDetails`, com a quebra de **carteira vencida** (`expired`) e **a vencer** (`toExpire`) por faixa de prazo.
 
-### Campos do `details`, HISTORY
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `months` | object[] | Array com os dados de cada mês |
-| `totalRisk` | number | Exposição total atual (R$) |
-| `totalExpired` | number | Total vencido atual (R$) |
-| `totalLate` | number | Total em atraso atual (R$) |
-| `availableCreditLimit` | number | Limite disponível (R$) |
-| `totalLosses` | number | Total de perdas registradas (R$) |
-
-### Campos de cada mês (`months[]`)
+### `graphicInfo[]`, série mensal para o gráfico
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
-| `yearMonth` | string | Ano/mês (YYYY-MM) |
-| `totalRisk` | number | Risco total no período (R$) |
-| `toExpire` | number | A vencer (R$) |
-| `expired` | number | Vencido (R$) |
-| `late` | number | Em atraso (R$) |
-| `losses` | number | Perdas (R$) |
-| `availableCreditLimit` | number | Limite disponível (R$) |
+| `formattedYearMonth` | string | Mês/ano formatado (MM/YYYY) |
+| `date` | string | Data do mês de referência (ISO) |
+| `totalRisk` | number | Risco total no mês (R$) |
+| `totalResponsabilityAmount` | number | Responsabilidade total no mês (R$) |
+| `creditLimitAmount` | number | Limites de crédito no mês (R$) |
+
+### `riskDetails.expired[]`, carteira vencida por faixa
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `formattedYearMonth` | string | Mês/ano (MM/YYYY) |
+| `date` | string | Data do mês (ISO) |
+| `totalRisk` | number | Risco total no mês (R$) |
+| `totalResponsabilityAmount` | number | Responsabilidade total (R$) |
+| `creditLimitAmount` | number | Limites de crédito (R$) |
+| `lossAmountTo12Months` | number | Prejuízo até 12 meses (R$) |
+| `lossAmountMoreThan12Months` | number | Prejuízo acima de 12 meses (R$) |
+| `expiredAmount30Days` | number | Vencido 15-30 dias (R$) |
+| `expiredAmount31to60Days` | number | Vencido 31-60 dias (R$) |
+| `expiredAmount61to90Days` | number | Vencido 61-90 dias (R$) |
+| `expiredAmount91to180Days` | number | Vencido 91-180 dias (R$) |
+| `expiredAmount181to360Days` | number | Vencido 181-360 dias (R$) |
+| `expiredAmountMoreThan360Days` | number | Vencido acima de 360 dias (R$) |
+| `expiredAmount` | number | Total vencido no mês (R$) |
+
+### `riskDetails.toExpire[]`, carteira a vencer por faixa
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `formattedYearMonth` | string | Mês/ano (MM/YYYY) |
+| `date` | string | Data do mês (ISO) |
+| `totalRisk` | number | Risco total no mês (R$) |
+| `totalResponsabilityAmount` | number | Responsabilidade total (R$) |
+| `creditLimitAmount` | number | Limites de crédito (R$) |
+| `lossAmountTo12Months` | number | Prejuízo até 12 meses (R$) |
+| `lossAmountMoreThan12Months` | number | Prejuízo acima de 12 meses (R$) |
+| `toExpireAmount30Days` | number | A vencer até 30 dias (R$) |
+| `toExpireAmount31to60Days` | number | A vencer 31-60 dias (R$) |
+| `toExpireAmount61to90Days` | number | A vencer 61-90 dias (R$) |
+| `toExpireAmount91to180Days` | number | A vencer 91-180 dias (R$) |
+| `toExpireAmount181to360Days` | number | A vencer 181-360 dias (R$) |
+| `toExpireAmountMoreThan360Days` | number | A vencer acima de 360 dias (R$) |
+| `toExpireAmount` | number | Total a vencer no mês (R$) |
 
 ### Exemplo HISTORY
 
 ```json
 {
   "type": { "value": "HISTORY" },
-  "details": {
-    "totalRisk": 450000.00,
-    "totalExpired": 15000.00,
-    "totalLosses": 0,
-    "availableCreditLimit": 120000.00,
-    "months": [
+  "data": {
+    "graphicInfo": [
       {
-        "yearMonth": "2025-01",
+        "formattedYearMonth": "01/2025",
+        "date": "2025-01-02T00:00:00.000Z",
         "totalRisk": 450000.00,
-        "toExpire": 435000.00,
-        "expired": 15000.00,
-        "late": 0,
-        "losses": 0,
-        "availableCreditLimit": 120000.00
-      },
-      {
-        "yearMonth": "2024-12",
-        "totalRisk": 480000.00,
-        "toExpire": 480000.00,
-        "expired": 0,
-        "late": 0,
-        "losses": 0
+        "totalResponsabilityAmount": 470000.00,
+        "creditLimitAmount": 120000.00
       }
-    ]
+    ],
+    "riskDetails": {
+      "expired": [
+        {
+          "formattedYearMonth": "01/2025",
+          "totalRisk": 450000.00,
+          "totalResponsabilityAmount": 470000.00,
+          "creditLimitAmount": 120000.00,
+          "lossAmountTo12Months": 0,
+          "lossAmountMoreThan12Months": 0,
+          "expiredAmount30Days": 15000.00,
+          "expiredAmount31to60Days": 0,
+          "expiredAmount61to90Days": 0,
+          "expiredAmount91to180Days": 0,
+          "expiredAmount181to360Days": 0,
+          "expiredAmountMoreThan360Days": 0,
+          "expiredAmount": 15000.00
+        }
+      ],
+      "toExpire": [
+        {
+          "formattedYearMonth": "01/2025",
+          "toExpireAmount30Days": 50000.00,
+          "toExpireAmount31to60Days": 80000.00,
+          "toExpireAmount61to90Days": 70000.00,
+          "toExpireAmount91to180Days": 120000.00,
+          "toExpireAmount181to360Days": 90000.00,
+          "toExpireAmountMoreThan360Days": 25000.00,
+          "toExpireAmount": 435000.00
+        }
+      ]
+    }
   }
 }
 ```
@@ -96,6 +138,64 @@ A seção `CATEGORIES` detalha o endividamento bancário por finalidade do créd
 | `categories[].code` | string | Código da modalidade SCR |
 | `categories[].totalRisk` | number | Risco total na categoria (R$) |
 | `categories[].expired` | number | Valor vencido na categoria (R$) |
+
+---
+
+## Resumo consolidado do SCR (`summary`)
+
+Além do histórico mês a mês, cada mês do SCR carrega um **resumo consolidado** (`summary`) com a visão completa da exposição de crédito do documento naquela data de referência. A partir das últimas atualizações, esse resumo passou a expor **mais campos**, com destaque para a **quantidade de relacionamentos** (instituições) e o número de operações.
+
+### Relacionamento e exposição
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `institutionQuantity` | number | **Quantidade de relacionamentos**: número de instituições financeiras com as quais o documento mantém operações de crédito |
+| `transactionsQuantity` | number | Quantidade de operações de crédito ativas |
+| `startRelationship` | string | Data de início do relacionamento de crédito (alimenta `SCR_START_RELATIONSHIP`) |
+| `amount` | number | Carteira de crédito, saldo total (R$) |
+| `totalRisk` | number | Risco total, exposição consolidada (R$) |
+| `totalResponsabilityAmount` | number | Responsabilidade total (R$) |
+| `vendorIndirectRiskAmount` | number | Risco indireto (vendor) (R$) |
+
+### Carteira a vencer e vencida (por faixa de prazo)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `toExpireAmount` | number | Carteira a vencer, total (R$) |
+| `toExpireAmount30Days` … `toExpireAmountMoreThan360Days` | number | Carteira a vencer por faixa (até 30, 31-60, 61-90, 91-180, 181-360, acima de 360 dias) |
+| `toExpireAmountIndefinite` | number | Carteira a vencer com prazo indeterminado (R$) |
+| `expiredAmount` | number | Carteira vencida, total (R$) |
+| `expiredAmount30Days` … `expiredAmountMoreThan360Days` | number | Carteira vencida por faixa (15-30, 31-60, 61-90, 91-180, 181-360, acima de 360 dias) |
+
+### Prejuízo, limites e demais valores
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `lossAmount` | number | Prejuízo total (R$) |
+| `lossAmountTo12Months` / `lossAmountMoreThan12Months` | number | Prejuízo até 12 meses / acima de 12 meses (R$) |
+| `creditLimitAmount` | number | Limites de crédito, total (R$) |
+| `creditLimitAmount360Days` / `creditLimitAmountMoreThan360Days` | number | Limites de crédito até 360 dias / acima de 360 dias (alimenta `SCR_CREDIT_LIMIT_360_DAYS`) |
+| `creditToReleaseAmount` | number | Créditos a liberar (R$) |
+| `coObligationsAmount` | number | Coobrigações (R$) |
+| `onLendingAmount` | number | Repasses (R$) |
+
+### Operações sob judice e em discordância
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `judicialTransactionsAmount` / `judicialTransactionsQuantity` | number | Operações sob judice, valor / quantidade |
+| `discordanceTransactionsAmount` / `discordanceTransactionsQuantity` | number | Operações em discordância, valor / quantidade |
+
+### Qualidade da consulta
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `documentsProcessedPercertage` | number | Percentual de documentos processados na apuração (grafia do campo conforme a API) |
+| `volumeProcessedPercentage` | number | Percentual do volume processado na apuração |
+
+<Note>
+  Esses campos refletem a posição de uma data de referência. No histórico, eles aparecem por mês, permitindo medir a evolução do número de relacionamentos, da carteira e do prejuízo ao longo do tempo.
+</Note>
 
 ---
 

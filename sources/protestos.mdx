@@ -1,6 +1,6 @@
 ---
 title: "Protestos"
-description: "Protestos cartorários ativos em todo o Brasil, por CPF ou CNPJ, com valor, cartório e data."
+description: "Protestos cartorários ativos por CPF ou CNPJ, com valor, cartório e data. Fonte configurável: bureau da análise ou Cenprot (cobertura nacional garantida)."
 icon: "file-circle-exclamation"
 surface: conceito
 domain: fontes
@@ -9,7 +9,7 @@ lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** a fonte de protestos entrega a **lista consolidada de protestos ativos** em cartórios de todo o Brasil para um CPF ou CNPJ, com valor, data, cartório e UF. É um dos sinalizadores mais diretos de inadimplência comercial e costuma ser regra bloqueante em políticas conservadoras.
+  **Resumo:** a fonte de protestos entrega a **lista consolidada de protestos ativos** em cartório para um CPF ou CNPJ, com valor, data, cartório e UF. É um dos sinalizadores mais diretos de inadimplência comercial e costuma ser regra bloqueante em políticas conservadoras. A **abrangência depende da fonte escolhida**: por padrão, os protestos vêm do bureau da análise (cobertura conforme o convênio de cada bureau com os cartórios); para **cobertura nacional garantida**, ative **Protestos Cenprot** como fonte adicional na política (custo adicional).
 </Info>
 
 ## O que é
@@ -25,10 +25,31 @@ Em crédito, a seção de protestos responde:
 
 ## De onde vem
 
-- **Tipo de fonte:** cartorial oficial, via agregador autorizado (IEPTB e bases conexas).
-- **Cobertura geográfica:** Brasil, todas as 27 UFs.
+Os protestos podem ser consultados em duas fontes, definidas na política de crédito:
+
+- **Bureau da análise (padrão):** os protestos vêm do mesmo bureau escolhido para a análise (Serasa, Boa Vista, ProScore etc.). A cobertura depende do **acordo comercial de cada bureau com os cartórios**, e esse convênio pode **não ser nacional**, então o retorno pode ser parcial (regional ou limitado a um conjunto de cartórios).
+- **Protestos Cenprot (fonte adicional, opcional):** consolida os protestos de cartórios de **todo o Brasil**, garantindo **cobertura nacional**. Ativada por seleção explícita na edição da política, com **custo adicional** por consulta. Ver [Como escolher a fonte](#como-escolher-a-fonte).
+
+Características gerais (valem para as duas fontes):
+
+- **Tipo de fonte:** cartorial oficial, via agregadores autorizados (Cenprot/IEPTB e bases de bureau).
 - **Natureza do dado:** público (registros cartoriais são de consulta pública).
 - **Base legal:** dados públicos registrados em cartórios extrajudiciais.
+
+## Como escolher a fonte
+
+<Steps>
+  <Step title="Fonte padrão: o bureau da análise">
+    Sem configuração extra, os protestos saem do bureau já usado na análise. É o caminho mais econômico, mas a **abrangência segue o convênio daquele bureau com os cartórios**, que pode não cobrir o país inteiro.
+  </Step>
+  <Step title="Cobertura nacional garantida: Protestos Cenprot">
+    Na **edição da política de crédito**, selecione **Protestos Cenprot** como **fonte adicional de dados**. A partir daí, a seção de protestos passa a ser populada pelo Cenprot, com alcance nacional. Há **custo adicional** por consulta, útil quando a decisão exige certeza de que nenhum protesto, em qualquer UF, ficou de fora.
+  </Step>
+</Steps>
+
+<Note>
+  A estrutura de campos do relatório é a mesma nas duas fontes. O que muda é a **abrangência geográfica** e o **custo**. Avalie o trade-off conforme o ticket e o apetite de risco do produto.
+</Note>
 
 ## Frequência de atualização
 
@@ -101,8 +122,9 @@ Exemplo:
 
 - **Defasagem cartorial**: um protesto pago hoje pode continuar listado como `ACTIVE` por alguns dias até o cartório atualizar.
 - **Falsos positivos por homônimo**: raros, mas podem ocorrer em CPF com nomes muito comuns. O cruzamento com outros dados do relatório costuma resolver.
-- **Cartórios fora da base**: alguns cartórios pequenos podem ter atraso maior na sincronização. Cobertura é alta (>95%) mas não 100%.
-- **Não distingue protesto de cheque de protesto de duplicata** na camada básica. A descrição textual está em `items[].description` mas não é campo estruturado.
+- **Abrangência depende da fonte**: no padrão (bureau da análise), a cobertura segue o convênio daquele bureau com os cartórios e pode ser **parcial**. Para alcance nacional garantido, ative **Protestos Cenprot** (custo adicional).
+- **Cartórios fora da base**: mesmo com cobertura nacional, alguns cartórios pequenos podem ter atraso maior na sincronização.
+- **Tipo de instrumento por ocorrência**: o tipo do título protestado (duplicata, cheque, CCB, nota promissória etc.) vem estruturado em `protests[].instrumentType`. Ver [Seção Protestos](/data/secao-protestos).
 
 ## Perguntas frequentes
 
@@ -119,8 +141,14 @@ Exemplo:
   <Accordion title="Como contestar um protesto falso?">
     O processo é no cartório, não na GYRA+. Nós apenas consultamos. Se o cartório atualiza, nossa próxima consulta reflete. Uma reanálise 24-48h depois da correção no cartório costuma resolver.
   </Accordion>
+  <Accordion title="Os protestos cobrem todo o Brasil?">
+    Depende da fonte. No padrão, os protestos vêm do **bureau da análise**, e a abrangência segue o **acordo comercial daquele bureau com os cartórios**, que pode não ser nacional. Para garantir **cobertura nacional**, selecione **Protestos Cenprot** como fonte adicional na edição da política. Essa opção tem **custo adicional** por consulta.
+  </Accordion>
+  <Accordion title="Como ativo o Cenprot na minha política?">
+    Na **edição da política de crédito**, marque **Protestos Cenprot** entre as fontes adicionais de dados. A seção de protestos passa a ser populada pelo Cenprot (alcance nacional). Ver [Editar política](/toolbox/editar-politica).
+  </Accordion>
   <Accordion title="Qual nível de relatório inclui protestos?">
-    Disponível a partir do **COMPLETO**.
+    Disponível a partir do **COMPLETO**. A escolha entre bureau e Cenprot é independente do nível e feita na política.
   </Accordion>
 </AccordionGroup>
 
