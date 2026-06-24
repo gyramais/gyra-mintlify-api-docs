@@ -37,7 +37,7 @@ Cada disparo é um `POST` com o envelope `{ organizationId, webhookType, data }`
 | `type` | Quando dispara | O que vem em `data` |
 | ------ | -------------- | ------------------- |
 | `REPORT_FINISHED` | Relatório totalmente processado (todas as integrações concluíram). É o evento mais usado. | `reportId`, `policyId`, `isFinalized`, `finalizedAt` e, se houve falha parcial, `errors.sections[]`. |
-| `REPORT` | A cada **seção** concluída durante o processamento (granular, vários disparos por relatório). | Os dados da seção concluída (envelope traz também `sectionTypeId` e `integration`). |
+| `REPORT` | A cada **seção** concluída durante o processamento (granular, vários disparos por relatório). | Os dados da seção concluída em `content`. |
 | `REPORT_STATUS` | Decisão **manual** (analista aprovou/rejeitou via `analyze`/`re-analyze`). | `reportId` e `analysis` com `status` (`REPORT_APPROVED`/`REPORT_REJECTED`), autor e data. |
 | `REPORT_EXPORTED` | Exportação do relatório (PDF ou XLS) ficou pronta, ou falhou. | `reportId`, `exportUrl` (assinada) e `exportedAt`. Em falha, `exportUrl` vem `null` e há `error`. |
 | `CREDIT_POLICY` | Política de crédito avaliada (resultado final do motor de regras). | `reportId`, `policyId`, `version`, `status`, `risk`, `score`, `date`. |
@@ -128,7 +128,6 @@ Cada disparo é um `POST` com o envelope `{ organizationId, webhookType, data }`
 {
   "organizationId": "6612a7f30000000000000001",
   "webhookType": "REPORT",
-  "sectionTypeId": "PROCESSES",
   "data": {
     "content": { "...dados da seção concluída..." },
     "compress": false
