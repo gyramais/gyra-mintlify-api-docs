@@ -186,7 +186,7 @@ A plataforma calcula os indicadores abaixo automaticamente, com a **fórmula reg
 | --------- | ------- | ---------- |
 | **ROA (Retorno sobre o Ativo)** | Resultado Líquido / Ativo Total | Eficiência do ativo total em gerar lucro |
 | **ROE (Retorno sobre o PL)** | Resultado Líquido / Patrimônio Líquido | Retorno gerado para o capital dos sócios |
-| **Retorno sobre Investimento** | Resultado Líquido / Ativo Total | Retorno sobre o capital investido |
+| **Retorno sobre Investimento** | Resultado Líquido / Ativo Total | Retorno sobre o ativo investido (na implementação atual usa a mesma base do ROA) |
 | **Retorno sobre Capital** | Resultado Líquido / Capital Integralizado | Retorno sobre o capital integralizado |
 
 ### Eficiência e atividade
@@ -201,17 +201,21 @@ A plataforma calcula os indicadores abaixo automaticamente, com a **fórmula reg
 
 | Indicador | Fórmula | O que mede |
 | --------- | ------- | ---------- |
-| **Dívida Líquida** | (Empréstimos CP + Empréstimos LP) − Caixa − Aplicações | Endividamento financeiro líquido de caixa |
+| **Dívida Líquida** | (Obrigações Financeiras + Obrigações Financeiras LP) − Disponibilidades | Endividamento financeiro líquido de caixa |
 | **Dívida Líquida / EBITDA** | Dívida Líquida / EBITDA | Capacidade de servir a dívida com geração de caixa |
 | **Endividamento Geral** | Exigível Total / Ativo Total | Quanto do ativo está financiado por terceiros |
 | **Exigível Total / PL** | Exigível Total / Patrimônio Líquido | Obrigações totais frente ao capital dos sócios |
 | **Passivo / EBITDA** | Passivo Total / EBITDA | Capacidade de cobrir o passivo total com geração de caixa |
-| **Empréstimos CP / Exigível Total** | Empréstimos de Curto Prazo / Exigível Total | Parcela da dívida vencível em até 12 meses |
-| **Empréstimos LP / Exigível Total** | Empréstimos de Longo Prazo / Exigível Total | Parcela da dívida vencível acima de 12 meses |
-| **Empréstimos Totais / Exigível Total** | (Empréstimos CP + LP) / Exigível Total | Dívida financeira como parcela de todas as obrigações |
+| **Empréstimos CP / Exigível Total** | Obrigações Financeiras / Exigível Total | Parcela da dívida vencível em até 12 meses |
+| **Empréstimos LP / Exigível Total** | Obrigações Financeiras LP / Exigível Total | Parcela da dívida vencível acima de 12 meses |
+| **Empréstimos Totais / Exigível Total** | (Obrigações Financeiras + Obrigações Financeiras LP) / Exigível Total | Dívida financeira como parcela de todas as obrigações |
 | **Composição do Endividamento (CP) / Exigível Total** | Passivo Circulante / Exigível Total | Peso do passivo circulante no total de obrigações |
 | **Composição do Endividamento, Circulante** | Passivo Circulante / Passivo Total | Estrutura de curto prazo do passivo |
 | **Composição do Endividamento, Não Circulante** | Passivo Não Circulante / Passivo Total | Estrutura de longo prazo do passivo |
+
+<Note>
+  Convenções das fórmulas: **Exigível Total** = Passivo Circulante + Passivo Não Circulante; **Obrigações Financeiras** (CP) e **Obrigações Financeiras LP** são os empréstimos e financiamentos; **Disponibilidades** = caixa e aplicações de liquidez imediata; **Passivo Total** = total do passivo (Exigível Total + Patrimônio Líquido).
+</Note>
 
 ### Estrutura do ativo
 

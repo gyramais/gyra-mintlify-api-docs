@@ -124,7 +124,7 @@ Exemplo:
 - **Falsos positivos por homônimo**: raros, mas podem ocorrer em CPF com nomes muito comuns. O cruzamento com outros dados do relatório costuma resolver.
 - **Abrangência depende da fonte**: no padrão (bureau da análise), a cobertura segue o convênio daquele bureau com os cartórios e pode ser **parcial**. Para alcance nacional garantido, ative **Protestos Cenprot** (custo adicional).
 - **Cartórios fora da base**: mesmo com cobertura nacional, alguns cartórios pequenos podem ter atraso maior na sincronização.
-- **Não distingue protesto de cheque de protesto de duplicata** na camada básica. A descrição textual está em `items[].description` mas não é campo estruturado.
+- **Tipo de instrumento por ocorrência**: o tipo do título protestado (duplicata, cheque, CCB, nota promissória etc.) vem estruturado em `protests[].instrumentType`. Ver [Seção Protestos](/data/secao-protestos).
 
 ## Perguntas frequentes
 

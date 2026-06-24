@@ -39,7 +39,7 @@ A seção `HISTORY` mostra o endividamento bancário do documento mês a mês, p
 | `creditLimitAmount` | number | Limites de crédito (R$) |
 | `lossAmountTo12Months` | number | Prejuízo até 12 meses (R$) |
 | `lossAmountMoreThan12Months` | number | Prejuízo acima de 12 meses (R$) |
-| `expiredAmount30Days` | number | Vencido até 30 dias (R$) |
+| `expiredAmount30Days` | number | Vencido 15-30 dias (R$) |
 | `expiredAmount31to60Days` | number | Vencido 31-60 dias (R$) |
 | `expiredAmount61to90Days` | number | Vencido 61-90 dias (R$) |
 | `expiredAmount91to180Days` | number | Vencido 91-180 dias (R$) |
@@ -190,7 +190,7 @@ Além do histórico mês a mês, cada mês do SCR carrega um **resumo consolidad
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
-| `documentsProcessedPercertage` | number | Percentual de documentos processados na apuração |
+| `documentsProcessedPercertage` | number | Percentual de documentos processados na apuração (grafia do campo conforme a API) |
 | `volumeProcessedPercentage` | number | Percentual do volume processado na apuração |
 
 <Note>
