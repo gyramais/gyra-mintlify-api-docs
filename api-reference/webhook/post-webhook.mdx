@@ -20,11 +20,126 @@ Bearer JWT no header `Authorization`.
 
 ```json
 {
-  "type": "...",
+  "type": "REPORT_FINISHED",
   "url": "https://webhook-test.com/a0a7aadb8de3e",
   "apiKey": "xxx-xxx-xxx"
 }
 ```
+
+- `type` (obrigatório): um dos **tipos de webhook** abaixo. Cada webhook escuta **um único tipo**; para receber mais de um, cadastre webhooks separados.
+- `url` (obrigatório): endpoint HTTPS que receberá o `POST`.
+- `apiKey` (opcional): se informado, a GYRA+ envia esse valor no header `api-key` de cada requisição, para o seu endpoint validar a origem.
+
+### Tipos de webhook
+
+Cada disparo é um `POST` com o envelope `{ organizationId, webhookType, data }`. O que muda entre os tipos é **quando dispara** e o conteúdo de **`data`**:
+
+| `type` | Quando dispara | O que vem em `data` |
+| ------ | -------------- | ------------------- |
+| `REPORT_FINISHED` | Relatório totalmente processado (todas as integrações concluíram). É o evento mais usado. | `reportId`, `policyId`, `isFinalized`, `finalizedAt` e, se houve falha parcial, `errors.sections[]`. |
+| `REPORT` | A cada **seção** concluída durante o processamento (granular, vários disparos por relatório). | Os dados da seção concluída em `content`. |
+| `REPORT_STATUS` | Decisão **manual** (analista aprovou/rejeitou via `analyze`/`re-analyze`). | `reportId` e `analysis` com `status` (`REPORT_APPROVED`/`REPORT_REJECTED`), autor e data. |
+| `REPORT_EXPORTED` | Exportação do relatório (PDF ou XLS) ficou pronta, ou falhou. | `reportId`, `exportUrl` (assinada) e `exportedAt`. Em falha, `exportUrl` vem `null` e há `error`. |
+| `CREDIT_POLICY` | Política de crédito avaliada (resultado final do motor de regras). | `reportId`, `policyId`, `version`, `status`, `risk`, `score`, `date`. |
+| `OPERATION` | Operação (fluxo multi-relatório com cadeia de políticas) concluiu com status final. | `operationId`, `operationResultId`, `document`, `status`. |
+| `OPTIN` | Reservado para o fluxo de **opt-in de onboarding**. | Conforme o fluxo de onboarding contratado. |
+
+### O que cada tipo retorna em `data`
+
+<CodeGroup>
+
+```json REPORT_FINISHED
+{
+  "organizationId": "6612a7f30000000000000001",
+  "webhookType": "REPORT_FINISHED",
+  "data": {
+    "content": {
+      "reportId": "6612a7f30000000000000001",
+      "policyId": "6612a7f30000000000000010",
+      "isFinalized": true,
+      "finalizedAt": "2026-04-23T14:30:45Z",
+      "errors": { "sections": ["PROCESSES"] }
+    },
+    "compress": false
+  }
+}
+```
+
+```json CREDIT_POLICY
+{
+  "organizationId": "6612a7f30000000000000001",
+  "webhookType": "CREDIT_POLICY",
+  "data": {
+    "content": {
+      "reportId": "6612a7f30000000000000001",
+      "policyId": "6612a7f30000000000000010",
+      "version": 3,
+      "status": "APPROVED",
+      "risk": "LOW",
+      "score": 720,
+      "date": "2026-04-23T14:30:45Z"
+    }
+  }
+}
+```
+
+```json REPORT_STATUS
+{
+  "organizationId": "6612a7f30000000000000001",
+  "webhookType": "REPORT_STATUS",
+  "data": {
+    "reportId": "6612a7f30000000000000001",
+    "analysis": {
+      "userId": "user-id-ou-'Política de crédito'",
+      "userName": "Nome do analista",
+      "status": "REPORT_APPROVED",
+      "date": "2026-04-23T14:35:00Z"
+    }
+  }
+}
+```
+
+```json REPORT_EXPORTED
+{
+  "organizationId": "6612a7f30000000000000001",
+  "webhookType": "REPORT_EXPORTED",
+  "data": {
+    "reportId": "6612a7f30000000000000001",
+    "exportUrl": "https://...url-assinada...",
+    "exportedAt": "2026-04-23T14:40:00Z"
+  }
+}
+```
+
+```json OPERATION
+{
+  "organizationId": "6612a7f30000000000000001",
+  "webhookType": "OPERATION",
+  "data": {
+    "operationId": "6612a7f30000000000000100",
+    "operationResultId": "6612a7f30000000000000101",
+    "document": "43591367000130",
+    "status": "APPROVED"
+  }
+}
+```
+
+```json REPORT
+{
+  "organizationId": "6612a7f30000000000000001",
+  "webhookType": "REPORT",
+  "data": {
+    "content": { "...dados da seção concluída..." },
+    "compress": false
+  }
+}
+```
+
+</CodeGroup>
+
+<Tip>
+  Para a maioria das integrações, escute **`REPORT_FINISHED`** (resultado pronto) e/ou **`CREDIT_POLICY`** (decisão). Use `REPORT` apenas se precisar de atualizações seção a seção. Visão geral e boas práticas em [Webhooks e tempo real](/concepts/webhooks-e-tempo-real).
+</Tip>
 
 <RequestExample>
 
@@ -33,7 +148,7 @@ curl --location 'https://gyra-core.gyramais.com.br/webhook' \
 --header 'Authorization: Bearer {seu_token_jwt}' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-  "type": "...",
+  "type": "REPORT_FINISHED",
   "url": "https://webhook-test.com/a0a7aadb8de3e",
   "apiKey": "xxx-xxx-xxx"
 }'
@@ -47,7 +162,7 @@ fetch("https://gyra-core.gyramais.com.br/webhook", {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-  "type": "...",
+  "type": "REPORT_FINISHED",
   "url": "https://webhook-test.com/a0a7aadb8de3e",
   "apiKey": "xxx-xxx-xxx"
 })
@@ -64,7 +179,7 @@ headers = {
   "Authorization": "Bearer {seu_token_jwt}"
 }
 payload = {
-  "type": "...",
+  "type": "REPORT_FINISHED",
   "url": "https://webhook-test.com/a0a7aadb8de3e",
   "apiKey": "xxx-xxx-xxx"
 }
@@ -91,7 +206,7 @@ print(response.json())
 ```json 400 Bad Request
 {
   "code": 400,
-  "message": "type must be one of the following values: REPORT, OPTIN, CREDIT_POLICY, REPORT_STATUS, REPORT_FINISHED, OPERATION,type should not be empty,url should not be empty,url must be a string"
+  "message": "type must be one of the following values: REPORT, OPTIN, CREDIT_POLICY, REPORT_STATUS, REPORT_FINISHED, REPORT_EXPORTED, OPERATION,type should not be empty,url should not be empty,url must be a string"
 }
 ```
 
