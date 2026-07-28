@@ -29,6 +29,18 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 - **Novo tipo de webhook `COMMITTEE_FINISHED`:** dispara quando o comitê conclui (ou falha) a deliberação, tanto na convocação automática quanto na manual, com decisão e síntese no payload. Ver [Criar Webhook](/api-reference/webhook/post-webhook).
 - **Instruções da instituição nos agentes (Business e Enterprise):** organizações com o recurso habilitado escrevem orientações próprias por agente na edição da política (apetite de risco, critérios do setor, política interna), com validação anti-injeção e limite de 4.000 caracteres por agente. Ver [Editar Política](/toolbox/editar-politica#instru%C3%A7%C3%B5es-adicionais-dos-agentes).
 
+### Modos de leitura do SCR e FGTS unificado
+
+**Novidades**
+- **Modos de leitura da janela SCR:** cada regra SCR da política passa a escolher quais data-bases enxerga: **maior valor** entre todas as data-bases da janela (padrão, comportamento histórico), **data-base mais recente**, ou **data-base específica** pela posição (1 = mais recente). A posição precisa caber na janela `month-scr` da política, com limite de 24. Regras já existentes continuam no modo padrão e não mudam de resultado. Ver [Modos de leitura da janela de data-bases](/sources/scr-open-finance#modos-de-leitura-da-janela-de-data-bases).
+- **Precificação com SCR por data-base:** as variáveis numéricas de SCR (risco total, limite até 360 dias, total em atraso, valor a vencer e total de perdas) passam a ser ofertadas nas fórmulas de precificação nas três leituras, incluindo a variante "(data-base N)", criada sob demanda ao escolher a posição. Ver [Precificação](/concepts/precificacao#variaveis-de-scr-por-data-base).
+- **Descrição da regra indica o recorte:** regras SCR em modo não padrão aparecem no relatório com o complemento "na data-base mais recente" ou "na Nª data-base mais recente".
+
+**Melhorias**
+- **FGTS unificado:** a certidão de regularidade do FGTS passa a ser emitida por um tipo único, `GYRA_FGTS`, que escolhe a melhor fonte disponível e devolve sempre o mesmo formato normalizado (`situation`, `description`, `code`, `emissionDate`, `validityDate`, `url`). Os tipos antigos (`BDC_CERTIFICATE_FGTS`, `DIRECT_DATA_FGTS`, `DIRECT_DATA_FGTS_PROOF`) seguem sendo lidos em relatórios já existentes.
+- **Rastreabilidade do FGTS:** novo campo `source` na seção de FGTS, com `LIVE` (emissão ao vivo na fonte) ou `HISTORY` (resultado reaproveitado do histórico por contingência). Campo aditivo e retrocompatível. Ver [Certidões](/sources/certidoes).
+- Datas de emissão e validade do FGTS agora saem sempre formatadas em `dd/mm/aaaa`, com `-` quando indisponíveis.
+
 ---
 
 ## Junho 2026
