@@ -197,6 +197,12 @@ Além do histórico mês a mês, cada mês do SCR carrega um **resumo consolidad
   Esses campos refletem a posição de uma data de referência. No histórico, eles aparecem por mês, permitindo medir a evolução do número de relacionamentos, da carteira e do prejuízo ao longo do tempo.
 </Note>
 
+### Qual data-base a política lê
+
+Como o `summary` existe por data-base, cada regra SCR da política e cada variável de precificação declara **qual recorte da janela** usa: o maior valor entre todas as data-bases (padrão), a data-base mais recente, ou uma data-base específica pela posição. Os campos consumidos por esse recorte são `totalRisk`, `creditLimitAmount360Days`, `expiredAmount`, `toExpireAmount`, `lossAmount` e `startRelationship`.
+
+Detalhes em [Modos de leitura da janela de data-bases](/sources/scr-open-finance#modos-de-leitura-da-janela-de-data-bases).
+
 ---
 
 ## Principais categorias SCR

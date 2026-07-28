@@ -80,6 +80,38 @@ Ao digitar `#` ou `=` no editor, o toolbox abre uma lista buscável com as opç�
 
 Internamente as referências são resolvidas para os valores reais antes do cálculo.
 
+### Variáveis de SCR por data-base
+
+O SCR entrega uma **lista de data-bases** (uma por mês da janela `month-scr`). Por isso, cada campo numérico de SCR aparece na busca de variáveis em mais de uma leitura:
+
+| Leitura | Como aparece no catálogo | Valor usado na fórmula |
+| ------- | ------------------------ | ---------------------- |
+| Maior valor | `... (maior valor)` | Maior valor do campo entre todas as data-bases da janela. É a leitura histórica. |
+| Data-base mais recente | `... (data-base mais recente)` | Valor do campo na data-base mais recente disponível. |
+| Data-base específica | `... (data-base N)` | Valor do campo na N-ésima data-base mais recente (1 = mais recente). |
+
+Campos numéricos de SCR oferecidos nas três leituras:
+
+- **Risco total SCR**
+- **Limite de crédito até 360d SCR**
+- **Total em atraso SCR**
+- **Valor a vencer SCR**
+- **Total de perdas SCR**
+
+A variante "(data-base N)" é criada sob demanda quando você escolhe a posição na edição da política ou em *Minhas Variáveis*. A posição precisa caber na janela `month-scr` vigente (máximo 24).
+
+**Exemplo**, taxa que sobe quando a empresa tem atraso no SCR **hoje**, e não em algum mês antigo da janela:
+
+```excel
+IF(#totalEmAtrasoScrDataBaseMaisRecente > 0, 3.49, 1.99)
+```
+
+<Note>
+  **Início do relacionamento SCR** retorna texto (data) e permanece disponível apenas em regras de política, não em precificação. As fórmulas de precificação consomem valores numéricos.
+</Note>
+
+Ver também [Modos de leitura da janela de data-bases](/sources/scr-open-finance#modos-de-leitura-da-janela-de-data-bases), que aplica o mesmo recorte às regras da política.
+
 ## Fórmulas de exemplo
 
 ### 1. Valor aprovado limitado a 30% do faturamento

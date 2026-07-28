@@ -123,6 +123,30 @@ Exemplo:
 }
 ```
 
+## Modos de leitura da janela de data-bases
+
+O SCR chega ao motor como uma **lista de data-bases** (uma por mês da janela `month-scr`, da mais recente para a mais antiga). Cada regra SCR da política agora escolhe **quais data-bases enxergar**:
+
+| Modo | O que a regra avalia |
+| ---- | -------------------- |
+| **Qualquer data-base (maior valor)** | Todas as data-bases da janela, agregando pelo **maior valor** encontrado. É o comportamento padrão e o histórico. |
+| **Data-base mais recente** | Apenas a data-base mais recente disponível. |
+| **Data-base específica** | Apenas a **N-ésima data-base mais recente** (posição 1 = mais recente), escolhida na configuração da regra. |
+
+Na prática: "maior valor" responde *"em algum momento da janela ele passou do limite?"*; "mais recente" responde *"como ele está hoje?"*; "data-base específica" permite comparar posições fixas (ex: sempre a 3ª data-base) em políticas de tendência.
+
+<Note>
+  **Políticas existentes não mudam de resultado.** Regras criadas antes desta funcionalidade continuam no modo "qualquer data-base (maior valor)". O modo só passa a valer nas regras em que você escolher explicitamente outra leitura.
+</Note>
+
+Pontos de atenção ao configurar:
+
+- **A posição precisa caber na janela.** Se o `month-scr` da política é 12, escolher a posição 13 é recusado ao salvar, com mensagem pedindo para aumentar a janela ou reduzir a posição. O limite máximo de posição é **24**.
+- **Data-base pedida sem dado = "sem dado".** Se a posição escolhida não tem informação naquele documento, a regra avalia como ausência de dado, não como valor zero.
+- **A descrição da regra no relatório reflete o modo.** Regras em modo não padrão ganham o complemento "na data-base mais recente" ou "na Nª data-base mais recente", para o analista saber sobre qual recorte a regra decidiu.
+
+O mesmo recorte está disponível em **[Precificação](/concepts/precificacao#variaveis-de-scr-por-data-base)**, nas variáveis numéricas de SCR usadas pelas fórmulas.
+
 ## Limitações e considerações
 
 - **Depende de consentimento via Open Finance** para PF. Sem consentimento, a seção vem vazia.
