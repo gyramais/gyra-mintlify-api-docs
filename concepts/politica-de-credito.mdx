@@ -25,22 +25,67 @@ Toda chamada ao `POST /report` exige um `policyId`. Esse ID determina completame
 
 ---
 
-## Hierarquia de uma política
+## As seis etapas de uma política
 
+Toda política é montada nas mesmas seis etapas, na ordem em que aparecem no editor. As três primeiras respondem *com o que decidir*; as três últimas, *como decidir*.
+
+```mermaid
+flowchart LR
+  A["1 · Fontes de dados<br/>o que consultar"] --> B["2 · Minhas variáveis<br/>fórmulas reutilizáveis"]
+  B --> C["3 · Condições<br/>as regras"]
+  C --> D["4 · Classificação de risco<br/>faixas de score"]
+  D --> E["5 · Precificação<br/>limite, taxa e prazo"]
+  E --> F["6 · Decisão e alçada<br/>quem assina"]
 ```
-Policy
-├── IntegrationGroup          → Fontes de dados consultadas (Bureau, SCR, Dados Cadasrais...)
-├── PolicyRuleGroup[]         → Grupos de regras (ex: "Cadastral", "Financeiro")
-│   ├── scoreApproved         → Pontuação mínima para aprovação no grupo
-│   ├── scoreAlert            → Pontuação para alerta
-│   ├── scoreDenied           → Pontuação para negação
-│   └── PolicyRuleSettingJoin[]
-│       ├── operationType     → Como as regras se combinam (sempre AND)
-│       ├── statusToApply     → Resultado se a condição for verdadeira
-│       └── PolicyRuleSetting → Regra configurada com seus parâmetros
-└── Risk[]                    → Faixas de score final → status final
-    └── { from, to, statusToApply }
-```
+
+<Steps>
+  <Step title="Fontes de dados" icon="database">
+    De onde vêm os dados que esta política usa. Começa pelo **Relatório base**, que define o tipo de documento (CPF ou CNPJ) e o nível da análise, e a partir dele você liga só as fontes que fizerem sentido. **Esta etapa destrava as outras**: o Relatório base é o que determina quais variáveis existem para escrever regra em cima.
+  </Step>
+  <Step title="Minhas variáveis" icon="code">
+    Fórmulas reutilizáveis criadas por você, referenciadas por `#nome` em qualquer regra, faixa de risco ou fórmula de preço. Serve para escrever uma vez o cálculo que a sua casa repete em toda política.
+  </Step>
+  <Step title="Condições" icon="filter">
+    O coração da política. Cada condição é um conjunto de regras avaliadas sobre os dados coletados, e cada uma aplica um veredito (aprovar, alerta ou negar) ou soma e subtrai pontos.
+  </Step>
+  <Step title="Classificação de risco" icon="gauge">
+    Opcional. Liga a pontuação e define os **ratings por faixa de score, de 0 a 1000**, com o veredito de cada faixa. Sem esta etapa ativa, as condições decidem direto; com ela ativa, a faixa final prevalece sobre o resultado individual das condições.
+  </Step>
+  <Step title="Precificação" icon="tag">
+    Opcional. Fórmulas que sugerem **limite, taxa e prazo** a partir das variáveis do relatório. Ver [Precificação](/concepts/precificacao).
+  </Step>
+  <Step title="Decisão e alçada" icon="user-check">
+    O objetivo da política, se o resultado é aplicado automaticamente ao relatório e quem pode alterar análises. É também onde vive a configuração do [Comitê de Crédito IA](/concepts/comite-de-credito), quando a política tem pipeline de parecer.
+  </Step>
+</Steps>
+
+<Note>
+  Só a primeira etapa é obrigatória. Uma política válida pode ter apenas Relatório base e Condições. Classificação de risco, Precificação e Minhas variáveis existem para quem precisa delas.
+</Note>
+
+---
+
+## Fontes de dados
+
+A primeira etapa é uma lista de cartões que você liga ou desliga. Só o que estiver ativo é coletado em runtime, o que significa que **esta tela é também onde você controla custo e latência** da análise.
+
+| Fonte | O que faz |
+| ----- | --------- |
+| **Relatório base** | Obrigatório. Tipo de documento (CPF ou CNPJ) e nível: **Simples**, **Essencial**, **Completo** ou **Completo+**. Define o conjunto de dados e, por consequência, as variáveis disponíveis. |
+| **Bureau de crédito** | Escolha **única** entre os bureaus disponíveis, ou nenhum. Detalhe das opções em [Bureau de Crédito](/sources/bureau-credito#qual-bureau-usar). |
+| **SCR, Banco Central** | Endividamento no sistema financeiro. Ver [SCR / Open Finance](/sources/scr-open-finance). |
+| **Cenprot** | Protestos em nível nacional, direto da Central Nacional de Protestos, com cobertura mais completa que a do bureau. Fonte adicional. Ver [Protestos](/sources/protestos#como-escolher-a-fonte). |
+| **Núclea** | Indicadores baseados em transações reais (antiga CIP), selecionados individualmente. Só PJ. Fonte adicional. Ver [Inteligência de Pagamentos](/sources/inteligencia-pagamentos). |
+| **Balanço patrimonial** | Habilita as variáveis de balanço nas condições e fórmulas desta política. Ver [Análise Financeira](/concepts/analise-financeira). |
+| **Bases externas** | Dados próprios da sua organização, configurados em *Configurações de integrações*, disponíveis como variáveis. |
+
+<Warning>
+  Sem **Relatório base** definido, as demais etapas ficam bloqueadas: não há variáveis para escrever condição, faixa ou fórmula. É sempre o primeiro passo.
+</Warning>
+
+<Tip>
+  Cenprot e Núclea são **fontes adicionais**, com custo por consulta além do relatório base. Ligue quando o dado for mudar a decisão, não por padrão. As demais fontes acompanham o nível do relatório contratado.
+</Tip>
 
 ---
 
