@@ -27,7 +27,7 @@ Se o caso é próximo de algum template, **sempre prefira clonar** pela opção 
 
 ## Fluxo
 
-O editor tem um menu **Configurar política** à esquerda com seis etapas. Você não precisa percorrer todas: só a primeira é obrigatória.
+O editor tem um menu **Configurar política** à esquerda com seis etapas. Você não precisa percorrer todas: só duas são obrigatórias, **Fontes de dados** (o Relatório base) e **Decisão e alçada** (o Objetivo). As outras quatro existem para quem precisa delas.
 
 <Steps>
   <Step title="Entrar em Nova Política">
@@ -54,6 +54,8 @@ O editor tem um menu **Configurar política** à esquerda com seis etapas. Você
 
     <Warning>
       Só o que estiver ligado aqui é coletado quando a análise roda. Esta tela é onde você controla **custo e latência** da política.
+
+      Uma exceção: em relatórios COMPLETO e COMPLETO+, a **busca** por balanços publicados roda de qualquer forma. O cartão *Balanço patrimonial* controla se o que for encontrado é **processado** automaticamente, não se a busca acontece.
     </Warning>
   </Step>
   <Step title="Minhas variáveis, opcional">
@@ -92,6 +94,10 @@ O editor tem um menu **Configurar política** à esquerda com seis etapas. Você
   </Step>
   <Step title="Salvar e habilitar">
     Salve e ligue o toggle de status no topo. Enquanto estiver **Inativa**, a política não aparece no input de análise e não pode ser executada. Ativada, ela passa a aparecer para todos os usuários com permissão ao digitar um documento compatível.
+
+    <Note>
+      Salvar sem o **Objetivo** preenchido não passa: o editor avisa, leva você para *Decisão e alçada* e marca a etapa como obrigatória.
+    </Note>
   </Step>
 </Steps>
 

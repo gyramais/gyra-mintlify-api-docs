@@ -60,7 +60,7 @@ flowchart LR
 </Steps>
 
 <Note>
-  Só a primeira etapa é obrigatória. Uma política válida pode ter apenas Relatório base e Condições. Classificação de risco, Precificação e Minhas variáveis existem para quem precisa delas.
+  Duas etapas são obrigatórias: **Fontes de dados**, pelo Relatório base, e **Decisão e alçada**, pelo Objetivo, que o editor exige para salvar. Minhas variáveis, Classificação de risco e Precificação existem para quem precisa delas.
 </Note>
 
 ---
@@ -82,6 +82,10 @@ A primeira etapa é uma lista de cartões que você liga ou desliga. Só o que e
 <Warning>
   Sem **Relatório base** definido, as demais etapas ficam bloqueadas: não há variáveis para escrever condição, faixa ou fórmula. É sempre o primeiro passo.
 </Warning>
+
+<Note>
+  Uma exceção ao "só o que está ligado é coletado": em relatórios COMPLETO e COMPLETO+, a **busca** por balanços já publicados roda de qualquer forma. O cartão *Balanço patrimonial* controla se o que for encontrado é **processado** automaticamente e se as variáveis de balanço ficam disponíveis nas regras, não se a busca acontece. Ver [Análise Financeira](/concepts/analise-financeira#balan%C3%A7os-que-j%C3%A1-temos).
+</Note>
 
 <Tip>
   Cenprot e Núclea são **fontes adicionais**, com custo por consulta além do relatório base. Ligue quando o dado for mudar a decisão, não por padrão. As demais fontes acompanham o nível do relatório contratado.
