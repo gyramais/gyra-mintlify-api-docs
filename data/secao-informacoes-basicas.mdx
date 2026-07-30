@@ -8,6 +8,12 @@ audience: integrador
 lang: tecnica
 ---
 
+<Warning>
+  **Página em revisão.** Os campos listados abaixo ainda não foram conferidos contra os tradutores de `BASIC_INFORMATION` no backend, e sabemos que parte da documentação antiga descrevia campos que não correspondem à resposta real. Até a revisão terminar, confirme o formato consultando a seção diretamente com [`GET /report/{id}/section/{sectionType}`](/api-reference/report/get-report-section), ou use [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights), que tem formato estável.
+
+  Como os dados chegam de fato, incluindo a indexação por provedor, está em [Estrutura do Relatório](/data/estrutura-relatorio#onde-ficam-os-dados-sectiondetails-values).
+</Warning>
+
 A seção `BASIC_INFORMATION` consolida os dados cadastrais do documento consultado, incluindo dados da Receita Federal, contatos, endereço e quadro societário.
 
 Disponível em **todos os tipos** de relatório.

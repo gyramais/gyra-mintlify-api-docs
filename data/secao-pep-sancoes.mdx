@@ -8,6 +8,12 @@ audience: integrador
 lang: tecnica
 ---
 
+<Warning>
+  **Página em revisão.** Os campos listados abaixo ainda não foram conferidos contra os tradutores de `PEP e SANCTIONS` no backend, e sabemos que parte da documentação antiga descrevia campos que não correspondem à resposta real. Até a revisão terminar, confirme o formato consultando a seção diretamente com [`GET /report/{id}/section/{sectionType}`](/api-reference/report/get-report-section), ou use [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights), que tem formato estável.
+
+  Como os dados chegam de fato, incluindo a indexação por provedor, está em [Estrutura do Relatório](/data/estrutura-relatorio#onde-ficam-os-dados-sectiondetails-values).
+</Warning>
+
 ## PEP, Pessoas Expostas Politicamente
 
 A seção `PEP` avalia se o documento está vinculado a cargos públicos, mandatos eletivos ou agentes políticos relevantes. Inclui também os sócios quando o documento for CNPJ.

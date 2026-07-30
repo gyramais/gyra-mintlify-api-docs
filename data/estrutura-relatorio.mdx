@@ -61,7 +61,55 @@ Cada elemento de `sections` tem:
 | `completedAt` | datetime | Quando a seção foi finalizada |
 | `errors` | object[] | Erros de integrações (se houver) |
 | `comments` | object[] | Comentários de analistas nesta seção |
-| `details` | object | Dados normalizados da seção (varia por tipo) |
+| `selectedIntegrations` | string[] | Integrações que alimentaram esta seção |
+| `sectionDetails` | object[] | **Os dados da seção.** Ver abaixo. |
+
+### Onde ficam os dados: `sectionDetails[].values`
+
+Cada item de `sectionDetails` tem `integrationTypes` (de onde veio) e `values` (o conteúdo).
+
+<Warning>
+  **`values` é indexado pelo provedor que respondeu**, com a chave sendo o tipo de integração em camelCase. A mesma seção `PROTESTS` devolve `values.serasa` quando a política usa Serasa e outra chave quando usa outro provedor, cada uma com o seu conjunto de campos. **Não assuma uma chave fixa.**
+</Warning>
+
+```json
+{
+  "id": "69a207bcdd0197828df9156a",
+  "type": { "id": "672b49a91acad6953b56b109", "value": "PROTESTS" },
+  "selectedIntegrations": ["SERASA"],
+  "sectionDetails": [
+    {
+      "integrationTypes": ["SERASA"],
+      "values": {
+        "serasa": {
+          "protestsQuantity": 2,
+          "protestsTotalValue": "R$ 12.400,00",
+          "lastProtestDate": "2026-03-14",
+          "protestsTable": []
+        }
+      }
+    }
+  ]
+}
+```
+
+O caminho robusto é iterar, em vez de acessar uma chave fixa:
+
+```javascript
+for (const detail of section.sectionDetails ?? []) {
+  for (const [provedor, dados] of Object.entries(detail.values ?? {})) {
+    console.log(provedor, dados.protestsQuantity);
+  }
+}
+```
+
+<Tip>
+  Se você quer a leitura consolidada e estável, independente de qual bureau respondeu, use [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights) em vez de fazer parse de `values`.
+</Tip>
+
+### Campos crus e campos formatados
+
+Vários tradutores devolvem o mesmo dado duas vezes: `value` e `date` (crus, para cálculo) mais `formattedValue` e `formattedDate` (formatados em português e padrão brasileiro, para exibição). Não faça parse do formatado para recuperar o número: use o cru.
 
 ### Tipo da seção (`sections[].type`)
 
