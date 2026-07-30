@@ -76,7 +76,7 @@ Protestos **quitados** ficam registrados por um período mesmo depois de resolvi
 <CardGroup cols={2}>
   <Card title="Bloqueio por protesto ativo" icon="ban">
     Negar concessão imediata quando há protesto ativo.
-    **Regra:** `protests.count > 0` : `DENIED`.
+    **Regra:** `NOTARIES_COUNT` maior que 0 : `DENIED`.
   </Card>
   <Card title="Alerta por valor total" icon="triangle-exclamation">
     Tolerar protestos pequenos, alertar em valores relevantes.
@@ -94,13 +94,13 @@ Protestos **quitados** ficam registrados por um período mesmo depois de resolvi
 
 <Steps>
   <Step title="Regra binária simples">
-    `protests.count > 0` : `DENIED`. Direto, conservador, funciona para crédito sensível.
+    `NOTARIES_COUNT` maior que 0 : `DENIED`. Direto, conservador, funciona para crédito sensível.
   </Step>
   <Step title="Regra por valor">
     Quando você aceita protesto pequeno (ex: erro operacional), use `protests.totalAmount > threshold`. Threshold comum: R$ 5.000 a R$ 20.000.
   </Step>
   <Step title="Regra por quantidade + valor">
-    Política mais refinada: `protests.count >= 3` ou `protests.totalAmount > 50000` : `DENIED`.
+    Política mais refinada: `NOTARIES_COUNT` a partir de 3, ou `NOTARIES_AMOUNT` acima de 50.000 : `DENIED`.
   </Step>
   <Step title="Regra de histórico quitado">
     Via parâmetro temporal, considerar protestos `PAID` nos últimos N meses como `ALERT`.
@@ -111,7 +111,7 @@ Exemplo:
 
 ```json
 {
-  "field": "protests.count",
+  "rule": "NOTARIES_COUNT",
   "operator": "GREATER_THAN",
   "value": 0,
   "status": "DENIED"

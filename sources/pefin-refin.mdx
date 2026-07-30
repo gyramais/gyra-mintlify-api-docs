@@ -94,7 +94,7 @@ Detalhes completos em [Seção, PEFIN e REFIN](/data/secao-pefin-refin).
 
 <Steps>
   <Step title="Escolher o campo">
-    `pefin.totalAmount`, `pefin.count`, `pefin.calculatedRevenuePercentage`, ou equivalentes em `refin`.
+    Regras `PEFIN_AMOUNT` e `REFIN_AMOUNT` (valor), `PEFIN_LAST_DAYS` e `REFIN_LAST_DAYS` (recência) e `PEFIN_NOT_CALCULATED_REVENUE` / `REFIN_NOT_CALCULATED_REVENUE` (proporção do faturamento).
   </Step>
   <Step title="Definir o operador">
     `GREATER_THAN` para valor, `COUNT_GREATER_THAN` para quantidade de ocorrências.
@@ -108,7 +108,7 @@ Exemplo:
 
 ```json
 {
-  "field": "pefin.calculatedRevenuePercentage",
+  "rule": "PEFIN_NOT_CALCULATED_REVENUE",
   "operator": "GREATER_THAN",
   "value": 5,
   "status": "DENIED"

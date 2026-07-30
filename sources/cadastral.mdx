@@ -110,10 +110,10 @@ Endereço, telefones, e-mails e demais dados de localização estão descritos e
 
 <Steps>
   <Step title="Começar pelos campos de situação">
-    `COMPANY_SITUATION` e `PERSON_SITUATION` deveriam ser as primeiras regras de qualquer política: são bloqueios óbvios e baratos de avaliar.
+    `COMPANY_SITUATION` e `DEATH` deveriam ser as primeiras regras de qualquer política: são bloqueios óbvios e baratos de avaliar.
   </Step>
   <Step title="Adicionar regras de idade">
-    `COMPANY_OPENING_TIME` e `PERSON_AGE` são segundo filtro fundamental.
+    `COMPANY_OPENING_TIME` e `AGE_PERSON` são segundo filtro fundamental.
   </Step>
   <Step title="Camada opcional de segmentação">
     Filtros por CNAE, porte, regime tributário para alinhar ao produto que você oferece.
@@ -124,7 +124,7 @@ Exemplo:
 
 ```json
 {
-  "field": "company.situation",
+  "rule": "COMPANY_SITUATION",
   "operator": "CONTAINS",
   "value": "INAPTA,BAIXADA,SUSPENSA,NULA",
   "status": "DENIED"

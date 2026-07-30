@@ -206,7 +206,7 @@ Certidões costumam bloquear por simples presença de débito ou situação irre
 
 ```json
 {
-  "field": "certificate.pgfn.baseStatus",
+  "rule": "CERTIFICATES_PGFN",
   "operator": "EQUALS",
   "value": "POSITIVA",
   "status": "DENIED"
@@ -215,7 +215,7 @@ Certidões costumam bloquear por simples presença de débito ou situação irre
 
 ```json
 {
-  "field": "certificate.fgts.status",
+  "rule": "CERTIFICATES_FGTS",
   "operator": "NOT_EQUALS",
   "value": "REGULAR",
   "status": "ALERT"
@@ -224,7 +224,7 @@ Certidões costumam bloquear por simples presença de débito ou situação irre
 
 ```json
 {
-  "field": "certificate.mte.situation",
+  "rule": "MTE_CERTIFICATE",
   "operator": "EQUALS",
   "value": "invalid",
   "status": "DENIED"
