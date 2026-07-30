@@ -57,6 +57,12 @@ A convocação é recusada com `400` se o relatório ainda não está pronto par
   **O webhook `REPORT_FINISHED` não é garantia de que o comitê pode ser convocado.** Ele sinaliza que as **integrações** do relatório terminaram, que é um pipeline diferente do de pareceres. Os pareceres por seção rodam depois e podem continuar processando por mais alguns instantes. Convocar o comitê no exato momento em que o `REPORT_FINISHED` chega costuma devolver `400`.
 </Warning>
 
+<Tip>
+  **Se todo relatório dessa política deve ir a comitê, não use este endpoint.** Configure a política como **Convocar comitê e sugerir decisão** e a plataforma convoca sozinha, na hora certa, sem você precisar acertar o momento nem tratar retry. A deliberação chega pelo webhook [`COMMITTEE_FINISHED`](/api-reference/webhook/post-webhook) com `trigger: "AUTO_SUGGEST"`, e a decisão final continua sendo do analista, igual à convocação manual.
+
+  Este endpoint existe para o caso oposto: quando o comitê é **exceção**, disparada por uma pessoa no seu sistema (um botão na tela do analista, uma aprovação de alçada) ou por uma regra sua que seleciona quais casos valem a deliberação. É aí que o padrão abaixo importa.
+</Tip>
+
 ### Padrão de integração recomendado
 
 Não existe hoje um evento que anuncie "os pareceres terminaram". O caminho robusto é tratar o `400` de prontidão como **estado transitório** e repetir:
