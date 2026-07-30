@@ -1,6 +1,6 @@
 ---
 title: "Análise Financeira (Balanços e DRE)"
-description: "Extração automática de balanços e DRE a partir de PDFs, com indicadores calculados, análise por IA, comparação multi-período e exportação para planilha, API e MCP."
+description: "Balanços e DRE viram dados estruturados: a GYRA+ busca as demonstrações que já tem na base de mais de 170 mil balanços, aceita upload de múltiplos exercícios, calcula mais de 30 indicadores, compara a evolução período a período e entrega tudo como variável de política, planilha, API e MCP."
 icon: "file-invoice-dollar"
 surface: conceito
 domain: relatorio
@@ -9,7 +9,7 @@ lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** a Análise Financeira transforma um **PDF de balanço patrimonial e DRE** em dados estruturados, padronizados e acionáveis. Você envia um ou mais arquivos (no input da análise ou pelo menu do relatório, podendo selecionar só as páginas relevantes), e a GYRA+ extrai as demonstrações, **padroniza para um formato único**, calcula **mais de 30 indicadores financeiros**, gera **parecer e recomendações por IA**, e compara **múltiplos períodos** lado a lado. Todos os números e indicadores ficam disponíveis como **variáveis na política de crédito** para automação, e podem ser **exportados em planilha** ou consumidos via **API e MCP**.
+  **Resumo:** a Análise Financeira transforma **balanço patrimonial e DRE** em dados estruturados, padronizados e acionáveis. Os documentos podem vir de duas formas: **você envia** um ou mais PDFs, ou **a GYRA+ encontra sozinha** na base própria de mais de **170 mil balanços** de fontes públicas. A plataforma extrai as demonstrações, **padroniza para um formato único**, calcula **mais de 30 indicadores**, gera **parecer e recomendações por IA** e monta a **comparação entre todos os exercícios** disponíveis, com a leitura da evolução ao longo do tempo. Tudo vira **variável de política de crédito**, **planilha**, **API** e **MCP**.
 </Info>
 
 ## O que é
@@ -29,9 +29,64 @@ A Análise Financeira resolve isso de ponta a ponta:
   A Análise Financeira é complementar à fonte [Financeira](/sources/financeira) (faturamento e renda presumidos) e ao [SCR / Open Finance](/sources/scr-open-finance) (endividamento bancário real). Juntas, formam a visão de capacidade mais completa da plataforma.
 </Note>
 
+## De onde vêm os balanços
+
+Existem dois caminhos, e eles se somam no mesmo relatório:
+
+<CardGroup cols={2}>
+  <Card title="A GYRA+ encontra" icon="magnifying-glass">
+    Base própria com mais de **170 mil balanços**, públicos e privados. Se acharmos demonstrações da empresa analisada, elas entram no relatório com todo o histórico que temos.
+  </Card>
+  <Card title="Você envia" icon="upload">
+    Upload de um ou vários PDFs, no input da análise ou pelo menu do relatório, com seleção de páginas.
+  </Card>
+</CardGroup>
+
+---
+
+## Balanços que já temos
+
+A maior fricção da análise de balanço nunca foi ler o documento. Foi **conseguir o documento**. O analista pede ao cliente, o cliente pede ao contador, o contador manda três semanas depois, e a proposta esfria no meio do caminho.
+
+A GYRA+ inverte isso: **antes de pedir qualquer coisa, procura o que já existe.**
+
+Mantemos uma base própria de mais de **170 mil balanços**, alimentada continuamente por duas frentes:
+
+| Origem | O que é | Cobertura |
+| ------ | ------- | --------- |
+| **Fontes públicas oficiais** | Demonstrações que companhias abertas publicam na CVM: DFP (anual) e ITR (trimestral). | Empresas de capital aberto, série histórica completa |
+| **Publicações legais** | Scrapers proprietários de diários oficiais e jornais de grande circulação, onde sociedades anônimas de capital fechado publicam suas demonstrações por obrigação legal. | Empresas fechadas que publicam, incluindo muita empresa média que nunca mandaria o balanço espontaneamente |
+
+<Tip>
+  A segunda frente é a que muda o jogo no dia a dia. Balanço de companhia aberta qualquer um acha. O que é difícil é a S.A. de capital fechado do interior que publicou o balanço num jornal regional em março: legalmente público, praticamente inacessível. É exatamente esse acervo que os scrapers varrem e normalizam.
+</Tip>
+
+### Como isso aparece na sua análise
+
+A busca roda sozinha em relatórios **COMPLETO** e **COMPLETO+**. O que acontece depois depende de um único switch na política, **"Usar regras do balanço"**:
+
+<CardGroup cols={1}>
+  <Card title="Switch ligado, processamento automático" icon="bolt">
+    Achou balanço, processa. As demonstrações são extraídas, padronizadas e comparadas junto com o resto do relatório, e o **histórico completo que temos daquela empresa** entra na análise sem ninguém pedir nada a ninguém. Os indicadores já chegam disponíveis como variáveis para as regras da política decidirem em cima deles.
+  </Card>
+  <Card title="Switch desligado, você decide" icon="hand-pointer">
+    A busca roda mesmo assim, mas nada é processado. A aba **Análise financeira** aparece sinalizando que **encontramos demonstrações** para aquele CNPJ, com a lista do que foi achado (fonte, exercício, data de publicação). Um clique em **processar** e a extração roda. Nada é consumido enquanto você não decidir.
+  </Card>
+</CardGroup>
+
+<Note>
+  O segundo modo existe porque processar balanço custa. Deixando o switch desligado, você paga só pelos casos em que o balanço vai realmente pesar na decisão, e continua sabendo que ele existe nos demais.
+</Note>
+
+### Quando a extração não conclui
+
+Se a extração falhar ou ficar abaixo do nível de confiança que exigimos, não devolvemos número errado. A aba passa a listar os **documentos encontrados** com link de download, para o analista abrir o original e conferir na mão. O documento que a GYRA+ achou continua sendo entregue, mesmo quando a leitura automática não fecha.
+
+---
+
 ## Como enviar os balanços
 
-Há dois momentos para enviar os arquivos, e em ambos você controla **quais páginas** e **quantos arquivos**.
+Quando não temos o balanço, ou quando você tem uma versão mais recente que a publicada, o upload continua disponível. Há dois momentos para enviar os arquivos, e em ambos você controla **quais páginas** e **quantos arquivos**.
 
 <Steps>
   <Step title="No input da análise, junto com o documento">
@@ -65,15 +120,43 @@ O que acontece entre o upload e a aba pronta:
 4. **Cálculo de indicadores**: os indicadores são calculados **no momento da extração**, com fórmula registrada, garantindo que planilha, tela, API e MCP mostrem exatamente os mesmos números.
 5. **Análise por IA**: agentes geram parecer, pontos de atenção, recomendação de crédito e limites sugeridos.
 
-### Suporte a múltiplos períodos
+### Múltiplos períodos e múltiplos arquivos
 
-Quando o PDF (ou o conjunto de PDFs) contém **mais de um exercício**, a plataforma detecta e separa cada período automaticamente. Para cada período ela mantém:
+Um balanço isolado diz onde a empresa está. **Três balanços dizem para onde ela vai** — e é a segunda pergunta que decide crédito. Toda a plataforma foi construída em cima disso.
 
-- O balanço e a DRE padronizados daquele período.
-- Todos os indicadores recalculados para aquele período.
-- A **variação** em relação ao período anterior, tanto absoluta quanto percentual.
+Você não precisa organizar nada antes de enviar. Jogue os arquivos como eles chegaram:
 
-Isso alimenta tanto os indicadores de tendência (ex.: **crescimento médio da receita**, **evolução da dívida**) quanto a leitura comparativa na tela.
+- **Vários exercícios num só PDF** (o formato mais comum, com o comparativo do ano anterior ao lado).
+- **Um arquivo por exercício**, mandados de uma vez.
+- **Balanço e DRE em documentos separados**.
+- **Envios em momentos diferentes**: subiu 2024 hoje, 2023 na semana que vem. O período novo entra na comparação já existente.
+
+A plataforma detecta os exercícios presentes, separa cada um, reconhece quando o mesmo período aparece em mais de um arquivo e consolida tudo numa linha do tempo única. Para cada período ela mantém o balanço e a DRE padronizados, **todos os indicadores recalculados** e a **variação** contra o período anterior, absoluta e percentual.
+
+### A leitura da evolução
+
+Com a série montada, a análise deixa de ser uma foto:
+
+<CardGroup cols={2}>
+  <Card title="Tabela comparativa completa" icon="table-columns">
+    Balanço e DRE lado a lado, todos os exercícios em colunas. Cada linha do plano de contas padronizado com seu valor por período e a variação entre eles.
+  </Card>
+  <Card title="Indicadores em série" icon="chart-line">
+    Os mais de 30 indicadores recalculados por período, para ver liquidez, alavancagem e margem se movendo em vez de um número solto.
+  </Card>
+  <Card title="Métricas de tendência" icon="arrow-trend-up">
+    Crescimento médio da receita, evolução do endividamento, trajetória da rentabilidade. Calculadas sobre a série, não sobre o último exercício.
+  </Card>
+  <Card title="Parecer da trajetória" icon="sparkles">
+    O [parecer de IA](/concepts/pareceres-gyra-ia) lê a série inteira e escreve o que ela conta: se a alavancagem subiu financiando crescimento ou tapando buraco, se a margem cedeu por preço ou por custo.
+  </Card>
+</CardGroup>
+
+<Tip>
+  É a diferença entre "a empresa tem dívida líquida de 2,1x EBITDA" e "a dívida líquida saiu de 0,8x para 2,1x em dois anos, com a receita parada". O primeiro é um número; o segundo é uma decisão de crédito.
+</Tip>
+
+As métricas de tendência entram como **variáveis de política** iguais às demais, então dá para escrever regra em cima da evolução, não só do último exercício.
 
 ## A aba de Análise Financeira
 
@@ -301,7 +384,7 @@ A análise é entregue em **formato padrão** e fica acessível por três caminh
   <Card title="Precificação" icon="calculator" href="/concepts/precificacao">
     Fórmulas usando indicadores do balanço.
   </Card>
-  <Card title="GYRA Insights" icon="sparkles" href="/concepts/gyra-insights">
+  <Card title="Pareceres GYRA+ IA" icon="sparkles" href="/concepts/pareceres-gyra-ia">
     Os agentes de IA que geram o parecer.
   </Card>
   <Card title="Rodar uma análise" icon="play" href="/toolbox/rodar-operacao">

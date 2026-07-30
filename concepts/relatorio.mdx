@@ -48,6 +48,10 @@ flowchart LR
 
 O processamento é **assíncrono**. Após o `POST /report`, você recebe o resultado via [webhook](/concepts/webhooks-e-tempo-real) ou consulta com `GET /report/:id`.
 
+<Note>
+  Quando a política usa o [Comitê de Crédito IA](/concepts/comite-de-credito), há uma etapa a mais **depois** da decisão automática: os pareceres por seção e o resultado da política vão a comitê, que devolve uma decisão fundamentada. O comitê pode rodar sozinho ou ser convocado sob demanda, pelo botão *Convocar Comitê* no relatório ou por [`POST /report/{id}/committee`](/api-reference/report/post-reportcommittee). A conclusão é avisada pelo webhook `COMMITTEE_FINISHED`.
+</Note>
+
 ---
 
 ## Status do relatório × Status da política

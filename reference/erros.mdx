@@ -38,6 +38,10 @@ Todos os erros da API GYRA+ seguem o mesmo formato:
 | `"Documento inválido."` | CPF ou CNPJ com formato ou dígitos incorretos | Valide o documento antes de enviar (sem formatação) |
 | `"Tipo de documento inválido."` | Campo `type` diferente de `CPF` ou `CNPJ` | Use exatamente `"CPF"` ou `"CNPJ"` (maiúsculo) |
 | `"policyId inválido."` | ID de política inexistente ou inativo | Consulte as políticas ativas com `GET /credit-policy/policy` |
+| `"O comitê de crédito não está habilitado para a política deste relatório."` | A política do relatório não habilita o pipeline de parecer, que é o insumo do comitê | Use uma política com parecer habilitado, ou fale com **atendimento@gyramais.com** |
+| `"Os pareceres por seção ainda não finalizaram. Aguarde a conclusão para convocar o comitê."` | Convocou o comitê antes de os pareceres terminarem | Aguarde o webhook `REPORT_FINISHED` ou verifique em `GET /report/{id}/insights` |
+| `"A política de crédito ainda não concluiu. Aguarde o resultado da política para convocar o comitê."` | O resultado da política ainda não chegou ao relatório | Aguarde o webhook `CREDIT_POLICY` antes de convocar |
+| `"Nenhum parecer por seção disponível para deliberação do comitê."` | Nenhuma seção produziu parecer; não há insumo para o comitê | Verifique se o relatório concluiu com sucesso |
 
 ### 401, Unauthorized
 
@@ -59,6 +63,14 @@ Todos os erros da API GYRA+ seguem o mesmo formato:
 |----------|-------|---------|
 | `"Registro não encontrado."` | `reportId`, `sectionId` ou `webhookId` inexistente | Verifique se o ID está correto |
 | `"Política não encontrada."` | `policyId` inválido ou removido | Consulte políticas ativas |
+| `"Relatório não encontrado"` | `reportId` inexistente **ou pertencente a outra organização** | Confirme o ID e o token usado |
+| `"Nenhuma deliberação do comitê encontrada para este relatório."` | O relatório nunca foi a comitê | Convoque com `POST /report/{id}/committee` |
+
+### 409, Conflict
+
+| Mensagem | Causa | Solução |
+|----------|-------|---------|
+| `"O comitê já está em deliberação para este relatório."` | Convocação do comitê enquanto outra deliberação está `RUNNING` | Aguarde o webhook `COMMITTEE_FINISHED` antes de convocar de novo |
 
 ### 429, Too Many Requests
 

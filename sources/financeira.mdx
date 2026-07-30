@@ -112,16 +112,21 @@ Exemplo de fórmula aprovando até 3 meses de faturamento, cap no solicitado:
 MIN(|#amount|valor solicitado|#|, |#SUMMARY_PRESUMED_BILLING|faturamento anual|#| / 12 * 3)
 ```
 
-## Como enviar o balanço
+## Como o balanço chega ao relatório
 
-O balanço entra por **upload de PDF**: anexe o arquivo no input da análise (junto com o CNPJ) ou pelo menu *Enviar balanço* (3 pontinhos) de um relatório já gerado. Você pode selecionar só as páginas relevantes (economia de tokens) e enviar vários arquivos. O passo a passo completo, a mecânica multi-período e a lista de indicadores estão em **[Análise Financeira](/concepts/analise-financeira)**.
+Por dois caminhos, que se somam:
+
+- **A GYRA+ encontra.** Em relatórios COMPLETO e COMPLETO+, a plataforma busca demonstrações da empresa na base própria de mais de **170 mil balanços**, alimentada pela CVM e por scrapers de publicações legais em diários oficiais e jornais de grande circulação. Achando, processa automaticamente (se a política tem *Usar regras do balanço* ligado) ou sinaliza na aba para você decidir.
+- **Você envia.** Upload de PDF no input da análise (junto com o CNPJ) ou pelo menu *Enviar balanço* (3 pontinhos) de um relatório já gerado, com seleção de páginas e vários arquivos por vez.
+
+O passo a passo completo, a mecânica multi-período e a lista de indicadores estão em **[Análise Financeira](/concepts/analise-financeira)**.
 
 Uma vez enviado o balanço, o relatório passa a trazer as seções contábeis detalhadas (`BALANCE_SHEET`, `DRE`, `FINANCIAL_INDICATORS`, etc.).
 
 ## Limitações e considerações
 
 - **Faturamento e renda presumidos são inferências** dos bureaus, com margem de erro. Empresas com operação atípica (sazonal, exportação, grupo econômico complexo) podem ter estimativa defasada.
-- **Balanço depende de envio**. Sem o upload do PDF do balanço, as seções contábeis não aparecem no relatório, fica só o faturamento presumido.
+- **Balanço depende de existir uma fonte**. Se a empresa não publica demonstrações e ninguém envia o PDF, as seções contábeis não aparecem no relatório e fica só o faturamento presumido. A busca automática cobre quem publica (companhia aberta na CVM, S.A. de capital fechado em publicação legal), não a empresa que nunca publicou.
 - **Obter renda PF precisa é difícil**: a GYRA+ não acessa holerite individual sem consentimento específico (Open Finance PF). Para precisão, usar [SCR / Open Finance](/sources/scr-open-finance).
 
 ## Perguntas frequentes

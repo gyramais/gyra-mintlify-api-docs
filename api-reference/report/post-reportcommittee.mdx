@@ -1,0 +1,208 @@
+---
+title: Convocar Comitê de Crédito IA
+description: Dispara manualmente a deliberação do Comitê de Crédito IA sobre um relatório.
+surface: api
+domain: analise-credito
+audience: integrador
+lang: tecnica
+openapi: post /report/{id}/committee
+---
+
+### Quando usar
+
+É o mesmo endpoint que o botão **Convocar Comitê** do toolbox usa. Ele existe para as duas primeiras das três configurações de comitê da política:
+
+| Configuração da política | Como este endpoint entra |
+| ------------------------ | ------------------------ |
+| **Não convocar automaticamente** | É a **única** forma de levar o relatório a comitê. Use para triagem sob demanda, exceção de alçada, ou fluxos em que só parte da carteira vai a comitê. |
+| **Convocar comitê e sugerir decisão** | O comitê já rodou sozinho. Use para **reconvocar**, por exemplo depois de subir um balanço ou corrigir dados do relatório. A decisão final continua com o analista, via [`POST /report/analyze`](/api-reference/report/post-reportanalyze). |
+| **Convocar comitê e decisão automática** | Normalmente você não precisa: o comitê já rodou e já aplicou a decisão no status do relatório. Uma reconvocação aqui gera uma nova deliberação **como sugestão**, e não altera o status já registrado. |
+
+Também funciona para reconvocar um relatório cujo comitê falhou (`ERROR`) ou foi pulado (`SKIPPED`).
+
+<Warning>
+  Convocação manual **sempre entra como sugestão**, nunca decide sozinha. Só o gatilho automático da política *Convocar comitê e decisão automática* aplica a decisão no status do relatório.
+</Warning>
+
+Conceito completo em [Comitê de Crédito IA](/concepts/comite-de-credito).
+
+### Autenticação
+
+Bearer JWT no header `Authorization`. A organização do token é a única que enxerga o relatório: um `id` de outra organização retorna `404`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID do relatório que vai a comitê. |
+| `force` | `body` | `boolean` | `não` | Padrão `false`. Ignora o cache da deliberação e força os agentes a reprocessarem do zero. Use ao reconvocar depois de corrigir dados do relatório. |
+
+### Pré-requisitos
+
+A convocação é recusada com `400` se o relatório ainda não está pronto para o comitê:
+
+<Steps>
+  <Step title="A política precisa habilitar o pipeline de parecer">
+    Sem parecer por seção não existe insumo para o comitê.
+  </Step>
+  <Step title="Os pareceres por seção precisam ter terminado">
+    Não há evento que anuncie isso. Veja o padrão de integração abaixo.
+  </Step>
+  <Step title="A política de crédito precisa ter concluído">
+    Se o relatório tem `policyId`, o resultado da política precisa ter chegado.
+  </Step>
+</Steps>
+
+<Warning>
+  **O webhook `REPORT_FINISHED` não é garantia de que o comitê pode ser convocado.** Ele sinaliza que as **integrações** do relatório terminaram, que é um pipeline diferente do de pareceres. Os pareceres por seção rodam depois e podem continuar processando por mais alguns instantes. Convocar o comitê no exato momento em que o `REPORT_FINISHED` chega costuma devolver `400`.
+</Warning>
+
+<Tip>
+  **Se todo relatório dessa política deve ir a comitê, não use este endpoint.** Configure a política como **Convocar comitê e sugerir decisão** e a plataforma convoca sozinha, na hora certa, sem você precisar acertar o momento nem tratar retry. A deliberação chega pelo webhook [`COMMITTEE_FINISHED`](/api-reference/webhook/post-webhook) com `trigger: "AUTO_SUGGEST"`, e a decisão final continua sendo do analista, igual à convocação manual.
+
+  Este endpoint existe para o caso oposto: quando o comitê é **exceção**, disparada por uma pessoa no seu sistema (um botão na tela do analista, uma aprovação de alçada) ou por uma regra sua que seleciona quais casos valem a deliberação. É aí que o padrão abaixo importa.
+</Tip>
+
+### Padrão de integração recomendado
+
+Não existe hoje um evento que anuncie "os pareceres terminaram". O caminho robusto é tratar o `400` de prontidão como **estado transitório** e repetir:
+
+<Steps>
+  <Step title="Aguarde o REPORT_FINISHED">
+    Ele indica que a análise entrou na reta final. Serve como ponto de partida, não como sinal de prontidão.
+  </Step>
+  <Step title="Chame o endpoint e leia o erro">
+    Um `200` significa que a deliberação começou. Um `400` de *pareceres ainda não finalizaram* ou de *política ainda não concluiu* significa "ainda não, tente de novo".
+  </Step>
+  <Step title="Repita com backoff">
+    Aguarde alguns segundos e chame novamente. Na prática os pareceres fecham em menos de um minuto depois do relatório. Estabeleça um teto de tentativas para não repetir indefinidamente.
+  </Step>
+  <Step title="Pare nos erros terminais">
+    *Comitê não habilitado na política* e *nenhum parecer disponível* não mudam com o tempo. Nesses casos, não repita.
+  </Step>
+</Steps>
+
+Consulte a tabela de [erros](#erros) abaixo: a coluna **Repetir** diz quais valem nova tentativa.
+
+<Note>
+  [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights) mostra os pareceres já concluídos, mas **não informa quantos faltam**. Serve para acompanhar o progresso, não para decidir que tudo terminou. Quem tem essa informação é o próprio endpoint de convocação, na resposta que ele devolve.
+</Note>
+
+### Resposta
+
+A chamada é **assíncrona**. O `200` confirma que a deliberação foi aceita e iniciada, não que ela terminou.
+
+| Campo | Descrição |
+|---|---|
+| `status` | Sempre `RUNNING` no sucesso. |
+| `trigger` | `MANUAL` na primeira deliberação do relatório, `RERUN` quando já havia uma anterior. |
+
+Para saber o resultado, registre o webhook [`COMMITTEE_FINISHED`](/api-reference/webhook/post-webhook) ou consulte [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights).
+
+<RequestExample>
+
+```bash cURL
+curl --location --request POST 'https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/committee' \
+--header 'Authorization: Bearer {seu_token_jwt}' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "force": false
+}'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/committee", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer {seu_token_jwt}",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ force: false })
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/committee"
+headers = {"Authorization": "Bearer {seu_token_jwt}"}
+payload = {"force": False}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "status": "RUNNING",
+  "trigger": "MANUAL"
+}
+```
+
+```json 200 OK (reconvocação)
+{
+  "status": "RUNNING",
+  "trigger": "RERUN"
+}
+```
+
+```json 400 Bad Request
+{
+  "code": 400,
+  "message": "Os pareceres por seção ainda não finalizaram. Aguarde a conclusão para convocar o comitê."
+}
+```
+
+```json 404 Not Found
+{
+  "code": 404,
+  "message": "Relatório não encontrado"
+}
+```
+
+```json 409 Conflict
+{
+  "code": 409,
+  "message": "O comitê já está em deliberação para este relatório."
+}
+```
+
+</ResponseExample>
+
+### Erros
+
+| Código | Mensagem | Causa | Repetir |
+|---|---|---|---|
+| `400` | `"Os pareceres por seção ainda não finalizaram. Aguarde a conclusão para convocar o comitê."` | O relatório ainda está gerando pareceres. | **Sim**, com backoff |
+| `400` | `"A política de crédito ainda não concluiu. Aguarde o resultado da política para convocar o comitê."` | O resultado da política ainda não chegou. | **Sim**, com backoff |
+| `400` | `"O comitê de crédito não está habilitado para a política deste relatório."` | A política do relatório não habilita o pipeline de parecer. | Não, é definitivo |
+| `400` | `"Nenhum parecer por seção disponível para deliberação do comitê."` | Nenhuma seção produziu parecer; não há insumo. | Não, é definitivo |
+| `404` | `"Relatório não encontrado"` | ID inexistente ou de outra organização. | Não |
+| `409` | `"O comitê já está em deliberação para este relatório."` | Já existe uma deliberação `RUNNING`. | Não. A deliberação já começou, aguarde o `COMMITTEE_FINISHED` |
+
+<Tip>
+  Trate o `409` como sucesso na sua lógica de retry: ele significa que a deliberação está em andamento, seja porque outra chamada sua já passou, seja porque a política convocou automaticamente.
+</Tip>
+
+### Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Comitê de Crédito IA" icon="users" href="/concepts/comite-de-credito">
+    Agentes, modos e regras de convocação.
+  </Card>
+  <Card title="Consultar Pareceres" icon="file-lines" href="/api-reference/report/get-reportinsights">
+    Pareceres por seção e resumo da decisão.
+  </Card>
+  <Card title="Consultar Deliberação" icon="scale-balanced" href="/api-reference/committee/get-committeedeliberations">
+    Votos individuais, custo e auditoria.
+  </Card>
+  <Card title="Criar Webhook" icon="webhook" href="/api-reference/webhook/post-webhook">
+    Receber `COMMITTEE_FINISHED`.
+  </Card>
+</CardGroup>

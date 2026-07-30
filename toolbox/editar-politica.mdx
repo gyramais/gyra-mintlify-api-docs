@@ -42,6 +42,7 @@ lang: nao-tecnica
     - **Fórmulas**: `periodFormula`, `interestFormula`, `amountFormula`. Ver [Precificação](/concepts/precificacao).
     - **Dados consultados**: ativar ou desativar SCR, janela de processos, níveis de vínculos societários, e **fontes adicionais** (com custo adicional) como **Protestos Cenprot** (cobertura nacional de protestos, ver [Protestos](/sources/protestos#como-escolher-a-fonte)) e os indicadores de **[Inteligência de Pagamentos da Núclea](/sources/inteligencia-pagamentos)** (fluxo transacionado, predição, concentração e liquidez, PJ).
     - **Mensagens**: textos mostrados para `APPROVED`, `ALERT`, `DENIED`.
+    - **Comitê de Crédito IA**: se o relatório vai a comitê e como. Ver abaixo.
   </Step>
   <Step title="Ver o diff">
     Botão *Ver alterações* mostra, lado a lado, o que mudou em relação à versão publicada: regras adicionadas, removidas, alteradas, fórmulas antes/depois.
@@ -54,6 +55,32 @@ lang: nao-tecnica
 <Tip>
   Análises disparadas **antes** da publicação continuam rastreáveis à versão antiga da política. A tela de resultado sempre mostra qual versão rodou.
 </Tip>
+
+## Comitê de Crédito IA
+
+No bloco **Comitê de Crédito IA** você escolhe se o [comitê](/concepts/comite-de-credito) é convocado sozinho ao fim da análise:
+
+- **Não convocar automaticamente**: o comitê só roda pelo botão *Convocar Comitê* dentro do relatório, ou por [`POST /report/{id}/committee`](/api-reference/report/post-reportcommittee). É o modo manual.
+- **Convocar comitê e sugerir decisão**: o comitê roda sozinho e sugere; aprovar ou negar continua com o analista.
+- **Convocar comitê e decisão automática**: o comitê roda sozinho e aplica a decisão no status do relatório.
+
+Com *Usar resultado da política no relatório* ativo, o comitê só é convocado quando a política aprova.
+
+### Instruções adicionais dos agentes
+
+<Info>
+  Disponível nos planos **Business** e **Enterprise**. Fale com `atendimento@gyramais.com` para habilitar na sua organização.
+</Info>
+
+Com o recurso habilitado, o bloco do comitê exibe um campo de texto por agente (Cadastral, Societário, Financeiro, Comportamental, Jurídico, Macro e Setorial, Compliance e Presidente). É onde você registra as **orientações da sua instituição**: apetite de risco, critérios do setor que você opera e política interna.
+
+Pontos práticos:
+
+- As instruções **complementam** o conhecimento do agente, não substituem o prompt-base da GYRA+.
+- Elas não podem alterar o formato da resposta, a soberania da política de crédito, as regras de compliance nem o idioma. Texto que tente isso é recusado no salvamento, com a explicação do motivo.
+- Limite de **4.000 caracteres por agente**. Campo vazio remove a customização e volta ao padrão.
+- O botão *Salvar instruções* é independente da publicação da política: as instruções valem para as próximas deliberações assim que salvas.
+- Cada deliberação registra qual versão de instrução cada agente usou, o que permite auditar o efeito de uma mudança.
 
 ## Versionamento
 

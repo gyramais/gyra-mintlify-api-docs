@@ -1,0 +1,124 @@
+---
+title: "Arquivos do Relatório"
+description: "Guarde no relatório os documentos que sustentaram a decisão de crédito e baixe o dossiê completo num único zip: anexos enviados, certidões coletadas, demonstrações de origem, PDF e planilha do relatório."
+icon: "folder-open"
+surface: conceito
+domain: relatorio
+audience: ambos
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** o botão **Arquivos** do relatório guarda, junto da análise, os documentos que sustentaram a decisão: contrato social, comprovante de faturamento, extrato bancário, documento de garantia, o que a sua mesa exigir. Cada arquivo entra com uma **tag** do que ele é. E o botão **Baixar dossiê** empacota tudo num **zip único**: o que você subiu, as certidões que a GYRA+ coletou, os balanços de origem, o PDF e a planilha do relatório.
+</Info>
+
+## O problema: a decisão vive num lugar, a evidência em outro
+
+A análise de crédito termina no relatório. A **prova** de que a análise aconteceu costuma terminar em outro lugar: o contrato social num e-mail, o comprovante de faturamento no WhatsApp do gerente, a certidão baixada na pasta Downloads de alguém.
+
+Aí chega uma auditoria, um questionamento do cliente ou um pedido do regulador perguntando por que aquela operação de seis meses atrás foi aprovada. A resposta está espalhada por cinco sistemas e duas pessoas, e uma delas não trabalha mais aqui.
+
+**Arquivos do Relatório resolve isso pela raiz:** a evidência mora no mesmo objeto que a decisão, e sai de lá num pacote só.
+
+---
+
+## Anexar documentos
+
+No relatório, o botão **Arquivos** abre o painel de anexos. Cada upload é classificado com uma **tag** que descreve o papel do documento na análise:
+
+| Tag | Documento |
+| --- | --------- |
+| `IDENTITY_DOCUMENT` | Documento de identidade |
+| `PROOF_OF_RESIDENCE` | Comprovante de residência |
+| `REVENUE_PROOF` | Comprovante de faturamento |
+| `INCOME_TAX` | Declaração de imposto de renda |
+| `ARTICLES_OF_INCORPORATION` | Contrato ou estatuto social |
+| `CLEARANCE_CERTIFICATE` | Certidão negativa |
+| `BANK_STATEMENT` | Extrato bancário |
+| `COLLATERAL` | Documento de garantia |
+| `OTHER` | Outros |
+
+Qualquer formato é aceito, com limite de **16 MB por arquivo**.
+
+<Note>
+  **Balanço não é anexo.** Demonstrações financeiras têm fluxo próprio, com extração, padronização e cálculo de indicadores. Se o documento é um balanço ou uma DRE, use a [Análise Financeira](/concepts/analise-financeira) para ele virar dado, não arquivo parado.
+</Note>
+
+### Pela API
+
+| Ação | Endpoint |
+| ---- | -------- |
+| Anexar | `POST /report/{id}/attachments`, multipart com os campos `file` e `tag` |
+| Listar | `GET /report/{id}/attachments` |
+
+Ambos exigem Bearer JWT e respeitam a organização do token: um relatório de outra organização retorna `404`.
+
+---
+
+## O dossiê
+
+O botão **Baixar dossiê** monta um **zip** com tudo que existe de arquivo naquele relatório. O pacote é construído no servidor, organizado em pastas por origem:
+
+| Pasta no zip | Conteúdo |
+| ------------ | -------- |
+| `exportacoes/` | PDF e planilha Excel do relatório |
+| `analise-financeira/` | Planilha da análise financeira, com balanço, DRE e indicadores padronizados |
+| `documentos-origem/` | Os balanços originais encontrados pela GYRA+ nas fontes públicas |
+| `enviados/` | Os anexos que você subiu, com o nome refletindo a tag |
+| `certidoes/` | As certidões válidas coletadas durante a análise (CND federal, CRF FGTS, CNDT trabalhista, entre outras) |
+
+Se algum arquivo não puder entrar (link expirado, arquivo acima de 50 MB, origem fora do ar), ele **não é omitido em silêncio**: o zip inclui um `_avisos.txt` listando o que ficou de fora e por quê.
+
+<Tip>
+  É o pacote que responde a uma auditoria sem depender de ninguém reconstruir a história. Documento de entrada, evidência coletada pela plataforma e resultado da análise, todos com a mesma data e no mesmo lugar.
+</Tip>
+
+### Pela API
+
+```bash
+curl -L 'https://gyra-core.gyramais.com.br/report/{reportId}/files/archive' \
+  -H 'Authorization: Bearer {seu_token_jwt}' \
+  -o dossie.zip
+```
+
+O zip é montado em streaming: a resposta começa a sair antes de o pacote inteiro estar pronto, então relatórios com muitos arquivos não estouram timeout.
+
+<Warning>
+  A lista de arquivos é montada **pelo servidor**, a partir do que está registrado no relatório. Não existe parâmetro para o cliente informar URLs a incluir. É uma decisão de segurança: um endpoint que baixasse URLs arbitrárias enviadas pelo chamador seria um vetor de SSRF.
+</Warning>
+
+---
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Quem consegue ver e anexar arquivos?">
+    Usuários com permissão de gerar relatório, dentro da própria organização. O acesso segue exatamente a mesma regra dos demais dados do relatório.
+  </Accordion>
+  <Accordion title="Dá para remover um anexo?">
+    Sim. A listagem devolve apenas os anexos ativos, e o histórico é preservado internamente para auditoria, seguindo o padrão da plataforma de nunca apagar dado de negócio em definitivo.
+  </Accordion>
+  <Accordion title="O dossiê inclui as certidões que a GYRA+ buscou?">
+    Sim, as certidões válidas coletadas durante a análise vão na pasta `certidoes/`, com nome legível por tipo. É o mesmo arquivo que a plataforma obteve na fonte.
+  </Accordion>
+  <Accordion title="Posso anexar o balanço aqui em vez de usar a Análise Financeira?">
+    Tecnicamente cabe em `OTHER`, mas você perde o principal: pela [Análise Financeira](/concepts/analise-financeira) o balanço vira indicador calculado, variável de política e parecer de IA. Como anexo, ele é só um PDF guardado.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Análise Financeira" icon="file-invoice-dollar" href="/concepts/analise-financeira">
+    Balanço e DRE viram dado estruturado, não arquivo.
+  </Card>
+  <Card title="Certidões" icon="stamp" href="/sources/certidoes">
+    Quais certidões a plataforma coleta e como.
+  </Card>
+  <Card title="Relatório" icon="file-chart-column" href="/concepts/relatorio">
+    Estrutura e ciclo de vida do relatório.
+  </Card>
+  <Card title="Comitê de Crédito IA" icon="users" href="/concepts/comite-de-credito">
+    A decisão que esses documentos sustentam.
+  </Card>
+</CardGroup>

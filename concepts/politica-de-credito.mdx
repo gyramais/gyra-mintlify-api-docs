@@ -70,6 +70,26 @@ Mesmo com a opção ligada, a análise manual continua possível e sobrescreve o
 
 ---
 
+## Comitê de Crédito IA na política
+
+Além do motor de regras, cada política define se o relatório vai a [Comitê de Crédito IA](/concepts/comite-de-credito), a deliberação de sete agentes especialistas e um Presidente sobre os pareceres do relatório. A configuração fica no bloco **Comitê de Crédito IA** da edição da política:
+
+| Opção | Comportamento |
+| ----- | ------------- |
+| **Não convocar automaticamente** | O comitê só roda quando alguém convoca: pelo botão **Convocar Comitê** no relatório, ou por [`POST /report/{id}/committee`](/api-reference/report/post-reportcommittee). É o modo sob demanda. |
+| **Convocar comitê e sugerir decisão** | O comitê roda sozinho e sugere a decisão. Aprovar ou negar continua com o analista, pela tela ou por [`POST /report/analyze`](/api-reference/report/post-reportanalyze). |
+| **Convocar comitê e decisão automática** | O comitê roda sozinho e aplica a decisão no status do relatório, sem passar por um humano. |
+
+O comitê só é convocado depois que os pareceres por seção e o resultado da política concluem, e depende de a política ter o pipeline de parecer habilitado.
+
+<Note>
+  Com **"Usar resultado da política no relatório"** ligado, o comitê só é convocado quando a política **aprova**. Política rejeitada não vai a comitê (o relatório fica com o comitê em `SKIPPED`, e ainda assim pode ser levado a comitê manualmente).
+</Note>
+
+Nos planos **Business** e **Enterprise**, a mesma tela permite escrever **instruções adicionais por agente**, com o apetite de risco e os critérios internos da sua instituição. Detalhes em [Comitê de Crédito IA](/concepts/comite-de-credito#instru%C3%A7%C3%B5es-da-sua-institui%C3%A7%C3%A3o-nos-agentes).
+
+---
+
 ## Templates disponíveis
 
 A GYRA+ oferece políticas prontas para os cenários mais comuns. Use o `policyId` correspondente ao chamar a API.

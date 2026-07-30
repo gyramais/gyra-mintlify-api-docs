@@ -41,6 +41,7 @@ Cada disparo é um `POST` com o envelope `{ organizationId, webhookType, data }`
 | `REPORT_STATUS` | Decisão **manual** (analista aprovou/rejeitou via `analyze`/`re-analyze`). | `reportId` e `analysis` com `status` (`REPORT_APPROVED`/`REPORT_REJECTED`), autor e data. |
 | `REPORT_EXPORTED` | Exportação do relatório (PDF ou XLS) ficou pronta, ou falhou. | `reportId`, `exportUrl` (assinada) e `exportedAt`. Em falha, `exportUrl` vem `null` e há `error`. |
 | `CREDIT_POLICY` | Política de crédito avaliada (resultado final do motor de regras). | `reportId`, `policyId`, `version`, `status`, `risk`, `score`, `date`. |
+| `COMMITTEE_FINISHED` | [Comitê de Crédito IA](/concepts/comite-de-credito) concluiu (ou falhou) a deliberação do relatório, seja ela automática ou convocada manualmente. | `reportId`, `status`, `decision`, `synthesis`, `deliberationId`, `finishedAt`. Em falha, `status` vem `ERROR` e há `error`. |
 | `OPERATION` | Operação (fluxo multi-relatório com cadeia de políticas) concluiu com status final. | `operationId`, `operationResultId`, `document`, `status`. |
 | `OPTIN` | Reservado para o fluxo de **opt-in de onboarding**. | Conforme o fluxo de onboarding contratado. |
 
@@ -78,6 +79,31 @@ Cada disparo é um `POST` com o envelope `{ organizationId, webhookType, data }`
       "risk": "LOW",
       "score": 720,
       "date": "2026-04-23T14:30:45Z"
+    }
+  }
+}
+```
+
+```json COMMITTEE_FINISHED
+{
+  "organizationId": "6612a7f30000000000000001",
+  "webhookType": "COMMITTEE_FINISHED",
+  "data": {
+    "content": {
+      "reportId": "6612a7f30000000000000001",
+      "status": "DONE",
+      "decision": "APPROVED",
+      "synthesis": {
+        "decision": "APPROVED",
+        "resumo": "Aprovar com ressalvas: caixa e histórico sustentam a operação.",
+        "reasoning": "Seis dos sete agentes recomendaram aprovação...",
+        "proximaAcao": "Solicitar garantia adicional antes do desembolso.",
+        "conditions": ["Garantia adicional de 20% do limite"],
+        "confidence": 0.82,
+        "alcadaLevel": null
+      },
+      "deliberationId": "6612a7f30000000000000900",
+      "finishedAt": "2026-07-30T14:31:12.004Z"
     }
   }
 }
@@ -138,8 +164,12 @@ Cada disparo é um `POST` com o envelope `{ organizationId, webhookType, data }`
 </CodeGroup>
 
 <Tip>
-  Para a maioria das integrações, escute **`REPORT_FINISHED`** (resultado pronto) e/ou **`CREDIT_POLICY`** (decisão). Use `REPORT` apenas se precisar de atualizações seção a seção. Visão geral e boas práticas em [Webhooks e tempo real](/concepts/webhooks-e-tempo-real).
+  Para a maioria das integrações, escute **`REPORT_FINISHED`** (resultado pronto) e/ou **`CREDIT_POLICY`** (decisão). Use `REPORT` apenas se precisar de atualizações seção a seção. Se a sua política usa o [Comitê de Crédito IA](/concepts/comite-de-credito), adicione **`COMMITTEE_FINISHED`**. Visão geral e boas práticas em [Webhooks e tempo real](/concepts/webhooks-e-tempo-real).
 </Tip>
+
+<Warning>
+  Os webhooks da organização são copiados para o relatório **no momento em que ele é criado**. Um webhook `COMMITTEE_FINISHED` registrado depois da criação não dispara para relatórios que já existiam. Registre o webhook antes de começar a criar relatórios que vão a comitê.
+</Warning>
 
 <RequestExample>
 
@@ -206,7 +236,7 @@ print(response.json())
 ```json 400 Bad Request
 {
   "code": 400,
-  "message": "type must be one of the following values: REPORT, OPTIN, CREDIT_POLICY, REPORT_STATUS, REPORT_FINISHED, REPORT_EXPORTED, OPERATION,type should not be empty,url should not be empty,url must be a string"
+  "message": "type must be one of the following values: REPORT, OPTIN, CREDIT_POLICY, REPORT_STATUS, REPORT_FINISHED, REPORT_EXPORTED, COMMITTEE_FINISHED, OPERATION,type should not be empty,url should not be empty,url must be a string"
 }
 ```
 

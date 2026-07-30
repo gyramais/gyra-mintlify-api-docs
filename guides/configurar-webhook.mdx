@@ -112,6 +112,47 @@ Após 30–90 segundos (dependendo das integrações ativas), seu endpoint deve 
 
 ---
 
+## Passo 4, Receber a decisão do comitê
+
+Se a sua política usa o [Comitê de Crédito IA](/concepts/comite-de-credito), registre também o tipo `COMMITTEE_FINISHED`. Cada webhook escuta **um** tipo, então é um registro separado:
+
+```bash
+curl -X POST https://gyra-core.gyramais.com.br/webhook \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "COMMITTEE_FINISHED",
+    "url": "https://seu-sistema.com/webhooks/gyra-comite"
+  }'
+```
+
+O payload traz a decisão e a síntese do Presidente:
+
+```json
+{
+  "organizationId": "6612a7f30000000000000001",
+  "webhookType": "COMMITTEE_FINISHED",
+  "data": {
+    "content": {
+      "reportId": "64a3b2c1d4e5f6a7b8c9d0e1",
+      "status": "DONE",
+      "decision": "APPROVED",
+      "synthesis": { "resumo": "...", "conditions": ["..."], "confidence": 0.82 },
+      "deliberationId": "6612a7f30000000000000900",
+      "finishedAt": "2026-07-30T14:31:12.004Z"
+    }
+  }
+}
+```
+
+Se a política está em **Não convocar automaticamente**, o comitê só delibera depois que você chamar [`POST /report/{id}/committee`](/api-reference/report/post-reportcommittee). O gatilho natural é o próprio `REPORT_FINISHED`: quando ele chega, o relatório já está pronto para ir a comitê.
+
+<Warning>
+  Os webhooks da organização são copiados para o relatório **na criação dele**. Registre `COMMITTEE_FINISHED` antes de criar os relatórios que vão a comitê, senão o evento não tem destino para os que já existiam.
+</Warning>
+
+---
+
 ## Gerenciar webhooks
 
 **Listar webhooks cadastrados:**

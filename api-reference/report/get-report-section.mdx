@@ -48,7 +48,76 @@ Bearer JWT no header `Authorization`.
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
 | `id` | `path` | `string` | `sim` | ID do relatório. |
-| `sectionType` | `path` | `string` | `sim` | Tipo da seção. Valores comuns: `SUMMARY`, `LAWSUITS`, `BUREAU`, `SCR`, `PROTESTS`, `PEFIN_REFIN`, `PEP_SANCTIONS`. |
+| `sectionType` | `path` | `string` | `sim` | Tipo da seção, em maiúsculas. Lista completa abaixo. |
+
+### Tipos de seção
+
+O `sectionType` é a chave estável da seção: não muda entre ambientes nem entre versões. Quais seções existem em um relatório específico depende do [tipo de relatório](/docs/tipos-relatorios), do documento (CPF ou CNPJ) e das fontes ativadas na política.
+
+**Análise e risco**
+
+| `sectionType` | Seção | Parecer IA |
+|---|---|---|
+| `SUMMARY` | Resumo, indicadores consolidados de risco | – |
+| `BASIC_INFORMATION` | Informações básicas, dados cadastrais e QSA | ✓ |
+| `LOCATION` | Localização e fachada do endereço | ✓ |
+| `RELATIONS` | Vínculos societários e grupo econômico | ✓ |
+| `SCORE` | Score de bureau | ✓ |
+| `PROCESSES` | Processos judiciais | ✓ |
+| `CERTIFICATES` | Certidões (federal, trabalhista, FGTS, estaduais) | ✓ |
+| `LICENSES_AUTHORIZATIONS` | Licenças e autorizações | ✓ |
+| `PEP` | Pessoa politicamente exposta | ✓ |
+| `SANCTIONS` | Sanções e listas restritivas | ✓ |
+| `MEDIA_EXPOSURE` | Exposição em mídia e reputação | ✓ |
+| `CRIMINAL_RECORD` | Antecedentes criminais e mandados de prisão | ✓ |
+| `SOCIAL_ASSISTANCE_PROGRAMS` | Programas sociais e benefícios | ✓ |
+| `SECTOR` | Panorama setorial e macroeconômico | ✓ |
+
+**Restritivos e endividamento**
+
+| `sectionType` | Seção | Parecer IA |
+|---|---|---|
+| `SCR` | SCR / Open Finance, categorias e modalidades | ✓ |
+| `SCR_SUMMARY` | Resumo SCR, endividamento consolidado | ✓ |
+| `PEFIN` | Pefin, restritivos de credores não financeiros | ✓ |
+| `REFIN` | Refin, restritivos de instituições financeiras | ✓ |
+| `PROTESTS` | Protestos em cartório | ✓ |
+| `BAD_CHECK` | Cheques sem fundo | ✓ |
+| `PAST_DUE_DEBT` | Dívidas vencidas | ✓ |
+| `PAYMENT_INTELLIGENCE` | Inteligência de pagamentos (fluxo transacionado) | – |
+
+**Análise financeira** (dependem do envio do balanço)
+
+| `sectionType` | Seção | Parecer IA |
+|---|---|---|
+| `BALANCE_SHEET` | Balanço patrimonial | ✓ |
+| `DRE` | Demonstração do resultado do exercício | – |
+| `FINANCIAL_INDICATORS` | Indicadores financeiros calculados | – |
+| `FINANCIAL_INSIGHTS` | Resumo executivo da análise financeira | – |
+| `FINANCIAL_RECOMMENDATIONS` | Recomendações da análise financeira | – |
+| `BALANCE_SHEET_CHART` | Séries do balanço para gráficos | – |
+| `COST_PROFIT_FORECAST` | Projeção de custo e resultado | – |
+| `DETAILED_COSTS` | Custos detalhados | – |
+| `SUPPLIERS_CLIENTS` | Fornecedores e clientes | – |
+
+**Complementares e resultado da política**
+
+| `sectionType` | Seção | Parecer IA |
+|---|---|---|
+| `CATEGORIES` | Categorias de atividade | – |
+| `HISTORY` | Histórico cadastral | – |
+| `DOMAINS` | Domínios de internet associados | – |
+| `BUREAU_INQUIRY` | Consultas ao bureau (histórico de pesquisas) | – |
+| `CREDIT_POLICY` | Resultado da avaliação da política de crédito | – |
+| `PRICING` | Limite, taxa e prazo calculados pela política | – |
+
+<Note>
+  A coluna **Parecer IA** marca as 21 seções que recebem um [Parecer GYRA+ IA](/concepts/pareceres-gyra-ia) nos relatórios COMPLETO e COMPLETO+. As demais são estruturais ou já derivadas de outra seção. Para ler só os pareceres, sem os dados brutos, use [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights).
+</Note>
+
+<Warning>
+  Nem todo relatório tem todas as seções. `CRIMINAL_RECORD` e `SOCIAL_ASSISTANCE_PROGRAMS` só existem em relatórios de **CPF**; as seções de análise financeira só existem em **CNPJ** e só depois do envio do balanço. Um `sectionType` que não existe naquele relatório retorna **404**, não vazio. Antes de consultar, confira o array `sections[]` em [`GET /v2/report/{id}`](/api-reference/report-v2/get-v2report).
+</Warning>
 
 <RequestExample>
 
