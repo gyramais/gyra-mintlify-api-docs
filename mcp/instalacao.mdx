@@ -281,7 +281,11 @@ Quando o stdio for necessário:
     Não. O MCP depende do backend da GYRA+, exige internet.
   </Accordion>
   <Accordion title="Posso conectar múltiplas organizações?">
-    Sim, com um login por organização. Para stdio, adicione várias entradas em `mcpServers` com nomes distintos (ex: `gyra-orgA`, `gyra-orgB`), cada uma com o e-mail e a senha daquela organização. Para custom connector, adicione múltiplos connectors no Claude.
+    Sim, desde que você tenha **uma conta em cada uma**. Na plataforma, um e-mail pertence a uma única organização, e não há seleção de organização no login: a sessão já vem amarrada à organização daquele usuário.
+
+    Então cada entrada precisa de um **e-mail diferente**. Para stdio, adicione várias entradas em `mcpServers` com nomes distintos (ex: `gyra-orgA`, `gyra-orgB`), cada uma com as credenciais da conta correspondente. Para custom connector, adicione múltiplos connectors no Claude e autentique cada um com a sua conta.
+
+    Repetir o mesmo e-mail em duas entradas não conecta duas organizações: as duas apontam para a mesma.
   </Accordion>
   <Accordion title="Como renovar o token manualmente?">
     Só é necessário no modo `GYRA_ACCESS_TOKEN`: chame `POST /auth/authenticate` com os headers `gyra-client-id` (seu e-mail) e `gyra-client-secret` (sua senha) e use o `accessToken` retornado, válido por 24h. Com `GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET` o MCP faz isso sozinho, inclusive se a sessão cair no meio do caminho.
