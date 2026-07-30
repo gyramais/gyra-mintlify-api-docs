@@ -36,13 +36,20 @@ lang: nao-tecnica
   <Step title="Fazer as alterações">
     Tudo que pode ser editado:
 
-    - **Cabeçalho**: nome, nível de relatório, produto vinculado. (O tipo de documento PF/PJ é imutável.)
-    - **Grupos**: adicionar, remover, renomear, mudar score agregado (`scoreApproved`, `scoreAlert`, `scoreDenied`).
-    - **Regras**: adicionar, remover, desabilitar, ajustar campo/operador/threshold/status.
-    - **Fórmulas**: `periodFormula`, `interestFormula`, `amountFormula`. Ver [Precificação](/concepts/precificacao).
-    - **Dados consultados**: ativar ou desativar SCR, janela de processos, níveis de vínculos societários, e **fontes adicionais** (com custo adicional) como **Protestos Cenprot** (cobertura nacional de protestos, ver [Protestos](/sources/protestos#como-escolher-a-fonte)) e os indicadores de **[Inteligência de Pagamentos da Núclea](/sources/inteligencia-pagamentos)** (fluxo transacionado, predição, concentração e liquidez, PJ).
-    - **Mensagens**: textos mostrados para `APPROVED`, `ALERT`, `DENIED`.
-    - **Comitê de Crédito IA**: se o relatório vai a comitê e como. Ver abaixo.
+    O menu **Configurar política**, à esquerda, tem as seis etapas. Tudo que pode ser editado:
+
+    - **Fontes de dados**: Relatório base (nível e tipo de documento), bureau de crédito, SCR, e as fontes adicionais **Cenprot** (protestos nacionais, ver [Protestos](/sources/protestos#como-escolher-a-fonte)) e **[Núclea](/sources/inteligencia-pagamentos)** (indicadores de transações reais, PJ), além de **Balanço patrimonial** e **Bases externas**.
+    - **Minhas variáveis**: criar, editar e remover as fórmulas reutilizáveis (`#nome`).
+    - **Condições**: adicionar, remover, desabilitar, ajustar campo, operador, valor e o veredito ou a pontuação.
+    - **Classificação de risco**: ligar ou desligar a pontuação e ajustar as faixas de score e seus vereditos.
+    - **Precificação**: as fórmulas de limite, taxa e prazo. Ver [Precificação](/concepts/precificacao).
+    - **Decisão e alçada**: objetivo da política, decisão automática, quem pode alterar análises e o **Comitê de Crédito IA** (ver abaixo).
+
+    O nome da política e o produto vinculado ficam no cabeçalho. O tipo de documento (PF ou PJ) é imutável depois de criada.
+
+    <Warning>
+      Trocar o **Relatório base** para um nível menor pode remover variáveis que as suas condições e fórmulas já usam. O editor sinaliza o que quebra antes de você publicar.
+    </Warning>
   </Step>
   <Step title="Ver o diff">
     Botão *Ver alterações* mostra, lado a lado, o que mudou em relação à versão publicada: regras adicionadas, removidas, alteradas, fórmulas antes/depois.
