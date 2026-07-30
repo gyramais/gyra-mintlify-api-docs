@@ -32,9 +32,15 @@ Bearer JWT no header `Authorization`. Um `id` de outra organização retorna `40
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
 | `id` | `path` | `string` | `sim` | ID do relatório. |
-| `section` | `query` | `string` | `não` | Filtra o parecer de **uma** seção. Sem o parâmetro, retorna todos os pareceres concluídos. Um valor fora da lista de seções retorna `400`. |
+| `section` | `query` | `string` | `não` | Filtra o parecer de **uma** seção. Sem o parâmetro, retorna todos os pareceres concluídos. Um valor que não seja um tipo de seção válido retorna `400`. |
 
-Valores comuns de `section`: `SUMMARY`, `BASIC_INFORMATION`, `LOCATION`, `RELATIONS`, `PROCESSES`, `PROTESTS`, `PEFIN`, `REFIN`, `SCR`, `CERTIFICATES`, `SANCTIONS`, `PEP`, `MEDIA_EXPOSURE`, `SECTOR`, `CRIMINAL_RECORD`, `BALANCE_SHEET`, `FINANCIAL_INSIGHTS`, `PAYMENT_INTELLIGENCE`.
+Só estas **21 seções** produzem parecer, e portanto só elas fazem sentido como filtro:
+
+`BASIC_INFORMATION`, `LOCATION`, `RELATIONS`, `SCORE`, `PROCESSES`, `CERTIFICATES`, `LICENSES_AUTHORIZATIONS`, `PEP`, `SANCTIONS`, `MEDIA_EXPOSURE`, `CRIMINAL_RECORD`, `SOCIAL_ASSISTANCE_PROGRAMS`, `SECTOR`, `SCR`, `SCR_SUMMARY`, `PEFIN`, `REFIN`, `PROTESTS`, `BAD_CHECK`, `PAST_DUE_DEBT`, `BALANCE_SHEET`.
+
+<Warning>
+  Filtrar por um tipo de seção **que existe mas não produz parecer** (por exemplo `SUMMARY`, `DRE` ou `CREDIT_POLICY`) não é erro: a requisição retorna `200` com `insights` **vazio**. O mesmo vale para uma seção com parecer que ainda não terminou. Lista completa dos tipos e quais recebem parecer em [Consultar Seção por Tipo](/api-reference/report/get-report-section#tipos-de-se%C3%A7%C3%A3o).
+</Warning>
 
 ### Resposta
 

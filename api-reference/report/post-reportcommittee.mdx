@@ -46,16 +46,41 @@ A convocação é recusada com `400` se o relatório ainda não está pronto par
     Sem parecer por seção não existe insumo para o comitê.
   </Step>
   <Step title="Os pareceres por seção precisam ter terminado">
-    Consulte com [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights) antes de convocar.
+    Não há evento que anuncie isso. Veja o padrão de integração abaixo.
   </Step>
   <Step title="A política de crédito precisa ter concluído">
     Se o relatório tem `policyId`, o resultado da política precisa ter chegado.
   </Step>
 </Steps>
 
-<Tip>
-  Na prática, o gatilho mais simples é o webhook [`REPORT_FINISHED`](/api-reference/webhook/post-webhook): quando ele chega, o relatório já está pronto para ir a comitê.
-</Tip>
+<Warning>
+  **O webhook `REPORT_FINISHED` não é garantia de que o comitê pode ser convocado.** Ele sinaliza que as **integrações** do relatório terminaram, que é um pipeline diferente do de pareceres. Os pareceres por seção rodam depois e podem continuar processando por mais alguns instantes. Convocar o comitê no exato momento em que o `REPORT_FINISHED` chega costuma devolver `400`.
+</Warning>
+
+### Padrão de integração recomendado
+
+Não existe hoje um evento que anuncie "os pareceres terminaram". O caminho robusto é tratar o `400` de prontidão como **estado transitório** e repetir:
+
+<Steps>
+  <Step title="Aguarde o REPORT_FINISHED">
+    Ele indica que a análise entrou na reta final. Serve como ponto de partida, não como sinal de prontidão.
+  </Step>
+  <Step title="Chame o endpoint e leia o erro">
+    Um `200` significa que a deliberação começou. Um `400` de *pareceres ainda não finalizaram* ou de *política ainda não concluiu* significa "ainda não, tente de novo".
+  </Step>
+  <Step title="Repita com backoff">
+    Aguarde alguns segundos e chame novamente. Na prática os pareceres fecham em menos de um minuto depois do relatório. Estabeleça um teto de tentativas para não repetir indefinidamente.
+  </Step>
+  <Step title="Pare nos erros terminais">
+    *Comitê não habilitado na política* e *nenhum parecer disponível* não mudam com o tempo. Nesses casos, não repita.
+  </Step>
+</Steps>
+
+Consulte a tabela de [erros](#erros) abaixo: a coluna **Repetir** diz quais valem nova tentativa.
+
+<Note>
+  [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights) mostra os pareceres já concluídos, mas **não informa quantos faltam**. Serve para acompanhar o progresso, não para decidir que tudo terminou. Quem tem essa informação é o próprio endpoint de convocação, na resposta que ele devolve.
+</Note>
 
 ### Resposta
 
@@ -146,14 +171,18 @@ print(response.json())
 
 ### Erros
 
-| Código | Mensagem | Causa |
-|---|---|---|
-| `400` | `"O comitê de crédito não está habilitado para a política deste relatório."` | A política do relatório não habilita o pipeline de parecer. |
-| `400` | `"Os pareceres por seção ainda não finalizaram. Aguarde a conclusão para convocar o comitê."` | O relatório ainda está gerando pareceres. |
-| `400` | `"A política de crédito ainda não concluiu. Aguarde o resultado da política para convocar o comitê."` | O resultado da política ainda não chegou. |
-| `400` | `"Nenhum parecer por seção disponível para deliberação do comitê."` | Nenhuma seção produziu parecer; não há insumo. |
-| `404` | `"Relatório não encontrado"` | ID inexistente ou de outra organização. |
-| `409` | `"O comitê já está em deliberação para este relatório."` | Já existe uma deliberação `RUNNING`. |
+| Código | Mensagem | Causa | Repetir |
+|---|---|---|---|
+| `400` | `"Os pareceres por seção ainda não finalizaram. Aguarde a conclusão para convocar o comitê."` | O relatório ainda está gerando pareceres. | **Sim**, com backoff |
+| `400` | `"A política de crédito ainda não concluiu. Aguarde o resultado da política para convocar o comitê."` | O resultado da política ainda não chegou. | **Sim**, com backoff |
+| `400` | `"O comitê de crédito não está habilitado para a política deste relatório."` | A política do relatório não habilita o pipeline de parecer. | Não, é definitivo |
+| `400` | `"Nenhum parecer por seção disponível para deliberação do comitê."` | Nenhuma seção produziu parecer; não há insumo. | Não, é definitivo |
+| `404` | `"Relatório não encontrado"` | ID inexistente ou de outra organização. | Não |
+| `409` | `"O comitê já está em deliberação para este relatório."` | Já existe uma deliberação `RUNNING`. | Não. A deliberação já começou, aguarde o `COMMITTEE_FINISHED` |
+
+<Tip>
+  Trate o `409` como sucesso na sua lógica de retry: ele significa que a deliberação está em andamento, seja porque outra chamada sua já passou, seja porque a política convocou automaticamente.
+</Tip>
 
 ### Próximos passos
 
