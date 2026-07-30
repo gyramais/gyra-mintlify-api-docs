@@ -75,9 +75,34 @@ Também vêm parcialmente do bureau, detalhe em [Seção Protestos](/data/secao-
 
 ### Comportamental (Cadastro Positivo)
 
-O **Cadastro Positivo** vem hoje do **Bureau Boa Vista** e já está incluído na **consulta normal** que os clientes contratam, **sem custo adicional**. Diferente dos restritivos (que mostram o que deu errado), o cadastro positivo descreve o **comportamento de pagamento** do documento. Esses dados aparecem na **aba Comportamental** do relatório.
+<Info>
+  **Status:** a integração que traz o Cadastro Positivo de **PF e PJ** está hoje em **sandbox**, em validação. A previsão é subir para produção em breve. Como faz parte da consulta padrão do Boa Vista, **não haverá cobrança adicional** quando entrar.
+</Info>
 
-Os dados **diferem entre PF e PJ**:
+#### O que é o Cadastro Positivo
+
+O Cadastro Positivo é o histórico de **pagamentos feitos em dia**. Criado pela [Lei 12.414/2011](https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12414.htm) e ampliado pela Lei Complementar 166/2019, ele inverte a lógica do bureau tradicional.
+
+O restritivo é um **registro de falhas**: ele só existe quando alguém deixou de pagar. Quem sempre pagou em dia simplesmente não aparece, e a ausência de informação acaba sendo lida como risco. Foi assim que bons pagadores sem histórico de crédito formal ficaram invisíveis para o mercado por décadas.
+
+O Cadastro Positivo registra o outro lado: contas de energia, água, telefone, financiamentos e cartões **pagos corretamente**. A partir disso o bureau modela a probabilidade de o documento continuar pagando em dia.
+
+| | Restritivo (Pefin, Refin, protesto) | Cadastro Positivo |
+| --- | --- | --- |
+| O que registra | O que deu errado | O que deu certo |
+| Quem aparece | Só quem tem pendência | Todo mundo com histórico de pagamento |
+| Leitura | Binário: tem ou não tem | Gradiente: comportamento ao longo do tempo |
+| Serve para | Barrar risco evidente | Diferenciar entre quem está limpo |
+
+<Tip>
+  O ganho prático é na faixa que os restritivos não separam. Dois CNPJs sem nenhuma pendência são idênticos aos olhos do Pefin/Refin. Com o Cadastro Positivo, um deles pode ter 4 anos de pagamentos pontuais e o outro um histórico curto e irregular. É o dado que permite aprovar melhor no meio da curva, não só negar nas pontas.
+</Tip>
+
+Os dados são adesão por **opt-out**: o titular está incluído por padrão e pode pedir exclusão ao bureau a qualquer momento. Nesse caso a consulta volta sem os indicadores.
+
+#### O que vem no relatório
+
+Os dados aparecem na **aba Comportamental** e **diferem entre PF e PJ**:
 
 - **Comum a PF e PJ:**
   - **Score / probabilidade do Cadastro Positivo**: probabilidade de o documento manter os pagamentos em dia (com mensagem descritiva, ex.: "é provável que 96% das pessoas com esse comportamento paguem suas contas nos próximos 6 meses").
@@ -88,7 +113,7 @@ Os dados **diferem entre PF e PJ**:
 - **PJ (CNPJ):** inclui **faturamento presumido** (estimado a partir de informações comportamentais e cadastrais) e **indicadores de sócios e relacionamentos** (participações em outras empresas, com sinalização de débito/fraude).
 
 <Note>
-  A ingestão do Boa Vista está migrando para integração via **REST API**, que passa a trazer o Cadastro Positivo de PF e PJ na aba Comportamental. Como faz parte da consulta padrão do Boa Vista, não há cobrança adicional.
+  A ingestão do Boa Vista está migrando para integração via **REST API**, que é o que passa a trazer o Cadastro Positivo de PF e PJ na aba Comportamental. Essa migração está em **sandbox** no momento. Avisamos pelo [changelog](/reference/changelog) quando entrar em produção.
 </Note>
 
 ## Casos de uso

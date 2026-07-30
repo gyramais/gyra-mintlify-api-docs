@@ -124,3 +124,49 @@ Bearer JWT no header `Authorization`.
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
 | `id` | `path` | `string` | `sim` | Identificador da seção do relatório |
+
+### Como obter o `id`
+
+<Warning>
+  O `id` desta rota é o **id da seção dentro de um relatório específico**. Ele é gerado por relatório: a mesma seção `PROCESSES` tem um `id` diferente em cada análise. Não existe uma lista fixa de ids que você possa guardar.
+</Warning>
+
+Os ids vêm no array `sections[]` do relatório:
+
+```bash
+curl 'https://gyra-core.gyramais.com.br/v2/report/{reportId}' \
+  -H 'Authorization: Bearer {seu_token_jwt}'
+```
+
+```json
+{
+  "id": "69a207bcdd0197828df9155a",
+  "sections": [
+    { "id": "69a207bcdd0197828df9156a", "type": { "id": "672b49a91acad6953b56b109", "value": "SUMMARY" } },
+    { "id": "69a207bcdd0197828df9156b", "type": { "id": "672b49a91acad6953b56b110", "value": "PROCESSES" } }
+  ]
+}
+```
+
+Repare que existem **dois ids** e eles não são a mesma coisa:
+
+| Campo | O que é | Estabilidade |
+|---|---|---|
+| `id` (da seção) | A seção daquele relatório. **É o que vai nesta rota.** | Único por relatório |
+| `type.id` | O registro do tipo de seção no catálogo interno | Varia por ambiente, não use como chave |
+| `type.value` | O nome do tipo (`SUMMARY`, `PROCESSES`, ...) | **Estável.** É a chave a guardar no seu lado |
+
+<Tip>
+  Se você já sabe qual seção quer e só tem o `reportId`, pule esta rota: [`GET /report/{id}/section/{sectionType}`](/api-reference/report/get-report-section) busca direto pelo tipo, sem precisar descobrir o `id` antes. É uma requisição em vez de duas.
+</Tip>
+
+### Tipos de seção (`type.value`)
+
+| Grupo | `sectionType` |
+|---|---|
+| **Análise e risco** | `SUMMARY`, `BASIC_INFORMATION`, `LOCATION`, `RELATIONS`, `SCORE`, `PROCESSES`, `CERTIFICATES`, `LICENSES_AUTHORIZATIONS`, `PEP`, `SANCTIONS`, `MEDIA_EXPOSURE`, `CRIMINAL_RECORD`, `SOCIAL_ASSISTANCE_PROGRAMS`, `SECTOR` |
+| **Restritivos e endividamento** | `SCR`, `SCR_SUMMARY`, `PEFIN`, `REFIN`, `PROTESTS`, `BAD_CHECK`, `PAST_DUE_DEBT`, `PAYMENT_INTELLIGENCE` |
+| **Análise financeira** | `BALANCE_SHEET`, `DRE`, `FINANCIAL_INDICATORS`, `FINANCIAL_INSIGHTS`, `FINANCIAL_RECOMMENDATIONS`, `BALANCE_SHEET_CHART`, `COST_PROFIT_FORECAST`, `DETAILED_COSTS`, `SUPPLIERS_CLIENTS` |
+| **Complementares e política** | `CATEGORIES`, `HISTORY`, `DOMAINS`, `BUREAU_INQUIRY`, `CREDIT_POLICY`, `PRICING` |
+
+Descrição de cada uma e quais recebem parecer de IA em [Consultar Seção por Tipo](/api-reference/report/get-report-section#tipos-de-se%C3%A7%C3%A3o).

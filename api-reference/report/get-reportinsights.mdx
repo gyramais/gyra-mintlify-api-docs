@@ -1,0 +1,214 @@
+---
+title: Consultar Pareceres do Relatório
+description: Retorna apenas os pareceres de IA por seção e o resumo da decisão do comitê, sem os dados brutos do relatório.
+surface: api
+domain: analise-credito
+audience: integrador
+lang: tecnica
+openapi: get /report/{id}/insights
+---
+
+### Quando usar
+
+Use este endpoint quando você quer **só a leitura interpretada** do relatório: o parecer de cada seção (texto, score, nível de risco e destaques) e o resumo da deliberação do comitê, sem trazer os payloads pesados de integração.
+
+Casos típicos:
+
+- Alimentar um agente de IA ou um LLM do seu lado com contexto barato, em vez de mandar o relatório inteiro.
+- Montar uma tela de resumo executivo no seu sistema.
+- Verificar se os pareceres já terminaram antes de [convocar o comitê](/api-reference/report/post-reportcommittee).
+- Buscar o detalhe depois de receber o webhook `COMMITTEE_FINISHED`.
+
+<Note>
+  Para os dados completos do relatório, use [`GET /v2/report/{id}`](/api-reference/report-v2/get-v2report). Para os votos individuais dos agentes e a auditoria da deliberação, use [`GET /committee/deliberations/{reportId}`](/api-reference/committee/get-committeedeliberations).
+</Note>
+
+### Autenticação
+
+Bearer JWT no header `Authorization`. Um `id` de outra organização retorna `404`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID do relatório. |
+| `section` | `query` | `string` | `não` | Filtra o parecer de **uma** seção. Sem o parâmetro, retorna todos os pareceres concluídos. Um valor fora da lista de seções retorna `400`. |
+
+Valores comuns de `section`: `SUMMARY`, `BASIC_INFORMATION`, `LOCATION`, `RELATIONS`, `PROCESSES`, `PROTESTS`, `PEFIN`, `REFIN`, `SCR`, `CERTIFICATES`, `SANCTIONS`, `PEP`, `MEDIA_EXPOSURE`, `SECTOR`, `CRIMINAL_RECORD`, `BALANCE_SHEET`, `FINANCIAL_INSIGHTS`, `PAYMENT_INTELLIGENCE`.
+
+### Resposta
+
+O envelope é o mesmo com ou sem filtro; com `section`, o array `insights` vem com um único item.
+
+| Campo | Descrição |
+|---|---|
+| `reportId` | ID do relatório. |
+| `document` | CPF ou CNPJ analisado. |
+| `committee.status` | `RUNNING`, `DONE`, `ERROR`, `SKIPPED` ou `null` (comitê nunca convocado). |
+| `committee.decision` | `APPROVED`, `REJECTED`, `REQUIRES_ALCADA` ou `NEEDS_INFO`. |
+| `committee.result` | Resultado consolidado: síntese do Presidente, opiniões dos agentes, confiança, custo e duração. |
+| `committee.at` | Quando a deliberação terminou. |
+| `insights[]` | Um item por seção com parecer concluído. |
+| `insights[].section` | Tipo da seção. |
+| `insights[].score` | Score do parecer daquela seção. |
+| `insights[].riskLevel` | Nível de risco atribuído pelo parecer. |
+| `insights[].parecer` | Texto do parecer. |
+| `insights[].highlights` | Destaques estruturados da seção. |
+| `insights[].at` | Quando o parecer foi gerado. |
+
+<Warning>
+  Só entram no array as seções com parecer **concluído**. Um relatório ainda em processamento retorna `insights` vazio ou parcial, e `committee.status` `null`. Isso é o esperado, não é erro.
+</Warning>
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/insights' \
+--header 'Authorization: Bearer {seu_token_jwt}'
+```
+
+```bash cURL (uma seção)
+curl --location 'https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/insights?section=PROCESSES' \
+--header 'Authorization: Bearer {seu_token_jwt}'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/insights", {
+  method: "GET",
+  headers: { "Authorization": "Bearer {seu_token_jwt}" },
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/insights"
+headers = {"Authorization": "Bearer {seu_token_jwt}"}
+params = {"section": "PROCESSES"}  # opcional
+
+response = requests.get(url, headers=headers, params=params)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "reportId": "6612a7f30000000000000001",
+  "document": "43591367000130",
+  "committee": {
+    "status": "DONE",
+    "decision": "APPROVED",
+    "result": {
+      "decision": "APPROVED",
+      "synthesis": {
+        "decision": "APPROVED",
+        "resumo": "Aprovar com ressalvas: operação sustentada por caixa e histórico limpo, mas com concentração relevante em conta garantida.",
+        "reasoning": "Os agentes convergiram em aprovação...",
+        "proximaAcao": "Solicitar garantia adicional antes do desembolso.",
+        "conditions": ["Garantia adicional de 20% do limite"],
+        "limitReview": {
+          "status": "ADEQUADO",
+          "limite": "R$ 250.000,00",
+          "taxa": "2,1% a.m.",
+          "prazo": "12 meses",
+          "justificativa": "Limite compatível com o faturamento apurado."
+        },
+        "dissentLog": [
+          { "agent": "comportamental", "divergedHow": "Alertou para concentração em conta garantida acima de 60%." }
+        ],
+        "monitoringItems": ["Acompanhar evolução do SCR nos próximos 3 meses"],
+        "infoGapsBeforeDecision": [],
+        "confidence": 0.82,
+        "alcadaLevel": null
+      },
+      "agentOpinions": [
+        {
+          "agent": "cadastral",
+          "agentLabel": "Cadastral",
+          "score": 8,
+          "resumo": "Cadastro íntegro e atividade coerente com o CNAE declarado.",
+          "recommendation": "APPROVE",
+          "confidence": 0.9
+        }
+      ],
+      "confidence": 0.82,
+      "costUsd": 0.41,
+      "durationMs": 38210,
+      "trigger": "MANUAL",
+      "deliberationId": "6612a7f30000000000000900",
+      "finishedAt": "2026-07-30T14:31:12.004Z"
+    },
+    "at": "2026-07-30T14:31:12.004Z"
+  },
+  "insights": [
+    {
+      "section": "PROCESSES",
+      "score": 6,
+      "riskLevel": "MEDIUM",
+      "parecer": "A empresa figura em 4 processos trabalhistas...",
+      "highlights": ["4 processos trabalhistas ativos", "Sem execuções fiscais"],
+      "at": "2026-07-30T14:22:03.881Z"
+    },
+    {
+      "section": "SCR",
+      "score": 7,
+      "riskLevel": "LOW",
+      "parecer": "O endividamento bancário é estável nos últimos 12 meses...",
+      "highlights": ["Endividamento estável", "Sem atraso acima de 90 dias"],
+      "at": "2026-07-30T14:23:41.220Z"
+    }
+  ]
+}
+```
+
+```json 200 OK (comitê nunca convocado)
+{
+  "reportId": "6612a7f30000000000000001",
+  "document": "43591367000130",
+  "committee": {
+    "status": null,
+    "decision": null,
+    "result": null,
+    "at": null
+  },
+  "insights": []
+}
+```
+
+```json 400 Bad Request
+{
+  "code": 400,
+  "message": "section must be one of the following values: BASIC_INFORMATION, SUMMARY, SCR, ..."
+}
+```
+
+```json 404 Not Found
+{
+  "code": 404,
+  "message": "Relatório não encontrado."
+}
+```
+
+</ResponseExample>
+
+### Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Comitê de Crédito IA" icon="users" href="/concepts/comite-de-credito">
+    Como os pareceres viram uma decisão.
+  </Card>
+  <Card title="Convocar Comitê" icon="gavel" href="/api-reference/report/post-reportcommittee">
+    Levar o relatório a comitê sob demanda.
+  </Card>
+  <Card title="Pareceres GYRA+ IA" icon="sparkles" href="/concepts/pareceres-gyra-ia">
+    O que é um parecer de seção.
+  </Card>
+  <Card title="Seções do Relatório" icon="layout-panel-top" href="/concepts/secoes">
+    Catálogo de seções e seus tipos.
+  </Card>
+</CardGroup>

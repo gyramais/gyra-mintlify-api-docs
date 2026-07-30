@@ -59,10 +59,14 @@ paths:
           - REPORT_STATUS: disparado quando um analista aprova ou rejeita o relatorio manualmente
           - REPORT_EXPORTED: disparado quando a exportacao (PDF/XLS) de um relatorio e gerada (ou falha)
           - CREDIT_POLICY: disparado quando a politica de credito e avaliada e o status muda
+          - COMMITTEE_FINISHED: disparado quando o Comite de Credito IA conclui (ou falha) a deliberacao do relatorio
           - OPERATION: disparado quando uma operacao (fluxo multi-relatorio) conclui
-          
+
           O webhook recebe um POST na URL configurada com o payload do evento.
           Se apiKey for informada, sera enviada no header api-key da requisicao.
+
+          ATENCAO: os webhooks da organizacao sao copiados para o relatorio na criacao dele.
+          Um tipo registrado depois nao dispara para relatorios que ja existiam.
           
           RECOMENDADO: Sempre configure um webhook ao criar relatorios. Evita
           a necessidade de polling com get_report.
@@ -313,6 +317,128 @@ paths:
           - SCR: dados do Sistema de Informacoes de Credito do Banco Central
           - PEP_SANCTIONS: Pessoa Politicamente Exposta e sancoes
           - CREDIT_POLICY: resultado da avaliacao da politica de credito
+  /report/{id}/committee:
+    post:
+      operationId: ReportController_conveneCommittee
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio que vai a comite.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                force:
+                  type: boolean
+                  description: 'Ignora o cache da deliberacao e reprocessa do zero. Padrao false.'
+                  default: false
+      responses:
+        200:
+          description: 'Deliberacao aceita e iniciada: { status: "RUNNING", trigger: "MANUAL" | "RERUN" }.'
+        400:
+          description: 'Relatorio ainda nao esta pronto para o comite (pareceres ou politica pendentes, ou parecer nao habilitado na politica).'
+        404:
+          description: Relatorio nao encontrado ou de outra organizacao.
+        409:
+          description: Ja existe uma deliberacao em andamento para este relatorio.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Convocar o Comite de Credito IA
+      description: |
+          Dispara manualmente a deliberacao do Comite de Credito IA sobre um relatorio.
+
+          Use quando a politica esta em "Nao convocar automaticamente" e o comite deve rodar
+          sob demanda, ou para reconvocar um relatorio que ja deliberou (DONE), falhou
+          (ERROR) ou foi pulado (SKIPPED).
+
+          Pre-requisitos (senao retorna 400):
+          - a politica do relatorio habilita o pipeline de parecer;
+          - os pareceres por secao ja finalizaram;
+          - a politica de credito ja concluiu (quando o relatorio tem politica).
+
+          A chamada e assincrona: o 200 confirma que a deliberacao iniciou, nao que terminou.
+          Convocacao manual sempre entra como sugestao e nao altera o status do relatorio,
+          mesmo numa politica em "Convocar comite e decisao automatica".
+          Para saber o resultado, registre o webhook COMMITTEE_FINISHED ou consulte
+          GET /report/{id}/insights.
+  /report/{id}/insights:
+    get:
+      operationId: ReportController_getReportInsights
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio.
+        - name: section
+          required: false
+          in: query
+          schema:
+            type: string
+          description: 'Filtra o parecer de UMA secao (ex: PROCESSES, SCR, BALANCE_SHEET). Sem o parametro, retorna todos os pareceres concluidos.'
+      responses:
+        200:
+          description: 'Envelope com reportId, document, committee { status, decision, result, at } e insights[] (parecer por secao).'
+        400:
+          description: Valor de section fora da lista de tipos de secao.
+        404:
+          description: Relatorio nao encontrado ou de outra organizacao.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Consultar pareceres do relatorio
+      description: |
+          Leitura enxuta do relatorio: apenas os pareceres de IA por secao (texto, score,
+          nivel de risco e destaques) e o resumo da deliberacao do comite. Nao traz os
+          payloads pesados de integracao.
+
+          Pensado para consumo barato por agentes de IA e para telas de resumo executivo.
+          Tambem serve para verificar se os pareceres ja terminaram antes de convocar o
+          comite com POST /report/{id}/committee.
+
+          Só entram no array insights[] as secoes com parecer concluido. Relatorio ainda em
+          processamento devolve insights vazio ou parcial e committee.status null.
+  /committee/deliberations/{reportId}:
+    get:
+      operationId: CommitteeController_getDeliberation
+      parameters:
+        - name: reportId
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio que foi a comite.
+      responses:
+        200:
+          description: 'Deliberacao completa: agentOpinions[], synthesis, finalRecommendation, versoes de prompt e telemetria.'
+        404:
+          description: Nenhuma deliberacao encontrada para este relatorio.
+      tags:
+        - committee
+      security:
+        - authorization: []
+      summary: Consultar deliberacao do Comite de Credito IA
+      description: |
+          Retorna a deliberacao completa e auditavel do Comite de Credito IA para um
+          relatorio: o voto individual de cada um dos sete agentes (score, parecer,
+          redFlags, positiveFactors, recommendation), a sintese do Presidente (decisao,
+          justificativa, condicoes, registro de divergencia, alcada), a versao de prompt
+          usada por agente e a telemetria (modelos, tokens, custo, duracao).
+
+          Retorna sempre a deliberacao mais recente. Reconvocacoes (trigger RERUN) geram
+          uma nova deliberacao, e e ela que passa a ser devolvida.
+
+          Para o fluxo do dia a dia, GET /report/{id}/insights e mais leve.
   /report/analyze:
     post:
       operationId: ReportController_analyze
@@ -511,6 +637,7 @@ components:
         - REPORT_STATUS
         - REPORT_FINISHED
         - REPORT_EXPORTED
+        - COMMITTEE_FINISHED
         - OPERATION
     CreateReportDto:
       type: object

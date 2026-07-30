@@ -81,7 +81,12 @@ Cada webhook é registrado para **um único tipo**. Se você quer receber mais d
 | `REPORT_STATUS` | Analista humano aprovou ou rejeitou manualmente o relatório (via `analyze` ou `re-analyze`). |
 | `REPORT_EXPORTED` | Exportação (PDF ou XLS) do relatório foi gerada e está disponível por URL, ou falhou. |
 | `CREDIT_POLICY` | Política de crédito foi avaliada e o status mudou (resultado final do motor de regras). |
+| `COMMITTEE_FINISHED` | [Comitê de Crédito IA](/concepts/comite-de-credito) concluiu (ou falhou) a deliberação do relatório, tanto na convocação automática quanto na manual. |
 | `OPERATION` | Operação (fluxo multi-relatório com cadeia de políticas) concluiu com status final. |
+
+<Warning>
+  Os webhooks da organização são copiados para o relatório **na criação dele**. Se você registrar um tipo novo depois, ele não dispara para relatórios que já existiam.
+</Warning>
 
 ### Configurar
 
@@ -176,6 +181,29 @@ Em caso de falha, `exportUrl` vem `null` e o payload inclui `error`.
   }
 }
 ```
+
+**`COMMITTEE_FINISHED`** (deliberação do comitê concluída)
+```json
+{
+  "content": {
+    "reportId": "6612a7f30000000000000001",
+    "status": "DONE",
+    "decision": "APPROVED",
+    "synthesis": {
+      "decision": "APPROVED",
+      "resumo": "Aprovar com ressalvas: caixa e histórico sustentam a operação.",
+      "reasoning": "Seis dos sete agentes recomendaram aprovação...",
+      "proximaAcao": "Solicitar garantia adicional antes do desembolso.",
+      "conditions": ["Garantia adicional de 20% do limite"],
+      "confidence": 0.82,
+      "alcadaLevel": null
+    },
+    "deliberationId": "6612a7f30000000000000900",
+    "finishedAt": "2026-07-30T14:31:12.004Z"
+  }
+}
+```
+O payload é enxuto de propósito: decisão e síntese. Os votos individuais dos agentes e a auditoria ficam em `GET /committee/deliberations/{reportId}`, e a leitura combinada com os pareceres por seção em `GET /report/{id}/insights`. Se a deliberação falhar, `status` vem `ERROR`, `decision` não vem e o payload inclui `error`.
 
 **`OPERATION`**
 ```json

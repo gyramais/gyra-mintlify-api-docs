@@ -53,7 +53,12 @@ Cada webhook é registrado para **um único tipo** de evento. Para escutar mais 
 | `REPORT_STATUS` | Analista aprovou ou rejeitou manualmente o relatório. |
 | `REPORT_EXPORTED` | Exportação (PDF/XLS) do relatório foi gerada (ou falhou). |
 | `CREDIT_POLICY` | Política de crédito foi avaliada e o status mudou. |
+| `COMMITTEE_FINISHED` | [Comitê de Crédito IA](/concepts/comite-de-credito) concluiu (ou falhou) a deliberação do relatório. |
 | `OPERATION` | Operação (fluxo multi-relatório) concluiu com status final. |
+
+<Note>
+  Os webhooks da organização são copiados para o relatório no momento da **criação**. Um tipo registrado depois não dispara para relatórios que já existiam, registre antes de começar a criar relatórios.
+</Note>
 
 ## Payload do webhook
 

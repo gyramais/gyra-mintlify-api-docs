@@ -1,0 +1,200 @@
+---
+title: Consultar Deliberação do Comitê
+description: Retorna a deliberação completa do Comitê de Crédito IA para um relatório, com o voto de cada agente e os dados de auditoria.
+surface: api
+domain: analise-credito
+audience: integrador
+lang: tecnica
+openapi: get /committee/deliberations/{reportId}
+---
+
+### Quando usar
+
+Use este endpoint quando precisa da **deliberação completa e auditável**: o voto individual de cada um dos sete agentes, os alertas que cada um levantou, o registro de divergência, a versão de prompt usada e a telemetria (modelos, tokens, custo e duração).
+
+É o endpoint de **auditoria e compliance**. Para o dia a dia da integração (decisão + pareceres), [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights) é mais leve e costuma bastar.
+
+<Note>
+  Retorna sempre a deliberação **mais recente** do relatório. Reconvocações (`trigger: "RERUN"`) geram uma nova deliberação, e é ela que passa a ser devolvida.
+</Note>
+
+### Autenticação
+
+Bearer JWT no header `Authorization`. A busca é restrita à organização do token.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `reportId` | `path` | `string` | `sim` | ID do relatório que foi a comitê. |
+
+### Resposta
+
+| Campo | Descrição |
+|---|---|
+| `id` | ID da deliberação. |
+| `reportId` | Relatório deliberado. |
+| `policyId` / `policyVersion` | Política e versão vigentes na deliberação. |
+| `trigger` | `AUTO_SUGGEST`, `AUTO_DECIDE`, `MANUAL` ou `RERUN`. |
+| `status` | `RUNNING`, `DONE` ou `ERROR`. |
+| `agentOpinions[]` | Um objeto por agente: `agent`, `agentLabel`, `score` (0 a 10), `resumo`, `parecer`, `redFlags[]`, `positiveFactors[]`, `confidence`, `infoGaps[]`, `recommendation`, `model`, `costUsd` e `sectionsSeen[]`. |
+| `synthesis` | Saída do Presidente: `decision`, `resumo`, `reasoning`, `proximaAcao`, `conditions[]`, `dissentLog[]`, `monitoringItems[]`, `infoGapsBeforeDecision[]`, `limitReview`, `confidence`, `alcadaLevel`. |
+| `finalRecommendation` | `APPROVED`, `REJECTED`, `REQUIRES_ALCADA` ou `NEEDS_INFO`. |
+| `confidence` | Confiança agregada da deliberação (0 a 1). |
+| `promptVersion` | Versão do prompt-base GYRA+ usada. |
+| `customPrompts` | `true` quando a organização tinha instruções adicionais ativas. |
+| `promptVersionsByAgent` | Versão de prompt base e da organização por agente. Permite rastrear a relação entre uma mudança de instrução e a decisão. |
+| `totalInputTokens` / `totalOutputTokens` / `totalCostUsd` | Telemetria de consumo da deliberação. |
+| `webSearchRequests` | Buscas na web feitas pelo agente Cadastral. |
+| `durationMs` | Duração total da deliberação. |
+| `modelVersions` | Modelos usados por etapa. |
+| `error` | Preenchido quando `status` é `ERROR`. |
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/committee/deliberations/6612a7f30000000000000001' \
+--header 'Authorization: Bearer {seu_token_jwt}'
+```
+
+```javascript JavaScript
+fetch("https://gyra-core.gyramais.com.br/committee/deliberations/6612a7f30000000000000001", {
+  method: "GET",
+  headers: { "Authorization": "Bearer {seu_token_jwt}" },
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/committee/deliberations/6612a7f30000000000000001"
+headers = {"Authorization": "Bearer {seu_token_jwt}"}
+
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "id": "6612a7f30000000000000900",
+  "reportId": "6612a7f30000000000000001",
+  "organizationId": "65eb4989a4a87b9a94d1920f",
+  "policyId": "6612a7f30000000000000010",
+  "policyVersion": 3,
+  "trigger": "MANUAL",
+  "status": "DONE",
+  "agentOpinions": [
+    {
+      "agent": "cadastral",
+      "agentLabel": "Cadastral",
+      "score": 8,
+      "resumo": "Cadastro íntegro e atividade coerente com o CNAE declarado.",
+      "parecer": "A empresa está ativa desde 2014, sem mudanças recentes de endereço...",
+      "redFlags": [],
+      "positiveFactors": [
+        { "label": "Empresa madura", "detail": "12 anos de operação no mesmo endereço." }
+      ],
+      "confidence": 0.9,
+      "infoGaps": [],
+      "recommendation": "APPROVE",
+      "model": "claude-sonnet-4-6",
+      "costUsd": 0.052,
+      "sectionsSeen": ["BASIC_INFORMATION", "LOCATION", "CERTIFICATES"]
+    },
+    {
+      "agent": "comportamental",
+      "agentLabel": "Comportamental",
+      "score": 6,
+      "resumo": "Concentração relevante em conta garantida pede atenção.",
+      "parecer": "O mix de produtos indica dependência de linha rotativa...",
+      "redFlags": [
+        { "severity": "WARNING", "label": "Concentração em conta garantida", "detail": "62% da carteira." }
+      ],
+      "positiveFactors": [],
+      "confidence": 0.78,
+      "infoGaps": [],
+      "recommendation": "APPROVE_WITH_RESTRICTION",
+      "model": "claude-sonnet-4-6",
+      "costUsd": 0.061,
+      "sectionsSeen": ["SCR", "PEFIN", "PROTESTS"]
+    }
+  ],
+  "synthesis": {
+    "decision": "APPROVED",
+    "resumo": "Aprovar com ressalvas: caixa e histórico sustentam a operação, com atenção à concentração em rotativo.",
+    "reasoning": "Seis dos sete agentes recomendaram aprovação...",
+    "proximaAcao": "Solicitar garantia adicional antes do desembolso.",
+    "conditions": ["Garantia adicional de 20% do limite"],
+    "dissentLog": [
+      { "agent": "comportamental", "divergedHow": "Alertou para concentração em conta garantida acima de 60%." }
+    ],
+    "monitoringItems": ["Acompanhar evolução do SCR nos próximos 3 meses"],
+    "infoGapsBeforeDecision": [],
+    "limitReview": {
+      "status": "ADEQUADO",
+      "limite": "R$ 250.000,00",
+      "taxa": "2,1% a.m.",
+      "prazo": "12 meses",
+      "justificativa": "Limite compatível com o faturamento apurado."
+    },
+    "confidence": 0.82,
+    "alcadaLevel": null
+  },
+  "finalRecommendation": "APPROVED",
+  "confidence": 0.82,
+  "promptVersion": "v8",
+  "customPrompts": true,
+  "promptVersionsByAgent": {
+    "cadastral": { "baseVersion": 8, "orgVersion": 2 },
+    "comportamental": { "baseVersion": 8, "orgVersion": 1 }
+  },
+  "totalInputTokens": 184320,
+  "totalOutputTokens": 9840,
+  "totalCostUsd": 0.41,
+  "webSearchRequests": 3,
+  "durationMs": 38210,
+  "modelVersions": { "specialists": "claude-sonnet-4-6", "synthesizer": "claude-sonnet-4-6" },
+  "error": null,
+  "createdAt": "2026-07-30T14:30:33.812Z",
+  "updatedAt": "2026-07-30T14:31:12.004Z"
+}
+```
+
+```json 404 Not Found
+{
+  "code": 404,
+  "message": "Nenhuma deliberação do comitê encontrada para este relatório."
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+</ResponseExample>
+
+### Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Comitê de Crédito IA" icon="users" href="/concepts/comite-de-credito">
+    Agentes, decisões e modos de convocação.
+  </Card>
+  <Card title="Convocar Comitê" icon="gavel" href="/api-reference/report/post-reportcommittee">
+    Disparar uma nova deliberação.
+  </Card>
+  <Card title="Consultar Pareceres" icon="file-lines" href="/api-reference/report/get-reportinsights">
+    Versão enxuta, para o fluxo do dia a dia.
+  </Card>
+  <Card title="Criar Webhook" icon="webhook" href="/api-reference/webhook/post-webhook">
+    Receber `COMMITTEE_FINISHED`.
+  </Card>
+</CardGroup>

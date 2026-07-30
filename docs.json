@@ -44,8 +44,10 @@
           "concepts/templates-de-politica",
           "concepts/operacoes",
           "concepts/secoes",
-          "concepts/gyra-insights",
+          "concepts/pareceres-gyra-ia",
+          "concepts/comite-de-credito",
           "concepts/analise-financeira",
+          "concepts/arquivos-do-relatorio",
           "concepts/score",
           "concepts/decisao-automatica",
           "concepts/precificacao",
@@ -124,6 +126,9 @@
           "api-reference/report/get-reportlist",
           "api-reference/report/get-reportsection",
           "api-reference/report/get-report-section",
+          "api-reference/report/get-reportinsights",
+          "api-reference/report/post-reportcommittee",
+          "api-reference/committee/get-committeedeliberations",
           "api-reference/report/post-reportanalyze",
           "api-reference/report/post-reportre-analyze",
           "api-reference/report/get-reportexport",
@@ -170,6 +175,10 @@
     {
       "source": "/concepts/score-e-decisao",
       "destination": "/concepts/decisao-automatica"
+    },
+    {
+      "source": "/concepts/gyra-insights",
+      "destination": "/concepts/pareceres-gyra-ia"
     }
   ]
 }

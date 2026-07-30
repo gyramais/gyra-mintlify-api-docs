@@ -73,7 +73,7 @@ Quando explicar qualquer termo, prefira a definição da Plataforma. A versão d
 
 **Na API:** `policyStatus`, com valores `APPROVED`, `DENIED`, `ALERT`, `NOT_EXECUTED`, `PENDING`, `NOT_APPLICABLE`.
 
-**Não confundir com:** [Análise manual](#analise-manual), que é a decisão registrada por um operador depois que o caso ficou em alerta ou em modo manual.
+**Não confundir com:** [Análise manual](#an%C3%A1lise-manual), que é a decisão registrada por um operador depois que o caso ficou em alerta ou em modo manual.
 
 ---
 
@@ -119,6 +119,30 @@ Mesmo no modo automático, a análise manual sobrescreve o `status` (e o `policy
 
 ---
 
+## Parecer (de seção)
+
+**Definição:** Leitura interpretada que a IA da Gyra+ produz sobre **uma** seção do relatório: o que aqueles dados significam para a decisão de crédito, com score, nível de risco e destaques. Não é a decisão, é o insumo dela.
+
+**Na plataforma:** "Parecer GYRA+ IA", exibido dentro da própria seção do relatório, com o score e o nível de risco em destaque.
+
+**Na API:** `insights[]` em `GET /report/{id}/insights`, com `parecer`, `score`, `riskLevel` e `highlights` por seção.
+
+**Não confundir com:** [Comitê de Crédito IA](#comit%C3%AA-de-cr%C3%A9dito-ia), que delibera sobre o **conjunto** dos pareceres e devolve uma decisão. E com [Análise manual](#an%C3%A1lise-manual), que é a decisão de um humano.
+
+---
+
+## Comitê de Crédito IA
+
+**Definição:** Deliberação de sete agentes especialistas e um Presidente sobre os pareceres de um relatório, produzindo uma decisão de crédito com justificativa, condições, registro de divergência e nível de alçada. Roda depois que os pareceres por seção e a política de crédito concluem.
+
+**Na plataforma:** "Comitê de Crédito IA", bloco na visão geral do relatório, com o botão "Convocar Comitê". A configuração fica na edição da política.
+
+**Na API:** `POST /report/{id}/committee` para convocar; `GET /committee/deliberations/{reportId}` para a deliberação completa; webhook `COMMITTEE_FINISHED` para o aviso de conclusão.
+
+**Não confundir com:** [Política de crédito](#pol%C3%ADtica-de-cr%C3%A9dito), que é o motor de regras determinístico. A política é a régua da casa; o comitê traz a leitura qualitativa e sugere (ou aplica) a decisão.
+
+---
+
 ## Seção
 
 **Definição:** Bloco temático de informações dentro de um relatório. Exemplos: Informações Básicas, Resumo, PEFIN/REFIN, Processos, Protestos, PEP e Sanções, SCR, Política de Crédito.
@@ -135,7 +159,7 @@ Mesmo no modo automático, a análise manual sobrescreve o `status` (e o `policy
 
 **Na plataforma:** "Notificação automática" ou "Webhook" (na tela de configuração de integrações).
 
-**Na API:** `webhook`, configurado via `POST /webhook`. Tipos disponíveis: `REPORT`, `REPORT_FINISHED`, `REPORT_STATUS`, `REPORT_EXPORTED`, `CREDIT_POLICY`, `OPERATION`.
+**Na API:** `webhook`, configurado via `POST /webhook`. Tipos disponíveis: `REPORT`, `REPORT_FINISHED`, `REPORT_STATUS`, `REPORT_EXPORTED`, `CREDIT_POLICY`, `COMMITTEE_FINISHED`, `OPERATION`.
 
 **Não confundir com:** Endpoint da Gyra+. O webhook é uma URL do seu lado que a Gyra+ chama. O endpoint é uma URL da Gyra+ que você chama.
 
