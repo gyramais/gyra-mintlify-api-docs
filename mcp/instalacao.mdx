@@ -9,22 +9,45 @@ lang: tecnica
 ---
 
 <Info>
-  **Resumo:** o MCP da GYRA+ é hospedado pela GYRA+ em `https://mcp.gyramais.com.br`. Você só configura o **cliente** (Claude.ai, Claude Desktop, Cursor, etc.) e autentica com as credenciais (`clientId` + `clientSecret`) enviadas pelo suporte. Existem duas formas de conectar: **custom connector (OAuth)**, indicado para Claude.ai e Claude Desktop, e **stdio local**, indicado para Claude Code, Cursor, VS Code e SDKs próprios.
+  **Resumo:** o MCP da GYRA+ é hospedado por nós em `https://mcp.gyramais.com.br`. Você configura só o **cliente** (Claude.ai, Claude Desktop, Cursor, etc.) e entra com **o seu próprio login da plataforma**: o mesmo e-mail e senha que você usa no toolbox. Nada de credencial separada, nada de abrir chamado. E, principalmente: o agente enxerga exatamente o que **você** enxerga.
 </Info>
 
-## Obter credenciais
+## Entre com o seu login
 
-As credenciais do MCP são as **mesmas credenciais de API** da sua organização: `clientId` e `clientSecret`. Não existe tela no toolbox para gerá-las. Solicite por e-mail:
+Não existe credencial de MCP para pedir ao suporte. Suas credenciais são as que você já tem:
 
-```text
-atendimento@gyramais.com
-Assunto: Credenciais de API / MCP — [nome da organização]
-```
+| Campo | O que informar |
+| ----- | -------------- |
+| **Client ID** | O **e-mail** com que você acessa o toolbox |
+| **Client Secret** | A sua **senha** da plataforma |
 
-O suporte responde com `clientId` e `clientSecret`. Guarde em cofre seguro (1Password, Vault, etc.) — elas dão acesso a todas as tools do MCP e endpoints da API REST.
+Os nomes dos campos vêm do padrão OAuth de client credentials, mas o conteúdo é o seu login. É a mesma autenticação da plataforma, pela mesma rota.
+
+### Por que isso importa
+
+Porque o permissionamento vem junto. **O agente não é um usuário privilegiado: ele é você.**
+
+<CardGroup cols={2}>
+  <Card title="Mesmo escopo, sem configuração" icon="user-shield">
+    Se o seu perfil só enxerga os relatórios que você mesmo criou, o agente também só enxerga esses. Se você não tem permissão para gerenciar políticas, o agente não gerencia.
+  </Card>
+  <Card title="Auditoria com nome e sobrenome" icon="fingerprint">
+    Toda ação disparada pelo agente fica registrada como **sua**, não como "a integração". Uma análise criada por conversa é rastreável ao usuário que a pediu.
+  </Card>
+  <Card title="Onboarding em segundos" icon="bolt">
+    Um novo analista conecta o MCP sozinho, com a senha que já tem. Sem ticket, sem espera, sem uma credencial compartilhada circulando pelo time.
+  </Card>
+  <Card title="Offboarding que funciona" icon="user-minus">
+    Desligou o usuário na plataforma? O acesso do agente dele morre junto. Não sobra credencial órfã ativa em nenhum laptop.
+  </Card>
+</CardGroup>
+
+<Note>
+  O contraste é com o modelo de credencial de serviço: uma chave da organização, com escopo amplo, emitida por chamado e compartilhada entre pessoas. Esse modelo continua existindo para **integrações servidor a servidor** (ver [API Keys](/toolbox/webhooks-e-api-keys)). Para o MCP, que é uma ferramenta de pessoa, o login da pessoa é o modelo certo.
+</Note>
 
 <Warning>
-  Credenciais não expiram sozinhas, mas podem ser revogadas e reemitidas pelo suporte a qualquer momento em caso de vazamento. Avise imediatamente se suspeitar de comprometimento.
+  **Se você acessa a plataforma por SSO** (Google ou Microsoft) e nunca definiu uma senha, este fluxo não funciona até você cadastrar uma. Fale com o administrador da sua organização.
 </Warning>
 
 ## Endpoint do servidor
@@ -35,7 +58,7 @@ https://mcp.gyramais.com.br
 
 ## Opção 1, Custom connector no Claude.ai ou Claude Desktop (recomendado)
 
-Fluxo via **OAuth**: você adiciona o endpoint uma única vez, clica em *Autenticar* e a GYRA+ abre uma página de login onde você informa o `clientId` e `clientSecret` recebidos do suporte. O Claude volta conectado.
+Fluxo via **OAuth**: você adiciona o endpoint uma única vez, clica em *Autenticar* e a GYRA+ abre a própria página de login. Você entra com e-mail e senha, e o Claude volta conectado. **É a opção mais segura**: a sua senha é digitada na página da GYRA+ e nunca fica gravada em arquivo de configuração.
 
 <Steps>
   <Step title="Abrir a tela de connectors">
@@ -51,13 +74,13 @@ Fluxo via **OAuth**: você adiciona o endpoint uma única vez, clica em *Autenti
   <Step title="Autenticar">
     Clicar em **Authenticate** ao lado do connector recém-adicionado. O Claude abre uma aba no navegador com a página de login da GYRA+.
   </Step>
-  <Step title="Informar clientId e clientSecret">
-    Na página de login da GYRA+, cole as credenciais recebidas do suporte:
+  <Step title="Entrar com o seu login">
+    Na página de login da GYRA+, informe:
 
-    - **Client ID**
-    - **Client Secret**
+    - **Client ID**: o seu e-mail de acesso ao toolbox
+    - **Client Secret**: a sua senha
 
-    Confirmar. Se as credenciais estiverem corretas, você é redirecionado de volta ao Claude com o connector marcado como conectado.
+    Confirmar. Você é redirecionado de volta ao Claude com o connector conectado, e o agente passa a operar com as suas permissões.
   </Step>
   <Step title="Testar">
     Na conversa, pergunte: *"liste minhas últimas 5 análises"*. O Claude escolhe `list_reports` e traz a resposta.
@@ -72,21 +95,21 @@ Para clientes que rodam o MCP como **processo local via stdio**, use o pacote `@
 
 | Variável | Obrigatório | Descrição |
 | --- | --- | --- |
-| `GYRA_CLIENT_ID` | Sim (ou `GYRA_ACCESS_TOKEN`) | Client ID recebido do suporte. |
-| `GYRA_CLIENT_SECRET` | Sim (ou `GYRA_ACCESS_TOKEN`) | Client Secret recebido do suporte. O MCP troca por um JWT automaticamente e renova antes de expirar. |
-| `GYRA_ACCESS_TOKEN` | Alternativa | JWT obtido manualmente via `POST /auth/authenticate`. Estático, você é responsável por renovar. |
+| `GYRA_CLIENT_ID` | Sim (ou `GYRA_ACCESS_TOKEN`) | O **e-mail** da sua conta na plataforma. |
+| `GYRA_CLIENT_SECRET` | Sim (ou `GYRA_ACCESS_TOKEN`) | A sua **senha**. O MCP troca por um JWT automaticamente e renova antes de expirar. |
+| `GYRA_ACCESS_TOKEN` | Alternativa | JWT obtido manualmente via `POST /auth/authenticate`. Estático e válido por 24h; a renovação fica por sua conta. |
 | `GYRA_BASE_URL` | Não | Default `https://gyra-core.gyramais.com.br`. |
 | `GYRA_PROFILE` | Não | `external` (default) ou `internal`. Use `external` para uso normal. |
 
-Use **uma das duas opções**: `GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET` (recomendado, com renovação automática) **ou** `GYRA_ACCESS_TOKEN` (estático).
+Use **uma das duas opções**: `GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET` (recomendado, com renovação automática) **ou** `GYRA_ACCESS_TOKEN` (estático, expira em 24h).
 
 ### Claude Code (CLI)
 
 ```bash
 claude mcp add gyra \
   --command "npx -y @gyramais/mcp-server" \
-  --env GYRA_CLIENT_ID=seu_client_id \
-  --env GYRA_CLIENT_SECRET=seu_client_secret
+  --env GYRA_CLIENT_ID=voce@suaempresa.com \
+  --env GYRA_CLIENT_SECRET=sua_senha
 ```
 
 Verificar:
@@ -106,8 +129,8 @@ claude mcp list
     - **Type**: `command`
     - **Command**: `npx -y @gyramais/mcp-server`
     - **Env**:
-      - `GYRA_CLIENT_ID=seu_client_id`
-      - `GYRA_CLIENT_SECRET=seu_client_secret`
+      - `GYRA_CLIENT_ID=voce@suaempresa.com`
+      - `GYRA_CLIENT_SECRET=sua_senha`
   </Step>
   <Step title="Salvar e reiniciar o Cursor">
     As tools são reconhecidas automaticamente.
@@ -128,8 +151,8 @@ Se preferir configurar via arquivo em vez de usar o custom connector:
       "command": "npx",
       "args": ["-y", "@gyramais/mcp-server"],
       "env": {
-        "GYRA_CLIENT_ID": "seu_client_id",
-        "GYRA_CLIENT_SECRET": "seu_client_secret"
+        "GYRA_CLIENT_ID": "voce@suaempresa.com",
+        "GYRA_CLIENT_SECRET": "sua_senha"
       }
     }
   }
@@ -150,8 +173,8 @@ Reiniciar totalmente o Claude Desktop (Cmd+Q no macOS).
       "command": "npx",
       "args": ["-y", "@gyramais/mcp-server"],
       "env": {
-        "GYRA_CLIENT_ID": "seu_client_id",
-        "GYRA_CLIENT_SECRET": "seu_client_secret"
+        "GYRA_CLIENT_ID": "voce@suaempresa.com",
+        "GYRA_CLIENT_SECRET": "sua_senha"
       }
     }
   ]
@@ -172,8 +195,8 @@ params = StdioServerParameters(
     command="npx",
     args=["-y", "@gyramais/mcp-server"],
     env={
-        "GYRA_CLIENT_ID": "seu_client_id",
-        "GYRA_CLIENT_SECRET": "seu_client_secret",
+        "GYRA_CLIENT_ID": "voce@suaempresa.com",
+        "GYRA_CLIENT_SECRET": "sua_senha",
     },
 )
 
@@ -194,8 +217,8 @@ const transport = new StdioClientTransport({
   command: 'npx',
   args: ['-y', '@gyramais/mcp-server'],
   env: {
-    GYRA_CLIENT_ID: 'seu_client_id',
-    GYRA_CLIENT_SECRET: 'seu_client_secret',
+    GYRA_CLIENT_ID: 'voce@suaempresa.com',
+    GYRA_CLIENT_SECRET: 'sua_senha',
   },
 });
 
@@ -215,12 +238,35 @@ Depois de conectar, no cliente MCP:
 
 Se as tools não aparecem, consulte [Troubleshooting](/mcp/troubleshooting).
 
-## Segurança das credenciais
+## Sessão e renovação
 
-- **Nunca commitar** config com `clientSecret` em repositório.
-- Em configs JSON, referenciar via variáveis de ambiente do sistema (`${env:GYRA_CLIENT_SECRET}`) quando o cliente suportar.
-- Em caso de vazamento, acione `atendimento@gyramais.com` para reemissão — a credencial antiga é invalidada.
-- No fluxo OAuth (Opção 1), as credenciais ficam armazenadas de forma segura no cliente (Claude) e o MCP recebe apenas um token de sessão revogável.
+Você informa as credenciais uma vez. A partir daí o MCP administra a sessão sozinho:
+
+| Comportamento | Detalhe |
+| ------------- | ------- |
+| **Validade do token** | O JWT emitido vale **24 horas**. |
+| **Renovação antecipada** | O MCP renova sozinho **antes** do vencimento, sem esperar a expiração. Você não vê a troca acontecer. |
+| **Recuperação de sessão perdida** | Se uma chamada volta `401`, por deploy, revogação ou sessão encerrada do outro lado, o MCP **força uma nova autenticação e repete a chamada**. O erro não chega até você. |
+
+<Tip>
+  É por isso que `GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET` é a configuração recomendada, e não `GYRA_ACCESS_TOKEN`. Com as credenciais, o MCP se recupera sozinho de qualquer interrupção de sessão. Com um token estático, ele fica sem como renovar e a conexão simplesmente para de funcionar depois de 24h.
+</Tip>
+
+## Segurança
+
+A sua senha vira uma sessão de 24 horas e é isso que trafega nas chamadas. Ainda assim, trate a configuração com o mesmo cuidado que você trata a senha em si.
+
+<Warning>
+  No modo stdio, a senha fica **em texto plano** no arquivo de configuração do cliente. Prefira a **Opção 1 (custom connector)** sempre que o seu cliente suportar: nesse fluxo a senha é digitada na página da GYRA+ e o cliente guarda apenas um token de sessão revogável.
+</Warning>
+
+Quando o stdio for necessário:
+
+- **Nunca commite** a configuração em repositório. Vale para `claude_desktop_config.json`, `config.json` do Continue e afins.
+- **Referencie variáveis de ambiente do sistema** (`${env:GYRA_CLIENT_SECRET}`) em vez de escrever a senha no JSON, quando o cliente suportar.
+- **Não compartilhe a configuração** com colegas. Cada pessoa conecta com o próprio login: é isso que faz o permissionamento e a auditoria funcionarem.
+- **Trocou a senha na plataforma?** Atualize a configuração do MCP. As sessões em aberto continuam válidas até expirar, e a próxima renovação falha com a senha antiga.
+- **Suspeita de comprometimento?** Troque a senha no toolbox. Isso invalida a credencial em todos os clientes conectados, sem depender de chamado.
 
 ## Perguntas frequentes
 
@@ -235,10 +281,19 @@ Se as tools não aparecem, consulte [Troubleshooting](/mcp/troubleshooting).
     Não. O MCP depende do backend da GYRA+, exige internet.
   </Accordion>
   <Accordion title="Posso conectar múltiplas organizações?">
-    Sim. Para stdio, adicione várias entradas em `mcpServers` com nomes distintos (ex: `gyra-orgA`, `gyra-orgB`) e credenciais específicas. Para custom connector, adicione múltiplos connectors no Claude, cada um com suas credenciais.
+    Sim, com um login por organização. Para stdio, adicione várias entradas em `mcpServers` com nomes distintos (ex: `gyra-orgA`, `gyra-orgB`), cada uma com o e-mail e a senha daquela organização. Para custom connector, adicione múltiplos connectors no Claude.
   </Accordion>
   <Accordion title="Como renovar o token manualmente?">
-    Se estiver usando `GYRA_ACCESS_TOKEN`, chame `POST /auth/authenticate` com headers `gyra-client-id` e `gyra-client-secret` e use o `accessToken` retornado. Usando `GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET` o MCP faz isso automaticamente.
+    Só é necessário no modo `GYRA_ACCESS_TOKEN`: chame `POST /auth/authenticate` com os headers `gyra-client-id` (seu e-mail) e `gyra-client-secret` (sua senha) e use o `accessToken` retornado, válido por 24h. Com `GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET` o MCP faz isso sozinho, inclusive se a sessão cair no meio do caminho.
+  </Accordion>
+  <Accordion title="O agente pode fazer algo que eu não posso?">
+    Não. A sessão do MCP carrega o seu usuário e o seu papel. Se você não enxerga um relatório no toolbox, o agente também não enxerga; se você não tem permissão para gerenciar políticas, a tool correspondente falha do mesmo jeito que a tela falharia.
+  </Accordion>
+  <Accordion title="Preciso pedir credenciais ao suporte?">
+    Não para o MCP: use o seu login da plataforma. Credenciais emitidas pelo suporte continuam existindo para **integrações servidor a servidor** na API REST, que é outro caso de uso. Ver [API Keys](/toolbox/webhooks-e-api-keys).
+  </Accordion>
+  <Accordion title="Uso SSO (Google ou Microsoft). Como conecto?">
+    Este fluxo exige senha. Se você nunca definiu uma, fale com o administrador da sua organização antes de configurar o MCP.
   </Accordion>
 </AccordionGroup>
 

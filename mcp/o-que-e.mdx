@@ -68,18 +68,19 @@ O protocolo é aberto, qualquer cliente MCP-compliant funciona. Os mais comuns:
 
 ## Autenticação
 
-Toda tool exige autenticação via **credenciais da organização** (`clientId` + `clientSecret`), as mesmas usadas na API REST. Duas formas de conectar:
+Toda tool exige autenticação com o **seu login da plataforma**: o mesmo e-mail e senha que você usa no toolbox. Duas formas de conectar:
 
-1. **Custom connector (OAuth)** no Claude.ai/Claude Desktop: você adiciona o endpoint, clica em *Authenticate* e informa `clientId` + `clientSecret` na página de login da GYRA+.
-2. **Stdio local** em Claude Code, Cursor, VS Code, SDKs: credenciais via variáveis de ambiente (`GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET`), com renovação automática de token.
+1. **Custom connector (OAuth)** no Claude.ai/Claude Desktop: você adiciona o endpoint, clica em *Authenticate* e faz login na página da GYRA+. A senha não fica gravada em lugar nenhum do seu lado.
+2. **Stdio local** em Claude Code, Cursor, VS Code, SDKs: e-mail e senha em variáveis de ambiente (`GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET`), com renovação automática de sessão.
 
-Credenciais são emitidas por `atendimento@gyramais.com`. Detalhes em [Instalação](/mcp/instalacao).
+Não há credencial para solicitar: você entra com o e-mail e a senha que já usa no toolbox, e o agente herda as **suas** permissões. Detalhes em [Instalação](/mcp/instalacao).
 
 ## Segurança
 
-- No modo stdio, as credenciais (`clientId`/`clientSecret`) ficam no **cliente** (Claude Desktop, Cursor, etc.), nunca no servidor MCP.
+- **O agente opera com as suas permissões, não com as da organização.** Se você não enxerga um relatório no toolbox, o agente também não enxerga. Não existe escalonamento de privilégio por usar o MCP.
 - No modo custom connector (OAuth), o Claude armazena as credenciais de forma cifrada e o servidor MCP recebe apenas um token de sessão revogável.
-- Toda chamada é **auditada no backend** como qualquer chamada de API, com as credenciais identificando a organização de origem.
+- Toda chamada é **auditada no backend** identificando o **usuário** que a originou, não uma credencial genérica de integração.
+- No modo stdio, as credenciais ficam no **cliente** (Claude Desktop, Cursor, etc.), nunca no servidor MCP.
 - O escopo disponível corresponde ao que a organização tem contratado. Features não contratadas retornam erro claro.
 
 ## Perguntas frequentes
