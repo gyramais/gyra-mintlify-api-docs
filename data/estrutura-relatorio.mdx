@@ -69,37 +69,32 @@ Cada elemento de `sections` tem:
 Cada item de `sectionDetails` tem `integrationTypes` (de onde veio) e `values` (o conteúdo).
 
 <Warning>
-  **`values` é indexado pelo provedor que respondeu**, com a chave sendo o tipo de integração em camelCase. A mesma seção `PROTESTS` devolve `values.serasa` quando a política usa Serasa e outra chave quando usa outro provedor, cada uma com o seu conjunto de campos. **Não assuma uma chave fixa.**
+  **O formato de `values` varia por seção.** Em algumas, os campos ficam no nível de cima. Em outras, ficam aninhados sob uma chave com o nome do provedor que respondeu (ex.: `values.SERASA`). Não existe uma regra única, então **não assuma nem uma coisa nem outra**: inspecione as chaves antes de acessar.
 </Warning>
+
+Exemplo real de uma seção com campos no nível de cima (`BAD_CHECK`):
 
 ```json
 {
-  "id": "69a207bcdd0197828df9156a",
-  "type": { "id": "672b49a91acad6953b56b109", "value": "PROTESTS" },
-  "selectedIntegrations": ["SERASA"],
-  "sectionDetails": [
-    {
-      "integrationTypes": ["SERASA"],
-      "values": {
-        "serasa": {
-          "protestsQuantity": 2,
-          "protestsTotalValue": "R$ 12.400,00",
-          "lastProtestDate": "2026-03-14",
-          "protestsTable": []
-        }
-      }
-    }
-  ]
+  "integrationCount": 1,
+  "checksQuantity": 0,
+  "checksBalance": "R$ 0,00",
+  "lastCheckDate": "",
+  "checkTable": []
 }
 ```
 
-O caminho robusto é iterar, em vez de acessar uma chave fixa:
+Já os protestos via Serasa aninham sob a chave do provedor. O campo `integrationCount`, quando presente, indica quantas integrações contribuíram para aquele bloco.
+
+O caminho robusto é inspecionar antes de acessar, em vez de assumir um caminho fixo:
 
 ```javascript
 for (const detail of section.sectionDetails ?? []) {
-  for (const [provedor, dados] of Object.entries(detail.values ?? {})) {
-    console.log(provedor, dados.protestsQuantity);
-  }
+  const v = detail.values ?? {};
+  // campos no nível de cima?
+  if ('checksQuantity' in v) usar(v);
+  // ou aninhados sob o provedor?
+  else for (const [provedor, dados] of Object.entries(v)) usar(dados, provedor);
 }
 ```
 
