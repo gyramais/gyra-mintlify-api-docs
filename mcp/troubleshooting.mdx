@@ -28,8 +28,8 @@ Você configurou o `mcpServers` em Claude Desktop (ou equivalente), reiniciou, e
     Num terminal:
 
     ```bash
-    GYRA_CLIENT_ID=seu_client_id \
-    GYRA_CLIENT_SECRET=seu_client_secret \
+    GYRA_CLIENT_ID=voce@suaempresa.com \
+    GYRA_CLIENT_SECRET=sua_senha \
     npx -y @gyramais/mcp-server
     ```
 
@@ -51,13 +51,19 @@ O agente tenta chamar uma tool e recebe `401 Unauthorized`.
 
 ### Causas possíveis
 
-- **`clientId` ou `clientSecret` com typo**. Copie novamente do e-mail do suporte.
-- **Credenciais revogadas ou reemitidas**. Confirme com `atendimento@gyramais.com` se as credenciais que você tem ainda estão ativas.
-- **Credenciais de organização errada**. As credenciais são vinculadas a uma organização; se você tem várias, confira qual está usando.
+- **E-mail ou senha com typo** no `GYRA_CLIENT_ID` / `GYRA_CLIENT_SECRET`. Lembre que são o seu login da plataforma, não uma credencial emitida pelo suporte.
+- **Senha trocada na plataforma** e configuração do MCP desatualizada. É a causa mais comum: a sessão em aberto continua funcionando até expirar, e o 401 só aparece na próxima renovação, que pode ser horas depois da troca.
+- **Login de outra organização**. Se você tem acesso a mais de uma, confira qual está configurada.
+- **Usuário desativado** na plataforma.
+- **Conta só de SSO**, sem senha definida. Este fluxo exige senha.
 
 ### Solução
 
-Solicitar reemissão via `atendimento@gyramais.com`, atualizar `GYRA_CLIENT_ID` e `GYRA_CLIENT_SECRET` no config do cliente (ou reautenticar no custom connector do Claude) e reiniciar.
+Confira que o e-mail e a senha são exatamente os do toolbox (teste fazendo login lá) e atualize `GYRA_CLIENT_ID` e `GYRA_CLIENT_SECRET` no config do cliente, ou reautentique no custom connector do Claude. Depois reinicie o cliente.
+
+<Note>
+  Usando `GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET`, um `401` isolado por sessão expirada ou deploy **não deveria chegar até você**: o MCP força nova autenticação e repete a chamada sozinho. Um `401` persistente indica credencial de fato inválida, não sessão caída.
+</Note>
 
 ## Erro 403, Forbidden
 
@@ -67,11 +73,11 @@ Tool específica retorna `403`. Outras tools funcionam.
 
 ### Causa
 
-As credenciais da sua organização não têm permissão para o endpoint em questão (ex: organização sem a feature contratada, ou papel restrito).
+Duas possibilidades: o **seu usuário** não tem permissão para aquela ação (o agente herda o seu papel, então a tool falha igual à tela falharia), ou a **organização** não tem a feature contratada.
 
 ### Solução
 
-Acionar `atendimento@gyramais.com` informando a tool que falhou — o suporte confirma o escopo contratado e ajusta se for o caso.
+Confira primeiro se você consegue fazer a mesma ação pelo toolbox com o seu login. Se não consegue, é permissão de usuário: peça ao administrador da sua organização. Se consegue pela tela mas a tool falha, acione `atendimento@gyramais.com` informando qual tool falhou.
 
 ## Rate limit, 429 Too Many Requests
 
