@@ -8,97 +8,81 @@ audience: integrador
 lang: tecnica
 ---
 
-<Warning>
-  **Página em revisão.** Os campos listados abaixo ainda não foram conferidos contra os tradutores de `PEP e SANCTIONS` no backend, e sabemos que parte da documentação antiga descrevia campos que não correspondem à resposta real. Até a revisão terminar, confirme o formato consultando a seção diretamente com [`GET /report/{id}/section/{sectionType}`](/api-reference/report/get-report-section), ou use [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights), que tem formato estável.
+<Info>
+  **Resumo:** `PEP` e `SANCTIONS` são **duas seções separadas**, cada uma com os dados do titular e dos sócios em fragmentos distintos.
+</Info>
 
-  Como os dados chegam de fato, incluindo a indexação por provedor, está em [Estrutura do Relatório](/data/estrutura-relatorio#onde-ficam-os-dados-sectiondetails-values).
+<Warning>
+  **Não há exemplo completo desta seção nesta página, de propósito.** O payload real é grande demais: os achados de PEP e de sanções vêm em fragmentos separados e cada achado traz o registro completo da fonte. Um dump inteiro seria ilegível e envelheceria rápido.
+
+  O que está abaixo é um **trecho real**, anonimizado, para você reconhecer o formato. Para o payload completo do seu caso, chame [`GET /report/{id}/section/{sectionType}`](/api-reference/report/get-report-section) com o seu relatório. Para a leitura já interpretada, sem lidar com o bruto, use [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights).
 </Warning>
 
-## PEP, Pessoas Expostas Politicamente
-
-A seção `PEP` avalia se o documento está vinculado a cargos públicos, mandatos eletivos ou agentes políticos relevantes. Inclui também os sócios quando o documento for CNPJ.
-
-Disponível no relatório **COMPLETO** e **COMPLETO+**.
-
-### Campos do `details`, PEP (CNPJ)
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `hasPep` | boolean | Empresa ou sócios têm vínculo PEP |
-| `pepCount` | number | Número de vínculos PEP identificados |
-| `persons` | object[] | Sócios com vínculo PEP |
-| `persons[].name` | string | Nome da pessoa |
-| `persons[].document` | string | CPF |
-| `persons[].positions` | object[] | Cargos políticos |
-| `persons[].positions[].title` | string | Título do cargo (ex: "Vereador", "Deputado Estadual") |
-| `persons[].positions[].organization` | string | Órgão ou instituição |
-| `persons[].positions[].startDate` | string | Início do mandato/cargo |
-| `persons[].positions[].endDate` | string | Fim do mandato/cargo (null se atual) |
-| `donations` | object[] | Doações eleitorais registradas |
-| `donations[].year` | number | Ano eleitoral |
-| `donations[].candidate` | string | Candidato beneficiado |
-| `donations[].amount` | number | Valor doado (R$) |
-
-### Campos do `details`, PEP (CPF)
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `hasPep` | boolean | Pessoa tem vínculo PEP |
-| `positions` | object[] | Cargos políticos (mesma estrutura acima) |
-| `donations` | object[] | Doações eleitorais (mesma estrutura acima) |
-
----
-
-## SANCTIONS, Sanções Nacionais e Internacionais
-
-A seção `SANCTIONS` verifica o documento contra listas de sanções regulatórias nacionais e internacionais, cobrindo OFAC, CEIS, CEPIM e outras.
-
-### Campos do `details`, SANCTIONS
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `hasSanctions` | boolean | Encontrado em alguma lista de sanções |
-| `count` | number | Número de registros em listas |
-| `lists` | object[] | Listas onde o documento foi encontrado |
-| `lists[].name` | string | Nome da lista (ex: "OFAC", "CEIS", "CEPIM") |
-| `lists[].country` | string | País da lista (`BR`, `US`, `EU`, etc.) |
-| `lists[].reason` | string | Motivo ou descrição da sanção |
-| `lists[].date` | string | Data de inclusão na lista |
-| `lists[].status` | string | Status: `ACTIVE`, `REMOVED` |
-
-### Principais listas verificadas
-
-| Lista | País | Descrição |
-|-------|------|-----------|
-| OFAC | EUA | Office of Foreign Assets Control, sanções internacionais dos EUA |
-| CEIS | Brasil | Cadastro de Empresas Inidôneas e Suspensas |
-| CEPIM | Brasil | Cadastro de Entidades Privadas Sem Fins Lucrativos Impedidas |
-| CNEP | Brasil | Cadastro Nacional de Empresas Punidas |
-| UN | Internacional | Lista da ONU de sanções globais |
-
----
-
-## Exemplo de resposta, SANCTIONS
+### Trecho real
 
 ```json
 {
-  "type": { "value": "SANCTIONS" },
-  "details": {
-    "hasSanctions": true,
-    "count": 1,
-    "lists": [
-      {
-        "name": "CEIS",
-        "country": "BR",
-        "reason": "Inexecução total do contrato administrativo",
-        "date": "2023-04-15",
-        "status": "ACTIVE"
-      }
-    ]
-  }
+  "id": "202607-43591367000130",
+  "document": "43591367000130",
+  "yearMonth": 202607,
+  "kyc": [
+    {
+      "id": "6612a7f396efdbab00000000",
+      "createdAt": "2026-07-01T14:50:55.805Z",
+      "updatedAt": "2026-07-01T14:50:55.805Z",
+      "bDCId": "202607-43591367000130",
+      "document": null,
+      "pEPHistory": [],
+      "isCurrentlyPEP": null,
+      "sanctionsHistory": [],
+      "isCurrentlySanctioned": false,
+      "wasPreviouslySanctioned": false,
+      "last30DaysSanctions": 0,
+      "last90DaysSanctions": 0,
+      "last180DaysSanctions": 0,
+      "last365DaysSanctions": 0,
+      "lastYearPEPOccurence": 0,
+      "last3YearsPEPOccurence": 0,
+      "last5YearsPEPOccurence": 0,
+      "last5PlusYearsPEPOccurence": 0,
+      "firstSanctionDate": null,
+      "lastSanctionDate": null,
+      "isCurrentlyElectoralDonor": false,
+      "isHistoricalElectoralDonor": false,
+      "totalElectoralDonations": 0,
+      "totalElectoralDonationAmount": 0,
+      "electoralDonations": null,
+      "firstPEPOccurenceDate": null,
+      "lastPEPOccurenceDate": null
+    }
+  ]
 }
 ```
 
+## Seção `PEP`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | string | Identificador no formato `AAAAMM-documento`. |
+| `document` | string | Documento consultado, sem formatação. |
+| `yearMonth` | number | Competência dos dados (`AAAAMM`). |
+| `kyc` | object[] | Achados de PEP do próprio documento. |
+| `ownersKyc` | object[] | Achados de PEP dos sócios. |
+| `createdAt` / `updatedAt` | datetime | Datas do registro. |
+
+`kyc` e `ownersKyc` vêm em **fragmentos separados** de `sectionDetails`.
+
+## Seção `SANCTIONS`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `national` | object[] | Sanções nacionais do documento analisado. |
+| `international` | object[] | Sanções internacionais do documento analisado. |
+| `ownersNational` | object[] | Sanções nacionais dos sócios. |
+| `ownersInternational` | object[] | Sanções internacionais dos sócios. |
+
+Também em dois fragmentos: um com os dados do documento e outro com os dos sócios.
+
 <Warning>
-Qualquer resultado com `hasSanctions: true` deve ser tratado como critério de exclusão imediato na sua política de crédito, independente do score. Configure uma regra de negação direta para esse cenário.
+  Presença nessas listas **não significa sanção efetiva**. São achados de screening que precisam de conferência de identidade. Para a leitura já interpretada, use o [parecer da seção](/api-reference/report/get-reportinsights).
 </Warning>

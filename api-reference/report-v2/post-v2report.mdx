@@ -8,10 +8,6 @@ lang: tecnica
 openapi: post /v2/report
 ---
 
-<Note>
-  **Exemplo de resposta ainda não verificado contra a API.** Os demais endpoints desta referência tiveram o exemplo capturado de uma chamada real; este não, porque a chamada cria um relatório e gera cobrança. Trate o formato abaixo como indicativo e confirme na sua primeira integração.
-</Note>
-
 <Endpoint
   method="POST"
   path="/v2/report"
@@ -77,6 +73,12 @@ Bearer JWT no header `Authorization`.
 }
 ```
 
+<Warning>
+  **Chamar duas vezes para o mesmo documento e a mesma política não gera dois relatórios.** Verificado contra a API: a segunda chamada devolveu **o relatório já existente**, com o mesmo `id` e o `createdAt` original, em vez de criar um novo.
+
+  Na prática isso protege contra cobrança duplicada por retry, mas também significa que **você não força uma reanálise repetindo o `POST`**. Se precisa de dados novos, é preciso um documento ou uma política diferente.
+</Warning>
+
 <RequestExample>
 
 ```bash cURL
@@ -135,17 +137,22 @@ A requisição retorna o `id` e o status inicial do relatório. Você pode confi
 
 ```json 200 OK
 {
-  "id": "69a207bcdd0197828df9155a",
-  "policyId": "69a1fbb06a44799c9c440d2d",
+  "id": "6612a7f3a19b467000000000",
+  "createdAt": "2026-07-31T13:42:37.059Z",
+  "updatedAt": "2026-07-31T18:03:37.453Z",
   "document": "43591367000130",
-  "policyStatus": "PENDING",
+  "organizationId": "6612a7f3fa9e086b00000000",
+  "customerId": "6612a7f388be48e900000000",
+  "months": 12,
+  "policyVersion": 1.11,
+  "verified": true,
   "status": {
-    "id": "6614758260513064a5af1046",
-    "value": "PENDING",
-    "title": "Não iniciado"
+    "id": "6612a7f33fdd7d9400000000",
+    "value": "APPROVED"
   },
-  "createdAt": "2026-02-27T21:08:11.938Z",
-  "updatedAt": "2026-02-27T21:08:11.938Z"
+  "reportProgress": {
+    "steps": []
+  }
 }
 ```
 

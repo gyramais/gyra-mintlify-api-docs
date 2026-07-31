@@ -8,118 +8,65 @@ audience: integrador
 lang: tecnica
 ---
 
-<Warning>
-  **Página em revisão.** Os campos listados abaixo ainda não foram conferidos contra os tradutores de `SUMMARY` no backend, e sabemos que parte da documentação antiga descrevia campos que não correspondem à resposta real. Até a revisão terminar, confirme o formato consultando a seção diretamente com [`GET /report/{id}/section/{sectionType}`](/api-reference/report/get-report-section), ou use [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights), que tem formato estável.
+<Info>
+  **Resumo:** a seção `SUMMARY` é a única que **não tem um formato fixo**. Ela é montada por fragmentos: cada fonte que respondeu adiciona o seu próprio bloco ao array `sectionDetails`. No relatório que usamos para verificar, eram **16 fragmentos**.
+</Info>
 
-  Como os dados chegam de fato, incluindo a indexação por provedor, está em [Estrutura do Relatório](/data/estrutura-relatorio#onde-ficam-os-dados-sectiondetails-values).
+<Warning>
+  **Não há exemplo completo desta seção nesta página, de propósito.** O payload real é grande demais: chega em 16 fragmentos de `sectionDetails` e cada fonte adiciona o seu bloco. Um dump inteiro seria ilegível e envelheceria rápido.
+
+  O que está abaixo é um **trecho real**, anonimizado, para você reconhecer o formato. Para o payload completo do seu caso, chame [`GET /report/{id}/section/{sectionType}`](/api-reference/report/get-report-section) com o seu relatório. Para a leitura já interpretada, sem lidar com o bruto, use [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights).
 </Warning>
 
-A seção `SUMMARY` reúne os principais indicadores de risco em um único painel. É o ponto de partida para uma leitura rápida da saúde financeira e jurídica do documento analisado.
-
-Disponível a partir do relatório **ESSENCIAL**.
-
----
-
-## Campos do `details`
-
-### Score e avaliação geral
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `bureauScoreSummary` | object | Resumo do score do Bureau escolhido |
-| `bureauScoreSummary.score` | number | Pontuação (0–1000) |
-| `bureauScoreSummary.scoreClass` | string | Faixa: Muito Alto, Alto, Médio, Baixo, Muito Baixo |
-| `bureauScoreSummary.defaultProbability` | number | Probabilidade de inadimplência (%) |
-
-### Restrições financeiras
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `pefinsSummary` | object | Resumo de PEFIN |
-| `pefinsSummary.totalAmount` | number | Valor total em pendências (R$) |
-| `pefinsSummary.count` | number | Quantidade de ocorrências |
-| `pefinsSummary.lastOccurrenceDate` | string | Data da ocorrência mais recente |
-| `refinsSummary` | object | Resumo de REFIN |
-| `refinsSummary.totalAmount` | number | Valor total em refinanciamentos (R$) |
-| `refinsSummary.count` | number | Quantidade de ocorrências |
-| `checksSummary` | object | Resumo de cheques sem fundo |
-| `checksSummary.count` | number | Quantidade de cheques |
-| `checksSummary.totalAmount` | number | Valor total (R$) |
-
-### Protestos
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `protestsSummary` | object | Resumo de protestos |
-| `protestsSummary.count` | number | Quantidade de protestos |
-| `protestsSummary.totalAmount` | number | Valor total protestado (R$) |
-| `protestsSummary.lastOccurrenceDate` | string | Data do último protesto |
-
-### Processos judiciais
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `companyLawsuits` | object | Processos da empresa (CNPJ) |
-| `companyLawsuits.passive.count` | number | Total como réu |
-| `companyLawsuits.passive.totalAmount` | number | Valor total como réu (R$) |
-| `companyLawsuits.active.count` | number | Total como autor |
-| `ownersLawsuits` | object | Processos dos sócios (CNPJ) |
-| `ownersLawsuits.passive.count` | number | Total dos sócios como réu |
-| `ownersLawsuits.passive.totalAmount` | number | Valor total dos sócios como réu (R$) |
-| `lawsuitsSummary` | object | Indicadores consolidados |
-| `lawsuitsSummary.hasFinancial` | boolean | Tem processo financeiro |
-| `lawsuitsSummary.hasCriminal` | boolean | Tem processo criminal |
-| `lawsuitsSummary.hasLabor` | boolean | Tem processo trabalhista |
-
-### PEP
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `companyPep` | object | PEP da empresa (CNPJ) |
-| `companyPep.hasPep` | boolean | Empresa é PEP ou tem sócios PEP |
-| `companyPep.pepCount` | number | Número de vínculos PEP |
-| `personPep` | object | PEP da pessoa (CPF) |
-| `personPep.hasPep` | boolean | Pessoa é PEP |
-| `pepSummary` | object | Resumo consolidado |
-
-### Alterações cadastrais (CNPJ)
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `changesSummary` | object | Resumo de alterações |
-| `changesSummary.totalChanges` | number | Total de alterações registradas |
-| `changesSummary.lastChangeDate` | string | Data da última alteração |
-| `changesSummary.hasQsaChange` | boolean | Houve mudança no quadro societário |
-| `economicGroupChanges` | object | Mudanças no grupo econômico |
-
----
-
-## Exemplo de resposta
+### Trecho real
 
 ```json
 {
-  "type": { "value": "SUMMARY" },
-  "details": {
-    "serasaScoreSummary": {
-      "score": 620,
-      "scoreClass": "Alto",
-      "defaultProbability": 12.5
-    },
-    "pefinsSummary": {
-      "totalAmount": 0,
-      "count": 0,
-      "lastOccurrenceDate": null
-    },
-    "protestsSummary": {
-      "count": 1,
-      "totalAmount": 3500.00,
-      "lastOccurrenceDate": "2024-06-15"
-    },
-    "lawsuitsSummary": {
-      "hasFinancial": false,
-      "hasCriminal": false,
-      "hasLabor": true
-    }
-  }
+  "certificatesSummary": {
+    "order": 8,
+    "title": "Certidões emitidas",
+    "tooltip": "Emissão de certidões federais e estaduais relacionadas a pessoa ou empresa. São elas: PGFN, CND estadual, FGTS, Débitos Trabalhistas e Cartão CNPJ,        \nCertidão Negativa de CNJ, Certidão CND IBAMA,        \nCertidão CND IBAMA EMBARGOS,        \nCertidão CCC,        \nCertidão Suframa,        \nCertidão Simples Nacional.\n\n      Todas certidões emitidas com sucesso: positivo\n      70 a 99% das certidões emitidas com sucesso: alerta brando\n      Abaixo de 70% das certidões emitidas com sucesso: alerta severo",
+    "icon": "medal",
+    "subValue": "com sucesso",
+    "dateText": "Atualizado em: 31/07/2026"
+  },
+  "totalCertificates": 5
 }
 ```
+
+## Como ela é montada
+
+Diferente das outras seções, aqui `sectionDetails` não é um item só. Cada entrada traz o resumo de uma fonte, e você precisa **percorrer o array e juntar as chaves**:
+
+```javascript
+const resumo = {};
+for (const detail of secaoSummary.sectionDetails ?? []) {
+  Object.assign(resumo, detail.values ?? {});
+}
+```
+
+## Blocos de resumo (`*Summary`)
+
+Os cartões do topo do relatório seguem um padrão comum, com `order`, `title`, `tooltip`, `icon`, `value`, `subValue` e `dateText`:
+
+| Bloco | Conteúdo |
+|---|---|
+| `certificatesSummary` | Certidões emitidas, com `totalCertificates`. |
+| `changesSummary` | Alterações cadastrais. |
+| `pepSummary` | Exposição política. |
+| `lawsuitsSummary` | Processos judiciais. |
+| `pefinsSummary` / `refinsSummary` | Restritivos. |
+| `checksSummary` | Cheques sem fundo. |
+| `serasaScoreSummary` | Score do bureau. |
+| `estimatedBillingSummary` / `presumedBillingBaseSummary` | Faturamento estimado e a base usada. |
+| `limitGyraSummary` | Limite GYRA+. |
+| `creditLimitRecommendationSummary` | Limite recomendado. |
+| `nucleaHistoricalReceivingSummary` / `nucleaHistoricalPayingSummary` | Fluxo transacionado (Núclea). |
+
+## Outros campos observados
+
+Certidões individuais (`pgfnCertificate`, `debtAbsenceStateCertificate`, `debtLaborAbsenceCertificate`, `boardCertificate`), cada uma com `valid` e `error`. Dados de PEP (`ownersPep`, `companyPep`), processos (`companyLawsuits`), mudanças (`addressesChanges`, `basicDataChanges`, `economicGroupChanges`) e identificação (`name`, `document`, `formattedDocument`, `situation`, `provider`, `source`, `emissionDate`, `validityDate`, `url`).
+
+<Warning>
+  A lista acima é **o que apareceu num relatório COMPLETO+ real**, não um contrato. Quais blocos existem depende das fontes ativadas na política. Sempre verifique a presença da chave antes de usar.
+</Warning>
