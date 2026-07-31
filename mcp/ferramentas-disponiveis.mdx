@@ -16,11 +16,11 @@ lang: tecnica
 
 ### `authenticate`
 
-Troca `clientId` + `clientSecret` por um token de sessão (JWT). Geralmente **não precisa ser chamada manualmente**: o MCP autentica e renova o token automaticamente quando `GYRA_CLIENT_ID` e `GYRA_CLIENT_SECRET` estão configurados (ou via custom connector OAuth).
+Troca o seu **e-mail e senha da plataforma** por um token de sessão (JWT válido por 24h). Geralmente **não precisa ser chamada manualmente**: o MCP autentica e renova sozinho quando `GYRA_CLIENT_ID` e `GYRA_CLIENT_SECRET` estão configurados (ou via custom connector OAuth).
 
-- **Quando usa**: agente que gerencia múltiplas organizações e precisa trocar de contexto on demand.
-- **Parâmetros**: `clientId`, `clientSecret`.
-- **Retorno**: objeto de sessão com `accessToken`, `expiresAt` (24h), `userId` e `organizationId`.
+- **Quando usa**: agente que alterna entre logins de organizações diferentes on demand.
+- **Parâmetros**: `clientId` (e-mail), `clientSecret` (senha).
+- **Retorno**: objeto de sessão com `accessToken`, `expiresAt` (24h), `userId` e `organizationId`. **Não existe campo `expiresIn`** (verificado contra a API).
 
 ## Relatórios
 

@@ -27,66 +27,83 @@ Se o caso é próximo de algum template, **sempre prefira clonar** pela opção 
 
 ## Fluxo
 
+O editor tem um menu **Configurar política** à esquerda com seis etapas. Você não precisa percorrer todas: só duas são obrigatórias, **Fontes de dados** (o Relatório base) e **Decisão e alçada** (o Objetivo). As outras quatro existem para quem precisa delas.
+
 <Steps>
   <Step title="Entrar em Nova Política">
-    *Política de Crédito, Políticas, Nova política*. O editor abre com uma política em branco.
+    *Política de Crédito, Políticas, Nova política*. O editor abre em branco, com o menu de etapas à esquerda e o nome da política no topo, ao lado do status **Inativa**.
   </Step>
-  <Step title="Definir cabeçalho">
-    - **Nome**, interno, reconhecível pelo time.
-    - **Tipo de documento**, `PF` (CPF) ou `PJ` (CNPJ). A política só pode ser usada no tipo declarado.
-    - **Nível de relatório**, `SIMPLES`, `ESSENCIAL`, `COMPLETO` ou `COMPLETO+`. Define quais fontes ficam disponíveis para as regras.
-    - **Produto**, vínculo opcional a um produto cadastrado (ex: Capital de Giro, Antecipação).
+  <Step title="Fontes de dados">
+    *"Escolha de onde vêm os dados que esta política usa nas análises. Ative só o que fizer sentido para o seu processo."*
+
+    Comece pelo **Relatório base**, que é obrigatório e destrava todo o resto:
+
+    - **Tipo de documento**: Pessoa Jurídica (CNPJ) ou Pessoa Física (CPF).
+    - **Nível**: **Simples** (cadastral, contatos, renda e sócios diretos), **Essencial** (+ rede até 3º grau, processos desde 2014 e alterações cadastrais), **Completo** (+ PEP, sanções e certidões oficiais) ou **Completo+** (+ processos desde 1980, licenças e benefícios).
+
+    Definido o Relatório base, ligue as fontes que fizerem sentido:
+
+    | Cartão | O que decide |
+    | ------ | ------------ |
+    | **Bureau de crédito** | Qual bureau consultar, escolha única. Pode ser **Nenhum**. Ver [opções](/sources/bureau-credito#qual-bureau-usar). |
+    | **SCR, Banco Central** | Endividamento no sistema financeiro. |
+    | **Cenprot** | Protestos nacionais direto da Central de Protestos. Fonte adicional. |
+    | **Núclea** | Indicadores de transações reais, selecionados um a um. Só PJ. Fonte adicional. |
+    | **Balanço patrimonial** | Libera as variáveis de balanço nas condições e fórmulas. |
+    | **Bases externas** | Suas próprias bases, configuradas em *Configurações de integrações*. |
+
+    <Warning>
+      Só o que estiver ligado aqui é coletado quando a análise roda. Esta tela é onde você controla **custo e latência** da política.
+
+      Uma exceção: em relatórios COMPLETO e COMPLETO+, a **busca** por balanços publicados roda de qualquer forma. O cartão *Balanço patrimonial* controla se o que for encontrado é **processado** automaticamente, não se a busca acontece.
+    </Warning>
   </Step>
-  <Step title="Adicionar grupos de regras">
-    Uma política é organizada em **grupos**. Cada grupo reúne regras com uma lógica interna (e.g. "Bloqueios cadastrais", "Restritivos", "Endividamento"). Regras dentro do grupo funcionam em E: todas precisam passar.
+  <Step title="Minhas variáveis, opcional">
+    *"Fórmulas reutilizáveis. Use `#nome` em qualquer regra, classificação de risco ou precificação."*
 
-    Botão *Adicionar grupo*, nomear e configurar se o grupo contribui para um score agregado (campos `scoreApproved`, `scoreAlert`, `scoreDenied`).
+    Crie aqui o cálculo que a sua casa repete em toda política, uma vez só. Depois é só referenciar por `#nome` nas etapas seguintes. Pule se a sua primeira política não precisar.
   </Step>
-  <Step title="Adicionar regras ao grupo">
-    Cada regra tem:
+  <Step title="Condições">
+    *"Cada condição é um conjunto de regras avaliadas."*
 
-    - **Regra**, escolhida no catálogo do editor (ex: `SCORE`, `COMPANY_SITUATION`, `PEFIN_AMOUNT`), agrupada por categoria.
-    - **Operador** e **valor** de comparação (ex: menor que `400`).
-    - **Parâmetros**, quando a regra exigir (ex: o tipo de vara em `LAWSUITS_COUNT_BY_COURT_TYPE`).
-    - **Status a aplicar**, `APPROVED`, `ALERT` ou `DENIED` quando a condição é satisfeita.
+    É onde a política decide de fato. Cada condição reúne uma ou mais regras (campo, operador e valor) e define o que acontece quando ela é satisfeita: aplicar um veredito (**aprovar**, **alerta** ou **negar**), ou somar e subtrair pontos, se a Classificação de risco estiver ativa.
 
-    O editor valida em tempo real: campo inexistente, operador inválido para o tipo do campo, parâmetros ausentes são bloqueados antes de salvar.
+    O editor valida enquanto você escreve: campo inexistente, operador incompatível com o tipo do dado e parâmetro faltando são bloqueados antes de salvar.
   </Step>
-  <Step title="Configurar fontes de dados">
-    No painel lateral *Dados Consultados*, ative ou desative o que a política vai buscar:
+  <Step title="Classificação de risco, opcional">
+    *"Defina os ratings dos relatórios por faixas de pontuação (0 a 1000)."*
 
-    - **Bureau** (qual bureau, cache, janela).
-    - **SCR**, se ativo, quantos meses de histórico (campo `scrMonths`).
-    - **Processos**, janela temporal (últimos 12, 24, 60 meses).
-    - **Vínculos societários**, níveis consultados (ROOT, FIRST_LEVEL, etc.).
-    - **Balanço e integrações externas**, via `externalIntegrationEnabled`.
+    Ative se quiser que as condições **pontuem** em vez de decidir individualmente. Aqui você cria as faixas de score e o veredito de cada uma: aprovar, enviar para análise humana ou reprovar.
 
-    Só o que estiver ativado aqui é coletado em runtime, isso afeta custo e latência da operação.
+    <Note>
+      A ordem importa. Ative a Classificação de risco **antes** de voltar às Condições para definir quantos pontos cada uma soma ou subtrai. Com ela ativa, a faixa final prevalece sobre o resultado individual das condições.
+    </Note>
   </Step>
-  <Step title="Fórmulas de precificação, opcional">
-    Ativar o bloco *Ações pós-política* para habilitar as três fórmulas:
+  <Step title="Precificação, opcional">
+    *"Fórmulas que sugerem taxa, prazo e valor a partir das variáveis do relatório."*
 
-    - `periodFormula`, prazo.
-    - `interestFormula`, taxa.
-    - `amountFormula`, valor final aprovado.
+    Três fórmulas em sintaxe de planilha, para limite, taxa e prazo. Catálogo e exemplos em [Precificação](/concepts/precificacao).
+  </Step>
+  <Step title="Decisão e alçada">
+    *"Objetivo da política, decisão automática e quem pode alterar análises."*
 
-    Sintaxe Excel, catálogo e exemplos em [Precificação](/concepts/precificacao).
+    - **Objetivo** da política, obrigatório para salvar. É o que a operação está decidindo (capital de giro, contratação, abertura de conta), e serve de contexto para a análise de IA.
+    - **Usar resultado da política no relatório**: ligado, o resultado vira o status do relatório automaticamente; desligado, o relatório fica pendente até um analista decidir.
+    - **Quem pode alterar análises**: os papéis com alçada para reverter uma decisão.
+    - **[Comitê de Crédito IA](/concepts/comite-de-credito)**, quando o Relatório base tem pipeline de parecer: se o comitê é convocado sozinho e em qual modo.
   </Step>
-  <Step title="Mensagens ao tomador">
-    Customizar o texto mostrado em cada resultado final (`APPROVED`, `ALERT`, `DENIED`). Útil se você expõe o resultado diretamente ao cliente final em um fluxo self-service.
-  </Step>
-  <Step title="Salvar e validar">
-    Clicar em *Salvar*. O editor roda validações cruzadas:
+  <Step title="Salvar e habilitar">
+    Salve e ligue o toggle de status no topo. Enquanto estiver **Inativa**, a política não aparece no input de análise e não pode ser executada. Ativada, ela passa a aparecer para todos os usuários com permissão ao digitar um documento compatível.
 
-    - Toda regra tem campo, operador e threshold coerentes com o tipo de dado.
-    - Fontes referenciadas pelas regras estão ativadas no painel de dados.
-    - Fórmulas de precificação (se houver) parseiam.
-    - Pelo menos um grupo com pelo menos uma regra.
-  </Step>
-  <Step title="Habilitar">
-    Toggle **Habilitada** no cabeçalho. A política só pode ser usada quando está habilitada — enquanto desabilitada, ela não aparece no dropdown do input sempre visível e não pode ser executada. Após habilitar, ela passa a aparecer no dropdown ao digitar um documento compatível, para todos os usuários com permissão.
+    <Note>
+      Salvar sem o **Objetivo** preenchido não passa: o editor avisa, leva você para *Decisão e alçada* e marca a etapa como obrigatória.
+    </Note>
   </Step>
 </Steps>
+
+<Tip>
+  Para a primeira política, o caminho mais curto é: **Relatório base**, três ou quatro **Condições** de corte óbvio e **Decisão e alçada** com o objetivo preenchido. Classificação de risco e Precificação você adiciona depois, quando já tiver volume para calibrar.
+</Tip>
 
 ## Estrutura mínima recomendada
 
