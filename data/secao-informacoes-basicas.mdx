@@ -46,14 +46,19 @@ lang: tecnica
 
 ## Contatos e endereço
 
+Os campos de contato e endereço chegam com um **prefixo histórico** herdado da fonte que os alimenta. O prefixo não tem significado funcional e pode mudar; trate-o como parte opaca do nome.
+
 | Campo | Tipo | Descrição |
 |---|---|---|
-| `lemitPrimaryAddress` | object | Endereço principal: `{ address, creationDate }`. |
-| `lemitPrimaryPhoneNumber` | string | Telefone principal. |
-| `lemitPrimaryEmail` | string | E-mail principal. |
-| `lemitSecondaryContacts` | object[] | Contatos secundários. |
-| `lemitProfession` | string | Profissão (PF). |
-| `cPFSituation` | string | Situação do CPF (PF). |
+| `...PrimaryAddress` | object | Endereço principal: `{ address, creationDate }`. |
+| `...PrimaryPhoneNumber` | string | Telefone principal. |
+| `...PrimaryEmail` | string | E-mail principal. |
+| `...SecondaryContacts` | object[] | Contatos secundários. |
+| `...Profession` | string | Profissão (PF). |
+
+<Note>
+  Leia esse bloco varrendo as chaves do fragmento, em vez de fixar o nome completo. O sufixo (`PrimaryAddress`, `PrimaryEmail`) é o que identifica o dado.
+</Note>
 
 ## Vínculos e metadados
 

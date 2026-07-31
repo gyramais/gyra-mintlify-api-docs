@@ -65,7 +65,7 @@ Protesto lavrado hoje em cartório tipicamente aparece na nossa consulta em 1 a 
 A seção de Protestos do relatório traz:
 
 - **Resumo agregado**: quantidade de ocorrências, valor total protestado e data do último protesto.
-- **Lista detalhada de ocorrências**: cada registro com cartório, comarca, UF, data de ocorrência, data de atualização, valor do título, credor/cedente, indicador de anuência, custas e status (ativo/baixado) conforme o bureau de origem (Serasa, Boa Vista, ProScore ou SCloud).
+- **Lista detalhada de ocorrências**: cada registro com cartório, comarca, UF, data de ocorrência, data de atualização, valor do título, credor/cedente, indicador de anuência, custas e status (ativo/baixado) conforme o bureau de origem.
 
 A estrutura JSON exata varia conforme o bureau que populou a seção. Para contrato integrador, consuma a seção via `get_report_section_by_type(reportId, "PROTESTS")` e tipe em cima do retorno real — documentação autoritativa no [Dicionário de Dados](/data/secao-protestos).
 
