@@ -35,7 +35,7 @@ openapi: get /v2/report/{id}
         status: { id: "6614758260513064a5af1046", value: "PENDING" },
         document: "43**********30",
         policyId: "69a1fbb06a44799c9c440d2d",
-        organizationId: "65eb4989a4a87b9a94d1920f",
+        organizationId: "6612a7f30000000000000001",
         createdAt: "2026-02-27T21:08:11.938Z",
         updatedAt: "2026-02-27T21:09:39.455Z"
       }
@@ -104,16 +104,65 @@ O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo inc
 
 ```json 200 OK
 {
-  "id": "69a207bcdd0197828df9155a",
+  "id": "6612a7f3a19b467000000000",
+  "createdAt": "2026-07-31T13:42:37.059Z",
+  "updatedAt": "2026-07-31T13:43:28.150Z",
+  "document": "43591367000130",
+  "yearMonthDay": 20260731,
+  "policyId": "6612a7f3625ea4ab00000000",
+  "policyVersion": 1.11,
+  "policyName": "Completo+",
+  "organizationId": "6612a7f3fa9e086b00000000",
+  "commentary": null,
+  "previousAnalystId": null,
+  "policyErrorStatusApplied": null,
+  "userId": "6612a7f338154f0100000000",
   "status": {
-    "id": "6614758260513064a5af1046",
+    "id": "6612a7f3410dcd8100000000",
     "value": "PENDING"
   },
-  "document": "43**********30",
-  "policyId": "69a1fbb06a44799c9c440d2d",
-  "organizationId": "65eb4989a4a87b9a94d1920f",
-  "createdAt": "2026-02-27T21:08:11.938Z",
-  "updatedAt": "2026-02-27T21:09:39.455Z"
+  "reportProgress": {
+    "isFinalized": true,
+    "finalizedAt": "2026-07-31T13:43:24.194Z",
+    "steps": []
+  },
+  "analystId": null,
+  "analystName": null,
+  "ranWithoutSCRReason": null,
+  "sections": [
+    {
+      "id": "6612a7f31f3a577d00000000",
+      "type": {
+        "id": "6612a7f3ae25b13000000000",
+        "title": "Resumo",
+        "value": "SUMMARY"
+      },
+      "parecerStatus": null,
+      "parecerScore": null,
+      "parecerRiskLevel": null,
+      "sectionDetails": "[ ... ver GET /report/{id}/section/{sectionType} ... ]"
+    },
+    {
+      "id": "6612a7f30a2c8b1a00000000",
+      "type": {
+        "id": "6612a7f3cd81d4f900000000",
+        "title": "Sanções",
+        "value": "SANCTIONS"
+      },
+      "parecerStatus": "DONE",
+      "parecerScore": 10,
+      "parecerRiskLevel": "LOW",
+      "sectionDetails": "[ ... ver GET /report/{id}/section/{sectionType} ... ]"
+    }
+  ],
+  "product": null,
+  "verified": true,
+  "exportUrl": null,
+  "exportExcelUrl": null,
+  "parecerEnabled": true,
+  "committeeStatus": null,
+  "committeeDecision": null,
+  "committeeResult": null
 }
 ```
 

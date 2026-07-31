@@ -20,7 +20,7 @@ Troca `clientId` + `clientSecret` por um token de sessão (JWT). Geralmente **n�
 
 - **Quando usa**: agente que gerencia múltiplas organizações e precisa trocar de contexto on demand.
 - **Parâmetros**: `clientId`, `clientSecret`.
-- **Retorno**: `{ accessToken, expiresIn }`.
+- **Retorno**: objeto de sessão com `accessToken`, `expiresAt` (24h), `userId` e `organizationId`.
 
 ## Relatórios
 

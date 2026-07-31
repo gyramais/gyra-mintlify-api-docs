@@ -154,13 +154,74 @@ print(response.json())
 
 ```json 200 OK
 {
-  "id": "69a207bcdd0197828df9156a",
-  "type": {
-    "id": "672b49a91acad6953b56b109",
-    "value": "SUMMARY"
+  "id": "6612a7f3dc5b830500000000",
+  "report": {
+    "id": "6612a7f3a19b467000000000",
+    "organizationId": "6612a7f3fa9e086b00000000",
+    "reportProgress": {
+      "isFinalized": true,
+      "finalizedAt": "2026-07-31T13:43:24.194Z"
+    }
   },
-  "createdAt": "2026-02-27T21:08:11.938Z",
-  "updatedAt": "2026-02-27T21:09:39.250Z"
+  "type": {
+    "id": "6612a7f3ae223a4700000000",
+    "value": "PROTESTS",
+    "tabs": [
+      {
+        "type": "RESTRICTIVE",
+        "order": 5,
+        "side": null
+      }
+    ]
+  },
+  "selectedIntegrations": [
+    "EPOSI_SERASA_MAX"
+  ],
+  "createdAt": "2026-07-31T13:42:37.059Z",
+  "updatedAt": "2026-07-31T13:43:12.180Z",
+  "sectionDetails": [
+    {
+      "values": {
+        "serasa": {
+          "injunction": false,
+          "protestsQuantity": 15,
+          "protestsTotalValue": "R$ 102.390,05",
+          "protestsByRegion": [
+            {
+              "name": "SP",
+              "value": 5
+            }
+          ],
+          "lastProtestDate": "2026-02-05T00:00:00.000Z",
+          "formattedLastProtestDate": "05/02/2026",
+          "protestsTable": [
+            {
+              "name": "-",
+              "registry": "04",
+              "formattedDate": "05/02/2026",
+              "date": "2026-02-05T00:00:00.000Z",
+              "uf": "SAO PAULO/SP",
+              "value": 1679.95,
+              "formattedValue": "R$ 1.679,95"
+            },
+            {
+              "name": "-",
+              "registry": "08",
+              "formattedDate": "05/02/2026",
+              "date": "2026-02-05T00:00:00.000Z",
+              "uf": "SAO PAULO/SP",
+              "value": 4170.38,
+              "formattedValue": "R$ 4.170,38"
+            }
+          ]
+        }
+      },
+      "integrationTypes": [
+        "EPOSI_SERASA_MAX"
+      ]
+    }
+  ],
+  "errors": []
 }
 ```
 

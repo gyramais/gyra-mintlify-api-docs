@@ -22,7 +22,7 @@ paths:
             type: string
       responses:
         200:
-          description: Objeto com accessToken (JWT) e expiresIn (tempo em segundos).
+          description: Objeto Session com accessToken (JWT), expiresAt (24h), userId e organizationId.
       tags:
         - auth
       summary: Gerar token de acesso JWT

@@ -104,69 +104,30 @@ print(response.json())
 
 ```json 200 OK
 {
-  "reportId": "6612a7f30000000000000001",
+  "reportId": "6612a7f3a19b467000000000",
   "document": "43591367000130",
   "committee": {
-    "status": "DONE",
-    "decision": "APPROVED",
-    "result": {
-      "decision": "APPROVED",
-      "synthesis": {
-        "decision": "APPROVED",
-        "resumo": "Aprovar com ressalvas: operação sustentada por caixa e histórico limpo, mas com concentração relevante em conta garantida.",
-        "reasoning": "Os agentes convergiram em aprovação...",
-        "proximaAcao": "Solicitar garantia adicional antes do desembolso.",
-        "conditions": ["Garantia adicional de 20% do limite"],
-        "limitReview": {
-          "status": "ADEQUADO",
-          "limite": "R$ 250.000,00",
-          "taxa": "2,1% a.m.",
-          "prazo": "12 meses",
-          "justificativa": "Limite compatível com o faturamento apurado."
-        },
-        "dissentLog": [
-          { "agent": "comportamental", "divergedHow": "Alertou para concentração em conta garantida acima de 60%." }
-        ],
-        "monitoringItems": ["Acompanhar evolução do SCR nos próximos 3 meses"],
-        "infoGapsBeforeDecision": [],
-        "confidence": 0.82,
-        "alcadaLevel": null
-      },
-      "agentOpinions": [
-        {
-          "agent": "cadastral",
-          "agentLabel": "Cadastral",
-          "score": 8,
-          "resumo": "Cadastro íntegro e atividade coerente com o CNAE declarado.",
-          "recommendation": "APPROVE",
-          "confidence": 0.9
-        }
-      ],
-      "confidence": 0.82,
-      "costUsd": 0.41,
-      "durationMs": 38210,
-      "trigger": "MANUAL",
-      "deliberationId": "6612a7f30000000000000900",
-      "finishedAt": "2026-07-30T14:31:12.004Z"
-    },
-    "at": "2026-07-30T14:31:12.004Z"
+    "status": null,
+    "decision": null,
+    "result": null,
+    "at": null
   },
   "insights": [
     {
-      "section": "PROCESSES",
-      "score": 6,
-      "riskLevel": "MEDIUM",
-      "parecer": "A empresa figura em 4 processos trabalhistas...",
-      "highlights": ["4 processos trabalhistas ativos", "Sem execuções fiscais"],
-      "at": "2026-07-30T14:22:03.881Z"
+      "section": "SANCTIONS",
+      "score": 10,
+      "riskLevel": "LOW",
+      "parecer": "Texto do parecer da seção, redigido pelo agente especialista daquele domínio...",
+      "highlights": null,
+      "at": "2026-07-31T13:43:12.307Z"
     },
     {
-      "section": "SCR",
-      "score": 7,
-      "riskLevel": "LOW",
-      "parecer": "O endividamento bancário é estável nos últimos 12 meses...",
-      "highlights": ["Endividamento estável", "Sem atraso acima de 90 dias"],
-      "at": "2026-07-30T14:23:41.220Z"
+      "section": "BASIC_INFORMATION",
+      "score": 2,
+      "riskLevel": "CRITICAL",
+      "parecer": "Texto do parecer da seção, redigido pelo agente especialista daquele domínio...",
+      "highlights": null,
+      "at": "2026-07-31T13:43:08.482Z"
     }
   ]
 }

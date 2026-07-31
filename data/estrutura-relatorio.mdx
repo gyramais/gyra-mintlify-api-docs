@@ -18,13 +18,15 @@ Todo relatório retornado pela API tem a seguinte estrutura raiz:
 | `createdAt` | datetime | Data/hora de criação |
 | `updatedAt` | datetime | Data/hora da última atualização |
 | `document` | string | CPF ou CNPJ consultado (sem formatação) |
-| `yearMonthDay` | string | Data de referência dos dados (YYYY-MM-DD) |
+| `yearMonthDay` | number | Data de referência como inteiro `AAAAMMDD` (ex.: `20260731`). |
 | `organizationId` | string (ObjectId) | ID da organização que gerou o relatório |
-| `externalId` | string | Identificador externo enviado na criação |
-| `type` | object | Tipo do relatório (ver abaixo) |
-| `status` | object | Status atual do relatório (ver abaixo) |
-| `policyStatus` | string | Decisão da política: `APPROVED`, `DENIED`, `ALERT` |
-| `score` | number | Score final composto (0–1000) |
+
+| `status` | object | `{ id, value }`, com `value` em `PENDING`, `APPROVED` ou `DENIED`. |
+| `policyId` / `policyVersion` / `policyName` | | Política aplicada. |
+| `parecerEnabled` | boolean | Se o pipeline de parecer está habilitado. |
+| `committeeStatus` / `committeeDecision` / `committeeResult` | | Estado e resultado do Comitê de Crédito IA. |
+| `exportUrl` / `exportExcelUrl` | string | Últimas exportações geradas. |
+
 | `commentary` | object[] | Comentários de analistas |
 | `sections` | object[] | Seções do relatório (ver abaixo) |
 
