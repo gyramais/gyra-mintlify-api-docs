@@ -45,7 +45,7 @@ Se o caso é próximo de algum template, **sempre prefira clonar** pela opção 
   <Step title="Adicionar regras ao grupo">
     Cada regra tem:
 
-    - **Regra**, escolhida no catálogo (ex: `SCORE`, `COMPANY_SITUATION`, `PEFIN_AMOUNT`). Lista completa em [Catálogo de Regras](/reference/catalogo-de-regras).
+    - **Regra**, escolhida no catálogo do editor (ex: `SCORE`, `COMPANY_SITUATION`, `PEFIN_AMOUNT`), agrupada por categoria.
     - **Operador** e **valor** de comparação (ex: menor que `400`).
     - **Parâmetros**, quando a regra exigir (ex: o tipo de vara em `LAWSUITS_COUNT_BY_COURT_TYPE`).
     - **Status a aplicar**, `APPROVED`, `ALERT` ou `DENIED` quando a condição é satisfeita.
@@ -111,7 +111,6 @@ Política "Crédito PJ Giro 2026"
     └─ SCR_DOMAIN_EXPIRED maior que 0                   → ALERT
 ```
 
-Todas as regras acima saem do [Catálogo de Regras](/reference/catalogo-de-regras).
 
 E, se cabe precificação:
 
