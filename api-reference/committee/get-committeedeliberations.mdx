@@ -8,6 +8,12 @@ lang: tecnica
 openapi: get /committee/deliberations/{reportId}
 ---
 
+<Warning>
+  **Este endpoint não está respondendo em produção.** Verificado com um relatório cujo comitê concluiu (`committeeStatus: "DONE"`): a chamada retorna `404`. O proxy para o serviço de IA não resolve a rota.
+
+  Enquanto isso não é corrigido, **use [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights)**: o campo `committee.result` traz a deliberação completa, com `synthesis`, os `agentOpinions` dos sete agentes, `deliberationId`, `confidence`, `costUsd`, `durationMs` e `models`. É a mesma informação descrita abaixo.
+</Warning>
+
 ### Quando usar
 
 Use este endpoint quando precisa da **deliberação completa e auditável**: o voto individual de cada um dos sete agentes, os alertas que cada um levantou, o registro de divergência, a versão de prompt usada e a telemetria (modelos, tokens, custo e duração).

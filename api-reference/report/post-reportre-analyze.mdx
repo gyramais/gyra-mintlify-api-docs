@@ -87,7 +87,19 @@ print(response.json())
 
 </RequestExample>
 
+<Warning>
+  **Credenciais de integração (`API_USER`) não conseguem reanalisar.** Verificado contra a API: a chamada retorna `401` com a mensagem *"Você não tem permissão para reanalisar esse relatório."* A reanálise exige um usuário com alçada para revisar análises manuais, o que na prática significa fazer pela tela do toolbox ou com o login de um usuário que tenha essa permissão.
+</Warning>
+
 <ResponseExample>
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Você não tem permissão para reanalisar esse relatório."
+}
+```
+
 
 ```json 200 OK
 {

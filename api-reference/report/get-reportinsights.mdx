@@ -107,17 +107,142 @@ print(response.json())
   "reportId": "6612a7f3a19b467000000000",
   "document": "43591367000130",
   "committee": {
-    "status": null,
-    "decision": null,
-    "result": null,
-    "at": null
+    "status": "DONE",
+    "decision": "REJECTED",
+    "result": {
+      "decision": "REJECTED",
+      "synthesis": {
+        "decision": "REJECTED",
+        "resumo": "Comitê confirma negativa da política: CNPJ suspenso, passivos de R$ 6,8 milhões em Pefin e Refin, processos judiciais de R$ 8,3 milhões e ausência total de gestão ativa inviabilizam qualquer concessão.",
+        "reasoning": "A política de crédito negou a operação com score mínimo e a decisão é integralmente confirmada. A empresa apresenta situação cadastral suspensa desde junho de 2026, inatividade tri...",
+        "proximaAcao": "Arquivar o processo e não retomar sem regularização cadastral comprovada.",
+        "limitReview": null,
+        "dissentLog": [
+          {
+            "agent": "Compliance",
+            "divergedHow": "Recomendou aprovação com base exclusivamente na ausência de sanções regulatórias, desconsiderando os fatores críticos de insolvência, suspensão cadastral e descontinuidade operacional que são determinantes para a decisão final."
+          }
+        ],
+        "confidence": 0.97,
+        "monitoringItems": [],
+        "infoGapsBeforeDecision": [],
+        "conditions": [],
+        "alcadaLevel": null
+      },
+      "agentOpinions": [
+        {
+          "agent": "cadastral",
+          "agentLabel": "Cadastral",
+          "score": 1,
+          "resumo": "Recomenda negar. Situação cadastral suspensa, massa crítica de passivos e saída total de diretores tornam o perfil inviável para crédito.",
+          "redFlags": [
+            {
+              "severity": "CRITICAL",
+              "label": "CNPJ suspenso e diretoria esvaziada",
+              "detail": "Situação cadastral suspensa desde junho de 2026 e inatividade tributária desde maio de 2026, com saída simultânea de todos os diretores no mesmo período, indicando descontinuidade operacional e de gestão."
+            },
+            {
+              "severity": "CRITICAL",
+              "label": "Passivos financeiros de alta materialidade",
+              "detail": "Pefin de R$ 4,6 milhões e Refin de R$ 2,1 milhões com ocorrências recentíssimas (janeiro e junho de 2026), além de 10 processos judiciais passivos totalizando R$ 8,3 milhões com o mais recente em julho de 2026."
+            },
+            {
+              "severity": "WARNING",
+              "label": "Certidão estadual não emitida",
+              "detail": "A certidão negativa junto à Secretaria da Fazenda Estadual não pôde ser emitida, possivelmente associada ao status suspenso perante o fisco, sem que a materialidade do eventual débito seja conhecida."
+            }
+          ],
+          "positiveFactors": [
+            {
+              "label": "Operação real identificada na web",
+              "detail": "A empresa possui marketplace ativo de equipamentos pesados usados com presença verificada no Brasil e em países da América Latina, endereço e identidade cadastral confirmados por múltiplas fontes independentes."
+            },
+            {
+              "label": "Regularidade federal e trabalhista",
+              "detail": "Certidões negativas de FGTS, PGFN, débitos trabalhistas e CNJ emitidas sem pendências, indicando ausência de passivos federais diretos nessas esferas."
+            },
+            {
+              "label": "Localização e CNAE coerentes",
+              "detail": "Sede em edifício corporativo de alto padrão na Berrini, compatível com atividade de agenciamento e intermediação; entorno com mais de 9 mil CNPJs ativos e mesmo CNAE predominante."
+            }
+          ],
+          "confidence": 0.82,
+          "infoGaps": [
+            "Identidade e regularidade dos novos diretores ou controladores após saída dos anteriores em maio de 2026.",
+            "Valor e natureza do débito estadual subjacente à certidão não emitida."
+          ],
+          "recommendation": "REJECT",
+          "model": "claude-sonnet-4-6",
+          "costUsd": 0.14448185,
+          "sectionsSeen": [
+            "BASIC_INFORMATION",
+            "CERTIFICATES",
+            "LOCATION",
+            "LICENSES_AUTHORIZATIONS"
+          ],
+          "parecer": "Texto completo do parecer do agente..."
+        },
+        {
+          "agent": "societario",
+          "agentLabel": "Societário",
+          "score": 3,
+          "resumo": "Recomenda negar. Estrutura societária com saída coletiva de diretores, cadastro suspenso e rede de relacionamentos com padrão de endereço fiscal de conveniência.",
+          "redFlags": [
+            {
+              "severity": "CRITICAL",
+              "label": "Saída coletiva de diretores e suspensão cadastral",
+              "detail": "Todos os diretores saíram simultaneamente em maio de 2026, coincidindo com a suspensão do cadastro federal e a classificação como empresa não ativa, indicando descontinuidade operacional intencional em empresa com menos de cinco anos de existência."
+            },
+            {
+              "severity": "CRITICAL",
+              "label": "Endereço fiscal de conveniência com passivos elevados",
+              "detail": "O endereço da empresa é compartilhado por 99 entidades, 40 delas em alerta, com empresas inativas registrando passivos federais de aproximadamente R$ 3,6 milhões e R$ 1,1 milhão, caracterizando padrão de domicílio fiscal de fachada."
+            },
+            {
+              "severity": "WARNING",
+              "label": "Sócios com restrições em bureau de crédito",
+              "detail": "Dois sócios pessoas físicas do quadro societário direto possuem restrições registradas em bureau de crédito, sem detalhamento de valores, o que agrava o risco dado o porte diminuto da empresa e a situação cadastral já fragilizada."
+            }
+          ],
+          "positiveFactors": [
+            {
+              "label": "Ausência de exposição política e sanções",
+              "detail": "Nenhum membro do quadro societário ou do grupo econômico apresenta vínculos com pessoas politicamente expostas ou sanções nacionais e internacionais registradas."
+            }
+          ],
+          "confidence": 0.72,
+          "infoGaps": [
+            "Valores e natureza das restrições de bureau dos sócios pessoas físicas não foram detalhados.",
+            "Identidade e perfil dos novos controladores após os ciclos de rotatividade societária não estão disponíveis."
+          ],
+          "recommendation": "REJECT",
+          "model": "claude-sonnet-4-6",
+          "costUsd": 0.0277494,
+          "sectionsSeen": [
+            "RELATIONS"
+          ],
+          "parecer": "Texto completo do parecer do agente..."
+        }
+      ],
+      "confidence": 0.97,
+      "models": {
+        "specialists": "claude-sonnet-4-6",
+        "synthesizer": "claude-sonnet-4-6"
+      },
+      "costUsd": 0.3572285,
+      "durationMs": 46040,
+      "trigger": "MANUAL",
+      "deliberationId": "6612a7f388b90e3600000000",
+      "finishedAt": "2026-07-31T17:50:16.725Z"
+    },
+    "at": "2026-07-31T17:50:16.725Z"
   },
   "insights": [
     {
       "section": "SANCTIONS",
       "score": 10,
       "riskLevel": "LOW",
-      "parecer": "Texto do parecer da seção, redigido pelo agente especialista daquele domínio...",
+      "parecer": "Texto do parecer da seção...",
       "highlights": null,
       "at": "2026-07-31T13:43:12.307Z"
     },
@@ -125,7 +250,7 @@ print(response.json())
       "section": "BASIC_INFORMATION",
       "score": 2,
       "riskLevel": "CRITICAL",
-      "parecer": "Texto do parecer da seção, redigido pelo agente especialista daquele domínio...",
+      "parecer": "Texto do parecer da seção...",
       "highlights": null,
       "at": "2026-07-31T13:43:08.482Z"
     }
