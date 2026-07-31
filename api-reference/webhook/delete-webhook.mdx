@@ -8,10 +8,6 @@ lang: tecnica
 openapi: delete /webhook/{id}
 ---
 
-<Note>
-  **Exemplo de resposta ainda não verificado contra a API.** Os demais endpoints desta referência tiveram o exemplo capturado de uma chamada real; este não, porque a chamada remove um webhook da organização. Trate o formato abaixo como indicativo e confirme na sua primeira integração.
-</Note>
-
 ### Quando usar
 
 Use este endpoint para desativar um webhook existente. Você pode usar quando trocar URL de integração, encerrar uma automação ou interromper recebimento de eventos em um destino antigo.
@@ -61,8 +57,13 @@ print(response.json())
 
 ```json 200 OK
 {
-  "id": "69a20f96f5b9cb55d8e8a6a1",
-  "deleted": true
+  "id": "6612a7f32f90990d00000000",
+  "createdAt": "2026-07-31T18:02:54.965Z",
+  "updatedAt": "2026-07-31T18:02:54.965Z",
+  "organizationId": "6612a7f3fa9e086b00000000",
+  "type": "REPORT_FINISHED",
+  "url": "https://seu-sistema.com/webhooks/gyra",
+  "apiKey": "teste-doc"
 }
 ```
 

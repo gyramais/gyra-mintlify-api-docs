@@ -8,10 +8,6 @@ lang: tecnica
 openapi: get /report/export-sync/{id}
 ---
 
-<Note>
-  **Exemplo de resposta ainda não verificado contra a API.** Os demais endpoints desta referência tiveram o exemplo capturado de uma chamada real; este não, porque a chamada dispara geração de arquivo. Trate o formato abaixo como indicativo e confirme na sua primeira integração.
-</Note>
-
 <Endpoint
   method="GET"
   path="/report/export-sync/{id}"
@@ -47,7 +43,9 @@ Bearer JWT no header `Authorization`.
 |---|---|---|---|---|
 | `id` | `path` | `string` | `sim` | ID do relatório a exportar. |
 | `format` | `query` | `string` | `não` | Formato do arquivo: `pdf`, `excel` ou `both`. Padrão: `pdf`. |
-| `type` | `query` | `string` | `não` | Tipo de export: `REPORT` (completo) ou `REPORT_MINIFIED` (resumido). Padrão: `REPORT`. |
+| `type` | `query` | `string` | **`sim`** | Use `REPORT`. Omitir o parâmetro retorna `400`. |
+| `exportFormat` | `query` | `string` | `não` | `pdf`, `excel` ou `both`. |
+| `sectionOrder` | `query` | `string[]` | `não` | Ordem das seções no arquivo gerado. |
 | `sectionOrder` | `query` | `string[]` | `não` | Lista ordenada de seções a serem incluídas no PDF. Cada seção é informada repetindo o parâmetro (ex.: `sectionOrder=LOCATION&sectionOrder=SUMMARY&sectionOrder=PEFIN`). Define **quais** seções aparecem e **em que ordem**. Se omitido, o relatório é exportado no layout **default** do sistema. Para a lista completa de seções suportadas, consulte o serviço `gyra-core`. |
 
 <Note>
@@ -97,12 +95,20 @@ O link retornado tem validade de 7 dias. Para geração em lote ou relatórios m
 
 <ResponseExample>
 
-```json 200 OK
+```json 202 Accepted
 {
-  "id": "69a207bcdd0197828df9155a",
-  "url": "https://toolbox.gyramais.com.br/export/report/69a207bcdd0197828df9155a.pdf",
-  "format": "pdf",
-  "expiresAt": "2026-03-06T21:08:11.938Z"
+  "id": "6612a7f32b77480800000000",
+  "createdAt": "2026-07-31T18:03:37.465Z",
+  "updatedAt": "2026-07-31T18:03:37.465Z",
+  "userId": "6612a7f3615ff3f200000000",
+  "organizationId": "6612a7f3fa9e086b00000000",
+  "typeId": "6612a7f371f08b3400000000",
+  "url": "https://exemplo.gyramais.com.br/relatorio.pdf?assinatura=...",
+  "payload": {
+    "reportId": "6612a7f3a19b467000000000",
+    "type": "PDFMAKE",
+    "generatedAt": "2026-07-31T18:03:37.464Z"
+  }
 }
 ```
 

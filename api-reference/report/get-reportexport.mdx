@@ -8,10 +8,6 @@ lang: tecnica
 openapi: get /report/export/{id}
 ---
 
-<Note>
-  **Exemplo de resposta ainda não verificado contra a API.** Os demais endpoints desta referência tiveram o exemplo capturado de uma chamada real; este não, porque a chamada dispara geração de arquivo. Trate o formato abaixo como indicativo e confirme na sua primeira integração.
-</Note>
-
 <Endpoint
   method="GET"
   path="/report/export/{id}"
@@ -46,7 +42,9 @@ Bearer JWT no header `Authorization`.
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
 | `id` | `path` | `string` | `sim` | ID do relatório a exportar. |
-| `type` | `query` | `string` | `não` | Tipo de export. Valores aceitos: `REPORT` (completo) ou `REPORT_MINIFIED` (resumido). Padrão: `REPORT`. |
+| `type` | `query` | `string` | **`sim`** | Use `REPORT`. Omitir o parâmetro retorna `400`. |
+| `exportFormat` | `query` | `string` | `não` | `pdf`, `excel` ou `both`. |
+| `sectionOrder` | `query` | `string[]` | `não` | Ordem das seções no arquivo gerado. |
 | `format` | `query` | `string` | `não` | Formato do arquivo: `pdf`, `excel` ou `both`. Padrão: `pdf`. |
 | `sectionOrder` | `query` | `string[]` | `não` | Lista ordenada de seções a serem incluídas no PDF. Cada seção é informada repetindo o parâmetro (ex.: `sectionOrder=LOCATION&sectionOrder=SUMMARY&sectionOrder=PEFIN`). Define **quais** seções aparecem e **em que ordem**. Se omitido, o relatório é exportado no layout **default** do sistema, com todas as seções padrão na ordem padrão. Para a lista completa de seções suportadas, consulte o serviço `gyra-core`. |
 
@@ -97,19 +95,17 @@ Configure um webhook do tipo `REPORT_EXPORTED` para receber o link do arquivo as
 
 <ResponseExample>
 
-```json 200 OK
+```json 202 Accepted
 {
-  "id": "69a207bcdd0197828df9155a",
-  "status": "PROCESSING",
-  "type": "REPORT",
-  "format": "pdf"
+  "status": "processing",
+  "reportId": "6612a7f3a19b467000000000"
 }
 ```
 
 ```json 400 Bad Request
 {
   "code": 400,
-  "message": "type must be one of the following values: REPORT, REPORT_MINIFIED"
+  "message": "type must be one of the following values: REPORT, REPORT_MINIFIED,type should not be empty"
 }
 ```
 
