@@ -74,12 +74,9 @@ Os dados do bureau aparecem em três lugares do relatório:
 
 ### Score sintético
 
-| Campo | Tipo | Descrição | Exemplo |
-| ----- | ---- | --------- | ------- |
-| `creditBureauScoreSummary.score` | number | Score de 0 a 1000 | `720` |
-| `creditBureauScoreSummary.class` | string | Faixa de risco: `A`, `B`, `C`, `D`, `E` | `"B"` |
-| `creditBureauScoreSummary.description` | string | Descrição textual do risco | `"Baixo risco"` |
-| `creditBureauScoreSummary.provider` | string | Bureau que gerou o score (quando aplicável) | `"SERASA"` |
+O score do bureau chega na seção `SCORE` do relatório, com a pontuação, a faixa de risco e a descrição textual.
+
+Para usar em política, a regra é **`SCORE`** (categoria *Bureau*), disponível para PF e PJ.
 
 ### Restritivos (Pefin e Refin)
 
@@ -142,7 +139,7 @@ Os dados aparecem na **aba Comportamental** e **diferem entre PF e PJ**:
 <CardGroup cols={2}>
   <Card title="Corte rápido por score" icon="chart-line">
     Negar abaixo de um score mínimo (ex: < 400) para filtrar alto risco antes de rodar outras fontes.
-    **Regra sugerida:** `creditBureauScoreSummary.score < 400` : `DENIED`.
+    **Regra sugerida:** `SCORE` menor que 400 : `DENIED`.
   </Card>
   <Card title="Alerta para score borderline" icon="triangle-exclamation">
     Marcar casos com score na zona cinzenta (ex: 500 a 650) para revisão manual.
@@ -159,7 +156,7 @@ Os dados aparecem na **aba Comportamental** e **diferem entre PF e PJ**:
 
 <Steps>
   <Step title="Escolher o campo">
-    `creditBureauScoreSummary.score` é o ponto de partida típico.
+    A regra `SCORE` é o ponto de partida típico.
   </Step>
   <Step title="Definir o operador">
     `LESS_THAN` para corte de aprovação, `GREATER_THAN` para corte de aprovação automática.
@@ -173,7 +170,7 @@ Exemplo:
 
 ```json
 {
-  "field": "creditBureauScoreSummary.score",
+  "rule": "SCORE",
   "operator": "LESS_THAN",
   "value": 400,
   "status": "DENIED"

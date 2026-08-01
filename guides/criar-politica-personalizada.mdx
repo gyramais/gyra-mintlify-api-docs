@@ -119,7 +119,7 @@ Se a condição for **verdadeira**, a regra aplica um resultado (`APPROVED`, `AL
 | `CAPITAL_STOCK_AMOUNT` | Capital social declarado em R$ | Exigir capital mínimo (ex: R$ 50.000) |
 | `CORPORATE_TAX_REGIME` | Regime tributário (Simples, Lucro Real, etc.) | Excluir MEIs ou selecionar apenas Lucro Real |
 | `TOTAL_PARTNERS` | Quantidade de sócios na empresa | Limitar empresas com muitos sócios |
-| `BUSINESS_PARTNERS_RESTRICTIVE` | Sócios com restrições | Negar se algum sócio está negativado |
+| `BUSINNES_PARTNERS_RESTRICTIVE` | Sócios com restrições | Negar se algum sócio está negativado |
 | `COMPLETE_QSA_CHANGE` | Mudança completa no quadro societário | Alertar quando todos os sócios foram trocados recentemente |
 
 ### Dados da Pessoa (CPF)
@@ -145,7 +145,7 @@ O score de 0 a 1000 representa o risco do cliente: **quanto maior, melhor**. Sco
 | Regra | O que verifica | Uso típico |
 |-------|---------------|-----------|
 | `PEFIN_AMOUNT` | Total de dívidas no PEFIN (R$) | Negar se há qualquer dívida (= 0) ou até um limite |
-| `PEFIN_CALCULATED_REVENUE` | Dívidas PEFIN como % do faturamento | Aceitar até 20% do faturamento em dívidas |
+| `PEFIN_NOT_CALCULATED_REVENUE` | Dívidas PEFIN como % do faturamento | Aceitar até 20% do faturamento em dívidas |
 | `REFIN_AMOUNT` | Total de refinanciamentos | Limitar volume de refinanciamentos |
 | `TOTAL_DEBT` | Dívida total consolidada (R$) | Teto absoluto de dívidas |
 | `BANKRUPT` | Falência ou recuperação judicial | Negar automaticamente em qualquer caso |
@@ -163,7 +163,7 @@ O score de 0 a 1000 representa o risco do cliente: **quanto maior, melhor**. Sco
 | Regra | O que verifica | Uso típico |
 |-------|---------------|-----------|
 | `SCR_TOTAL_LOSSES` | Perdas registradas no BC (R$) | Negar se há qualquer perda bancária |
-| `SCR_CALCULATED_REVENUE_EXPIRED` | Créditos vencidos como % do faturamento | Aceitar até 5% do faturamento vencido |
+| `SCR_NOT_CALCULATED_REVENUE_EXPIRED` | Créditos vencidos como % do faturamento | Aceitar até 5% do faturamento vencido |
 | `SCR_TOTAL_RISK` | Exposição total no sistema financeiro (R$) | Limite de endividamento bancário |
 
 ### Processos Judiciais
@@ -172,8 +172,8 @@ O score de 0 a 1000 representa o risco do cliente: **quanto maior, melhor**. Sco
 |-------|---------------|-----------|
 | `LAWSUITS_PASSIVE_COUNT` | Quantidade de processos como réu | Negar se há mais de X processos |
 | `LAWSUITS_PASSIVE_AMOUNT` | Valor total em processos passivos (R$) | Teto de R$ em processos |
-| `LAWSUITS_CALCULATED_REVENUE` | Processos como % do faturamento | Aceitar até 20% do faturamento em litígios |
-| `OWNER_LAWSUITS_HAS_CRIMINAL` | Sócios com processos criminais | Negar se qualquer sócio tem processo criminal |
+| `LAWSUITS_NOT_CALCULATED_REVENUE` | Processos como % do faturamento | Aceitar até 20% do faturamento em litígios |
+| `OWNER_LAWSUITS_HAS_BY_COURT_TYPE` | Sócios com processos criminais | Negar se qualquer sócio tem processo criminal |
 
 ---
 

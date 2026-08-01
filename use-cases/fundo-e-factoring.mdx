@@ -54,8 +54,8 @@ Configure regras que detectam os padrões de risco mais comuns nesse segmento:
 | Empresa nova com alta dívida | `COMPANY_OPENING_TIME` < 12 meses + `PEFIN_AMOUNT` > 0 | `DENIED` |
 | Troca total de sócios recente | `COMPLETE_QSA_CHANGE` IS_TRUE | `ALERT` |
 | Recuperação judicial ativa | `BANKRUPT` IS_TRUE | `DENIED` |
-| Alta concentração de processos trabalhistas | `LAWSUITS_COUNT_LABOR` > 10 | `ALERT` |
-| Endividamento bancário elevado | `SCR_CALCULATED_REVENUE_EXPIRED` > 15% | `ALERT` |
+| Alta concentração de processos trabalhistas | `LAWSUITS_COUNT_BY_COURT_TYPE` > 10 | `ALERT` |
+| Endividamento bancário elevado | `SCR_NOT_CALCULATED_REVENUE_EXPIRED` > 15% | `ALERT` |
 
 ### Sinais no sacado
 

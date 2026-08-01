@@ -12,88 +12,33 @@ A seção `PROTESTS` traz os protestos em cartório registrados para o documento
 
 Disponível no relatório **COMPLETO** e **COMPLETO+**.
 
-## Como os dados são coletados
+## Campos reais da seção
 
-Os dados de protestos podem vir de duas fontes, escolhidas na política de crédito:
-
-1. **Bureau selecionado na análise (padrão):** por padrão, os protestos são consultados no **mesmo bureau** escolhido para a análise (Serasa, Boa Vista, ProScore etc.). A abrangência depende do **acordo comercial de cada bureau com os cartórios**: nem todo bureau tem convênio de alcance nacional, então a cobertura pode ser **parcial** (regional ou limitada a um conjunto de cartórios).
-2. **Protestos Cenprot (fonte adicional, opcional):** para garantir **cobertura nacional**, basta selecionar **Protestos Cenprot** como fonte adicional de dados na edição da política de crédito. O Cenprot consolida os protestos de cartórios de todo o Brasil. Essa opção tem **custo adicional** por consulta.
-
-<Note>
-A estrutura de campos (`count`, `totalAmount`, `protests[]` etc.) é a mesma independentemente da fonte. O que muda é a **abrangência**: o bureau cobre o que o convênio dele alcança; o Cenprot garante alcance nacional. Quando o Cenprot está habilitado, são os dados dele que populam a seção e são avaliados pelas regras.
-</Note>
-
----
-
-## Campos do `details`
-
-### Totalizadores
+Os dados ficam em `sectionDetails[].values.{provedor}`. Estrutura confirmada para o provedor Serasa/Boa Vista:
 
 | Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `count` | number | Quantidade total de protestos |
-| `totalAmount` | number | Valor total protestado (R$) |
-| `lastOccurrenceDate` | string | Data do protesto mais recente |
-| `firstOccurrenceDate` | string | Data do protesto mais antigo |
-| `calculatedRevenuePercentage` | number | % do faturamento comprometido em protestos |
+|---|---|---|
+| `injunction` | boolean | Indica liminar sobre os protestos. |
+| `protestsQuantity` | number | Quantidade de protestos. |
+| `protestsTotalValue` | string | Valor total, **já formatado** (ex.: `"R$ 12.400,00"`). |
+| `lastProtestDate` | string | Data do protesto mais recente (crua). |
+| `formattedLastProtestDate` | string | A mesma data formatada para exibição. |
+| `protestsByRegion` | object[] | Agregado por UF: `{ name, value }`, onde `value` é a contagem. |
+| `protestsTable` | object[] | Lista dos protestos. Campos abaixo. |
 
-### Lista de protestos (`protests[]`)
+### `protestsTable[]`
 
 | Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `id` | string | ID do protesto |
-| `amount` | number | Valor do protesto (R$) |
-| `protestDate` | string | Data do protesto |
-| `creditor` | string | Credor |
-| `notary` | string | Cartório responsável |
-| `city` | string | Cidade |
-| `state` | string | Estado (UF) |
-| `instrumentType` | string | Tipo de instrumento: `DUPLICATA`, `CHEQUE`, `CCB`, `NOTA_PROMISSORIA`, etc. |
+|---|---|---|
+| `name` | string | Nome do titular do documento analisado. |
+| `registry` | string | Cartório: nome ou número do ofício. |
+| `date` | date | Data da ocorrência (crua, para cálculo). |
+| `formattedDate` | string | A mesma data formatada. |
+| `uf` | string | Cidade e UF concatenadas, no formato `"CIDADE/UF"`. |
+| `value` | number | Valor do protesto (cru). |
+| `formattedValue` | string | O mesmo valor formatado em reais. |
 
----
+<Warning>
+  O conjunto de campos **depende do provedor** que respondeu. Políticas que usam outra fonte de protestos devolvem outra chave em `values`, com campos próprios. Ver [Estrutura do Relatório](/data/estrutura-relatorio#onde-ficam-os-dados-sectiondetails-values).
+</Warning>
 
-## Exemplo de resposta
-
-```json
-{
-  "type": { "value": "PROTESTS" },
-  "details": {
-    "count": 2,
-    "totalAmount": 12500.00,
-    "lastOccurrenceDate": "2024-08-20",
-    "calculatedRevenuePercentage": 6.3,
-    "protests": [
-      {
-        "amount": 8000.00,
-        "protestDate": "2024-08-20",
-        "creditor": "Fornecedor XYZ",
-        "notary": "1º Ofício de Protestos",
-        "city": "São Paulo",
-        "state": "SP",
-        "instrumentType": "DUPLICATA"
-      },
-      {
-        "amount": 4500.00,
-        "protestDate": "2024-05-10",
-        "creditor": "Banco ABC",
-        "notary": "3º Tabelionato",
-        "city": "Campinas",
-        "state": "SP",
-        "instrumentType": "CCB"
-      }
-    ]
-  }
-}
-```
-
----
-
-## Regras sugeridas para protestos
-
-| Objetivo | Regra | Critério |
-|----------|-------|----------|
-| Sem protestos | `NOTARIES_COUNT` | = 0 → APPROVED |
-| Tolerância mínima | `NOTARIES_COUNT` | BETWEEN 1–2 → ALERT |
-| Negar acima de X | `NOTARIES_AMOUNT` | > R$ 50.000 → DENIED |
-| Protestos recentes | `NOTARIES_LAST_DAYS` | = 0 nos últimos 90 dias → APPROVED |
-| Proporcional | `NOTARIES_CALCULATED_REVENUE` | < 5% → APPROVED |

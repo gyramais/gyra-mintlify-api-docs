@@ -22,7 +22,7 @@ paths:
             type: string
       responses:
         200:
-          description: Objeto com accessToken (JWT) e expiresIn (tempo em segundos).
+          description: Objeto Session com accessToken (JWT), expiresAt (24h), userId e organizationId.
       tags:
         - auth
       summary: Gerar token de acesso JWT
@@ -135,9 +135,9 @@ paths:
           - Informacoes basicas (CNPJ/CPF, endereco, socios, QSA)
           - Processos judiciais
           - Protestos em cartorio
-          - Dividas Pefin/Refin
+          - Dividas Pefin (PEFIN) e Refin (REFIN)
           - Dados SCR / Open Finance (Banco Central)
-          - PEP e sancoes internacionais
+          - PEP (PEP) e sancoes (SANCTIONS)
           - Resultado da politica de credito
           
           Use get_report para obter a lista de secoes e seus IDs.
@@ -313,9 +313,11 @@ paths:
           - BASIC_INFORMATION: dados cadastrais, endereco, socios
           - PROCESSES: processos judiciais
           - PROTESTS: protestos em cartorio
-          - PEFIN_REFIN: dividas Pefin/Refin
+          - PEFIN: dividas Pefin
+          - REFIN: dividas Refin
           - SCR: dados do Sistema de Informacoes de Credito do Banco Central
-          - PEP_SANCTIONS: Pessoa Politicamente Exposta e sancoes
+          - PEP: Pessoa Politicamente Exposta
+          - SANCTIONS: sancoes e listas restritivas
           - CREDIT_POLICY: resultado da avaliacao da politica de credito
   /report/{id}/committee:
     post:

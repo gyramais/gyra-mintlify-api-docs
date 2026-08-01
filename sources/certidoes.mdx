@@ -36,7 +36,6 @@ Duas implicações imediatas:
 - **O que mostra:** débitos relativos a créditos tributários federais administrados pela RFB e a Dívida Ativa da União administrada pela PGFN.
 - **Status possíveis:** `NEGATIVA`, `POSITIVA COM EFEITOS DE NEGATIVA`, `POSITIVA`.
 - **Campos principais:** `baseStatus`, `pGFNClearance`, `protocolNumber`, `emissionDate`, `validityDate`, `rawResultFile` (comprovante).
-- **Enum interno:** `BDC_CERTIFICATE_PGFN`.
 
 #### Certificado de Regularidade do FGTS (CRF)
 
@@ -45,7 +44,6 @@ Duas implicações imediatas:
 - **O que mostra:** se a empresa está em dia com os depósitos do FGTS dos colaboradores.
 - **Status possíveis:** `REGULAR`, `IRREGULAR`.
 - **Campos principais:** `baseStatus`, `status`, `certificateNumber`, `validity`, endereço, `rawResultFile`.
-- **Enum interno:** `BDC_CERTIFICATE_FGTS`.
 
 ### Trabalhistas
 
@@ -54,7 +52,6 @@ Duas implicações imediatas:
 - **Emissor:** Tribunal Superior do Trabalho (TST).
 - **Documento:** CPF e CNPJ.
 - **O que mostra:** existência de débitos inadimplidos perante a Justiça do Trabalho.
-- **Enum interno:** `BDC_CERTIFICATE_DEBT_LABOR_ABSENCE`.
 
 #### Lista Suja do Trabalho Escravo (MTE)
 
@@ -62,7 +59,6 @@ Duas implicações imediatas:
 - **Documento:** CNPJ.
 - **O que mostra:** se o CNPJ consta na base de empregadores flagrados com trabalho análogo à escravidão.
 - **Observação:** a GYRA+ mantém uma réplica atualizada periodicamente da lista oficial, a checagem é instantânea sobre essa réplica (não há chamada externa por análise).
-- **Enum interno:** `MTE_CERTIFICATE`.
 
 ### Fiscais estaduais
 
@@ -71,14 +67,12 @@ Duas implicações imediatas:
 - **Emissor:** Secretaria da Fazenda do estado de registro do contribuinte.
 - **Documento:** CPF e CNPJ.
 - **O que mostra:** pendências fiscais no âmbito estadual (ICMS principalmente).
-- **Enum interno:** `BDC_CERTIFICATE_DEBT_ABSENCE_STATE`.
 
 #### Cadastro Centralizado de Contribuintes (CCC)
 
 - **Emissor:** SEFAZ estaduais via integração centralizada.
 - **Documento:** CNPJ.
 - **O que mostra:** inscrições estaduais do CNPJ e situação cadastral em cada estado onde opera.
-- **Enum interno:** `CNPJJA_CCC_CERTIFICATE`.
 
 ### Regimes especiais
 
@@ -87,14 +81,12 @@ Duas implicações imediatas:
 - **Emissor:** Receita Federal.
 - **Documento:** CNPJ.
 - **O que mostra:** se a empresa está enquadrada no Simples Nacional e/ou no SIMEI no momento da consulta.
-- **Enum interno:** `CNPJJA_SIMPLES_CERTIFICATE`.
 
 #### Certidão SUFRAMA
 
 - **Emissor:** Superintendência da Zona Franca de Manaus (SUFRAMA).
 - **Documento:** CNPJ.
 - **O que mostra:** inscrição e situação cadastral na SUFRAMA para empresas que atuam na área de incentivo fiscal.
-- **Enum interno:** `CNPJJA_SUFRAMA_CERTIFICATE`.
 
 ### Judiciais
 
@@ -103,21 +95,18 @@ Duas implicações imediatas:
 - **Emissor:** Conselho Nacional de Justiça (CNJ).
 - **Documento:** CPF.
 - **O que mostra:** existência de ações judiciais distribuídas em nome do CPF nos tribunais integrados ao banco do CNJ.
-- **Enum interno:** `BDC_CERTIFICATE_CNJ_NEGATIVE_PERSON`.
 
 #### Certidão Negativa Distribuidor (CNJ) — Pessoa Jurídica
 
 - **Emissor:** CNJ.
 - **Documento:** CNPJ.
 - **O que mostra:** o mesmo, para pessoa jurídica.
-- **Enum interno:** `BDC_CERTIFICATE_CNJ_NEGATIVE_COMPANY`.
 
 #### Certidão de Antecedentes Criminais
 
 - **Emissor:** Polícia Federal.
 - **Documento:** CPF.
 - **O que mostra:** existência de registros criminais no âmbito da PF.
-- **Enum interno:** `BDC_CERTIFICATE_CRIMINAL_RECORD`.
 
 ### Ambientais
 
@@ -126,14 +115,12 @@ Duas implicações imediatas:
 - **Emissor:** Instituto Brasileiro do Meio Ambiente e dos Recursos Naturais Renováveis (IBAMA).
 - **Documento:** CPF (PF) ou CNPJ (PJ).
 - **O que mostra:** existência de débitos ambientais junto ao IBAMA.
-- **Enum interno:** `BDC_CERTIFICATE_IBAMA_NEGATIVE_PERSON`, `BDC_CERTIFICATE_IBAMA_NEGATIVE_COMPANY`.
 
 #### Embargos IBAMA — PF e PJ
 
 - **Emissor:** IBAMA.
 - **Documento:** CPF (PF) ou CNPJ (PJ).
 - **O que mostra:** áreas ou atividades embargadas.
-- **Enum interno:** `BDC_CERTIFICATE_IBAMA_EMBARGOES_PERSON`, `BDC_CERTIFICATE_IBAMA_EMBARGOES_COMPANY`.
 
 ### Regulatórias
 
@@ -142,21 +129,18 @@ Duas implicações imediatas:
 - **Emissor:** Junta Comercial do estado de registro.
 - **Documento:** CNPJ.
 - **O que mostra:** situação registral na Junta, atos societários, arquivamentos.
-- **Enum interno:** `BDC_CERTIFICATE_BOARD`.
 
 #### SIPROQUIM (Polícia Federal)
 
 - **Emissor:** Polícia Federal — Sistema de Controle de Produtos Químicos.
 - **Documento:** CNPJ.
 - **O que mostra:** regularidade de empresas que manipulam produtos químicos controlados.
-- **Enum interno:** `BDC_CERTIFICATE_SIPROQUIM`.
 
 #### Anatel (outorgas e licenças)
 
 - **Emissor:** Agência Nacional de Telecomunicações (Anatel).
 - **Documento:** CNPJ.
 - **O que mostra:** outorgas e licenças ativas em nome da empresa para operação de serviços de telecomunicações.
-- **Enum interno:** `ANATEL_LICENSE_GRANT`.
 
 ## Natureza real-time e implicações de design
 
@@ -206,7 +190,7 @@ Certidões costumam bloquear por simples presença de débito ou situação irre
 
 ```json
 {
-  "field": "certificate.pgfn.baseStatus",
+  "rule": "CERTIFICATES_PGFN",
   "operator": "EQUALS",
   "value": "POSITIVA",
   "status": "DENIED"
@@ -215,7 +199,7 @@ Certidões costumam bloquear por simples presença de débito ou situação irre
 
 ```json
 {
-  "field": "certificate.fgts.status",
+  "rule": "CERTIFICATES_FGTS",
   "operator": "NOT_EQUALS",
   "value": "REGULAR",
   "status": "ALERT"
@@ -224,7 +208,7 @@ Certidões costumam bloquear por simples presença de débito ou situação irre
 
 ```json
 {
-  "field": "certificate.mte.situation",
+  "rule": "MTE_CERTIFICATE",
   "operator": "EQUALS",
   "value": "invalid",
   "status": "DENIED"

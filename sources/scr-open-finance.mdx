@@ -102,10 +102,10 @@ A lista completa de campos está em [Seção SCR](/data/secao-scr#resumo-consoli
 
 <Steps>
   <Step title="Escolher o campo">
-    `scr.totalRisk`, `scr.totalExpired`, `scr.totalLosses` ou campos mensais de `scr.months[]`.
+    Regras `SCR_TOTAL_RISK`, `SCR_TOTAL_LOSSES`, `SCR_DOMAIN_EXPIRED`, `SCR_AVAILABLE_CREDIT_LIMIT` e `SCR_NOT_CALCULATED_REVENUE_LATE`.
   </Step>
   <Step title="Definir o operador">
-    `GREATER_THAN` para cortes por valor absoluto, ou use as regras derivadas como `SCR_EXPIRED_RATIO` (razão sobre total).
+    `GREATER_THAN` para cortes por valor absoluto, ou use as regras derivadas como `SCR_DOMAIN_EXPIRED` (razão sobre total).
   </Step>
   <Step title="Definir threshold">
     Calibrar pelo porte típico dos seus clientes: o que é "muito" para microempresa não é para médio porte.
@@ -116,7 +116,7 @@ Exemplo:
 
 ```json
 {
-  "field": "scr.totalLosses",
+  "rule": "SCR_TOTAL_LOSSES",
   "operator": "GREATER_THAN",
   "value": 0,
   "status": "DENIED"

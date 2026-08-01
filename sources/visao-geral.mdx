@@ -59,7 +59,7 @@ flowchart TD
 ```
 
 1. **Coleta**: fontes são consultadas em **paralelo**. A latência total é dominada pela fonte mais lenta (tipicamente SCR via Open Finance).
-2. **Avaliação**: cada regra da política puxa o campo da fonte relevante (ex: `creditBureauScoreSummary.score` puxa da fonte bureau).
+2. **Avaliação**: cada regra da política puxa o campo da fonte relevante (ex: a regra `SCORE` puxa da fonte bureau).
 
 Fonte indisponível no momento da consulta não bloqueia o relatório: o campo fica nulo e as regras que dependem dele são tratadas conforme o comportamento configurado (normalmente `ALERT`).
 

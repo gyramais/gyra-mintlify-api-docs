@@ -171,6 +171,12 @@ Cada disparo é um `POST` com o envelope `{ organizationId, webhookType, data }`
   Os webhooks da organização são copiados para o relatório **no momento em que ele é criado**. Um webhook `COMMITTEE_FINISHED` registrado depois da criação não dispara para relatórios que já existiam. Registre o webhook antes de começar a criar relatórios que vão a comitê.
 </Warning>
 
+<Warning>
+  **A URL é validada com um POST de verdade antes de ser salva.** No cadastro, a GYRA+ envia para a sua URL um `POST` com o corpo `{"message": "Teste de webhook cadastrado com sucesso!"}` e, se você informou `apiKey`, o header `api-key`. Se essa chamada falhar por qualquer motivo (endpoint fora do ar, timeout, status de erro), o cadastro é recusado com `400 "URL de webhook inválida."`.
+
+  Ou seja: **o seu endpoint precisa estar no ar e respondendo `2xx` no momento do cadastro**, e precisa tolerar esse payload de teste, que não tem o envelope `{ organizationId, webhookType, data }` dos eventos reais.
+</Warning>
+
 <RequestExample>
 
 ```bash cURL
@@ -223,13 +229,13 @@ print(response.json())
 
 ```json 200 OK
 {
-  "id": "69a20f96f5b9cb55d8e8a6a1",
-  "organizationId": "65eb4989a4a87b9a94d1920f",
+  "id": "6612a7f32f90990d00000000",
+  "createdAt": "2026-07-31T18:02:54.965Z",
+  "updatedAt": "2026-07-31T18:02:54.965Z",
+  "organizationId": "6612a7f3fa9e086b00000000",
   "type": "REPORT_FINISHED",
-  "url": "https://webhook-test.com/a0a7aadb8de3e",
-  "apiKey": "xxx-xxx-xxx",
-  "createdAt": "2026-02-27T21:41:42.013Z",
-  "updatedAt": "2026-02-27T21:41:42.013Z"
+  "url": "https://seu-sistema.com/webhooks/gyra",
+  "apiKey": "teste-doc"
 }
 ```
 

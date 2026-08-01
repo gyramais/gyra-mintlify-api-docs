@@ -20,7 +20,7 @@ Troca o seu **e-mail e senha da plataforma** por um token de sessão (JWT válid
 
 - **Quando usa**: agente que alterna entre logins de organizações diferentes on demand.
 - **Parâmetros**: `clientId` (e-mail), `clientSecret` (senha).
-- **Retorno**: `{ accessToken, expiresIn }`.
+- **Retorno**: objeto de sessão com `accessToken`, `expiresAt` (24h), `userId` e `organizationId`. **Não existe campo `expiresIn`** (verificado contra a API).
 
 ## Relatórios
 
@@ -65,7 +65,7 @@ Retorna uma seção específica de um relatório.
 
 Atalho para pegar seção por tipo, sem precisar saber o `sectionId`.
 
-- **Parâmetros**: `reportId`, `sectionType` (ex: `"LAWSUITS"`, `"BUREAU"`, `"SCR"`).
+- **Parâmetros**: `reportId`, `sectionType` (ex: `"PROCESSES"`, `"SCORE"`, `"SCR"`). Lista completa em [Consultar Seção por Tipo](/api-reference/report/get-report-section).
 - **Prompt típico**: *"qual o score do bureau nesse relatório?"*.
 
 ### `analyze_report`

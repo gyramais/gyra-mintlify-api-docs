@@ -43,8 +43,8 @@ Regras que, se ativadas, negam automaticamente independente do score:
 |-------|----------|-----------|
 | `COMPANY_SITUATION` | ≠ "Ativa" | `DENIED` |
 | `BANKRUPT` | IS_TRUE | `DENIED` |
-| `BUSINESS_PARTNERS_RESTRICTIVE` | IS_TRUE | `DENIED` |
-| `OWNER_LAWSUITS_HAS_CRIMINAL` | IS_TRUE | `DENIED` |
+| `BUSINNES_PARTNERS_RESTRICTIVE` | IS_TRUE | `DENIED` |
+| `OWNER_LAWSUITS_HAS_BY_COURT_TYPE` | IS_TRUE | `DENIED` |
 
 ### Grupo: Cadastral
 
@@ -63,15 +63,15 @@ Regras que, se ativadas, negam automaticamente independente do score:
 | `SCORE` | BETWEEN 400–599 | `ALERT` (+150) |
 | `SCORE` | < 400 | `DENIED` |
 | `PEFIN_AMOUNT` | = 0 | `APPROVED` (+200) |
-| `PEFIN_CALCULATED_REVENUE` | < 10% | `APPROVED` (+100) |
-| `SCR_CALCULATED_REVENUE_EXPIRED` | < 5% | `APPROVED` (+100) |
+| `PEFIN_NOT_CALCULATED_REVENUE` | < 10% | `APPROVED` (+100) |
+| `SCR_NOT_CALCULATED_REVENUE_EXPIRED` | < 5% | `APPROVED` (+100) |
 
 ### Grupo: Processos
 
 | Regra | Critério | Resultado |
 |-------|----------|-----------|
 | `LAWSUITS_PASSIVE_COUNT` | = 0 | `APPROVED` (+100) |
-| `LAWSUITS_CALCULATED_REVENUE` | < 20% | `APPROVED` (+50) |
+| `LAWSUITS_NOT_CALCULATED_REVENUE` | < 20% | `APPROVED` (+50) |
 | `NOTARIES_COUNT` | = 0 | `APPROVED` (+100) |
 
 ### Risk Bands sugeridas

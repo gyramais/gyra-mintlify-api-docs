@@ -112,21 +112,22 @@ Toda política produção-ready tende a ter pelo menos três grupos:
 ```text
 Política "Crédito PJ Giro 2026"
 
-├─ Grupo 1: Bloqueios cadastrais
-│   ├─ situation IN ["BAIXADA", "SUSPENSA", "INAPTA"] → DENIED
-│   └─ foundationDate < "2024-01-01" → DENIED (menos de 1 ano)
+├─ Bloqueios cadastrais
+│   ├─ COMPANY_SITUATION contém BAIXADA, SUSPENSA, INAPTA → DENIED
+│   └─ COMPANY_OPENING_TIME menor que 12 meses          → DENIED
 
-├─ Grupo 2: Restritivos
-│   ├─ pefin.totalAmount > 50000 → DENIED
-│   ├─ pefin.count > 5 → DENIED
-│   └─ protests.count > 0 → ALERT
+├─ Restritivos
+│   ├─ PEFIN_AMOUNT maior que 50.000                    → DENIED
+│   ├─ NOTARIES_COUNT maior que 0                       → ALERT
+│   └─ BOUNDLESS_CHECK maior que 0                      → DENIED
 
-└─ Grupo 3: Capacidade e score
-    ├─ creditBureauScoreSummary.score < 400 → DENIED
-    ├─ creditBureauScoreSummary.score < 650 → ALERT
-    ├─ scr.totalLosses > 0 → DENIED
-    └─ scr.expiredRatio > 0.1 → ALERT
+└─ Capacidade e score
+    ├─ SCORE menor que 400                              → DENIED
+    ├─ SCORE menor que 650                              → ALERT
+    ├─ SCR_TOTAL_LOSSES maior que 0                     → DENIED
+    └─ SCR_DOMAIN_EXPIRED maior que 0                   → ALERT
 ```
+
 
 E, se cabe precificação:
 
