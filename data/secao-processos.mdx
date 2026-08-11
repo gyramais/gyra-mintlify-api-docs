@@ -27,8 +27,8 @@ A seção `PROCESSES` devolve `{ summary, lawsuits[] }`.
 | `number` | string | Número único do processo (CNJ). |
 | `title` | string | Assunto principal. |
 | `subjects` | string | Todos os assuntos, separados por vírgula. |
-| `type` | string | Natureza do processo. |
-| `owner` | string | A quem o processo pertence (documento analisado ou sócio). |
+| `type` | string | **Polo do documento analisado** naquele processo: `ATIVO`, `PASSIVO` ou `OUTROS`. Quando a fonte não classifica a polaridade da parte, o processo cai em `OUTROS`, nunca vazio. A natureza do processo é o `courtType`. |
+| `owner` | string | Natureza do documento a que o processo pertence: `BUSINESS` (CNPJ) ou `PERSON` (CPF). |
 | `status` | string | Situação do processo. |
 | `court` | string | Tribunal, em maiúsculas. |
 | `courtLevel` | string | Grau do processo. |
@@ -38,13 +38,34 @@ A seção `PROCESSES` devolve `{ summary, lawsuits[] }`.
 | `value` | number | Valor da causa. `0` quando não informado. |
 | `date` | date | Data de distribuição (crua). |
 | `formattedDate` | string | A mesma data formatada. |
-| `parties` | object[] | Partes do processo. |
+| `parties` | object[] | Partes do processo. Ver abaixo. |
 | `history` | object[] | Movimentações. |
 | `judgments` | object[] | Decisões. |
 
+### `lawsuits[].parties[]`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `document` | string | CPF/CNPJ da parte. Pode vir vazio: a fonte não informa o documento de todas as partes. |
+| `formattedDocument` | string | O mesmo documento formatado. |
+| `fullName` | string | Nome ou razão social da parte. |
+| `type` | string | Polo da parte: `ATIVO`, `PASSIVO`, `OUTROS`, ou `INDEFINIDO` quando a fonte não classificou. |
+| `typeDetailed` | string | Papel detalhado da parte, como vem do tribunal (ex.: `REQUERENTE`, `REU`, `CREDOR`, `TERCEIRO INTERESSADO`, `ADVOGADO`, `JUIZ`). |
+| `advogados` | object[] | Advogados do polo daquela parte, com `nome` e `oab`. Preenchido apenas para partes litigantes (polo ativo ou passivo). |
+
+<Warning>
+  **`type` é polo, não é grau de exposição.** Figurar em um processo não significa ser o devedor dele: o documento analisado pode aparecer como credor, terceiro interessado, ou nem ser parte (advogado, juiz, perito), e ainda assim cair em `ATIVO` ou `OUTROS`. Para separar passivo real de simples presença nos autos, leia o `typeDetailed` da parte que corresponde ao documento analisado, e não só o polo.
+</Warning>
+
+<Note>
+  Advogados também aparecem como **entradas próprias** em `parties[]`, com `typeDetailed` de advogado e, no BDC, com o documento do próprio advogado. Se você conta partes ou cruza documentos, filtre por `typeDetailed` antes: o mesmo documento pode aparecer duas vezes quando alguém atua em causa própria.
+</Note>
+
 ### `summary`
 
-Agregado por natureza (`CIVEL`, `CRIMINAL`, `FINANCEIRO`, `TRIBUTARIA`, `OUTROS`), cada uma com:
+O `summary` é indexado por chaves `{escopo}-{polo}`, onde escopo é `ALL`, `BUSINESS` ou `PERSON`, e polo é `ALL`, `ATIVO`, `PASSIVO` ou `OUTROS`. Ex.: `ALL-ALL` (tudo), `ALL-PASSIVO` (todos em que o documento é polo passivo), `PERSON-ATIVO`.
+
+Cada chave carrega os totais `totalQuantity` e `totalValue`, o agregado `region` por UF, e um bloco por natureza (`CIVEL`, `CRIMINAL`, `FINANCEIRO`, `TRIBUTARIA`, `OUTROS`) com:
 
 | Campo | Tipo | Descrição |
 |---|---|---|
@@ -54,5 +75,15 @@ Agregado por natureza (`CIVEL`, `CRIMINAL`, `FINANCEIRO`, `TRIBUTARIA`, `OUTROS`
 | `firstLawsuitDate` | date | Data do processo mais antigo. |
 | `lastLawsuitDate` | date | Data do processo mais recente. |
 
-Mais os totais gerais `totalQuantity` e `totalValue`, e `region` com o agregado por UF.
+<Tip>
+  A quebra por polo **fecha com o total**: `ALL-ATIVO`, `ALL-PASSIVO` e `ALL-OUTROS` somados dão o `totalQuantity` de `ALL-ALL`. Processos cuja polaridade a fonte não classificou entram em `ALL-OUTROS`. Antes desta correção eles apareciam apenas em `ALL-ALL`, e a quebra por polo vinha subcontada.
+</Tip>
+
+### Processos dos sócios
+
+Em relatório de CNPJ, os processos dos sócios vêm em `ownersLawsuits`, no mesmo formato de `lawsuits[]`, e **não** entram no `summary` dos processos da empresa.
+
+<Warning>
+  Nesse feed a fonte não informa o documento de nenhuma das partes, então o polo do sócio não é determinável: esses processos ficam com `type: "OUTROS"`. Trate-os como contexto sobre o sócio, não como passivo posicionado da empresa analisada.
+</Warning>
 

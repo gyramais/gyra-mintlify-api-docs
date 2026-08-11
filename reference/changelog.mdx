@@ -12,6 +12,25 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ---
 
+## Agosto 2026
+
+### Precisão dos pareceres de Processos, Vínculos e Localização
+
+**Melhorias**
+- **Papel processual no parecer de Processos:** o agente jurídico passa a receber o **papel** do avaliado em cada processo, derivado do papel detalhado da parte, e não apenas o polo. Processo em que o avaliado é **credor**, **terceiro interessado** ou **não parte** (advogado, juiz, perito, administrador judicial) deixa de ser lido como passivo. O parecer também distingue **recuperação judicial, extrajudicial e falência** de homônimos que não são insolvência (REFIS, recuperação fiscal, recuperação de crédito), e separa quem é devedor de quem é credor na insolvência. Ver [Pareceres GYRA+ IA](/concepts/pareceres-gyra-ia#o-que-o-agente-n%C3%A3o-confunde).
+- **Processos dos sócios não viram passivo da empresa:** os processos vindos de `ownersLawsuits` chegam ao parecer identificados como processos do sócio, com a ressalva de que naquele feed a fonte não informa o documento das partes e o polo do sócio não é determinável. Não entram na contagem de insolvência da empresa analisada. Ver [Seção Processos](/data/secao-processos#processos-dos-s%C3%B3cios).
+- **Natureza e vigência do vínculo no parecer de Vínculos:** cada relacionamento passa a chegar classificado (sócio, participação, administrador, empregador, parente, social) e com a vigência (encerrado, sem fim informado, sem data). O efeito prático é que a restrição de uma empresa **empregadora** aparece como contexto ocupacional, e não como exposição patrimonial da pessoa avaliada. Vínculo de gestão continua entrando na exposição.
+- **Fachada de PF com régua residencial:** em relatório de CPF a análise de fachada passa a avaliar o **imóvel residencial declarado**, com régua própria, em vez de aplicar critérios de ponto comercial (CNAE, letreiro, capital social) a uma residência. Antes o resultado era descartado e a fachada aparecia como indisponível na maioria dos relatórios de PF.
+- **Endereço não confirmado deixa de sumir do cálculo:** imagem inconclusiva (obra em andamento, foto obstruída ou antiga) e panorama distante passam a pontuar como **falta de confirmação**, distinta de **imóvel ausente ou degradado** (terreno baldio, imóvel demolido, ruína), que pontua baixo. O raio de busca do panorama do endereço subiu de 30 para 50 metros, o que recupera casos legítimos de avenida larga, rodovia e lote recuado. Quando não existe nenhuma imagem do endereço, a fachada continua indisponível, sem nota.
+
+**Correções**
+- **Objetivo da política chegando aos pareceres:** o objetivo configurado em *Decisão e alçada* passa a compor de fato o contexto enviado aos agentes de seção, ao parecer cadastral, à síntese de Localização e ao Comitê. Antes ele era derivado apenas dos campos de texto livre da política, quase sempre vazios, e a calibração por objetivo não disparava: um comitê de política de contratação podia falar em desembolso.
+- **Quebra por polo do `summary` de Processos:** processos cuja polaridade a fonte não classificou eram contados apenas no total (`ALL-ALL`) e sumiam da quebra por polo, que vinha subcontada. Agora caem em `OUTROS` e a quebra fecha com o total. Ver [Seção Processos](/data/secao-processos#summary).
+- **Vínculo empregatício classificado como participação societária:** em relatório de PF, qualquer empresa ligada à pessoa era marcada como participação societária, então o empregador aparecia como sociedade e a dívida da empresa como ponto de atenção da pessoa avaliada.
+- **Empresa listada como parte por filial:** o casamento da parte com o documento analisado passa a aceitar a **raiz do CNPJ**, então processo que lista a filial enquanto o relatório rodou na matriz (ou o inverso) é reconhecido como processo da mesma pessoa jurídica. O casamento exato continua tendo preferência, e CPF segue exigindo os 11 dígitos.
+
+---
+
 ## Julho 2026
 
 ### Pareceres GYRA+ IA, Comitê de Crédito e Arquivos do Relatório
