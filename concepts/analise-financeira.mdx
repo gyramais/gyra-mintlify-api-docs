@@ -110,6 +110,10 @@ Quando não temos o balanço, ou quando você tem uma versão mais recente que a
   Regra prática de seleção de páginas: marque a página do **Balanço Patrimonial** (Ativo e Passivo) e a da **DRE**. Se o documento traz vários exercícios em páginas diferentes, marque todas as que tiverem números. Quanto mais enxuto o envio, mais rápido e barato o processamento.
 </Tip>
 
+<Note>
+  **Pela API:** o mesmo envio existe como endpoint, para quem integra sem passar pela tela. Veja [Enviar Balanço e DRE](/api-reference/report/post-report-financial-tab).
+</Note>
+
 ## Mecânica de processamento
 
 O que acontece entre o upload e a aba pronta:
@@ -341,7 +345,7 @@ A análise é entregue em **formato padrão** e fica acessível por três caminh
     Exporte uma **planilha** com todo o trabalho: balanço e DRE padronizados, tabela de indicadores por período e a análise comparativa. Ideal para o comitê de crédito revisar fora da plataforma.
   </Card>
   <Card title="API" icon="code">
-    Consuma o relatório e a seção financeira via [API de relatório](/api-reference/report-v2/get-v2report), com os mesmos números calculados na extração.
+    [Envie os PDFs](/api-reference/report/post-report-financial-tab) e consuma o relatório e a seção financeira via [API de relatório](/api-reference/report-v2/get-v2report), com os mesmos números calculados na extração.
   </Card>
   <Card title="MCP" icon="plug">
     Acesse os dados e indicadores por linguagem natural via [MCP Server](/mcp/o-que-e), para análises e automações em ferramentas de IA.

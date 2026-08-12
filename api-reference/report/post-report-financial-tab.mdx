@@ -1,0 +1,207 @@
+---
+title: Enviar Balanço e DRE
+description: Envia os PDFs do balanço patrimonial e da DRE de um relatório de CNPJ para extração e estruturação automática.
+surface: api
+domain: relatorio
+audience: integrador
+lang: tecnica
+openapi: post /report/{id}/financial-tab
+---
+
+### Quando usar
+
+Use este endpoint quando você **já tem o balanço e a DRE em PDF** e quer que a GYRA+ transforme as demonstrações em dados estruturados: balanço e DRE padronizados, indicadores calculados e parecer de IA, tudo dentro de um relatório de **CNPJ** já existente.
+
+É o mesmo processamento que roda quando um analista envia o balanço pela tela do Toolbox. Se a GYRA+ já encontrou demonstrações públicas da empresa, o envio **soma** ao que existe, não substitui. Veja o funcionamento completo em [Análise Financeira](/concepts/analise-financeira).
+
+<Info>
+A chamada é **assíncrona**. O `200` significa "arquivos aceitos e enfileirados", não "dados prontos". Os dados estruturados saem depois, em `GET /report/{id}/section/BALANCE_SHEET` (e nas demais seções financeiras).
+</Info>
+
+### Pré-requisitos
+
+1. Um relatório de **CNPJ** já criado (`POST /v2/report`), cujo `id` vai na URL.
+2. Token JWT válido (`POST /auth/authenticate`).
+3. Os PDFs, de preferência contendo **apenas as páginas** do Balanço Patrimonial e da DRE.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID do relatório que vai receber as demonstrações. Precisa ser um relatório da sua organização. |
+| `files` | `form-data` | `file[]` | `sim` | PDFs do balanço e/ou da DRE. Repita o campo `files` para enviar mais de um arquivo. |
+
+O corpo é `multipart/form-data`. Não envie JSON.
+
+### Limites e validações
+
+| Regra | Valor | O que acontece se violar |
+|---|---|---|
+| Formato | Somente PDF | `400 Only valid PDF files are allowed.` O arquivo é lido nos primeiros bytes (`%PDF-`), renomear a extensão não passa. |
+| Tamanho por arquivo | 50 MB | `413 File too large` |
+| Arquivos por chamada | 10 | `400 Unexpected field` (o lote inteiro é recusado, nada é processado). |
+| Nenhum arquivo | n/a | `400 No file uploaded.` |
+| Relatório de outra organização | n/a | `404` (não distinguimos de relatório inexistente, para não vazar a existência). |
+
+<Tip>
+Enviar o PDF inteiro (capa, notas explicativas, parecer do auditor) funciona, mas custa mais e piora a precisão. Recorte o PDF nas páginas com números antes de enviar: Balanço Patrimonial (Ativo e Passivo) e DRE. Se cada exercício veio em um arquivo, mande todos na mesma chamada: eles são consolidados na mesma análise.
+</Tip>
+
+### O que acontece depois
+
+1. A chamada já cria as seções financeiras do relatório, vazias. É por isso que consultá-las logo depois do upload responde `200` com conteúdo vazio, e não `404`.
+2. Cada arquivo vira um job de extração paralelo: leitura das tabelas (inclusive em documentos escaneados), padronização das linhas para o plano de contas único da GYRA+, validação da consistência contábil e cálculo dos indicadores.
+3. Ao final, as seções são preenchidas e a organização recebe um **e-mail** com a planilha consolidada.
+
+Para consumir o resultado:
+
+| O que você quer | Chamada |
+|---|---|
+| Balanço patrimonial estruturado | `GET /report/{id}/section/BALANCE_SHEET` |
+| DRE estruturada | `GET /report/{id}/section/DRE` |
+| Indicadores calculados | `GET /report/{id}/section/FINANCIAL_INDICATORS` |
+| Parecer de IA do balanço | `GET /report/{id}/insights?section=BALANCE_SHEET` |
+| Relatório completo | `GET /v2/report/{id}` |
+
+Além dessas, o envio cria `DETAILED_COSTS`, `BALANCE_SHEET_CHART`, `COST_PROFIT_FORECAST`, `SUPPLIERS_CLIENTS`, `FINANCIAL_INSIGHTS` e `FINANCIAL_RECOMMENDATIONS`. A lista completa de tipos está em [Consultar Seção por Tipo](/api-reference/report/get-report-section).
+
+### Como saber que terminou
+
+Não existe endpoint de status do lote. Duas formas de acompanhar:
+
+<AccordionGroup>
+  <Accordion title="Polling da seção (mais simples)">
+    Consulte `GET /report/{id}/section/BALANCE_SHEET` a cada alguns minutos. Como as seções passam a existir já no `200` do upload, a leitura é sempre `200`: **conteúdo vazio** significa que a extração ainda está rodando, **conteúdo preenchido** significa que terminou.
+
+    Um `404` aqui não quer dizer "ainda processando", e sim que aquele relatório nunca recebeu balanço, nem por envio nem por descoberta automática.
+  </Accordion>
+  <Accordion title="Webhook (evita o polling)">
+    Relatórios criados por `POST /v2/report` notificam por [webhook](/guides/configurar-webhook). Com um webhook do tipo `REPORT` registrado, sua URL recebe um POST a cada atualização de seção do relatório, incluindo as financeiras.
+
+    O payload traz o conteúdo da seção em `data.content` e o relatório em `data.content.report.id`, mas **não identifica qual seção** foi atualizada. Ou seja: use o webhook como gatilho para reconsultar a seção que te interessa, não como um evento "balanço pronto".
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+Se a extração falhar ou ficar abaixo do nível de confiança exigido, as seções não são preenchidas com número errado: o erro fica registrado no campo `errors` da seção e o documento original continua disponível para conferência manual.
+</Note>
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://gyra-core.gyramais.com.br/report/69a207bcdd0197828df9155a/financial-tab' \
+--header 'Authorization: Bearer abc123' \
+--form 'files=@"/caminho/balanco-2025.pdf"' \
+--form 'files=@"/caminho/dre-2025.pdf"'
+```
+
+```javascript JavaScript
+import { readFile } from "node:fs/promises";
+
+const form = new FormData();
+const balanco = await readFile("/caminho/balanco-2025.pdf");
+form.append("files", new Blob([balanco], { type: "application/pdf" }), "balanco-2025.pdf");
+
+fetch("https://gyra-core.gyramais.com.br/report/69a207bcdd0197828df9155a/financial-tab", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer abc123",
+  },
+  body: form,
+})
+  .then(res => res.json())
+  .then(console.log)
+```
+
+```python Python
+import requests
+
+url = "https://gyra-core.gyramais.com.br/report/69a207bcdd0197828df9155a/financial-tab"
+headers = {"Authorization": "Bearer abc123"}
+files = [
+    ("files", ("balanco-2025.pdf", open("/caminho/balanco-2025.pdf", "rb"), "application/pdf")),
+    ("files", ("dre-2025.pdf", open("/caminho/dre-2025.pdf", "rb"), "application/pdf")),
+]
+response = requests.post(url, headers=headers, files=files)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 OK
+{
+  "id": "69a207bcdd0197828df9155a",
+  "document": "43591367000130",
+  "name": "EMPRESA EXEMPLO LTDA",
+  "organizationId": "6612a7f3fa9e086b00000000",
+  "policyId": "6612a7f3625ea4ab00000000",
+  "integrationTypes": [
+    "GYRA_BALANCE_SHEET"
+  ],
+  "status": {
+    "id": "6612a7f3410dcd8100000000",
+    "title": "Não iniciado",
+    "value": "PENDING",
+    "color": "#FBBB3B"
+  },
+  "sections": [
+    {
+      "id": "6612a7f3a19b467000000000",
+      "type": {
+        "id": "6612a7f3625ea4ab00000001",
+        "title": "Balanço patrimonial",
+        "value": "BALANCE_SHEET"
+      },
+      "selectedIntegrations": [
+        "GYRA_BALANCE_SHEET"
+      ],
+      "errors": []
+    }
+  ],
+  "createdAt": "2026-02-27T21:08:11.938Z",
+  "updatedAt": "2026-02-27T21:12:04.221Z"
+}
+```
+
+```json 400 Bad Request
+{
+  "code": 400,
+  "message": "No file uploaded."
+}
+```
+
+```json 400 Bad Request (arquivo não é PDF)
+{
+  "code": 400,
+  "message": "Only valid PDF files are allowed."
+}
+```
+
+```json 413 Payload Too Large
+{
+  "code": 413,
+  "message": "File too large"
+}
+```
+
+```json 401 Unauthorized
+{
+  "code": 401,
+  "message": "Token de acesso inválido."
+}
+```
+
+```json 404 Not Found
+{
+  "code": 404,
+  "message": "Relatório não encontrado"
+}
+```
+
+</ResponseExample>

@@ -319,6 +319,62 @@ paths:
           - PEP: Pessoa Politicamente Exposta
           - SANCTIONS: sancoes e listas restritivas
           - CREDIT_POLICY: resultado da avaliacao da politica de credito
+          - BALANCE_SHEET: balanco patrimonial estruturado
+          - DRE: demonstracao do resultado do exercicio
+          - FINANCIAL_INDICATORS: indicadores financeiros calculados
+  /report/{id}/financial-tab:
+    post:
+      operationId: ReportController_financialSection
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio (CNPJ) que vai receber as demonstracoes.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: |
+                      PDFs do balanco patrimonial e/ou da DRE. Repita o campo `files`
+                      para enviar mais de um arquivo. Ate 10 arquivos por chamada,
+                      50MB cada, somente PDF.
+              required:
+                - files
+      responses:
+        200:
+          description: Relatorio atualizado, com as secoes financeiras marcadas como em processamento.
+        400:
+          description: Nenhum arquivo enviado, arquivo que nao e um PDF valido ou mais de 10 arquivos.
+        404:
+          description: Relatorio nao encontrado ou de outra organizacao.
+        413:
+          description: Arquivo maior que 50MB.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Enviar balanco e DRE
+      description: |
+          Envia um ou mais PDFs de balanco patrimonial e DRE para um relatorio de CNPJ
+          ja existente. A extracao transforma as demonstracoes em dados estruturados
+          (balanco, DRE e indicadores) e as disponibiliza como secoes do relatorio.
+
+          A chamada e ASSINCRONA: responde 200 assim que os arquivos sao aceitos e
+          enfileirados, sem os dados estruturados. O resultado sai depois em
+          GET /report/{id}/section/BALANCE_SHEET (idem DRE e FINANCIAL_INDICATORS).
+
+          Envie apenas as paginas do balanco e da DRE: quanto mais enxuto o PDF,
+          mais rapido e barato o processamento.
   /report/{id}/committee:
     post:
       operationId: ReportController_conveneCommittee
