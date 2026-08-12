@@ -67,7 +67,21 @@ Para consumir o resultado:
 | Parecer de IA do balanço | `GET /report/{id}/insights?section=BALANCE_SHEET` |
 | Relatório completo | `GET /v2/report/{id}` |
 
-Além dessas, o envio cria `DETAILED_COSTS`, `BALANCE_SHEET_CHART`, `COST_PROFIT_FORECAST`, `SUPPLIERS_CLIENTS`, `FINANCIAL_INSIGHTS` e `FINANCIAL_RECOMMENDATIONS`. A lista completa de tipos está em [Consultar Seção por Tipo](/api-reference/report/get-report-section).
+O envio cria mais seis seções, derivadas das mesmas demonstrações:
+
+| `sectionType` | O que traz |
+|---|---|
+| `FINANCIAL_INSIGHTS` | Resumo executivo, pontos de atenção, score e nível de risco da leitura financeira |
+| `FINANCIAL_RECOMMENDATIONS` | Recomendação de crédito por modalidade (com e sem garantia, recebíveis, compra parcelada), com status e limite sugerido |
+| `DETAILED_COSTS` | Agregados de caixa, receitas e despesas financeiras |
+| `BALANCE_SHEET_CHART` e `COST_PROFIT_FORECAST` | Séries já formatadas para gráfico (ativo x passivo, custo x lucro). São derivadas: os mesmos números estão em `BALANCE_SHEET` e `DRE` |
+| `SUPPLIERS_CLIENTS` | Fornecedores e clientes citados nas demonstrações. Costuma vir vazia: só é preenchida quando o documento traz essa informação |
+
+Todas as seções são organizadas por período (`{"202401_202412": {...}}`), o que permite comparar exercícios. A lista completa de tipos está em [Consultar Seção por Tipo](/api-reference/report/get-report-section).
+
+<Tip>
+Para a maioria das integrações, `BALANCE_SHEET`, `DRE` e `FINANCIAL_INDICATORS` bastam. As seções de gráfico existem para a tela do Toolbox e não acrescentam informação.
+</Tip>
 
 ### Como saber que terminou
 
