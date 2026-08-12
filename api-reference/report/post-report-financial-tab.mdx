@@ -53,11 +53,11 @@ Enviar o PDF inteiro (capa, notas explicativas, parecer do auditor) funciona, ma
 
 ### O que acontece depois
 
-1. Os arquivos são armazenados e cada um vira um job de extração paralelo.
-2. A extração lê as tabelas (inclusive em documentos escaneados), padroniza as linhas para o plano de contas único da GYRA+, valida a consistência contábil e calcula os indicadores.
-3. Ao final, o relatório recebe as seções financeiras e a organização recebe um **e-mail** com a planilha consolidada.
+1. A chamada já cria as seções financeiras do relatório, vazias. É por isso que consultá-las logo depois do upload responde `200` com conteúdo vazio, e não `404`.
+2. Cada arquivo vira um job de extração paralelo: leitura das tabelas (inclusive em documentos escaneados), padronização das linhas para o plano de contas único da GYRA+, validação da consistência contábil e cálculo dos indicadores.
+3. Ao final, as seções são preenchidas e a organização recebe um **e-mail** com a planilha consolidada.
 
-Para acompanhar e consumir o resultado:
+Para consumir o resultado:
 
 | O que você quer | Chamada |
 |---|---|
@@ -67,8 +67,27 @@ Para acompanhar e consumir o resultado:
 | Parecer de IA do balanço | `GET /report/{id}/insights?section=BALANCE_SHEET` |
 | Relatório completo | `GET /v2/report/{id}` |
 
+Além dessas, o envio cria `DETAILED_COSTS`, `BALANCE_SHEET_CHART`, `COST_PROFIT_FORECAST`, `SUPPLIERS_CLIENTS`, `FINANCIAL_INSIGHTS` e `FINANCIAL_RECOMMENDATIONS`. A lista completa de tipos está em [Consultar Seção por Tipo](/api-reference/report/get-report-section).
+
+### Como saber que terminou
+
+Não existe endpoint de status do lote. Duas formas de acompanhar:
+
+<AccordionGroup>
+  <Accordion title="Polling da seção (mais simples)">
+    Consulte `GET /report/{id}/section/BALANCE_SHEET` a cada alguns minutos. Como as seções passam a existir já no `200` do upload, a leitura é sempre `200`: **conteúdo vazio** significa que a extração ainda está rodando, **conteúdo preenchido** significa que terminou.
+
+    Um `404` aqui não quer dizer "ainda processando", e sim que aquele relatório nunca recebeu balanço, nem por envio nem por descoberta automática.
+  </Accordion>
+  <Accordion title="Webhook (evita o polling)">
+    Relatórios criados por `POST /v2/report` notificam por [webhook](/guides/configurar-webhook). Com um webhook do tipo `REPORT` registrado, sua URL recebe um POST a cada atualização de seção do relatório, incluindo as financeiras.
+
+    O payload traz o conteúdo da seção em `data.content` e o relatório em `data.content.report.id`, mas **não identifica qual seção** foi atualizada. Ou seja: use o webhook como gatilho para reconsultar a seção que te interessa, não como um evento "balanço pronto".
+  </Accordion>
+</AccordionGroup>
+
 <Note>
-Enquanto a extração não termina, as seções financeiras respondem `200` com conteúdo vazio ou parcial. Não existe endpoint de status do lote: consulte a seção em intervalos de alguns minutos. A lista completa de tipos está em [Consultar Seção por Tipo](/api-reference/report/get-report-section).
+Se a extração falhar ou ficar abaixo do nível de confiança exigido, as seções não são preenchidas com número errado: o erro fica registrado no campo `errors` da seção e o documento original continua disponível para conferência manual.
 </Note>
 
 <RequestExample>
