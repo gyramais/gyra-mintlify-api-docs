@@ -42,8 +42,23 @@ Duas implicações imediatas:
 - **Emissor:** Caixa Econômica Federal (gestora do FGTS).
 - **Documento:** CNPJ.
 - **O que mostra:** se a empresa está em dia com os depósitos do FGTS dos colaboradores.
-- **Status possíveis:** `REGULAR`, `IRREGULAR`.
-- **Campos principais:** `baseStatus`, `status`, `certificateNumber`, `validity`, endereço, `rawResultFile`.
+- **Situação (`situation`):** `valid` (regular), `invalid` (irregular ou falha na emissão), `positive-negative-effects` (positiva com efeitos de negativa).
+- **Campos principais:** `situation`, `description`, `code` (número do certificado), `emissionDate` e `validityDate` (dd/mm/aaaa), `document` e `formattedDocument`, `url` (comprovante) e `source`.
+- **Enum interno:** `GYRA_FGTS`.
+
+<Note>
+  **FGTS unificado.** A emissão do FGTS passou a ser entregue por um tipo único, `GYRA_FGTS`, que escolhe a melhor fonte disponível no momento da consulta e devolve sempre o mesmo formato normalizado. Os tipos antigos (`BDC_CERTIFICATE_FGTS`, `DIRECT_DATA_FGTS`, `DIRECT_DATA_FGTS_PROOF`) continuam sendo lidos em relatórios já existentes, mas não são mais usados em novas análises. Se a sua integração dependia do nome do tipo, passe a tratar `GYRA_FGTS`.
+</Note>
+
+O campo `source` indica a **procedência do resultado**:
+
+| Valor | Significado |
+| ----- | ----------- |
+| `LIVE` | Certidão emitida ao vivo na fonte no momento da análise. |
+| `HISTORY` | Resultado reaproveitado do histórico recente, por contingência (fonte indisponível ou lenta no momento da consulta). |
+| `-` | Procedência não informada (relatórios antigos, anteriores ao campo, ou falha na emissão). |
+
+Use `source` para auditoria: um FGTS com `HISTORY` reflete a última emissão conhecida, não o estado do exato instante da análise.
 
 ### Trabalhistas
 
@@ -200,11 +215,19 @@ Certidões costumam bloquear por simples presença de débito ou situação irre
 ```json
 {
   "rule": "CERTIFICATES_FGTS",
-  "operator": "NOT_EQUALS",
-  "value": "REGULAR",
+  "operator": "CONTAINS",
+  "params": { "Value": "false" },
   "status": "ALERT"
 }
 ```
+
+<Note>
+  A regra do FGTS avalia **regularidade como booleano**, derivado do `situation` do formato normalizado: regular é `situation: "valid"`. Por isso ela usa `CONTAINS` com o parâmetro `Value`, e não uma comparação com o texto da situação.
+
+  - `Value: "true"` casa quando a certidão está regular; `Value: "false"` casa quando não está.
+  - Certidão irregular resulta em **negativa** quando a regra esperava regular.
+  - `positive-negative-effects` (positiva com efeitos de negativa) resulta em **alerta**, independente do parâmetro.
+</Note>
 
 ```json
 {

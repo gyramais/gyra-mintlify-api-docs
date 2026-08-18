@@ -1,0 +1,79 @@
+---
+title: Processar Balanços Encontrados
+description: Dispara a extração dos demonstrativos que a GYRA+ encontrou sozinha para o CNPJ do relatório, com escolha opcional de exercícios.
+surface: api
+domain: relatorio
+audience: integrador
+lang: tecnica
+openapi: post /report/{id}/balance-sheet/process
+---
+
+### Quando usar
+
+Use este endpoint quando a GYRA+ **já encontrou** demonstrações da empresa na base própria e você quer transformá-las em dados estruturados. É o caminho oposto ao de [Enviar Balanço e DRE](/api-reference/report/post-report-financial-tab): lá você manda o PDF, aqui o documento já está na base e você só manda processar.
+
+O funcionamento completo da busca automática está em [Análise Financeira](/concepts/analise-financeira).
+
+<Info>
+A chamada é **assíncrona**. O `200` significa "processamento despachado", não "dados prontos". Os dados estruturados saem depois, em `GET /report/{id}/section/BALANCE_SHEET` e nas demais seções financeiras.
+</Info>
+
+### Pré-requisitos
+
+1. Um relatório de **CNPJ** já criado (`POST /v2/report`), cujo `id` vai na URL.
+2. O relatório precisa ser **Completo** ou **Completo+**: são os tipos que rodam a busca automática de balanços. Sem isso não existe nada encontrado para processar e a resposta é `404`.
+3. Token JWT válido (`POST /auth/authenticate`).
+
+<Note>
+  A busca roda na **criação** do relatório. Relatórios criados antes de a busca automática existir na sua organização não têm resultado guardado e respondem `404` aqui.
+</Note>
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID do relatório. Precisa ser um relatório da sua organização. |
+| `selection` | `body` | `string[]` | `não` | `externalId` dos documentos que você quer processar. Máximo de 40 itens. |
+
+O corpo inteiro é opcional. **Sem `selection`, todos os exercícios processáveis entram**, que é o mesmo comportamento do processamento automático da política.
+
+Os valores de `selection` vêm do campo `externalId` de [Listar Balanços Encontrados](/api-reference/report/get-report-balance-sheet-documents). Só faz sentido selecionar documentos com `processable: true`.
+
+```bash
+curl -X POST https://gyra-core.gyramais.com.br/report/{id}/balance-sheet/process \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{ "selection": ["cdb::283500", "cdb::283501"] }'
+```
+
+Para processar tudo:
+
+```bash
+curl -X POST https://gyra-core.gyramais.com.br/report/{id}/balance-sheet/process \
+  -H "Authorization: Bearer {token}"
+```
+
+### Resposta
+
+```json
+{ "dispatched": true }
+```
+
+### Erros
+
+| Código | Quando | Repetir |
+|---|---|---|
+| `404` | Relatório não encontrado, de outra organização, ou **nenhum demonstrativo encontrado** para o CNPJ. | Não |
+| `409` | Os demonstrativos deste relatório **já estão em processamento**. | Não, aguarde o resultado |
+
+<Tip>
+  O `409` é proteção contra disparo duplicado, não um erro do seu lado. Trate como sucesso na sua lógica de retry: significa que o processamento que você queria já está rodando.
+</Tip>
+
+### O que acontece depois
+
+1. As seções financeiras do relatório são criadas, vazias. Consultá-las logo depois responde `200` com conteúdo vazio, e não `404`.
+2. Cada documento selecionado vira uma extração: leitura das tabelas, padronização para o plano de contas único da GYRA+ e cálculo dos indicadores.
+3. As seções são preenchidas conforme as extrações terminam. Acompanhe por webhook `REPORT` ou por polling em `GET /report/{id}/section/BALANCE_SHEET`.
+
+Se a extração não conseguir tirar números dos documentos, eles continuam disponíveis para leitura manual em [Listar Balanços Encontrados](/api-reference/report/get-report-balance-sheet-documents).

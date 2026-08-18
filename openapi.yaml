@@ -375,6 +375,285 @@ paths:
 
           Envie apenas as paginas do balanco e da DRE: quanto mais enxuto o PDF,
           mais rapido e barato o processamento.
+  /report/{id}/balance-sheet/process:
+    post:
+      operationId: ReportController_processBalanceSheet
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio (CNPJ) cujos demonstrativos encontrados serao processados.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                selection:
+                  type: array
+                  maxItems: 40
+                  items:
+                    type: string
+                  description: |
+                      externalId dos documentos escolhidos, como devolvidos por
+                      GET /report/{id}/balance-sheet/documents (ex: `cdb::283500`).
+                      Omita o corpo (ou o campo) para processar todos os exercicios
+                      processaveis. Maximo de 40 itens por chamada.
+      responses:
+        200:
+          description: Processamento despachado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dispatched:
+                    type: boolean
+                    example: true
+        404:
+          description: |
+              Relatorio nao encontrado, de outra organizacao, ou nenhum demonstrativo
+              encontrado para o CNPJ (o relatorio nao tem discovery disponivel).
+        409:
+          description: Os demonstrativos deste relatorio ja estao em processamento.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Processar balancos encontrados
+      description: |
+          Dispara o processamento dos demonstrativos que a GYRA+ encontrou sozinha na
+          base propria para o CNPJ do relatorio. Disponivel apenas nos relatorios
+          Completo e Completo+ de CNPJ, que sao os que rodam a busca automatica.
+
+          A chamada e ASSINCRONA: responde 200 assim que o processamento e despachado,
+          sem os dados estruturados. O resultado sai depois em
+          GET /report/{id}/section/BALANCE_SHEET (idem DRE e indicadores).
+
+          A chamada e idempotente enquanto o processamento estiver em andamento:
+          um novo disparo responde 409 em vez de reprocessar.
+  /report/{id}/balance-sheet/documents:
+    get:
+      operationId: ReportController_listBalanceSheetDocuments
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio (CNPJ).
+      responses:
+        200:
+          description: Documentos de balanco encontrados para o CNPJ.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  document:
+                    type: string
+                    description: CNPJ consultado, somente digitos.
+                  totalDocuments:
+                    type: integer
+                  documents:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        externalId:
+                          type: string
+                          nullable: true
+                          description: Id estavel do documento no catalogo. E a chave usada em `selection`.
+                        source:
+                          type: string
+                          description: Fonte de onde o documento veio.
+                        companyName:
+                          type: string
+                          nullable: true
+                        title:
+                          type: string
+                          nullable: true
+                        statementSigla:
+                          type: string
+                          nullable: true
+                          description: Peca do exercicio (BP, DRE, ...).
+                        processable:
+                          type: boolean
+                          description: |
+                              Indica se a extracao consegue tirar numero deste documento.
+                              Documentos com false aparecem para consulta manual, mas nao
+                              entram no processamento.
+                        publicationDate:
+                          type: string
+                          nullable: true
+                          description: Data de publicacao (YYYY-MM-DD).
+                        period:
+                          type: object
+                          properties:
+                            exercicio:
+                              type: integer
+                              nullable: true
+                            start:
+                              type: string
+                              nullable: true
+                            end:
+                              type: string
+                              nullable: true
+                        file:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              nullable: true
+                              enum: [pdf, html, text, xbrl]
+                            downloadUrl:
+                              type: string
+                              nullable: true
+                              description: URL assinada, valida por cerca de 1 hora. Null em documentos de texto.
+                            sizeBytes:
+                              type: integer
+                              nullable: true
+        404:
+          description: Relatorio nao encontrado ou de outra organizacao.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Listar balancos encontrados
+      description: |
+          Lista os documentos de balanco que a GYRA+ encontrou na base propria para o
+          CNPJ do relatorio, com link de download assinado.
+
+          Serve a dois usos: escolher quais exercicios processar (o campo `externalId`
+          alimenta o `selection` de POST /report/{id}/balance-sheet/process) e ler o
+          documento original quando a extracao automatica nao produziu numeros.
+  /report/{id}/attachments:
+    post:
+      operationId: ReportController_uploadAttachment
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio que vai receber o anexo.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Arquivo do anexo. Qualquer formato, ate 16MB.
+                tag:
+                  type: string
+                  description: Tipo de documento de credito do anexo.
+                  enum:
+                    - IDENTITY_DOCUMENT
+                    - PROOF_OF_RESIDENCE
+                    - REVENUE_PROOF
+                    - INCOME_TAX
+                    - ARTICLES_OF_INCORPORATION
+                    - CLEARANCE_CERTIFICATE
+                    - BANK_STATEMENT
+                    - COLLATERAL
+                    - OTHER
+              required:
+                - file
+                - tag
+      responses:
+        201:
+          description: Anexo salvo no relatorio.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportAttachment'
+        400:
+          description: Arquivo ausente no campo `file` ou `tag` fora da lista aceita.
+        404:
+          description: Relatorio nao encontrado ou de outra organizacao.
+        413:
+          description: O anexo excede o tamanho maximo de 16MB.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Anexar documento ao relatorio
+      description: |
+          Sobe um documento de credito e o guarda no relatorio com uma tag de tipo.
+          Aceita qualquer formato de arquivo, ate 16MB por anexo.
+
+          Anexo e armazenamento, nao analise: o arquivo fica disponivel no relatorio e
+          no dossie, mas nao e lido nem extraido. Para enviar balanco e DRE para
+          extracao, use POST /report/{id}/financial-tab.
+    get:
+      operationId: ReportController_listAttachments
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio.
+      responses:
+        200:
+          description: Anexos do relatorio.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attachments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReportAttachment'
+        404:
+          description: Relatorio nao encontrado ou de outra organizacao.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Listar anexos do relatorio
+      description: |
+          Lista os anexos ativos do relatorio. Anexos removidos nao aparecem.
+  /report/{id}/files/archive:
+    get:
+      operationId: ReportController_downloadFilesArchive
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio.
+      responses:
+        200:
+          description: Arquivo ZIP com todos os arquivos do relatorio, entregue em streaming.
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        404:
+          description: Relatorio nao encontrado ou de outra organizacao.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Baixar dossie do relatorio
+      description: |
+          Baixa todos os arquivos do relatorio num unico ZIP: exportacoes, planilha do
+          balanco, documentos de origem dos balancos encontrados, anexos e certidoes
+          validas.
+
+          A lista e montada pelo servidor a partir do relatorio. Nao existe parametro
+          para escolher arquivos nem para informar URL.
   /report/{id}/committee:
     post:
       operationId: ReportController_conveneCommittee
@@ -669,6 +948,38 @@ components:
       description: Enter JWT token
       in: header
   schemas:
+    ReportAttachment:
+      type: object
+      description: Documento de credito anexado a um relatorio.
+      properties:
+        id:
+          type: string
+        fileName:
+          type: string
+        tag:
+          type: string
+          enum:
+            - IDENTITY_DOCUMENT
+            - PROOF_OF_RESIDENCE
+            - REVENUE_PROOF
+            - INCOME_TAX
+            - ARTICLES_OF_INCORPORATION
+            - CLEARANCE_CERTIFICATE
+            - BANK_STATEMENT
+            - COLLATERAL
+            - OTHER
+        url:
+          type: string
+          description: URL do arquivo armazenado.
+        sizeBytes:
+          type: integer
+          nullable: true
+        uploadedByUserId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
     CreateWebhookDto:
       type: object
       properties:

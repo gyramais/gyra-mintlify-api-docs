@@ -34,6 +34,8 @@ flowchart TB
 
 O parecer é reativo por seção: assim que **uma** seção fecha, o agente dela já roda. Você não espera o relatório inteiro para começar a ler análise.
 
+O **objetivo** vem do campo *Objetivo* da política, em *Decisão e alçada* (ver [Criar Política](/toolbox/criar-politica)). É ele que calibra a leitura: a mesma rede de vínculos e os mesmos processos pesam diferente numa política de capital de giro e numa de contratação de pessoal, onde não há desembolso a proteger. Todos os agentes recebem o mesmo objetivo, inclusive o [Comitê de Crédito IA](/concepts/comite-de-credito).
+
 ### O contexto vem primeiro
 
 Antes de qualquer parecer, um **agente-mãe** analisa a seção de informações básicas com busca na web e monta o **contexto do negócio**: o que a empresa faz de fato, porte real, relevância no setor e quais padrões são esperados para esse perfil. Só depois os demais agentes rodam, cada um já sabendo com quem está lidando.
@@ -85,9 +87,9 @@ São **21 seções** cobertas. Cada uma tem um agente com a régua do seu domín
 | Seção | `sectionType` | O que o agente avalia |
 | ----- | ------------- | --------------------- |
 | Informações Básicas | `BASIC_INFORMATION` | **Agente-mãe.** Retrato atualizado do negócio com busca na web: o que faz de fato, porte real, relevância e padrões esperados. Produz o contexto que alimenta todos os outros. |
-| Localização | `LOCATION` | Coerência entre a fachada, o endereço e o negócio declarado. Usa as imagens do local. |
-| Vínculos Societários | `RELATIONS` | Quadro societário, grupo econômico, grau dos vínculos e comparação de CNAE e endereço com a empresa principal. |
-| Processos Judiciais | `PROCESSES` | Natureza, polo, matéria e materialidade dos processos, ponderados pelo porte. |
+| Localização | `LOCATION` | Coerência entre a fachada, o endereço e o negócio declarado. Usa as imagens do local. Em relatório de PF a régua é residencial: avalia o imóvel declarado, não um ponto comercial. |
+| Vínculos Societários | `RELATIONS` | Quadro societário, grupo econômico, natureza e vigência dos vínculos, e comparação de CNAE e endereço com a empresa principal. |
+| Processos Judiciais | `PROCESSES` | Natureza, matéria, materialidade e **papel processual** do avaliado, ponderados pelo porte. |
 | Certidões | `CERTIFICATES` | Regularidade fiscal, trabalhista e FGTS, e o peso real de cada irregularidade. |
 | Licenças e Autorizações | `LICENSES_AUTHORIZATIONS` | Licenças obrigatórias para a atividade exercida e o que a ausência de cada uma implica. |
 | PEP | `PEP` | Exposição política e o vínculo concreto com a operação. |
@@ -109,6 +111,34 @@ São **21 seções** cobertas. Cada uma tem um agente com a régua do seu domín
 <Note>
   As seções de PF (`CRIMINAL_RECORD`, `SOCIAL_ASSISTANCE_PROGRAMS`) só existem em relatórios de CPF, e a Análise Financeira depende do envio do balanço. O parecer aparece nas seções que o relatório efetivamente gerou.
 </Note>
+
+---
+
+## O que o agente não confunde
+
+Parte do trabalho do parecer é qualificar o dado bruto antes de opinar. Três distinções valem citar, porque são exatamente onde uma leitura ingênua da seção erra:
+
+<AccordionGroup>
+  <Accordion title="Presença nos autos não é passivo (PROCESSES)">
+    O polo do processo (`ATIVO` / `PASSIVO` / `OUTROS`) não diz o quanto o avaliado está exposto. O agente recebe o **papel processual** derivado do papel detalhado da parte, e distingue quem é polo passivo de quem aparece como **credor**, **terceiro interessado** ou **não parte** (advogado, juiz, perito, administrador judicial). Processos em que o avaliado não é litigante pesam pouco ou nada no parecer.
+
+    Na mesma linha, o agente separa **recuperação judicial, recuperação extrajudicial e falência** de homônimos que não são insolvência (REFIS, recuperação fiscal, recuperação de crédito), e distingue quem é o **devedor** de quem é **credor** no processo de insolvência.
+
+    Os processos dos sócios chegam identificados como tal, com a ressalva de que naquele feed o polo do sócio não é determinável. Não entram na contagem de insolvência do avaliado.
+  </Accordion>
+  <Accordion title="Restrição de terceiro não vira exposição do avaliado (RELATIONS)">
+    O agente recebe a **natureza** de cada vínculo, e não apenas a existência da ligação: sócio (participa do capital do avaliado), participação (o avaliado participa do capital de outra), administrador (gestão sem capital), empregador, parente e social (colega de faculdade, de trabalho, vizinho).
+
+    A distinção tem efeito prático: a dívida de uma empresa **empregadora** aparece no parecer como contexto ocupacional, não como passivo da pessoa avaliada. Vínculo de gestão continua entrando na exposição, porque quem administra responde pela gestão.
+
+    Cada vínculo também chega com **vigência**: encerrado, sem fim informado (sugere em curso, não confirma) ou sem data. O parecer não trata "sem data de fim" como vínculo atual.
+  </Accordion>
+  <Accordion title="Sem imagem não é fachada ruim (LOCATION)">
+    O agente diferencia **não conseguimos confirmar este endereço** (imagem inconclusiva, obra em andamento, foto obstruída ou antiga, panorama distante) de **a imagem mostra um problema** (terreno baldio, imóvel demolido, obra abandonada, ruína). Os dois desfechos eram indistinguíveis antes, e o caso ruim saía de graça.
+
+    Quando não existe nenhuma imagem do endereço, a fachada não é pontuada: fica indisponível em vez de receber uma nota que leria como "avaliamos e está razoável".
+  </Accordion>
+</AccordionGroup>
 
 ---
 

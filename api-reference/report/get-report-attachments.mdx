@@ -1,0 +1,55 @@
+---
+title: Listar Anexos do Relatório
+description: Lista os documentos de crédito anexados ao relatório.
+surface: api
+domain: relatorio
+audience: integrador
+lang: tecnica
+openapi: get /report/{id}/attachments
+---
+
+### Quando usar
+
+Use para recuperar os documentos que foram anexados ao relatório, seja pela API em [Anexar Documento](/api-reference/report/post-report-attachments), seja pela tela do Toolbox. Anexos removidos não aparecem.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID do relatório. Precisa ser um relatório da sua organização. |
+
+### Resposta
+
+```json
+{
+  "attachments": [
+    {
+      "id": "6612a7f30000000000000200",
+      "fileName": "contrato-social.pdf",
+      "tag": "ARTICLES_OF_INCORPORATION",
+      "url": "https://...",
+      "sizeBytes": 284320,
+      "uploadedByUserId": "6612a7f30000000000000001",
+      "createdAt": "2025-03-01T10:30:45.000Z"
+    }
+  ]
+}
+```
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | `string` | ID do anexo. |
+| `fileName` | `string` | Nome do arquivo enviado. |
+| `tag` | `string` | Tipo de documento de crédito. Ver a lista em [Anexar Documento](/api-reference/report/post-report-attachments#tags-aceitas). |
+| `url` | `string` | URL do arquivo armazenado. |
+| `sizeBytes` | `number \| null` | Tamanho do arquivo. |
+| `uploadedByUserId` | `string \| null` | Usuário que subiu o anexo. Vem `null` quando a origem não é um usuário. |
+| `createdAt` | `string` | Data do upload, ISO 8601. |
+
+### Erros
+
+| Código | Quando |
+|---|---|
+| `404` | Relatório não encontrado ou de outra organização. |
+
+Relatório sem anexos responde `200` com `attachments: []`.

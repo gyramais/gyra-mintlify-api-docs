@@ -1,0 +1,88 @@
+---
+title: Anexar Documento ao Relatório
+description: Sobe um documento de crédito e o guarda no relatório com uma tag de tipo.
+surface: api
+domain: relatorio
+audience: integrador
+lang: tecnica
+openapi: post /report/{id}/attachments
+---
+
+### Quando usar
+
+Use para guardar no relatório os documentos de crédito que a operação exige: contrato social, comprovante de residência, imposto de renda, extrato bancário, documento de garantia. O arquivo fica disponível na tela do relatório e entra no [dossiê](/api-reference/report/get-report-files-archive).
+
+<Warning>
+  **Anexo é armazenamento, não análise.** O arquivo é guardado como está: não é lido, extraído nem transformado em variável de política.
+
+  Para enviar **balanço e DRE** e obter dados estruturados, use [Enviar Balanço e DRE](/api-reference/report/post-report-financial-tab). É por isso que `BALANCE_SHEET` não está na lista de tags: balanço tem fluxo próprio.
+</Warning>
+
+### Pré-requisitos
+
+1. Um relatório já criado, cujo `id` vai na URL.
+2. Token JWT válido (`POST /auth/authenticate`).
+
+### Parâmetros
+
+O corpo é `multipart/form-data`. Não envie JSON.
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID do relatório. Precisa ser um relatório da sua organização. |
+| `file` | `form-data` | `file` | `sim` | O arquivo. Qualquer formato, até 16 MB. |
+| `tag` | `form-data` | `string` | `sim` | Tipo de documento de crédito. Ver as tags aceitas abaixo. |
+
+### Tags aceitas
+
+| Tag | Documento |
+|---|---|
+| `IDENTITY_DOCUMENT` | Documento de identidade |
+| `PROOF_OF_RESIDENCE` | Comprovante de residência |
+| `REVENUE_PROOF` | Comprovante de faturamento |
+| `INCOME_TAX` | Declaração de imposto de renda |
+| `ARTICLES_OF_INCORPORATION` | Contrato ou estatuto social |
+| `CLEARANCE_CERTIFICATE` | Certidão |
+| `BANK_STATEMENT` | Extrato bancário |
+| `COLLATERAL` | Documento de garantia |
+| `OTHER` | Qualquer outro documento |
+
+Um valor fora dessa lista é recusado com `400`, sem salvar o arquivo.
+
+### Exemplo
+
+```bash
+curl -X POST https://gyra-core.gyramais.com.br/report/{id}/attachments \
+  -H "Authorization: Bearer {token}" \
+  -F "file=@contrato-social.pdf" \
+  -F "tag=ARTICLES_OF_INCORPORATION"
+```
+
+### Resposta
+
+`201 Created` com o anexo salvo:
+
+```json
+{
+  "id": "6612a7f30000000000000200",
+  "fileName": "contrato-social.pdf",
+  "tag": "ARTICLES_OF_INCORPORATION",
+  "url": "https://...",
+  "sizeBytes": 284320,
+  "uploadedByUserId": "6612a7f30000000000000001",
+  "createdAt": "2025-03-01T10:30:45.000Z"
+}
+```
+
+### Limites e erros
+
+| Regra | Valor | O que acontece se violar |
+|---|---|---|
+| Tamanho do arquivo | 16 MB | `413` com a mensagem de tamanho máximo. |
+| Campo do arquivo | `file` | `400` se o campo vier vazio ou com outro nome. |
+| Tag | Lista acima | `400` com os valores aceitos na mensagem. |
+| Relatório de outra organização | n/a | `404`, sem distinção de relatório inexistente. |
+
+<Tip>
+  Um anexo por chamada. Para vários documentos, repita a chamada, cada um com a sua `tag`.
+</Tip>

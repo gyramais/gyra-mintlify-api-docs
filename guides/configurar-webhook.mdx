@@ -178,5 +178,6 @@ curl -X DELETE https://gyra-core.gyramais.com.br/webhook/{id} \
 | Responder `200` em menos de 3 segundos | Evita retentativas desnecessárias |
 | Usar `externalId` para rastrear | Facilita o vínculo com seu sistema sem consultar a API |
 | Implementar idempotência | O mesmo `reportId` pode chegar mais de uma vez em casos de retry |
+| Responder `200` antes de validar o conteúdo | Erro `4xx` (fora de `408`, `425` e `429`) não é retentado: o evento se perde no primeiro envio |
 | Ter fallback com `GET /report/:id` | Para casos em que o webhook falha por indisponibilidade temporária |
 | Usar HTTPS com certificado válido | Requisito de segurança, HTTP não é aceito |
