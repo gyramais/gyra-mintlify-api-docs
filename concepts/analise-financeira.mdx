@@ -82,6 +82,17 @@ A busca roda sozinha em relatórios **COMPLETO** e **COMPLETO+**. O que acontece
 
 Se a extração falhar ou ficar abaixo do nível de confiança que exigimos, não devolvemos número errado. A aba passa a listar os **documentos encontrados** com link de download, para o analista abrir o original e conferir na mão. O documento que a GYRA+ achou continua sendo entregue, mesmo quando a leitura automática não fecha.
 
+### O mesmo fluxo pela API
+
+Quem integra sem passar pela tela tem os dois passos como endpoint:
+
+| Passo | Endpoint |
+| --- | --- |
+| Ver o que foi encontrado, com link de download | [`GET /report/{id}/balance-sheet/documents`](/api-reference/report/get-report-balance-sheet-documents) |
+| Mandar processar | [`POST /report/{id}/balance-sheet/process`](/api-reference/report/post-report-balance-sheet-process) |
+
+O processamento aceita **escolher os exercícios**: mande no campo `selection` os `externalId` que interessam, ou omita o corpo para processar tudo que for processável. É o mesmo controle do clique em **processar** na aba, incluindo a escolha do que entra.
+
 ---
 
 ## Como enviar os balanços
@@ -345,7 +356,7 @@ A análise é entregue em **formato padrão** e fica acessível por três caminh
     Exporte uma **planilha** com todo o trabalho: balanço e DRE padronizados, tabela de indicadores por período e a análise comparativa. Ideal para o comitê de crédito revisar fora da plataforma.
   </Card>
   <Card title="API" icon="code">
-    [Envie os PDFs](/api-reference/report/post-report-financial-tab) e consuma o relatório e a seção financeira via [API de relatório](/api-reference/report-v2/get-v2report), com os mesmos números calculados na extração.
+    [Envie os PDFs](/api-reference/report/post-report-financial-tab) ou [processe o que a GYRA+ encontrou](/api-reference/report/post-report-balance-sheet-process), e consuma o relatório e a seção financeira via [API de relatório](/api-reference/report-v2/get-v2report), com os mesmos números calculados na extração.
   </Card>
   <Card title="MCP" icon="plug">
     Acesse os dados e indicadores por linguagem natural via [MCP Server](/mcp/o-que-e), para análises e automações em ferramentas de IA.

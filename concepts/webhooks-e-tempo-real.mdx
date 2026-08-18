@@ -138,4 +138,22 @@ Estrutura de `data` para os demais tipos e exemplos completos em [Webhooks e API
 
 ## Retry
 
-A GYRA+ tenta entregar cada evento até **3 vezes** com backoff exponencial (1s, ~2s, ~5s). Se o seu endpoint retornar `429` com `Retry-After`, a GYRA+ respeita esse tempo. Após as tentativas, o evento é descartado — mantenha fallback com polling em `GET /v2/report/:id` para eventuais perdas e planeje idempotência no seu lado.
+Quando a entrega falha, a GYRA+ repete o envio **até 3 vezes** depois da primeira tentativa (4 envios no total), com backoff exponencial de 1s, ~2s e ~5s. Se o seu endpoint retornar `429` com `Retry-After`, a GYRA+ respeita esse tempo antes de tentar de novo. Esgotadas as tentativas, o evento é descartado.
+
+### O que é retentado e o que não é
+
+Nem toda falha vale uma nova tentativa. Reenviar um evento para um endpoint que respondeu `404` só repete o mesmo erro, então a GYRA+ para na primeira resposta.
+
+| Resposta do seu endpoint | Comportamento |
+| --- | --- |
+| `2xx` | Entrega concluída, sem retry. |
+| `408`, `425`, `429` | **Retentado.** São falhas transitórias: timeout, envio antecipado e limite de taxa. |
+| Demais `4xx` (`400`, `401`, `403`, `404`, `422`, ...) | **Não retentado.** A resposta é determinística: o evento é descartado no primeiro erro. |
+| `5xx` | **Retentado.** Indisponibilidade do seu lado costuma passar. |
+| Sem resposta (timeout de conexão, DNS, conexão recusada) | **Retentado.** |
+
+<Warning>
+  Se o seu endpoint responde `4xx` para um payload que ele não sabe tratar, você recebe **um único envio** e o evento se perde. Responda `200` primeiro e valide o conteúdo depois, de forma assíncrona. Devolver erro de validação para a GYRA+ não faz o evento voltar.
+</Warning>
+
+Mantenha fallback com polling em `GET /v2/report/:id` para eventuais perdas e planeje idempotência no seu lado.

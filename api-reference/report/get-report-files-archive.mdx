@@ -1,0 +1,55 @@
+---
+title: Baixar Dossiê do Relatório
+description: Baixa todos os arquivos do relatório num único ZIP, montado pelo servidor.
+surface: api
+domain: relatorio
+audience: integrador
+lang: tecnica
+openapi: get /report/{id}/files/archive
+---
+
+### Quando usar
+
+Use quando a operação precisa do **pacote completo** de arquivos do relatório de uma vez, para arquivamento, envio a um comitê ou anexo em processo de formalização. Em vez de baixar cada arquivo pelo seu endpoint, o servidor monta um ZIP em streaming.
+
+### O que entra no ZIP
+
+| Conteúdo | Origem |
+|---|---|
+| Exportações do relatório | PDF e XLS gerados em `GET /report/export/{id}` |
+| Planilha do balanço | Resultado da Análise Financeira |
+| Documentos de origem dos balanços | Demonstrações encontradas pela GYRA+ na base própria |
+| Anexos | Documentos subidos em [Anexar Documento](/api-reference/report/post-report-attachments) |
+| Certidões válidas | Certidões emitidas no relatório |
+
+<Note>
+  A lista é montada pelo servidor a partir do próprio relatório. Não existe parâmetro para escolher arquivos nem para informar URL de origem.
+</Note>
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID do relatório. Precisa ser um relatório da sua organização. |
+
+### Exemplo
+
+```bash
+curl -X GET https://gyra-core.gyramais.com.br/report/{id}/files/archive \
+  -H "Authorization: Bearer {token}" \
+  --output dossie.zip
+```
+
+### Resposta
+
+`200` com `Content-Type: application/zip`, entregue em streaming.
+
+<Tip>
+  A resposta é um binário em streaming, não JSON. Escreva direto em arquivo ou consuma como stream: carregar tudo em memória antes de gravar é desnecessário e pesado em relatórios com muitos documentos.
+</Tip>
+
+### Erros
+
+| Código | Quando |
+|---|---|
+| `404` | Relatório não encontrado ou de outra organização. |

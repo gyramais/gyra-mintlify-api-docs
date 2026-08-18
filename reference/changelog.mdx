@@ -14,6 +14,15 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ## Agosto 2026
 
+### Entrega de webhook e referência dos endpoints de arquivos e balanços
+
+**Melhorias**
+- **Webhook não insiste em erro que não passa:** a entrega deixa de retentar respostas `4xx` do seu endpoint, com exceção de `408`, `425` e `429`, que continuam sendo retentadas por serem transitórias. Um endpoint que responde `404` (URL removida ou trocada no seu lado) recebia 4 envios idênticos e agora recebe um. Respostas `5xx` e falhas sem resposta (timeout, DNS, conexão recusada) seguem com o retry completo, até 3 tentativas depois da primeira, com backoff de 1s, ~2s e ~5s. Ver [Webhooks e Tempo Real](/concepts/webhooks-e-tempo-real#retry).
+
+**Novidades**
+- **Referência da API dos balanços encontrados:** os dois passos do fluxo de demonstrações que a GYRA+ acha sozinha ganharam página própria. [`GET /report/{id}/balance-sheet/documents`](/api-reference/report/get-report-balance-sheet-documents) lista o que foi encontrado, com período, fonte e link de download assinado; [`POST /report/{id}/balance-sheet/process`](/api-reference/report/post-report-balance-sheet-process) dispara o processamento e aceita `selection` para escolher quais exercícios entram, em vez de processar todos.
+- **Referência da API de anexos e dossiê:** [`POST /report/{id}/attachments`](/api-reference/report/post-report-attachments) (com a lista completa de tags aceitas e o limite de 16 MB), [`GET /report/{id}/attachments`](/api-reference/report/get-report-attachments) e [`GET /report/{id}/files/archive`](/api-reference/report/get-report-files-archive) agora estão na referência da API, com contratos de request e response.
+
 ### Precisão dos pareceres de Processos, Vínculos e Localização
 
 **Melhorias**
