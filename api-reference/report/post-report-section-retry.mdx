@@ -1,0 +1,78 @@
+---
+title: Reprocessar Seção com Erro
+description: Re-dispara só as integrações que falharam numa seção, sem refazer o relatório inteiro.
+surface: api
+domain: relatorio
+audience: integrador
+lang: tecnica
+openapi: post /report/{id}/section/{sectionId}/retry
+---
+
+### Quando usar
+
+Uma seção do relatório fechou com erro porque a fonte estava fora do ar, respondeu incompleto ou estourou o tempo. As outras seções vieram normalmente. Você quer só aquele pedaço de novo.
+
+Este endpoint re-dispara **apenas as integrações que registraram erro naquela seção**. As fontes que já responderam não são consultadas outra vez, e portanto não são cobradas outra vez.
+
+<Note>
+  Para refazer a análise inteira, com todas as fontes, use [Reanalisar Relatório](/api-reference/report/post-reportre-analyze). O retry por seção é cirúrgico de propósito.
+</Note>
+
+### Pré-requisitos
+
+1. Um relatório da sua organização, cujo `id` vai na URL.
+2. O `id` da seção. Ele vem no relatório (campo `id` da seção), e **não é o tipo** da seção: `PROCESSES` não serve, o valor esperado é o ObjectId.
+3. Token JWT válido (`POST /auth/authenticate`).
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID do relatório. |
+| `sectionId` | `path` | `string` | `sim` | ID da seção a reprocessar. |
+
+Não há corpo.
+
+### Exemplo
+
+```bash
+curl -X POST 'https://gyra-core.gyramais.com.br/report/{reportId}/section/{sectionId}/retry' \
+  -H 'Authorization: Bearer {token}'
+```
+
+### Resposta
+
+`200 OK` com os tipos de integração que voltaram para a fila:
+
+```json
+{
+  "status": "ok",
+  "types": ["BDC_COMPANY_LAWSUITS", "BDC_OWNERS_LAWSUITS"]
+}
+```
+
+### O que acontece por baixo
+
+1. O erro dessas integrações é apagado da seção e do progresso do relatório.
+2. A finalização do relatório é **reaberta**: ele volta a contar como não finalizado.
+3. As consultas são reenviadas às fontes.
+4. Quando a rodada fecha, o webhook [`REPORT_FINISHED`](/concepts/webhooks-e-tempo-real) é disparado **de novo**, agora com o resultado atualizado.
+
+<Warning>
+  **É uma tentativa única.** A integração re-disparada não tem retry automático. Se ela falhar outra vez, o erro volta a aparecer na seção e é preciso pedir o reprocessamento de novo.
+</Warning>
+
+Seções irmãs que compartilham alguma das integrações re-disparadas também são reprocessadas, porque a mesma consulta alimenta as duas. Elas aparecem atualizadas no mesmo ciclo.
+
+### Erros
+
+| Código | Quando | Mensagem |
+|---|---|---|
+| `400` | A seção existe, mas nenhuma integração dela está com erro | `Nenhuma integração com erro nesta seção.` |
+| `404` | Relatório inexistente, ou de outra organização | `Relatório não encontrado.` |
+| `404` | Seção inexistente, ou de outro relatório | `Seção não encontrada.` |
+| `409` | Já existe um reprocessamento em curso nessa seção | `Esta seção já está sendo reprocessada.` |
+
+<Tip>
+  O `409` é proteção contra clique duplo: sem ele, dois pedidos simultâneos consultariam o bureau duas vezes e você pagaria duas vezes. Se um reprocessamento travar, a seção volta a aceitar novo pedido depois de **10 minutos** sem atividade.
+</Tip>

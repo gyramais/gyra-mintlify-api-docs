@@ -1,0 +1,138 @@
+---
+title: "Listas de Bloqueio"
+description: "Cadastre os CPFs e CNPJs que a sua mesa não aceita e deixe a política barrar não só o avaliado, mas também o sócio, o parente, a filial e o vizinho de endereço que estejam na lista."
+icon: "ban"
+surface: conceito
+domain: politica
+audience: ambos
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** uma **lista de bloqueio** é um conjunto de CPFs e CNPJs que a sua organização não quer aceitar. Você cadastra a lista uma vez, liga ela na política de crédito e ganha **sete verificações**: o documento analisado e seis categorias de relacionado (sócio, segundo nível, terceiro nível, filial, mesmo endereço, parentesco). Cada verificação é uma regra que você configura como qualquer outra.
+</Info>
+
+## O problema: o fraudador volta com outro nome
+
+Um CNPJ dá prejuízo, entra na sua lista interna e é barrado na próxima tentativa. Seis meses depois a mesma pessoa aparece como sócia de outra empresa, ou abre uma filial, ou põe o cunhado na frente. O documento é diferente, a política aprova, e a perda se repete.
+
+A checagem de "está na lista?" só resolve de verdade quando ela alcança **quem está por trás**, não apenas o documento que veio no pedido.
+
+**Listas de bloqueio resolvem isso:** o cadastro é de documentos, mas a verificação percorre a rede de vínculos que a GYRA+ já levanta para o relatório.
+
+---
+
+## Como funciona
+
+<Steps>
+  <Step title="Cadastre a lista">
+    Em **Configurações**, crie a lista e cole os documentos. A colagem em lote aceita até **5.000 documentos por vez**, então a planilha do time de risco entra de uma vez só.
+  </Step>
+  <Step title="Ligue na política">
+    No editor da política, em **Fonte de Dados**, selecione quais listas aquela política consulta. Uma organização pode ter várias listas e cada política escolhe as suas.
+  </Step>
+  <Step title="Configure as regras">
+    Ao criar a lista, a plataforma gera as sete regras correspondentes, já nomeadas com o nome da lista. Você decide quais usar e qual o efeito de cada uma: reprovar, alertar, pontuar.
+  </Step>
+</Steps>
+
+---
+
+## As sete verificações
+
+Cada lista gera uma regra por categoria. Todas respondem a mesma pergunta, **sim ou não**: existe alguém dessa categoria que está na lista?
+
+| Regra | O que verifica |
+| --- | --- |
+| `BLOCKLIST_DOCUMENTO` | O próprio documento analisado está na lista |
+| `BLOCKLIST_SOCIO` | Algum sócio ou relacionado de primeiro nível está na lista |
+| `BLOCKLIST_2_NIVEL` | Algum relacionado de segundo nível está na lista |
+| `BLOCKLIST_3_NIVEL` | Algum relacionado de terceiro nível está na lista |
+| `BLOCKLIST_FILIAL` | Alguma filial da empresa está na lista |
+| `BLOCKLIST_MESMO_ENDERECO` | Alguma empresa no mesmo endereço está na lista |
+| `BLOCKLIST_PARENTESCO` | Algum parente identificado está na lista |
+
+As regras de relacionado agregam por **"qualquer um"**: basta um relacionado daquela categoria estar na lista para a regra responder sim. Não há contagem nem proporção.
+
+<Note>
+  As categorias de relacionado dependem da profundidade de vínculos que o tipo de relatório contrata. Um relatório simples enxerga menos níveis que um completo, e uma regra sem dado de entrada não é avaliada.
+</Note>
+
+---
+
+## Dado fresco, sem cache
+
+A lista é consultada **a cada análise**, no momento em que o relatório roda. Não existe cópia intermediária que possa envelhecer.
+
+Na prática: se você acrescenta um CNPJ à lista agora, o próximo relatório já o encontra. Relatórios anteriores não são reavaliados, porque eles registram a decisão tomada com o que se sabia naquele momento.
+
+## Quando o dado não chega
+
+Se a fonte que alimenta a verificação falhar, a regra **não aprova por omissão**. Ela é marcada como erro, e o efeito configurado no campo de erro da regra é o que vale.
+
+<Warning>
+  Essa é a diferença entre "verifiquei e não achou ninguém" e "não consegui verificar". Uma checagem de bloqueio que aprovasse em silêncio quando a fonte cai seria pior do que não existir: você acharia que a política protegeu quando ela nem rodou.
+</Warning>
+
+---
+
+## Excluir uma lista
+
+Excluir remove a lista, as regras que nasceram dela e o vínculo com as políticas que a usavam.
+
+Antes de confirmar, a plataforma mostra **quais políticas serão afetadas**. Vale ler: aquelas políticas passam a rodar sem a verificação, a partir do próximo relatório, e nada no resultado indica que ela existiu um dia.
+
+<Tip>
+  Se o objetivo é só parar de usar a lista numa política específica, desmarque ela na **Fonte de Dados** daquela política, em vez de excluir a lista inteira.
+</Tip>
+
+---
+
+## Pela API
+
+| Ação | Endpoint |
+| ---- | -------- |
+| Criar | [`POST /integration/blocklist`](/api-reference/blocklist/post-integration-blocklist) |
+| Listar | [`GET /integration/blocklist`](/api-reference/blocklist/get-integration-blocklist) |
+| Consultar | [`GET /integration/blocklist/{id}`](/api-reference/blocklist/get-integration-blocklist-id) |
+| Editar | [`PUT /integration/blocklist/{id}`](/api-reference/blocklist/put-integration-blocklist) |
+| Excluir | [`DELETE /integration/blocklist/{id}`](/api-reference/blocklist/delete-integration-blocklist) |
+| Ver impacto | [`GET /integration/blocklist/{id}/impact`](/api-reference/blocklist/get-integration-blocklist-impact) |
+
+Na política, as listas escolhidas vão no campo `blocklistsIds`.
+
+---
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Quem pode criar e editar listas?">
+    Usuários com permissão de gerenciar configurações, dentro da própria organização. Uma lista nunca é visível para outra organização.
+  </Accordion>
+  <Accordion title="Renomear a lista quebra as políticas que a usam?">
+    Não. O novo nome é propagado para as regras geradas por ela, então a política continua legível para quem abrir depois.
+  </Accordion>
+  <Accordion title="Posso usar a mesma lista em várias políticas?">
+    Sim. A lista é da organização; cada política escolhe quais listas consulta.
+  </Accordion>
+  <Accordion title="A regra diz quem foi encontrado na lista?">
+    A regra responde sim ou não. Os vínculos que motivaram a resposta ficam visíveis na seção de relacionamentos do relatório.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Política de Crédito" icon="scale-balanced" href="/concepts/politica-de-credito">
+    Como as regras compõem a decisão.
+  </Card>
+  <Card title="Vínculos Societários" icon="sitemap" href="/sources/vinculos-societarios">
+    De onde vem a rede de relacionados.
+  </Card>
+  <Card title="Criar Política Personalizada" icon="wrench" href="/guides/criar-politica-personalizada">
+    Montar a política do zero, regra a regra.
+  </Card>
+  <Card title="Decisão Automática" icon="bolt" href="/concepts/decisao-automatica">
+    O que acontece quando uma regra reprova.
+  </Card>
+</CardGroup>

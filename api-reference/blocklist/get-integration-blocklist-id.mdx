@@ -1,0 +1,48 @@
+---
+title: Consultar Lista de Bloqueio
+description: Devolve uma lista de documentos bloqueados com o seu conteúdo.
+surface: api
+domain: politica
+audience: integrador
+lang: tecnica
+openapi: get /integration/blocklist/{id}
+---
+
+### Quando usar
+
+Para conferir o conteúdo de uma lista antes de alterá-la, ou para sincronizar a lista com um sistema seu.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID da lista. |
+
+### Exemplo
+
+```bash
+curl https://gyra-core.gyramais.com.br/integration/blocklist/{id} \
+  -H 'Authorization: Bearer {token}'
+```
+
+### Resposta
+
+`200 OK` com a lista e os documentos:
+
+```json
+{
+  "id": "6612a7f30000000000000700",
+  "name": "Fraudes confirmadas 2026",
+  "documents": ["12345678000199", "98765432100"]
+}
+```
+
+### Erros
+
+| Código | Quando |
+|---|---|
+| `404` | Lista inexistente, ou de outra organização. Os dois casos respondem igual, sem distinção. |
+
+### Permissões
+
+Exige `can-manage-settings`.

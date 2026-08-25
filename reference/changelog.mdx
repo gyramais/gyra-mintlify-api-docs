@@ -14,6 +14,19 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ## Agosto 2026
 
+### Listas de bloqueio, modelos de exportação e reprocessamento por seção
+
+**Novidades**
+- **Listas de bloqueio:** cadastre em *Configurações* os CPFs e CNPJs que a sua organização não aceita (colagem em lote de até 5.000 documentos por vez) e ligue a lista na política, em *Fonte de dados*. Cada lista gera **sete regras**: o documento analisado (`BLOCKLIST_DOCUMENTO`) e seis categorias de relacionado (`BLOCKLIST_SOCIO`, `BLOCKLIST_2_NIVEL`, `BLOCKLIST_3_NIVEL`, `BLOCKLIST_FILIAL`, `BLOCKLIST_MESMO_ENDERECO`, `BLOCKLIST_PARENTESCO`), configuráveis como qualquer outra regra. A lista é consultada fresca a cada análise, sem cache, e quando a fonte falha a regra registra **erro** em vez de aprovar por omissão. Pela API, as listas escolhidas vão em `blocklistsIds` na política. Ver [Listas de Bloqueio](/concepts/listas-de-bloqueio).
+- **Modelos de exportação de relatório:** defina quais seções entram no **PDF** e no **Excel** e em que ordem, com seleção independente por formato, perfil (`PF`, `PJ` ou `BOTH`) e um modelo padrão por perfil na organização. A exportação passa a aceitar `templateId`, e o modelo aplicado segue a precedência seleção da chamada, modelo escolhido, padrão da organização, padrão do sistema. A resolução é best-effort: indisponibilidade do serviço de modelos não bloqueia a geração, que cai no padrão do sistema. Ver [Modelos de Exportação](/concepts/modelos-de-exportacao).
+- **Reprocessar uma seção com erro:** novo [`POST /report/{id}/section/{sectionId}/retry`](/api-reference/report/post-report-section-retry) re-dispara apenas as integrações que falharam naquela seção, sem refazer o relatório inteiro nem re-consultar as fontes que já responderam. É tentativa única, sem retry automático, e um segundo pedido durante o reprocessamento responde `409`. No Toolbox, o mesmo recurso aparece como *tentar novamente* no indicador de sincronização da seção.
+- **Parâmetros de exportação na referência:** `exportFormat` (`pdf`, `excel`, `both`), `templateId` e `sectionOrder` passam a constar em [Exportar Relatório](/api-reference/report/get-reportexport) e [Exportar Relatório síncrono](/api-reference/report/get-reportexport-sync). A referência dizia que a exportação síncrona sempre gerava o relatório completo, o que deixou de ser verdade com os modelos.
+
+**Correções**
+- **Erro de rodada anterior sobrevivendo ao reprocessamento:** ao reprocessar um relatório, os erros das seções e o `errors.sections` do payload `REPORT_FINISHED` não eram limpos. Uma rodada que fechava 100% com sucesso continuava entregando o erro da rodada anterior, e o integrador não conseguia distinguir sucesso de falha. Agora o estado de erro é zerado antes de a nova rodada começar. Erros da análise financeira de balanço seguem preservados de propósito: eles vêm de um documento enviado por você, que nenhuma consulta regenera. Ver [Webhooks e Tempo Real](/concepts/webhooks-e-tempo-real#errorssections-reflete-a-rodada-atual).
+- **Seção de Localização presa quando o bureau falha:** falha na fonte do endereço deixava a seção sem estado terminal, girando indefinidamente no relatório. Agora a seção fecha sinalizando o erro, o que também a torna elegível ao reprocessamento por seção.
+- **Protestos do Serasa sem bloco cadastral:** protestos vindos do Serasa em um payload sem o bloco de cadastro quebravam a tradução da seção **Protestos**, e o relatório ficava sem a seção. O nome do devedor, quando ausente, aparece como `-`, e o restante do protesto é entregue normalmente.
+
 ### Entrega de webhook e referência dos endpoints de arquivos e balanços
 
 **Melhorias**

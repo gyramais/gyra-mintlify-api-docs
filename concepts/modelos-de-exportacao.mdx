@@ -1,0 +1,146 @@
+---
+title: "Modelos de Exportação"
+description: "Defina quais seções entram no PDF e no Excel do relatório, e em que ordem, com modelos salvos por perfil de avaliado e reaproveitados em toda exportação."
+icon: "file-export"
+surface: conceito
+domain: relatorio
+audience: ambos
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** um **modelo de exportação** guarda a resposta para "o que entra no arquivo do relatório e em que ordem". Você monta a seleção uma vez, separadamente para **PDF** e **Excel**, marca um modelo como padrão da organização, e toda exportação passa a sair naquele formato. Pela API, basta enviar o `templateId`.
+</Info>
+
+## O problema: o PDF completo não serve para todo mundo
+
+O relatório completo tem muita coisa. Isso é bom para o analista e ruim para quase todo o resto: o comitê quer quatro seções, o cliente final não pode ver a política de crédito, o arquivo que vai para o cartório é outro recorte.
+
+Sem modelo, sobram dois caminhos igualmente ruins: mandar o relatório inteiro e pedir para a pessoa ignorar o que não interessa, ou montar a seleção na mão a cada exportação e torcer para ninguém esquecer uma seção.
+
+**Modelos de exportação resolvem isso:** o recorte vira uma configuração da organização, não uma decisão repetida a cada arquivo.
+
+---
+
+## O que um modelo define
+
+| Atributo | O que é |
+| --- | --- |
+| **Nome** | Como o modelo aparece na hora de escolher |
+| **Perfil** | A que tipo de avaliado ele se aplica: `PF`, `PJ` ou `BOTH` |
+| **Formatos** | Se ele atende `PDF`, `EXCEL` ou os dois |
+| **Seleção** | A lista **ordenada** de seções, **uma por formato** |
+| **Status** | `ACTIVE` ou `INACTIVE`. Modelo inativo continua salvo mas não é aplicado |
+| **Padrão** | No máximo um modelo padrão por perfil na organização |
+
+<Note>
+  **A seleção é por formato.** O PDF do comitê pode ter oito seções e o Excel do mesmo modelo ter duas, porque planilha e documento são lidos de formas diferentes. São duas listas independentes dentro do mesmo modelo.
+</Note>
+
+A ordem da lista é a ordem no arquivo: arrastar uma seção para cima muda onde ela sai no PDF.
+
+---
+
+## Qual modelo é aplicado
+
+Na hora de exportar, a plataforma resolve o modelo nesta ordem, e para no primeiro que existir:
+
+<Steps>
+  <Step title="Seleção enviada na chamada">
+    Se a requisição traz uma lista explícita de seções, ela vence tudo. É o caso de quem monta o recorte na hora, pela API.
+  </Step>
+  <Step title="Modelo escolhido">
+    O `templateId` informado na exportação.
+  </Step>
+  <Step title="Padrão da organização">
+    O modelo marcado como padrão para o perfil daquele relatório.
+  </Step>
+  <Step title="Padrão do sistema">
+    Sem nenhum modelo salvo, sai o relatório completo, como sempre foi.
+  </Step>
+</Steps>
+
+<Tip>
+  A resolução do modelo **não bloqueia a exportação**. Se o serviço de modelos não responder a tempo, o arquivo é gerado com o padrão do sistema em vez de falhar. Você recebe o relatório completo, nunca um erro no lugar do arquivo.
+</Tip>
+
+---
+
+## Seções fora do plano
+
+O catálogo de seções do editor mostra também as que a sua organização **não contrata** no plano atual. Elas ficam sinalizadas.
+
+Se um modelo inclui uma seção que o relatório não tem, ela simplesmente não entra no arquivo, e a exportação registra o que ficou de fora. O modelo não quebra por isso: ele descreve a intenção, e o arquivo sai com o que existe.
+
+---
+
+## Pela API
+
+Listar os modelos disponíveis e pegar o `id`:
+
+```bash
+curl 'https://gyra-core.gyramais.com.br/export-templates?format=PDF&profile=PJ' \
+  -H 'Authorization: Bearer {token}'
+```
+
+Exportar aplicando um modelo:
+
+```bash
+curl 'https://gyra-core.gyramais.com.br/report/export-sync/{reportId}?templateId={templateId}&exportFormat=pdf' \
+  -H 'Authorization: Bearer {token}'
+```
+
+| Parâmetro | Onde | O que faz |
+| --- | --- | --- |
+| `templateId` | query | Modelo a aplicar. Ausente cai no padrão da organização. |
+| `exportFormat` | query | `pdf`, `excel` ou `both`. Ausente equivale a `pdf`. |
+| `sectionOrder` | query | Seleção explícita de seções. Tem precedência sobre `templateId`. |
+
+Valem para [Exportar Relatório](/api-reference/report/get-reportexport) (assíncrono, entrega por webhook) e [Exportar Relatório síncrono](/api-reference/report/get-reportexport-sync).
+
+---
+
+## Quem pode mexer
+
+| Ação | Quem |
+| --- | --- |
+| Ver e usar modelos | Qualquer usuário autenticado da organização |
+| Criar, editar, ativar, desativar, definir padrão, excluir | Administrador, com a permissão de gerenciar modelos de exportação |
+
+Toda alteração fica registrada em trilha de auditoria, inclusive a troca de padrão: quando um modelo vira o padrão, o anterior é desmarcado e os dois lados ficam registrados. É o que responde "quem tirou o meu padrão".
+
+---
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Posso ter um padrão para PF e outro para PJ?">
+    Sim, e é o uso esperado. O limite é de um padrão por perfil, não um por organização.
+  </Accordion>
+  <Accordion title="O que acontece com os relatórios já exportados?">
+    Nada. O modelo vale para exportações novas; arquivos já gerados continuam como estavam.
+  </Accordion>
+  <Accordion title="Desativar um modelo apaga ele?">
+    Não. `INACTIVE` mantém o modelo salvo e apenas para de aplicá-lo, então dá para voltar atrás sem remontar a seleção.
+  </Accordion>
+  <Accordion title="Preciso incluir a capa em toda seleção?">
+    Sim, a seção de informações básicas é a capa do arquivo e faz parte de toda seleção válida.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Listar Modelos de Exportação" icon="list" href="/api-reference/export-template/get-export-templates">
+    O endpoint que devolve o `templateId`.
+  </Card>
+  <Card title="Arquivos do Relatório" icon="folder-open" href="/concepts/arquivos-do-relatorio">
+    O dossiê completo, com anexos e certidões.
+  </Card>
+  <Card title="Seções do Relatório" icon="table-list" href="/concepts/secoes">
+    Quais seções existem para escolher.
+  </Card>
+  <Card title="Webhooks" icon="bell" href="/concepts/webhooks-e-tempo-real">
+    Receber o arquivo quando a exportação assíncrona termina.
+  </Card>
+</CardGroup>

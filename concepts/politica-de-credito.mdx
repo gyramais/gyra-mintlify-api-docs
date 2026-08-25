@@ -78,6 +78,7 @@ A primeira etapa é uma lista de cartões que você liga ou desliga. Só o que e
 | **Núclea** | Indicadores baseados em transações reais (antiga CIP), selecionados individualmente. Só PJ. Fonte adicional. Ver [Inteligência de Pagamentos](/sources/inteligencia-pagamentos). |
 | **Balanço patrimonial** | Habilita as variáveis de balanço nas condições e fórmulas desta política. Ver [Análise Financeira](/concepts/analise-financeira). |
 | **Bases externas** | Dados próprios da sua organização, configurados em *Configurações de integrações*, disponíveis como variáveis. |
+| **Listas de bloqueio** | CPFs e CNPJs que a sua organização não aceita. Selecione quais listas esta política consulta. Ver [Listas de Bloqueio](/concepts/listas-de-bloqueio). |
 
 <Warning>
   Sem **Relatório base** definido, as demais etapas ficam bloqueadas: não há variáveis para escrever condição, faixa ou fórmula. É sempre o primeiro passo.
@@ -90,6 +91,10 @@ A primeira etapa é uma lista de cartões que você liga ou desliga. Só o que e
 <Tip>
   Cenprot e Núclea são **fontes adicionais**, com custo por consulta além do relatório base. Ligue quando o dado for mudar a decisão, não por padrão. As demais fontes acompanham o nível do relatório contratado.
 </Tip>
+
+<Note>
+  **Listas de bloqueio não consultam fonte externa** e por isso não têm custo por consulta. Elas cruzam o seu próprio cadastro de documentos bloqueados com os dados que a análise já levantou, e o cruzamento alcança o avaliado e os relacionados dele (sócio, filial, mesmo endereço, parentesco). Pela API, as listas escolhidas vão no campo `blocklistsIds` da política.
+</Note>
 
 ---
 
