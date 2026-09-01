@@ -1,6 +1,6 @@
 ---
 title: "Modelos de Exportação"
-description: "Defina quais seções entram no PDF e no Excel do relatório, e em que ordem, com modelos salvos por perfil de avaliado e reaproveitados em toda exportação."
+description: "Defina quais seções entram no PDF e no Excel do relatório, em que ordem e com que nível de detalhamento, com modelos salvos por perfil de avaliado e reaproveitados em toda exportação."
 icon: "file-export"
 surface: conceito
 domain: relatorio
@@ -30,6 +30,7 @@ Sem modelo, sobram dois caminhos igualmente ruins: mandar o relatório inteiro e
 | **Perfil** | A que tipo de avaliado ele se aplica: `PF`, `PJ` ou `BOTH` |
 | **Formatos** | Se ele atende `PDF`, `EXCEL` ou os dois |
 | **Seleção** | A lista **ordenada** de seções, **uma por formato** |
+| **Detalhamento do PDF** | `COMPLETE` ou `COMPACT`. Define o quanto cada seção mostra no PDF. Não se aplica ao Excel |
 | **Status** | `ACTIVE` ou `INACTIVE`. Modelo inativo continua salvo mas não é aplicado |
 | **Padrão** | No máximo um modelo padrão por perfil na organização |
 
@@ -41,16 +42,45 @@ A ordem da lista é a ordem no arquivo: arrastar uma seção para cima muda onde
 
 ---
 
+## Completo ou compacto
+
+Além de **quais** seções entram, o modelo guarda **quanto** cada seção mostra no PDF. São dois níveis:
+
+| Nível | Valor na API | O que sai |
+| --- | --- | --- |
+| **Completo** | `COMPLETE` | O PDF como sempre foi: cada seção com tabelas, listas de ocorrências e detalhamento por registro. |
+| **Compacto** | `COMPACT` | A versão resumida de cada seção: números consolidados, indicadores e o essencial para decidir, sem as listas longas. |
+
+O nível é uma propriedade do modelo, não da chamada. Quem monta o modelo decide de uma vez se aquele recorte é para leitura de comitê (compacto) ou para arquivo de crédito (completo), e toda exportação daquele modelo sai igual.
+
+<Note>
+  **O Excel é sempre completo.** Planilha existe para ser filtrada e somada, então não há versão compacta dela. Um modelo que atende só `EXCEL` fica em `COMPLETE` mesmo que o campo seja enviado com outro valor.
+</Note>
+
+Sem modelo salvo, você ainda pode pedir um dos **dois modelos nativos Gyra+** direto na exportação, com o parâmetro `systemTemplate`:
+
+| Valor | O que aplica |
+| --- | --- |
+| `COMPLETE` | Relatório completo do sistema, todas as seções padrão. |
+| `COMPACT` | O mesmo conjunto de seções, no nível compacto. |
+
+<Warning>
+  `systemTemplate` é uma **escolha explícita** e por isso ignora o modelo padrão da organização. Omitir o parâmetro não é a mesma coisa: a omissão deixa o padrão da organização ser aplicado. Se você mandar `templateId` e `systemTemplate` na mesma chamada, o `templateId` vence.
+</Warning>
+
 ## Qual modelo é aplicado
 
 Na hora de exportar, a plataforma resolve o modelo nesta ordem, e para no primeiro que existir:
 
 <Steps>
   <Step title="Seleção enviada na chamada">
-    Se a requisição traz uma lista explícita de seções, ela vence tudo. É o caso de quem monta o recorte na hora, pela API.
+    Se a requisição traz uma lista explícita de seções (`sectionOrder`), ela vence tudo **na escolha e na ordem das seções**. É o caso de quem monta o recorte na hora, pela API.
   </Step>
   <Step title="Modelo escolhido">
     O `templateId` informado na exportação.
+  </Step>
+  <Step title="Modelo nativo pedido na chamada">
+    O `systemTemplate` (`COMPLETE` ou `COMPACT`), quando não há `templateId`. Por ser escolha explícita, pula o padrão da organização.
   </Step>
   <Step title="Padrão da organização">
     O modelo marcado como padrão para o perfil daquele relatório.
@@ -59,6 +89,10 @@ Na hora de exportar, a plataforma resolve o modelo nesta ordem, e para no primei
     Sem nenhum modelo salvo, sai o relatório completo, como sempre foi.
   </Step>
 </Steps>
+
+<Note>
+  **O detalhamento sempre vem do modelo resolvido.** `sectionOrder` decide quais seções entram e em que ordem, e só isso. Mandar uma ordem explícita não desliga a resolução do modelo nem devolve o PDF ao nível completo: o `pdfDetail` do modelo continua valendo. Isso também vale para o parâmetro `type` da exportação (`REPORT` ou `REPORT_MINIFIED`), que só é considerado quando nenhum modelo resolve um detalhamento.
+</Note>
 
 <Tip>
   A resolução do modelo **não bloqueia a exportação**. Se o serviço de modelos não responder a tempo, o arquivo é gerado com o padrão do sistema em vez de falhar. Você recebe o relatório completo, nunca um erro no lugar do arquivo.
@@ -90,11 +124,19 @@ curl 'https://gyra-core.gyramais.com.br/report/export-sync/{reportId}?templateId
   -H 'Authorization: Bearer {token}'
 ```
 
+Exportar no modelo compacto nativo, sem modelo salvo:
+
+```bash
+curl 'https://gyra-core.gyramais.com.br/report/export-sync/{reportId}?systemTemplate=COMPACT&exportFormat=pdf' \
+  -H 'Authorization: Bearer {token}'
+```
+
 | Parâmetro | Onde | O que faz |
 | --- | --- | --- |
 | `templateId` | query | Modelo a aplicar. Ausente cai no padrão da organização. |
+| `systemTemplate` | query | `COMPLETE` ou `COMPACT`. Aplica um dos dois modelos nativos Gyra+, ignorando o padrão da organização. Perde para `templateId` quando os dois vêm juntos. |
 | `exportFormat` | query | `pdf`, `excel` ou `both`. Ausente equivale a `pdf`. |
-| `sectionOrder` | query | Seleção explícita de seções. Tem precedência sobre `templateId`. |
+| `sectionOrder` | query | Seleção explícita de seções. Tem precedência sobre `templateId` na escolha e na ordem das seções, mas não altera o detalhamento. |
 
 Valem para [Exportar Relatório](/api-reference/report/get-reportexport) (assíncrono, entrega por webhook) e [Exportar Relatório síncrono](/api-reference/report/get-reportexport-sync).
 
@@ -122,6 +164,12 @@ Toda alteração fica registrada em trilha de auditoria, inclusive a troca de pa
   </Accordion>
   <Accordion title="Desativar um modelo apaga ele?">
     Não. `INACTIVE` mantém o modelo salvo e apenas para de aplicá-lo, então dá para voltar atrás sem remontar a seleção.
+  </Accordion>
+  <Accordion title="Dá para ter o mesmo recorte de seções em completo e em compacto?">
+    Sim, com dois modelos. O detalhamento faz parte do modelo, então o mesmo conjunto de seções em dois níveis são dois modelos salvos, um `COMPLETE` e outro `COMPACT`.
+  </Accordion>
+  <Accordion title="Modelos criados antes do detalhamento mudaram de comportamento?">
+    Não. Modelo sem detalhamento gravado é lido como `COMPLETE`, que é exatamente como ele já saía.
   </Accordion>
   <Accordion title="Preciso incluir a capa em toda seleção?">
     Sim, a seção de informações básicas é a capa do arquivo e faz parte de toda seleção válida.

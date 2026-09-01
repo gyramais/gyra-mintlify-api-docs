@@ -14,6 +14,23 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ## Agosto 2026
 
+### PDF compacto e fonte única de protestos
+
+**Novidades**
+- **Nível de detalhamento do PDF no modelo de exportação:** cada modelo passa a guardar se o PDF sai **Completo** (como sempre foi) ou **Compacto** (números consolidados e o essencial de cada seção, sem as listas longas). O campo `pdfDetail` (`COMPLETE` ou `COMPACT`) é devolvido em [Listar Modelos de Exportação](/api-reference/export-template/get-export-templates); modelos criados antes dele são lidos como `COMPLETE`, então nenhum modelo existente muda de comportamento. O Excel continua sempre completo, e um modelo exclusivamente Excel ignora o detalhamento. Ver [Modelos de Exportação](/concepts/modelos-de-exportacao#completo-ou-compacto).
+- **Modelos nativos Gyra+ na exportação:** novo parâmetro `systemTemplate` (`COMPLETE` ou `COMPACT`) em [Exportar Relatório](/api-reference/report/get-reportexport) e [Exportar Relatório síncrono](/api-reference/report/get-reportexport-sync), para pedir um dos dois modelos do sistema sem ter modelo salvo. Por ser escolha explícita, ele ignora o modelo padrão da organização, o que omitir o parâmetro não faz. Enviado junto com `templateId`, o `templateId` vence.
+- **Indicação da fonte que falhou na seção:** os erros de integração da seção passam a trazer `integrationType` e `provider` em campos próprios, além do que já existia em `context`. Isso permite responder "a fonte de cartório caiu?" mesmo quando outra fonte da mesma seção respondeu, caso em que a seção era entregue com os números do bureau e nenhum indicador. Campos aditivos: erros gravados antes desta mudança não os têm. Ver [Seção Protestos](/data/secao-protestos#quando-uma-das-fontes-falha).
+
+**Melhorias**
+- **Protestos com fonte de cartório única:** a fonte cartorial de cobertura nacional passou a ser servida por um provedor único, por instabilidade do anterior em produção. O formato da seção, o rótulo exibido (`CENPROT`), o flag da política e a cobrança não mudam, e relatórios antigos continuam sendo lidos normalmente. Relatórios que já estavam em processamento na virada seguem finalizando sem intervenção.
+- **Uma fonte de protesto por parecer:** o agente de IA da seção `PROTESTS` passa a receber apenas a fonte vencedora da cadeia de prioridade (cartório antes de bureau), e não a mistura de todas as fontes que responderam. Antes elas chegavam juntas e sem rótulo, cada uma com o seu próprio total, o que abria espaço para o parecer somar protestos contados duas vezes. Ver [Seção Protestos](/data/secao-protestos#mais-de-uma-fonte-na-mesma-se%C3%A7%C3%A3o).
+
+**Correções**
+- **Parecer afirmando ausência de protesto sem ter consultado:** com cartório e bureau fora do ar ao mesmo tempo, a seção `PROTESTS` chegava vazia ao agente e o parecer saía como "não foram identificados protestos, sem impacto na dimensão", com risco baixo, sobre um documento que ninguém conseguiu consultar. Agora a indisponibilidade é sinalizada ao agente, que reporta o risco como desconhecido em vez de baixo. Consulta bem-sucedida com zero protestos continua gerando o parecer normal de nada consta. Ver [Pareceres GYRA+ IA](/concepts/pareceres-gyra-ia#o-que-o-agente-n%C3%A3o-confunde).
+- **Regras de protesto aprovando com dado ausente:** as regras `NOTARIES_*` devolviam aprovação quando o payload chegava sem `summary`, sem data de ocorrência ou sem valor, afirmando "poucos protestos" sobre um documento cujo dado não chegou. Agora a regra registra `ERROR`, que é o que aparece no item da política. Zero protestos segue sendo dado válido e aprova. Ver [Política de Crédito](/concepts/politica-de-credito#status-poss%C3%ADveis-de-uma-decis%C3%A3o).
+- **Detalhamento do PDF ignorado com `sectionOrder`:** enviar uma ordem explícita de seções pulava a resolução do modelo, então o mesmo pedido saía completo ou compacto dependendo de um parâmetro que não fala de detalhamento. O detalhamento passa a vir sempre do modelo resolvido, nos dois endpoints de exportação; a ordem explícita continua vencendo a ordem do modelo.
+- **Escolha de detalhamento apagada em atualização parcial:** um `PUT` de modelo sem o campo `pdfDetail`, vindo de cliente de API que não o conhece, redefinia o modelo para completo e apagava a escolha do usuário. Ausência no update passa a significar "não estou mexendo nisso" e mantém o valor gravado. No create, ausência continua significando `COMPLETE`.
+
 ### Listas de bloqueio, modelos de exportação e reprocessamento por seção
 
 **Novidades**

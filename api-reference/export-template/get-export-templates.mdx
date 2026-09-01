@@ -12,7 +12,7 @@ openapi: get /export-templates
 
 Antes de exportar um relatório, para descobrir qual `templateId` enviar em [Exportar Relatório](/api-reference/report/get-reportexport) ou [Exportar Relatório (síncrono)](/api-reference/report/get-reportexport-sync).
 
-Um modelo de exportação define **quais seções entram no arquivo e em que ordem**, separadamente para PDF e para Excel. O conceito está em [Modelos de Exportação](/concepts/modelos-de-exportacao).
+Um modelo de exportação define **quais seções entram no arquivo, em que ordem e com que nível de detalhamento**, separadamente para PDF e para Excel. O conceito está em [Modelos de Exportação](/concepts/modelos-de-exportacao).
 
 ### Parâmetros
 
@@ -43,6 +43,7 @@ curl 'https://gyra-core.gyramais.com.br/export-templates?format=PDF&profile=PJ' 
     "formats": ["PDF", "EXCEL"],
     "status": "ACTIVE",
     "isDefault": true,
+    "pdfDetail": "COMPLETE",
     "selections": [
       {
         "format": "PDF",
@@ -63,7 +64,12 @@ curl 'https://gyra-core.gyramais.com.br/export-templates?format=PDF&profile=PJ' 
 | `formats` | Formatos que o modelo atende: `PDF`, `EXCEL` ou os dois. |
 | `status` | `ACTIVE` ou `INACTIVE`. Modelo inativo continua existindo mas não é aplicado. |
 | `isDefault` | Se é o padrão da organização para aquele perfil. No máximo um por perfil. |
+| `pdfDetail` | Nível de detalhamento do PDF: `COMPLETE` (detalhado) ou `COMPACT` (resumido). Modelos criados antes deste campo são devolvidos como `COMPLETE`. Não se aplica ao Excel, que é sempre completo. |
 | `selections` | A seleção ordenada de seções, uma entrada por formato. A ordem da lista é a ordem no arquivo. |
+
+<Note>
+  Para exportar **sem** um modelo salvo, os dois modelos nativos Gyra+ ficam disponíveis pelo parâmetro `systemTemplate` (`COMPLETE` ou `COMPACT`) direto na exportação. Ver [Modelos de Exportação](/concepts/modelos-de-exportacao#completo-ou-compacto).
+</Note>
 
 ### Permissões
 

@@ -107,7 +107,12 @@ A primeira etapa é uma lista de cartões que você liga ou desliga. Só o que e
 | `APPROVED` | 3 | Aprovado automaticamente |
 | `DENIED` | 4 | Negado automaticamente |
 | `ALERT` | 5 | Requer revisão manual |
+| `ERROR` | 6 | A regra não pôde ser avaliada porque o dado não chegou |
 | `NOT_APPLIED` | 8 | Regra não aplicável ao documento |
+
+<Note>
+  **`ERROR` não é aprovação.** Quando a fonte de uma regra falha, a regra registra `ERROR` em vez de deixar passar por omissão. Uma consulta que respondeu com **zero ocorrências** é dado válido e segue aprovando normalmente: o que gera `ERROR` é a ausência da resposta, não a ausência de ocorrência.
+</Note>
 
 Esse é o `policyStatus` retornado em todo relatório. Se ele deve ou não virar o `status` do relatório depende da configuração da política — veja [Status do relatório × Status da política](/concepts/relatorio#status-do-relat%C3%B3rio-status-da-pol%C3%ADtica).
 

@@ -260,6 +260,20 @@ paths:
               Modelo de exportacao a aplicar (id de GET /export-templates). Define quais
               secoes entram no arquivo e em que ordem. Ausente usa o modelo padrao da
               organizacao para o perfil do relatorio e, na falta dele, o padrao do sistema.
+        - name: systemTemplate
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - COMPLETE
+              - COMPACT
+          description: |
+              Aplica um dos dois modelos nativos Gyra+ em vez de um modelo salvo: COMPLETE
+              entrega o PDF detalhado e COMPACT a versao resumida de cada secao. Por ser
+              escolha explicita, ignora o modelo padrao da organizacao (omitir o parametro
+              nao ignora). Enviado junto com templateId, o templateId vence. Nao se aplica
+              ao Excel, que e sempre completo.
         - name: sectionOrder
           required: false
           in: query
@@ -269,7 +283,9 @@ paths:
               type: string
           description: |
               Lista ordenada de secoes, para montar a selecao na propria chamada em vez de
-              usar um modelo salvo. Quando enviada, tem precedencia sobre templateId.
+              usar um modelo salvo. Quando enviada, tem precedencia sobre templateId na
+              escolha e na ordem das secoes. Nao altera o nivel de detalhamento, que
+              continua vindo do modelo resolvido.
       responses:
         200:
           description: 'Objeto { status: "processing", reportId } — o PDF chega via webhook.'
@@ -287,10 +303,14 @@ paths:
           for critica. Para receber o PDF na hora, use export_report_sync.
           
           O conteudo do arquivo segue o modelo de exportacao resolvido nesta ordem:
-          sectionOrder informado na chamada, depois templateId, depois o modelo padrao da
-          organizacao, depois o padrao do sistema. A resolucao do modelo e best-effort: se
-          o servico de modelos nao responder, a exportacao continua com o padrao do sistema
-          em vez de falhar.
+          sectionOrder informado na chamada, depois templateId, depois systemTemplate,
+          depois o modelo padrao da organizacao, depois o padrao do sistema. A resolucao do
+          modelo e best-effort: se o servico de modelos nao responder, a exportacao
+          continua com o padrao do sistema em vez de falhar.
+
+          O nivel de detalhamento do PDF (completo ou compacto) vem sempre do modelo
+          resolvido, inclusive quando sectionOrder e informado. O parametro type e usado
+          apenas quando nenhum modelo resolve um detalhamento.
   /report/export-sync/{id}:
     get:
       operationId: ReportController_exportSync
@@ -321,6 +341,20 @@ paths:
               Modelo de exportacao a aplicar (id de GET /export-templates). Define quais
               secoes entram no arquivo e em que ordem. Ausente usa o modelo padrao da
               organizacao para o perfil do relatorio e, na falta dele, o padrao do sistema.
+        - name: systemTemplate
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - COMPLETE
+              - COMPACT
+          description: |
+              Aplica um dos dois modelos nativos Gyra+ em vez de um modelo salvo: COMPLETE
+              entrega o PDF detalhado e COMPACT a versao resumida de cada secao. Por ser
+              escolha explicita, ignora o modelo padrao da organizacao (omitir o parametro
+              nao ignora). Enviado junto com templateId, o templateId vence. Nao se aplica
+              ao Excel, que e sempre completo.
         - name: sectionOrder
           required: false
           in: query
@@ -330,7 +364,9 @@ paths:
               type: string
           description: |
               Lista ordenada de secoes, para montar a selecao na propria chamada em vez de
-              usar um modelo salvo. Quando enviada, tem precedencia sobre templateId.
+              usar um modelo salvo. Quando enviada, tem precedencia sobre templateId na
+              escolha e na ordem das secoes. Nao altera o nivel de detalhamento, que
+              continua vindo do modelo resolvido.
       responses:
         200:
           description: 'Objeto com a URL de download do PDF gerado (assinada, com expiracao).'
@@ -346,9 +382,14 @@ paths:
           relatorios completos. Use com timeout adequado do lado do cliente.
           
           As secoes que entram no arquivo seguem o modelo de exportacao resolvido nesta
-          ordem: sectionOrder informado na chamada, depois templateId, depois o modelo
-          padrao da organizacao, depois o padrao do sistema. Sem nenhum modelo salvo, o
-          padrao do sistema entrega o relatorio completo.
+          ordem: sectionOrder informado na chamada, depois templateId, depois
+          systemTemplate, depois o modelo padrao da organizacao, depois o padrao do
+          sistema. Sem nenhum modelo salvo, o padrao do sistema entrega o relatorio
+          completo.
+
+          O nivel de detalhamento do PDF (completo ou compacto) vem sempre do modelo
+          resolvido, inclusive quando sectionOrder e informado. O parametro type e usado
+          apenas quando nenhum modelo resolve um detalhamento.
           
           Pre-requisito: o relatorio precisa estar finalizado (status APPROVED, DENIED
           ou ALERT). Relatorios em PENDING nao podem ser exportados.
@@ -1000,6 +1041,10 @@ paths:
       description: |
           Lista os modelos de exportacao da organizacao, com o id que deve ser enviado em
           templateId nos endpoints de exportacao.
+
+          Cada modelo traz pdfDetail (COMPLETE ou COMPACT), o nivel de detalhamento do PDF
+          gravado no modelo. Modelos criados antes desse campo sao devolvidos como
+          COMPLETE. O Excel e sempre completo.
           
           Leitura livre para qualquer usuario autenticado. Criar, editar, ativar, desativar,
           definir padrao e excluir exigem a permissao can-manage-export-templates e sao
