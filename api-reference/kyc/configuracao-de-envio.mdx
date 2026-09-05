@@ -1,0 +1,146 @@
+---
+title: "Marca, domínio e canais"
+description: "Colocar a sua marca na página do destinatário, usar domínio próprio no link, remetente próprio no e-mail e o WhatsApp da sua empresa no convite."
+icon: "palette"
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+---
+
+<Info>
+  **Resumo:** quatro recursos independentes que fazem a coleta sair com a identidade da sua empresa em vez da GYRA+. Marca e domínio do link exigem `kycEnabled` ou `scrEnabled`; remetente de e-mail e WhatsApp exigem `communicationBrandingEnabled`. Todos exigem `can-manage-settings` ou `can-use-registry-api`.
+</Info>
+
+## Marca da página
+
+Prefixo `/v1/collection-branding`.
+
+| Método | Caminho | O que faz |
+| --- | --- | --- |
+| `GET` | `/collection-branding` | Aparência atual do link do destinatário |
+| `POST` | `/collection-branding/logo/presign` | URL assinada para enviar o logo |
+| `PUT` | `/collection-branding/logo` | Confirma o logo, ou tira o logo do ar |
+
+### Enviar o logo
+
+```json
+{ "fileName": "logo.png", "size": 48320, "mimeType": "image/png" }
+```
+
+PNG ou JPG. **SVG é recusado.**
+
+Depois do `PUT` no armazenamento, confirme:
+
+```json
+{ "key": "branding/.../logo.png", "displayName": "Sua Empresa" }
+```
+
+Para voltar à marca da GYRA+:
+
+```json
+{ "removeLogo": true }
+```
+
+### Cores
+
+As cores vêm do cadastro da organização (`PUT /onboarding/organization/{id}`), em hexadecimal de **6 dígitos com `#`**:
+
+```json
+{
+  "colors": {
+    "backgroundColor": "#0B1F3B",
+    "primaryButton": "#1256FF",
+    "secondaryButton": "#B0C8FF",
+    "linkButton": "#1256FF"
+  }
+}
+```
+
+<Warning>
+  Formato curto (`#fff`) ou sem `#` é recusado com `400`. As mesmas cores valem nas telas do toolbox: a marca é uma só, configurada num lugar só.
+</Warning>
+
+## Domínio próprio do link
+
+Prefixo `/v1/collection-domain`.
+
+| Método | Caminho | O que faz |
+| --- | --- | --- |
+| `GET` | `/collection-domain` | Domínio atual e os registros de DNS a publicar |
+| `POST` | `/collection-domain` | Declara o domínio e devolve os registros |
+| `POST` | `/collection-domain/verify` | Confere o DNS e libera (ou não) o domínio |
+| `DELETE` | `/collection-domain` | Volta ao domínio da plataforma |
+
+```json
+{ "domain": "documentos.suaempresa.com.br" }
+```
+
+<Warning>
+  Use um **subdomínio**, não o domínio principal: o CNAME necessário conflita com o site e o e-mail da empresa.
+</Warning>
+
+Fluxo: declare o domínio, publique os registros de DNS que a resposta trouxer, chame `verify`. Enquanto o DNS não confere, o link continua saindo em `envio.gyramais.com.br`.
+
+## Remetente próprio do e-mail
+
+Prefixo `/v1/email-domain`. Exige `communicationBrandingEnabled`.
+
+| Método | Caminho | O que faz |
+| --- | --- | --- |
+| `GET` | `/email-domain` | Domínio do remetente e os registros de DNS |
+| `POST` | `/email-domain` | Declara o domínio e devolve os registros |
+| `POST` | `/email-domain/verify` | Pede ao provedor que confira o DNS agora |
+| `DELETE` | `/email-domain` | Volta ao remetente da plataforma |
+
+```json
+{
+  "domain": "suaempresa.com.br",
+  "senderLocalPart": "documentos",
+  "senderName": "Sua Empresa"
+}
+```
+
+| Campo | Nota |
+| --- | --- |
+| `domain` | Aqui o **domínio raiz é aceito**: os registros são CNAMEs em subdomínios que o provedor escolhe, e nenhum conflita com o site ou o MX |
+| `senderLocalPart` | O que vem antes do `@`. Ausente vale `documentos` |
+| `senderName` | O nome que aparece na caixa de entrada |
+
+## WhatsApp da sua empresa
+
+Prefixo `/v1/whatsapp-account`. Exige `communicationBrandingEnabled`.
+
+| Método | Caminho | O que faz |
+| --- | --- | --- |
+| `GET` | `/whatsapp-account` | O número conectado e o estado do modelo do convite |
+| `POST` | `/whatsapp-account` | Conecta o número, conferindo o token contra a Meta |
+| `POST` | `/whatsapp-account/template` | Salva o texto e submete o modelo para aprovação da Meta |
+| `DELETE` | `/whatsapp-account` | Volta ao número da plataforma |
+
+### Conectar
+
+```json
+{
+  "wabaId": "1234567890",
+  "phoneNumberId": "0987654321",
+  "accessToken": "EAAG..."
+}
+```
+
+<Note>
+  O token é guardado **cifrado** e nunca é devolvido pela API. A conexão só é aceita depois de a plataforma conferir o token contra a Meta.
+</Note>
+
+### Modelo do convite
+
+```json
+{
+  "body": "Olá {{1}}, a {{2}} precisa de alguns documentos seus. É rápido e seguro.",
+  "headerUrl": "https://cdn.suaempresa.com.br/header.png"
+}
+```
+
+<Warning>
+  O texto **precisa manter** `{{1}}` (nome de quem recebe) e `{{2}}` (nome da empresa). Salvar submete o modelo para aprovação da Meta; o `GET` mostra o estado (em análise, aprovado, recusado).
+</Warning>

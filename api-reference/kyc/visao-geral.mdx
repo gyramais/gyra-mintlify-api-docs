@@ -1,0 +1,109 @@
+---
+title: "API de Cadastros e Solicitações"
+description: "Endereço, autenticação, versionamento, permissões e capacidades das rotas de cadastro documental e de solicitações de coleta."
+icon: "plug"
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+---
+
+<Info>
+  **Resumo:** as rotas deste módulo vivem no mesmo endereço e usam a mesma autenticação do resto da API da GYRA+. O que muda é que elas exigem uma **capacidade** da organização, e que o caminho é **versionado**.
+</Info>
+
+## Endereço
+
+```
+https://gyra-core.gyramais.com.br
+```
+
+## Autenticação
+
+Igual ao resto da API: troque `gyra-client-id` e `gyra-client-secret` por um token em `POST /auth/authenticate` e use `Authorization: Bearer <token>` nas chamadas.
+
+As credenciais são geradas por você mesmo no toolbox, em *Configurações, API & MCP*. Ver [Chaves de API](/api-reference/api-keys).
+
+<Warning>
+  As rotas públicas do link do destinatário (`/public/collection/{token}/...`) são a única exceção: elas não usam token de API, o próprio token do link é a credencial. Nunca as chame do seu backend com dados de outra pessoa.
+</Warning>
+
+## Versionamento
+
+O versionamento é de URI. Cada rota responde nos dois caminhos:
+
+```
+/v1/registry/...      caminho versionado, use este em integração nova
+/registry/...         caminho legado sem versão, mantido por compatibilidade
+```
+
+Regras de evolução:
+
+| Mudança | O que acontece |
+| --- | --- |
+| Aditiva (campo novo opcional, rota nova, valor novo de enum) | Entra na `v1`, sem versão nova |
+| Quebradora (remover ou renomear campo, mudar tipo, tornar campo obrigatório, mudar semântica de status) | Abre `v2`; a `v1` continua no ar |
+| Descontinuar uma versão | Só depois de aviso formal aos integradores |
+
+<Tip>
+  Trate valor novo de enum como mudança aditiva do **nosso** lado: o seu parser precisa tolerar um `status` ou um `type` que ele ainda não conhece, em vez de quebrar.
+</Tip>
+
+## Permissões
+
+| Permissão | Quem tem |
+| --- | --- |
+| `can-use-registry-api` | Usuário de API (client credentials) |
+| `can-generate-report` | Usuário humano do toolbox |
+| `can-manage-settings` | Configuração: régua, marca, domínio, webhooks, credenciais |
+| `can-remove-registry` | Remover cadastro: Administrador, Owner, Superuser e Gerente de Crédito |
+
+A maior parte das rotas aceita `can-generate-report` **ou** `can-use-registry-api`. Nenhuma rota do módulo é pública.
+
+## Capacidades da organização
+
+Sem a capacidade, a rota responde `404`: ela não existe para aquela organização.
+
+| Capacidade | Rotas que libera |
+| --- | --- |
+| `kycEnabled` **ou** `scrEnabled` | `/registry`, `/collections`, `/collection-templates`, `/consent-templates`, `/collection-branding`, `/collection-domain`, `/webhook` |
+| `kycEnabled` | `/registry/rule-set` (as quatro rotas da régua) e criar/editar modelo de termo |
+| `communicationBrandingEnabled` | `/email-domain`, `/whatsapp-account` |
+| `identityEmailEnabled` | Valida+ nas rotas públicas de identidade por e-mail |
+
+<Note>
+  Quem tem só `scrEnabled` continua com a régua **rodando** nos documentos recebidos, com os padrões da plataforma. O que falta é a edição, não a validação.
+</Note>
+
+## Mapa das rotas
+
+| Grupo | Prefixo | Página |
+| --- | --- | --- |
+| Cadastros | `/registry` | [Cadastros](/api-reference/kyc/cadastros) |
+| Documentos do cadastro | `/registry/{id}/documents` | [Documentos](/api-reference/kyc/documentos) |
+| Validação síncrona | `/registry/validate-document` | [Validação síncrona](/api-reference/kyc/validacao-sincrona) |
+| Régua e indicadores | `/registry/rule-set`, `/registry/metrics` | [Régua e indicadores](/api-reference/kyc/regua-e-metricas) |
+| Solicitações | `/collections` | [Solicitações](/api-reference/kyc/solicitacoes) |
+| Modelos e termos | `/collection-templates`, `/consent-templates` | [Modelos e termos](/api-reference/kyc/modelos-e-termos) |
+| Link do destinatário | `/public/collection/{token}` | [Link do destinatário](/api-reference/kyc/link-do-destinatario) |
+| Marca, domínio e canais | `/collection-branding`, `/collection-domain`, `/email-domain`, `/whatsapp-account` | [Configuração de envio](/api-reference/kyc/configuracao-de-envio) |
+| Webhooks | `/webhook` | [Webhooks](/api-reference/kyc/webhooks) |
+
+## Formato dos identificadores
+
+Todo id é um ObjectId de 24 caracteres hexadecimais. Documento (CNPJ/CPF) é aceito com ou sem máscara nas rotas de entrada e devolvido só com dígitos.
+
+## Erros
+
+| Código | Quando |
+| --- | --- |
+| `400` | Corpo inválido, com mensagem em português apontando o campo |
+| `401` | Token ausente, expirado ou inválido |
+| `403` | Sem permissão para a ação |
+| `404` | Recurso inexistente, **ou** capacidade não liberada para a organização |
+| `413` | Arquivo acima do teto da rota |
+| `429` | Limite de requisições (rotas públicas do link) |
+
+<Warning>
+  Campo que a API não conhece é **descartado em silêncio**, não recusado. Se um campo que você mandou não aparece na resposta, confira o nome contra esta referência antes de investigar o resto.
+</Warning>

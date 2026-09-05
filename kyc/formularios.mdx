@@ -1,0 +1,118 @@
+---
+title: "Formulários"
+description: "Como montar o formulário de cadastro que o destinatário responde: campos prontos, campos livres, sócios e pré-preenchimento pela extração."
+icon: "rectangle-list"
+surface: plataforma
+domain: cadastro
+audience: operador
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** o item `FORM` é o formulário que a sua organização monta uma vez, no modelo, e que o destinatário responde pelo link. Ele tem duas partes: **campos prontos**, escolhidos por marcação, e **campos livres**, criados por você.
+</Info>
+
+## Onde o formulário mora
+
+O formulário é declarado no item do modelo, no campo `formSpec`. Item `FORM` sem `formSpec` é recusado: não haveria o que perguntar.
+
+```json
+{
+  "kind": "FORM",
+  "label": "Dados da empresa",
+  "required": true,
+  "formSpec": {
+    "presets": ["LEGAL_NAME", "DOCUMENT", "EMAIL", "PHONE", "ADDRESS"],
+    "allowPartners": true,
+    "custom": [
+      {
+        "key": "faturamento-medio-mensal",
+        "label": "Faturamento médio mensal",
+        "type": "MONEY",
+        "required": true,
+        "hint": "Média dos últimos 12 meses"
+      },
+      {
+        "key": "canal-de-venda",
+        "label": "Canal de venda principal",
+        "type": "SELECT",
+        "options": ["Loja física", "E-commerce", "Marketplace", "Distribuidor"],
+        "required": false
+      }
+    ]
+  }
+}
+```
+
+## Campos prontos
+
+Escolhidos por marcação, já vêm com rótulo, máscara e validação.
+
+| Preset | Pergunta |
+| --- | --- |
+| `NAME` | Nome |
+| `LEGAL_NAME` | Razão social |
+| `TRADE_NAME` | Nome fantasia |
+| `DOCUMENT` | CNPJ ou CPF |
+| `EMAIL` | E-mail |
+| `PHONE` | Telefone |
+| `BIRTH_DATE` | Data de nascimento |
+| `ADDRESS` | Endereço |
+
+## Campos livres
+
+Cada campo livre precisa de `key`, `label`, `type` e `required`. Aceita ainda `hint` (dica curta abaixo do campo) e `maxLength`.
+
+| Tipo | O que aceita |
+| --- | --- |
+| `TEXT` | Texto livre |
+| `NUMBER` | Número |
+| `DATE` | Data |
+| `SELECT` | Escolha entre opções (obrigatório informar `options`) |
+| `BOOLEAN` | Sim ou não |
+| `MONEY` | Valor em reais |
+| `EMAIL` | E-mail, com formato conferido |
+| `EMAIL_CORPORATE` | E-mail corporativo (recusa domínio gratuito) |
+| `CPF` | CPF, com dígito verificador |
+| `CNPJ` | CNPJ, com dígito verificador |
+| `CPF_CNPJ` | Um ou outro, com dígito verificador |
+| `PHONE_BR` | Telefone brasileiro |
+| `CEP` | CEP |
+
+### Regras da chave
+
+A `key` é **kebab-case** (`faturamento-medio-mensal`), até 60 caracteres, e é ela que vira chave na resposta gravada. Mudar a chave depois de publicado desliga a resposta que já existia, então trate a chave como estável entre versões.
+
+### Limites
+
+| Limite | Valor |
+| --- | --- |
+| Campos livres por formulário | 60 |
+| Opções por campo `SELECT` | 100 |
+| Rótulo | 120 caracteres |
+| Dica | 240 caracteres |
+| Resposta | 5000 caracteres |
+
+## Sócios
+
+Com `allowPartners: true`, o destinatário pode acrescentar sócios ao formulário (nome, documento e participação). É o caminho para o quadro societário que a empresa declara, ao lado do que a fonte oficial diz.
+
+## Pré-preenchimento pela extração
+
+Quando o cadastro já tem documento validado, o formulário chega **pré-preenchido** com o que a IA leu. A pessoa confere em vez de digitar.
+
+Três coisas acontecem em volta disso, e todas viram trilha:
+
+| Situação | O que a plataforma registra |
+| --- | --- |
+| A pessoa corrige um valor sugerido | Campo, valor sugerido e valor final. É sinal de qualidade do pipeline |
+| A pessoa contesta um campo ancorado na **fonte oficial** | Valor oficial, valor informado, quem informou e quando. O item vai para a revisão do operador |
+| Um documento do mesmo destinatário vira validado | A sugestão é recalculada: quantos campos ganharam sugestão e quais chaves (nunca os valores) |
+
+<Note>
+  Correção de sugestão e contestação de fonte oficial são ações **separadas** de propósito. A primeira mede a qualidade da extração; divergência de cadastro não diz nada sobre a leitura do PDF, e misturar as duas estragaria a única métrica que diz se a IA está lendo direito.
+</Note>
+
+## O formulário no termo
+
+As respostas do formulário podem ser citadas dentro de um [termo](/kyc/termos-e-assinatura), pela variável `<<form.CHAVE>>`. Quando o termo cita uma resposta, ele só fica assinável depois que o formulário concluir (comportamento `blockSignatureUntilDependenciesMet`, ligado por padrão).

@@ -56,12 +56,28 @@
         ]
       },
       {
+        "group": "Cadastros e Solicitações",
+        "pages": [
+          "kyc/visao-geral",
+          "kyc/cadastro-documental",
+          "kyc/tipos-de-documento",
+          "kyc/analise-documental",
+          "kyc/regua-de-validacao",
+          "kyc/solicitacoes",
+          "kyc/formularios",
+          "kyc/termos-e-assinatura",
+          "kyc/verificacao-de-identidade",
+          "kyc/pagina-do-destinatario"
+        ]
+      },
+      {
         "group": "Guia do Toolbox",
         "pages": [
           "toolbox/visao-geral",
           "toolbox/primeiro-acesso",
           "toolbox/rodar-operacao",
           "toolbox/interpretar-resultado-operacao",
+          "toolbox/cadastros",
           "toolbox/criar-politica",
           "toolbox/editar-politica",
           "toolbox/usar-templates",
@@ -138,6 +154,23 @@
           "api-reference/webhook/post-webhook",
           "api-reference/webhook/get-webhookfindby",
           "api-reference/webhook/delete-webhook"
+        ]
+      },
+      {
+        "group": "API: Cadastros e Solicitações",
+        "pages": [
+          "api-reference/kyc/visao-geral",
+          "api-reference/kyc/cadastros",
+          "api-reference/kyc/documentos",
+          "api-reference/kyc/validacao-sincrona",
+          "api-reference/kyc/formatos-de-retorno",
+          "api-reference/kyc/regua-e-metricas",
+          "api-reference/kyc/solicitacoes",
+          "api-reference/kyc/modelos-e-termos",
+          "api-reference/kyc/link-do-destinatario",
+          "api-reference/kyc/configuracao-de-envio",
+          "api-reference/kyc/webhooks",
+          "api-reference/kyc/eventos-de-webhook"
         ]
       },
       {

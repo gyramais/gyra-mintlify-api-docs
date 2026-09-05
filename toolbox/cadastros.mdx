@@ -1,0 +1,121 @@
+---
+title: "Cadastros no toolbox"
+description: "A tela do dossiê documental: listar cadastros, abrir um dossiê, enviar e reprocessar documentos, revisar pendências, configurar validações e acompanhar indicadores."
+icon: "folder-open"
+surface: plataforma
+domain: cadastro
+audience: operador
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** menu lateral, **Cadastros**. É onde o dossiê de cada CNPJ ou CPF vive: os documentos entregues, o que a IA leu, o que a régua conferiu e o que falta. A aba só aparece se a sua organização tem o módulo liberado.
+</Info>
+
+## As telas
+
+| Tela | Para quê |
+| --- | --- |
+| **Cadastros** | A listagem, com busca e filtro por situação |
+| **Cadastro** (o dossiê) | Um CNPJ/CPF: documentos, árvore societária, renovação, solicitações em curso e trilha |
+| **Documento** | Um arquivo: o que foi lido, as verificações e o parecer, lado a lado com o PDF |
+| **Revisão** | A fila do que precisa de olho humano |
+| **Validações** | A régua da organização |
+| **Indicadores** | Acurácia por tipo documental e por campo |
+
+## Listagem
+
+Busca por nome ou documento, e filtro por situação. A listagem destaca o que precisa de ação: os cadastros em `EXPIRED`, `ATTENTION` e `PENDING`.
+
+| Situação | O que quer dizer |
+| --- | --- |
+| Pendente | Criado, ainda sem documento validado |
+| Processando | Há documento no meio da análise |
+| Em dia | Tudo validado, sem pendência |
+| Atenção | Divergência, vencimento próximo ou parecer com ressalva |
+| Vencido | Renovação vencida |
+| Em renovação | Há uma solicitação de renovação em curso |
+
+## O dossiê
+
+Abrindo um cadastro você vê:
+
+- **Estado**: a situação, a completude e os dados básicos oficiais, com a ação de atualizá-los.
+- **Documentos**: um por tipo, com a versão vigente em destaque e o histórico atrás. Cada linha mostra o veredito e a data.
+- **Envio**: a fila de upload, com vários arquivos de uma vez. PDF, JPG e PNG, até 50 MB cada.
+- **Pessoas**: a árvore societária, com a origem de cada uma (fonte oficial, extração de documento ou manual) e a ação de **promover** a pessoa a cadastro próprio.
+- **Renovação**: a data, os contatos e o botão de pausar.
+- **Solicitações**: os pedidos em curso naquele cadastro, com o estado de cada um.
+- **Trilha**: quem fez o quê, quando.
+
+### A tela do documento
+
+Do lado esquerdo, o arquivo. Do lado direito, três coisas:
+
+1. **Dados extraídos**, com o rótulo em português de cada campo, o valor e a marca de "conferir" quando a leitura ficou incerta. Campo que não se aplica àquele documento não aparece, com a explicação do porquê.
+2. **Verificações**, agrupadas nas três perguntas (autenticidade, titularidade, fé pública), cada uma com o resultado, a mensagem e a evidência (página e trecho).
+3. **Parecer**, com veredito, justificativa e a versão da régua que julgou.
+
+Ações da tela: **reprocessar** (o pipeline inteiro ou só uma etapa), **corrigir o tipo** quando a classificação errou, e **discordar do parecer**, registrando a sua decisão.
+
+<Note>
+  Discordar não apaga o parecer da IA. Ele continua gravado e selado; o que muda é o veredito que vale dali em diante, e a trilha registra quem decidiu.
+</Note>
+
+## Revisão
+
+A fila do que parou e precisa de gente. Cada linha diz **por que** parou: classificação ambígua, parecer de análise manual, qualidade insuficiente, documento fora de escopo, divergência com a fonte oficial.
+
+Dá para abrir o documento sem sair da fila e resolver ali mesmo.
+
+## Validações
+
+A [régua](/kyc/regua-de-validacao) da organização, com três abas (Autenticidade, Titularidade, Fé pública) e navegação por tipo documental (pessoa jurídica, pessoa física e os que servem aos dois).
+
+Em cada verificação você escolhe entre **não exigir**, **ressalvar** ou **reprovar**, e ajusta o parâmetro dela quando existe (prazo de vigência, espécie mínima de certificação, meses de faturamento, tolerâncias).
+
+<Warning>
+  Salvar **publica uma versão nova** da régua. A anterior não é reescrita, e todo parecer já emitido continua registrando qual versão o julgou.
+</Warning>
+
+Esta tela exige o módulo de Cadastros. Quem tem apenas SCR continua com a régua rodando nos documentos recebidos, com os padrões da plataforma; o que falta é a edição.
+
+## Indicadores
+
+Acurácia por tipo documental e por campo, na janela que você escolher (30 dias, 90 dias, 6 meses ou todo o período):
+
+- volume por tipo e por status;
+- distribuição de vereditos;
+- taxa de análise manual;
+- taxa de reprocessamento;
+- confiança média por campo.
+
+<Tip>
+  É a tela para responder "vale a pena tornar esta verificação impeditiva?". Olhe a taxa de análise manual do tipo antes de subir uma ressalva a reprovação, e a confiança média do campo antes de apertar uma tolerância.
+</Tip>
+
+## Quem pode o quê
+
+| Ação | Quem |
+| --- | --- |
+| Ver, enviar, reprocessar, dar parecer | Quem gera relatório |
+| Editar a régua e a marca | Quem gerencia configurações |
+| Pausar renovação | Qualquer perfil do módulo |
+| **Remover cadastro** | Administrador, Owner, Superuser e Gerente de Crédito |
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Pedir documentos ao cliente" icon="paper-plane" href="/toolbox/solicitacoes">
+    A outra metade do módulo.
+  </Card>
+  <Card title="Tipos de documento" icon="files" href="/kyc/tipos-de-documento">
+    O que a plataforma reconhece e por quanto tempo cada um vale.
+  </Card>
+  <Card title="Régua de validação" icon="ruler" href="/kyc/regua-de-validacao">
+    O catálogo completo de verificações.
+  </Card>
+  <Card title="API do módulo" icon="plug" href="/api-reference/kyc/visao-geral">
+    Fazer o mesmo pelo seu backend.
+  </Card>
+</CardGroup>

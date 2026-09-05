@@ -1,0 +1,272 @@
+---
+title: "Eventos de webhook"
+description: "Todos os eventos do módulo de cadastros e solicitações, agrupados por categoria, com quando disparam e o que vem em data."
+icon: "bolt-lightning"
+surface: api
+domain: webhook
+audience: integrador
+lang: tecnica
+---
+
+<Info>
+  **Resumo:** 27 eventos, todos com o [mesmo envelope](/api-reference/kyc/webhooks#o-envelope). A convenção do nome é `<recurso>.<sub-recurso>.<o que aconteceu, no passado>`. Nome de evento é contrato público: ele não muda.
+</Info>
+
+## Catálogo
+
+| Categoria | Eventos |
+| --- | --- |
+| Documento | `registry.document.received`, `registry.document.progress`, `registry.document.assessed`, `registry.document.failed`, `registry.document.reprocessed`, `registry.document.decided` |
+| Cadastro | `registry.updated`, `registry.financial.extracted` |
+| Solicitação | `collection.created`, `collection.sent`, `collection.canceled`, `collection.completed`, `collection.expired` |
+| Itens | `collection.item.submitted`, `collection.item.assessed`, `collection.item.rejected`, `collection.item.reviewed`, `collection.item.waived` |
+| Formulário e assinatura | `collection.form.submitted`, `collection.consent.accepted`, `collection.identity.completed`, `collection.signature.collected`, `collection.signature.completed`, `collection.signature.document` |
+| Mensagens | `collection.message.sent`, `collection.message.reminded`, `collection.recipient.opened`, `collection.message.failed` |
+| Teste | `ping` |
+
+`GET /v1/webhook/events` devolve este mesmo catálogo, com os grupos, para você montar a sua tela sem fixar a lista no código.
+
+<Note>
+  `ping` não entra em nenhum grupo e não respeita a lista de eventos da assinatura: ele é o botão "testar".
+</Note>
+
+## Documento
+
+### `registry.document.received`
+
+Upload confirmado, a análise vai começar. Sai **depois** do despacho para o pipeline: um `received` que chegasse antes prometeria um parecer que poderia nunca vir.
+
+```json
+{
+  "registryId": "6612a7f30000000000000001",
+  "registryDocumentId": "6612a7f30000000000000031",
+  "document": "12345678000190",
+  "fileName": "contrato-social.pdf",
+  "mimeType": "application/pdf",
+  "sizeBytes": 1843200,
+  "expectedType": "CONTRATO_SOCIAL",
+  "status": "RECEIVED"
+}
+```
+
+### `registry.document.progress`
+
+Passo da análise. Existe para quem consome por API não ver um silêncio de minutos entre o upload e o parecer e sair fazendo polling, que é exatamente o que o webhook evita.
+
+```json
+{
+  "registryId": "6612a7f30000000000000001",
+  "registryDocumentId": "6612a7f30000000000000031",
+  "stage": "EXTRACTING",
+  "type": "CONTRATO_SOCIAL",
+  "attempt": 1
+}
+```
+
+### `registry.document.assessed`
+
+Parecer terminal. É o evento principal do módulo.
+
+```json
+{
+  "registryId": "6612a7f30000000000000001",
+  "registryDocumentId": "6612a7f30000000000000031",
+  "document": "12345678000190",
+  "type": "CONTRATO_SOCIAL",
+  "status": "VALIDATED",
+  "attempt": 1,
+  "verdict": "VALIDO",
+  "score": 0.91,
+  "reason": null
+}
+```
+
+`reason` traz o `statusReason` quando o documento parou num terminal que não é falha técnica (fora de escopo, não identificado, qualidade insuficiente, parecer de análise manual).
+
+Para os campos extraídos e as verificações, chame o [resultado completo](/api-reference/kyc/documentos#4-ler-o-resultado).
+
+### `registry.document.failed`
+
+Falha técnica: não há parecer, e o reprocessamento é possível. Mesmo formato do `assessed`, com `status: "FAILED"`.
+
+### `registry.document.reprocessed`
+
+Reprocessamento disparado. Avisa que o parecer que você já recebeu **vai ser substituído**; sem ele, você guardaria o veredito antigo e receberia um segundo `assessed` do mesmo documento sem entender de onde veio.
+
+```json
+{
+  "registryId": "6612a7f30000000000000001",
+  "registryDocumentId": "6612a7f30000000000000031",
+  "attempt": 2,
+  "forceType": "ALTERACAO_CONTRATUAL",
+  "overriddenFeedbackVerdict": null
+}
+```
+
+### `registry.document.decided`
+
+Um operador discordou do parecer e decidiu na mão. É evento separado do parecer da IA de propósito: quem integra costuma tratar os dois de forma diferente (um libera a operação automaticamente, o outro registra que alguém assumiu).
+
+```json
+{
+  "registryId": "6612a7f30000000000000001",
+  "registryDocumentId": "6612a7f30000000000000031",
+  "type": "CONTRATO_SOCIAL",
+  "status": "VALIDATED",
+  "attempt": 1,
+  "verdict": "VALIDO",
+  "comment": "Conferido na Junta por telefone.",
+  "decidedByUserId": "6612a7f30000000000000005"
+}
+```
+
+## Cadastro
+
+### `registry.updated`
+
+Completude, situação de KYC ou dados básicos mudaram. É o que você usa para decidir se pode seguir com a operação.
+
+```json
+{
+  "registryId": "6612a7f30000000000000001",
+  "document": "12345678000190",
+  "kycStatus": "UP_TO_DATE",
+  "completeness": 100
+}
+```
+
+### `registry.financial.extracted`
+
+Balanço e DRE extraídos: os números já estão no cadastro. É aqui que a esteira de crédito acorda.
+
+```json
+{
+  "registryId": "6612a7f30000000000000001",
+  "registryDocumentId": "6612a7f30000000000000041",
+  "attempt": 1,
+  "periodCount": 3,
+  "latestPeriodAt": "2025-12-31T00:00:00.000Z",
+  "periods": []
+}
+```
+
+## Solicitação, itens, formulário e assinatura
+
+Estes eventos saem da trilha da solicitação, então todos têm o **mesmo formato de `data`**:
+
+```json
+{
+  "collectionId": "6612a7f30000000000000051",
+  "itemId": "6612a7f30000000000000071",
+  "recipientId": "6612a7f30000000000000061",
+  "action": "ITEM_ASSESSED",
+  "actorType": "SYSTEM",
+  "occurredAt": "2026-09-05T14:21:03.517Z",
+  "payload": { }
+}
+```
+
+| Campo | O que é |
+| --- | --- |
+| `collectionId` | A solicitação |
+| `itemId` | O item, quando o evento é de item (`null` nos eventos da solicitação) |
+| `recipientId` | O destinatário, quando se aplica |
+| `action` | A ação na trilha que gerou o evento |
+| `actorType` | `USER`, `API_USER`, `RECIPIENT` ou `SYSTEM` |
+| `occurredAt` | Quando |
+| `payload` | O conteúdo específico da ação |
+
+### Solicitação
+
+| Evento | Quando dispara | `action` |
+| --- | --- | --- |
+| `collection.created` | A solicitação foi criada | `COLLECTION_CREATED` |
+| `collection.sent` | O envio foi disparado | `COLLECTION_SENT` |
+| `collection.canceled` | Cancelada por um operador | `COLLECTION_CANCELED` |
+| `collection.completed` | Todos os itens resolvidos | `COLLECTION_COMPLETED` |
+| `collection.expired` | O prazo venceu com item pendente | `COLLECTION_EXPIRED` |
+
+### Itens
+
+| Evento | Quando dispara | `action` |
+| --- | --- | --- |
+| `collection.item.submitted` | O destinatário entregou | `ITEM_SUBMITTED` |
+| `collection.item.assessed` | A análise concluiu com parecer | `ITEM_ASSESSED` |
+| `collection.item.rejected` | Reprovado, com pedido de reenvio ao destinatário | `ITEM_REJECTED` |
+| `collection.item.reviewed` | O operador decidiu (modo `REVIEW`) | `ITEM_REVIEWED` |
+| `collection.item.waived` | Dispensado pelo operador | `ITEM_WAIVED` |
+
+<Tip>
+  Em `AUTOMATIC`, `collection.item.assessed` já resolve o item. Em `REVIEW`, ele apenas informa o parecer da IA: o que fecha o item é `collection.item.reviewed`.
+</Tip>
+
+### Formulário, consentimento, identidade e assinatura
+
+| Evento | Quando dispara | `action` |
+| --- | --- | --- |
+| `collection.form.submitted` | O formulário foi respondido | `FORM_SUBMITTED` |
+| `collection.consent.accepted` | O termo foi aceito | `CONSENT_ACCEPTED` |
+| `collection.identity.completed` | A verificação de identidade voltou com resultado | `IDENTITY_COMPLETED` |
+| `collection.signature.collected` | **Uma parte** assinou | `SIGNATURE_COLLECTED` |
+| `collection.signature.completed` | A **última** parte obrigatória assinou: o documento conjunto existe | `SIGNATURE_COMPLETED` |
+| `collection.signature.document` | A via assinada em PDF foi gerada e guardada | `SIGNATURE_DOCUMENT_GENERATED` |
+
+<Note>
+  `signature.collected` e `signature.completed` respondem perguntas diferentes: uma é "fulano assinou", a outra é "o contrato existe". É a segunda que autoriza a via em PDF a nascer.
+</Note>
+
+## Mensagens
+
+| Evento | Quando dispara | `action` |
+| --- | --- | --- |
+| `collection.message.sent` | E-mail ou WhatsApp saiu para o destinatário | `RECIPIENT_NOTIFIED` |
+| `collection.message.reminded` | Lembrete automático de item pendente | `RECIPIENT_REMINDED` |
+| `collection.recipient.opened` | O destinatário **abriu** o link | `RECIPIENT_OPENED` |
+
+### `collection.message.failed`
+
+A mensagem **não** chegou. É o único da família que não sai da trilha, e é o mais fácil de esquecer de assinar: sem ele, você acha que avisou o cliente e o cliente nunca soube, e descobre no vencimento.
+
+```json
+{
+  "collectionId": "6612a7f30000000000000051",
+  "recipientId": "6612a7f30000000000000061",
+  "name": "Ana Souza",
+  "email": "ana@exemplo.com.br",
+  "phone": "+5551999998888",
+  "template": "COLLECTION_INVITE",
+  "channels": ["EMAIL", "WHATSAPP"],
+  "error": "550 mailbox unavailable"
+}
+```
+
+<Tip>
+  Assine `collection.message.failed` mesmo que não assine mais nada da categoria de mensagens. Quem tem este evento consegue ligar para o cliente; quem não tem, descobre no vencimento.
+</Tip>
+
+## O que não vira webhook
+
+Ruído interno não vira evento, de propósito: cada gravação de rascunho, cada recálculo de estado, a visualização de imagens da identidade, os eventos de bastidor do destinatário e o próprio registro de entrega de webhook (que se realimentaria). Evento demais tem o mesmo efeito que evento nenhum: o integrador filtra tudo e para de ler.
+
+Tudo isso continua na trilha de auditoria, consultável por API.
+
+## Eventos de relatório e crédito
+
+Os eventos de relatório, política, comitê, exportação e operação continuam existindo e agora aparecem na mesma tela de configuração, sob a categoria **Relatórios e crédito**, com nome público na mesma convenção:
+
+| Nome público | Tipo gravado |
+| --- | --- |
+| `report.section.updated` | `REPORT` |
+| `report.finished` | `REPORT_FINISHED` |
+| `report.status.changed` | `REPORT_STATUS` |
+| `report.exported` | `REPORT_EXPORTED` |
+| `committee.finished` | `COMMITTEE_FINISHED` |
+| `credit-policy.evaluated` | `CREDIT_POLICY` |
+| `operation.updated` | `OPERATION` |
+| `optin.updated` | `OPTIN` |
+
+<Note>
+  Nada foi migrado: o tipo gravado continua o mesmo, e quem já integra por `POST /webhook` com `type: "REPORT_FINISHED"` não precisa mudar nada. O que muda é o **nome público** na lista de eventos, para você não ter de aprender duas convenções.
+
+  O conteúdo desses eventos está em [Criar Webhook](/api-reference/webhook/post-webhook).
+</Note>

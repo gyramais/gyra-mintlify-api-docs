@@ -1,0 +1,88 @@
+---
+title: "Página do destinatário"
+description: "O link que o cliente final recebe: o que ele vê, como a página fica com a sua marca, domínio próprio, remetente próprio e WhatsApp próprio."
+icon: "link"
+surface: plataforma
+domain: cadastro
+audience: operador
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** o destinatário recebe um endereço curto e não precisa de senha, cadastro nem aplicativo. A página abre no celular, mostra só o que falta e atualiza sozinha conforme cada item é analisado.
+</Info>
+
+## O link
+
+```
+https://envio.gyramais.com.br/{token}
+```
+
+O token é o caminho inteiro: 43 caracteres, um por destinatário. Ele identifica a pessoa e o escopo dela, então dois destinatários da mesma solicitação recebem links diferentes e cada um só enxerga os próprios itens.
+
+Links já emitidos no formato antigo (`/envio/{token}`) continuam respondendo.
+
+## O que a pessoa faz na página
+
+| Item | O que aparece |
+| --- | --- |
+| `DOCUMENT` | Botão de envio, com os formatos e o tamanho aceitos daquele item, e o resultado da análise assim que sai |
+| `FORM` | O [formulário](/kyc/formularios), pré-preenchido com o que a IA já leu |
+| `CONSENT` | O texto do termo e o aceite |
+| `SIGNATURE` | O documento, o quadro de partes e a assinatura |
+| `IDENTITY` | A [verificação de identidade](/kyc/verificacao-de-identidade) |
+
+Ela pode ainda:
+
+- **Pedir um link novo** quando o dela venceu (quem reemite é o operador, nunca a página).
+- **Convidar outra parte** para um documento conjunto, quando o item permite.
+- **Informar o contato** de uma parte que o documento já nomeou.
+
+## Tempo real
+
+A página escuta um canal em tempo real e atualiza sozinha quando um item muda de estado, sem recarregar e sem polling. O nome do canal é derivado do token por HMAC: quem tiver apenas o hash guardado (um backup, um dump, um log de query) não consegue escutar o canal de ninguém.
+
+## Segurança do link
+
+| Proteção | Valor |
+| --- | --- |
+| Requisições por token | 30 por minuto |
+| Requisições por IP | 120 por minuto |
+| Reenvios de link por destinatário | 3 |
+
+O token nunca é gravado nem registrado em log: o que se guarda é o hash dele. Estouro de limite responde `429` com mensagem em português.
+
+## Sua marca na página
+
+Com a capacidade `communicationBrandingEnabled`, a página do destinatário e as mensagens saem com a identidade da sua empresa, e não com a da GYRA+.
+
+### Logo e cores
+
+Logo enviado pelo painel, e quatro cores em hexadecimal de 6 dígitos:
+
+| Cor | Onde aparece |
+| --- | --- |
+| `backgroundColor` | Fundo |
+| `primaryButton` | Botão principal |
+| `secondaryButton` | Botão secundário |
+| `linkButton` | Links |
+
+As mesmas cores valem nas telas do toolbox: a marca é uma só, configurada num lugar só.
+
+### Domínio próprio do link
+
+Em vez de `envio.gyramais.com.br`, o link sai no seu domínio. Você declara o domínio, a plataforma devolve os registros de DNS a publicar, e depois pede a verificação. Enquanto o DNS não confere, o link continua saindo no domínio da plataforma.
+
+### Remetente próprio do e-mail
+
+Mesmo desenho: você declara o domínio do remetente, publica os registros de DNS que a plataforma devolve e pede a conferência. Sem isso, o e-mail sai do remetente da plataforma.
+
+### WhatsApp próprio
+
+Você conecta o número da sua empresa, e a plataforma confere o token contra a Meta. O texto do convite é salvo e submetido para aprovação da Meta, e o painel mostra o estado do modelo (em análise, aprovado, recusado).
+
+Desconectar volta ao número da plataforma.
+
+## Pré-visualização
+
+Antes de enviar, dá para ver a mensagem exata que vai sair (e-mail e WhatsApp) e a página do destinatário como ela vai aparecer, com a marca aplicada.

@@ -1,6 +1,6 @@
 ---
-title: "Webhooks e API Keys"
-description: "Como obter credenciais de API e configurar webhooks para receber eventos em tempo real."
+title: "API & MCP: chaves e webhooks"
+description: "Gerar as credenciais de API pelo painel, configurar webhooks e ligar o conector de IA, tudo em Configurações."
 icon: "key"
 surface: plataforma
 domain: integracao
@@ -9,19 +9,50 @@ lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** para integrar a GYRA+ com seu backend, você precisa de **credenciais de API** (`clientId` + `clientSecret`) e, opcionalmente, de **webhooks** para receber o resultado da análise sem polling. As credenciais são solicitadas via suporte; os webhooks são configurados pela própria API.
+  **Resumo:** tudo o que liga o seu sistema ao nosso está em **Configurações, API & MCP**: você **gera a credencial de API ali mesmo**, cadastra webhooks e conecta o MCP. Não é mais preciso pedir credencial ao suporte.
 </Info>
 
-## API Keys
+## Onde fica
 
-### Obter credenciais
+Menu lateral, **Configurações**, aba **API & MCP**. A tela mostra, no topo, o endereço da API e o formato da autenticação, e em seguida três seções na ordem em que você precisa delas: **credenciais**, **webhooks** e **MCP**.
 
-Não existe tela de criação de API Keys no toolbox. Para obter credenciais de acesso à API, envie um e-mail para `atendimento@gyramais.com` informando:
+<Warning>
+  É área de administradores. As credenciais desta tela dão acesso aos dados da organização inteira; compartilhe com cuidado.
+</Warning>
 
-- Organização e ambiente de uso (produção, staging, etc.).
-- Nome reconhecível da integração (ex: `backend-produção`, `n8n-staging`).
+## Chaves de API
 
-A equipe retorna com o `clientId` e o `clientSecret`. Guarde o `clientSecret` no seu gerenciador de segredos, ele não é recuperável depois.
+### Gerar uma credencial
+
+<Steps>
+  <Step title="Configurações, API & MCP">
+    Na seção **Credenciais de API**, clique em criar.
+  </Step>
+  <Step title="Dar um nome reconhecível">
+    Use algo que você reconheça na hora de revogar: `backend-producao`, `n8n-homologacao`, `esteira-credito`.
+  </Step>
+  <Step title="Copiar o par">
+    A tela mostra o `clientId` e o `clientSecret` e só fecha quando você confirma que copiou.
+  </Step>
+</Steps>
+
+<Warning>
+  O `clientSecret` aparece **uma vez**, na criação, e nunca mais: guardamos apenas o hash dele e não existe rota que o devolva. Ao fechar o painel, o valor é apagado da tela.
+
+  Quem perdeu o segredo cria outra credencial e revoga a antiga, que é a operação certa de qualquer forma: um segredo que alguém precisou reler já esteve em algum lugar que não devia.
+</Warning>
+
+### Revogar
+
+A listagem mostra cada credencial com o `clientId` e a data de criação, e cada linha tem a ação de revogar. Revogar apaga a credencial dos dois lados: ela para de autenticar imediatamente.
+
+### Quantas você quiser
+
+Uma por integração e por ambiente é o padrão saudável: dá para revogar a de homologação sem derrubar a produção.
+
+### Quem pode
+
+Quem tem a permissão **gerenciar configurações** (Administrador, Owner, Superuser). O mesmo perfil que cadastra webhook.
 
 ### Gerar token
 
@@ -66,8 +97,15 @@ curl -X POST https://gyra-core.gyramais.com.br/v2/report \
 
 Permitem que a GYRA+ notifique seu backend quando algo relevante acontece (relatório concluído, política avaliada, exportação gerada, decisão manual de analista), em vez de você ficar fazendo polling.
 
+Você configura webhooks **pela tela**, na mesma aba *API & MCP*, ou pela API.
+
+Na tela você escolhe a URL, marca os eventos por categoria, testa o endereço com um disparo real e gira o segredo quando precisar. O catálogo de eventos vem do backend, então evento novo aparece ali sozinho.
+
 <Note>
-  Webhooks são configurados **via API**, não há tela no toolbox para gerenciá-los. Os endpoints são `POST /webhook`, `GET /webhook`, `DELETE /webhook/:id`.
+  Existem duas famílias de eventos, e as duas aparecem na mesma lista:
+
+  - **Relatórios e crédito**, documentada nesta página e em [Criar Webhook](/api-reference/webhook/post-webhook);
+  - **Cadastros e solicitações**, com envelope e assinatura próprios, documentada em [Eventos de webhook](/api-reference/kyc/eventos-de-webhook).
 </Note>
 
 ### Tipos de evento
@@ -226,6 +264,10 @@ A GYRA+ faz até **3 tentativas** de entrega com backoff exponencial (1s, ~2s, ~
 - **Escolha o tipo certo**: `REPORT_FINISHED` para a maioria dos fluxos (uma entrega por relatório), `REPORT` só se você precisa reagir seção a seção.
 - **Fallback com polling** em `GET /v2/report/:id` caso o seu endpoint fique indisponível.
 
+## Conector de IA (MCP)
+
+A terceira seção da tela liga o [MCP da GYRA+](/mcp/o-que-e) ao seu assistente. Ele não usa credencial de API: a autenticação é o seu próprio login da plataforma.
+
 ## Restringir acesso via SSO-only
 
 Por padrão, SSO (Google e Microsoft) convive com login por senha. Se você quer **forçar SSO-only** na sua organização, entre em contato com `atendimento@gyramais.com` para habilitar essa configuração.
@@ -234,10 +276,13 @@ Por padrão, SSO (Google e Microsoft) convive com login por senha. Se você quer
 
 <AccordionGroup>
   <Accordion title="Perdi meu clientSecret, como recupero?">
-    Não tem como recuperar. Envie e-mail para `atendimento@gyramais.com` pedindo novas credenciais.
+    Não tem como recuperar: guardamos só o hash. Crie uma credencial nova em *Configurações, API & MCP* e revogue a antiga.
   </Accordion>
   <Accordion title="Posso ter várias credenciais simultâneas?">
-    Sim. Útil para separar ambientes (dev, staging, prod) ou integrações diferentes. Peça ao suporte quantas precisar.
+    Sim, e é o recomendado: uma por integração e por ambiente (dev, homologação, produção). Você cria quantas precisar pelo painel, sem pedir a ninguém.
+  </Accordion>
+  <Accordion title="Preciso pedir credencial ao suporte?">
+    Não. Desde setembro de 2026 a credencial é gerada por você mesmo em *Configurações, API & MCP*. O suporte segue disponível para dúvidas, mas não é mais o caminho para obter a chave.
   </Accordion>
   <Accordion title="Diferença entre webhook e polling?">
     Webhook é push (GYRA+ te avisa quando o relatório fica pronto). Polling é pull (você consulta `GET /v2/report/:id` até concluir). Webhook é mais eficiente, mas exige endpoint público HTTPS.
@@ -259,7 +304,7 @@ Por padrão, SSO (Google e Microsoft) convive com login por senha. Se você quer
   <Card title="MCP da GYRA+" icon="plug" href="/mcp/o-que-e">
     Usar as credenciais via agente de IA.
   </Card>
-  <Card title="Rodar uma análise" icon="play" href="/toolbox/rodar-operacao">
-    Primeira análise ponta a ponta.
+  <Card title="Cadastros e Solicitações" icon="folder-open" href="/kyc/visao-geral">
+    O módulo documental, e os eventos que ele emite.
   </Card>
 </CardGroup>

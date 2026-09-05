@@ -1,0 +1,186 @@
+---
+title: "Webhooks"
+description: "Assinar eventos do módulo: envelope único, assinatura HMAC com carimbo de tempo, política de retentativa e as rotas de configuração."
+icon: "webhook"
+surface: api
+domain: webhook
+audience: integrador
+lang: tecnica
+---
+
+<Info>
+  **Resumo:** um envelope só para todos os eventos, assinatura HMAC que inclui o carimbo de tempo, segredo **por assinatura** e retentativa com espera crescente. Você escreve um parser e um `switch` no campo `event`.
+</Info>
+
+## O envelope
+
+Todo evento sai com a mesma forma:
+
+```json
+{
+  "id": "registry.document.assessed:6612a7f3...",
+  "event": "registry.document.assessed",
+  "occurredAt": "2026-09-05T13:07:44.812Z",
+  "organizationId": "6612a7f30000000000000009",
+  "data": { }
+}
+```
+
+| Campo | O que é |
+| --- | --- |
+| `id` | Id do **evento**, não da entrega. A mesma mensagem reentregue carrega o mesmo `id` |
+| `event` | Nome do evento. Ver [Eventos](/api-reference/kyc/eventos-de-webhook) |
+| `occurredAt` | Quando o evento aconteceu, ISO 8601 |
+| `organizationId` | A sua organização |
+| `data` | O conteúdo do evento |
+
+<Warning>
+  **Deduplique por `id`.** Uma retentativa depois de falha carrega o mesmo `id`; sem deduplicar, um retry vira um segundo pedido de reenvio para o seu cliente.
+</Warning>
+
+## Cabeçalhos
+
+| Cabeçalho | Conteúdo |
+| --- | --- |
+| `X-Gyra-Signature` | `sha256=<hex>` |
+| `X-Gyra-Timestamp` | Segundos Unix |
+| `X-Gyra-Event` | Nome do evento |
+| `X-Gyra-Delivery` | Id da entrega |
+| `Content-Type` | `application/json` |
+
+## Conferir a assinatura
+
+```
+assinatura_esperada = HMAC_SHA256(segredo, "<X-Gyra-Timestamp>.<corpo cru>")
+```
+
+Compare com `X-Gyra-Signature`, que vem no formato `sha256=<hex>`.
+
+<Warning>
+  Use o corpo **cru**, byte a byte. Reserializar o JSON muda espaços e ordem de chave, e a assinatura deixa de bater.
+
+  Recuse o que estiver fora de uma janela de tempo (cinco minutos é o costume). É isso que impede reenvio, e é por isso que o carimbo entra **dentro** da assinatura: fora dela, quem reenvia trocaria o cabeçalho e o resto continuaria valendo.
+</Warning>
+
+<CodeGroup>
+
+```javascript Node
+import crypto from "crypto";
+
+function conferir(req, segredo) {
+  const carimbo = req.headers["x-gyra-timestamp"];
+  const assinatura = req.headers["x-gyra-signature"];
+  const corpoCru = req.rawBody; // string ou Buffer, nunca JSON.stringify(req.body)
+
+  const idade = Math.abs(Date.now() / 1000 - Number(carimbo));
+  if (!carimbo || idade > 300) return false;
+
+  const esperada =
+    "sha256=" +
+    crypto
+      .createHmac("sha256", segredo)
+      .update(`${carimbo}.${corpoCru}`)
+      .digest("hex");
+
+  return crypto.timingSafeEqual(Buffer.from(esperada), Buffer.from(assinatura));
+}
+```
+
+```python Python
+import hmac, hashlib, time
+
+def conferir(headers, corpo_cru: bytes, segredo: str) -> bool:
+    carimbo = headers.get("X-Gyra-Timestamp", "")
+    assinatura = headers.get("X-Gyra-Signature", "")
+    if not carimbo or abs(time.time() - int(carimbo)) > 300:
+        return False
+    esperada = "sha256=" + hmac.new(
+        segredo.encode(),
+        f"{carimbo}.".encode() + corpo_cru,
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(esperada, assinatura)
+```
+
+</CodeGroup>
+
+## Entrega e retentativa
+
+| | |
+| --- | --- |
+| Tempo limite por tentativa | 10 segundos |
+| Tentativas | A inicial e mais 3 |
+| Espera entre tentativas | 5s, 30s, 120s |
+| Redirecionamento | **Não é seguido.** `3xx` conta como falha |
+| Falhas seguidas até desligar a assinatura | 20 |
+
+<Note>
+  O endereço é resolvido **a cada tentativa**, não só no cadastro. Domínio legítimo que passa a apontar para um endereço interno é recusado na hora da entrega, não depois.
+
+  Endpoint que acumula 20 falhas seguidas é desligado sozinho, e o painel mostra o motivo. Endpoint morto que continua sendo chamado mascara o problema: a organização acha que recebe eventos há semanas.
+</Note>
+
+Responda `2xx` rápido e processe depois. A GYRA+ nunca deixa de executar o que já aconteceu porque o seu servidor caiu.
+
+## Rotas de configuração
+
+Prefixo `/v1/webhook`. Exigem `can-manage-settings` ou `can-use-registry-api`.
+
+| Método | Caminho | O que faz |
+| --- | --- | --- |
+| `GET` | `/webhook/events` | Catálogo de eventos disponíveis, agrupados |
+| `GET` | `/webhook/endpoints` | Assinaturas configuradas |
+| `POST` | `/webhook/endpoints` | Cria ou atualiza uma assinatura |
+| `POST` | `/webhook/endpoints/test` | Dispara um evento de teste |
+| `POST` | `/webhook/endpoints/{id}/rotate` | Gira o segredo |
+| `DELETE` | `/webhook/endpoints/{id}` | Remove a assinatura |
+
+### Criar ou atualizar
+
+```json
+{
+  "url": "https://api.suaempresa.com/gyra/webhook",
+  "label": "Produção, esteira de crédito",
+  "events": ["registry.document.assessed", "collection.completed"],
+  "enabled": true
+}
+```
+
+| Campo | Nota |
+| --- | --- |
+| `id` | Ausente cria, presente atualiza |
+| `url` | Endereço público. Endereço interno é recusado |
+| `label` | Como a assinatura aparece na tela, até 80 caracteres |
+| `events` | Lista de nomes. **Vazio quer dizer todos** |
+| `enabled` | |
+| `apiKey` | Só no caminho legado de relatório e crédito, que envia o valor no cabeçalho `api-key` |
+
+<Tip>
+  Lista de eventos vazia quer dizer "todos" de propósito: quem está começando não sabe de quais precisa, e obrigar a escolher antes de conhecer produz assinatura errada e evento perdido em silêncio.
+</Tip>
+
+### O segredo
+
+O segredo é gerado pela plataforma e devolvido **uma vez**, na criação e na rotação. Depois disso a listagem só mostra uma dica com os últimos caracteres (`secretHint`).
+
+O segredo é **por assinatura**: um endpoint comprometido não permite forjar eventos para os outros, e girar a chave de um integrador não derruba ninguém.
+
+### Testar
+
+```json
+{ "id": "6612a7f30000000000000091" }
+```
+
+Dispara o evento `ping` naquele endpoint específico, ignorando a lista de eventos dele. Quem aperta "testar" quer ver **este** endpoint responder agora, e filtrar pelo mesmo critério dos eventos de negócio faria o teste falhar em silêncio numa assinatura que só escuta dois eventos.
+
+A resposta diz se a entrega aconteceu, com o status HTTP e o erro, quando houve.
+
+## Webhook por solicitação e por documento
+
+Além das assinaturas da organização, você pode passar um `callbackUrl` na criação de uma solicitação ou na confirmação de um documento. Ele recebe o resultado daquele objeto, com a **mesma** assinatura HMAC.
+
+Use as assinaturas da organização para o fluxo permanente e o `callbackUrl` para amarrar um retorno a uma chamada específica.
+
+## Onde configurar pela tela
+
+Toolbox, *Configurações, API & MCP, Webhooks*. A tela mostra as assinaturas, o catálogo de eventos por categoria, o botão de testar e o de girar o segredo.

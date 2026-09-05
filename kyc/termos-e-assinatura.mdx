@@ -1,0 +1,129 @@
+---
+title: "Termos e assinatura"
+description: "Modelos de termo em Markdown ou PDF, variáveis, campos posicionados, assinatura individual e conjunta, e o pacote com verificação de identidade."
+icon: "file-signature"
+surface: plataforma
+domain: cadastro
+audience: operador
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** o termo é um modelo versionado da sua organização. Ele pode ser escrito no editor (Markdown) ou ser o PDF que o jurídico mandou, e é assinado por uma pessoa (individual) ou por várias no mesmo documento (conjunta).
+</Info>
+
+## Modelos de termo
+
+| Escopo | Quem edita |
+| --- | --- |
+| `SYSTEM` | Da GYRA+ (o termo de SCR nasce assim). Sua organização **vê** mas não edita |
+| `ORGANIZATION` | Da sua organização, com redação própria |
+
+Como o modelo de coleta e a régua, salvar **publica uma versão nova** e a anterior nunca é reescrita. A `key` é o endereço estável entre versões: um item que aponta para a chave passa a usar a versão nova assim que o jurídico publica.
+
+O modelo pode declarar `entityType` (`COMPANY` ou `PERSON`). Ausente, ele serve os dois.
+
+## As duas origens
+
+| Origem | O que a pessoa assina | Onde os dados entram |
+| --- | --- | --- |
+| `MARKDOWN` | O texto escrito no editor. A via assinada é o PDF que desenhamos | Nas variáveis, dentro do texto |
+| `PDF` | O documento que o jurídico mandou, guardado como chegou | Em caixas que o operador posicionou sobre as páginas |
+
+O caminho `PDF` aceita **importar um contrato em Word**, que volta como rascunho editável do termo, ou enviar o PDF final (presign, confirmação e posicionamento das caixas).
+
+### Caixas posicionadas sobre o PDF
+
+| Espécie | O que é carimbado |
+| --- | --- |
+| `SIGNER_NAME` | Nome de quem assina |
+| `SIGNER_DOCUMENT` | CPF/CNPJ de quem assina |
+| `SIGNER_EMAIL` | E-mail de quem assina |
+| `SIGNED_AT` | Data e hora do aceite |
+| `ORGANIZATION` | Nome de quem pediu |
+| `SUBJECT_NAME` | Nome do cadastro alvo |
+| `SUBJECT_DOCUMENT` | Documento do cadastro alvo |
+| `SIGNATURE` | A assinatura |
+| `CONTENT_HASH` | Código de verificação da via assinada |
+
+## Variáveis do termo
+
+No corpo em Markdown, o termo cita dados com `<<nome>>`.
+
+### Conjunto fixo
+
+| Variável | O que traz | Quando existe |
+| --- | --- | --- |
+| `<<username>>` | Nome de quem assina | sempre |
+| `<<cpf>>` | CPF de quem assina, com máscara | sempre |
+| `<<cnpj>>` | CNPJ da empresa do cadastro, com máscara | sempre |
+| `<<email>>` | E-mail de quem assina | sempre |
+| `<<organizationName>>` | Nome de quem pediu os documentos | sempre |
+| `<<companyName>>` | Nome do cadastro alvo | sempre |
+| `<<date>>` | Data e hora do servidor no aceite | sempre |
+| `<<ip>>` | IP observado no aceite | só ao assinar |
+| `<<hash>>` | Código de verificação da via assinada | só no PDF gerado |
+| `<<partes>>` | Quadro das partes (nome, documento e papel) | só em assinatura conjunta |
+
+### Resposta do formulário
+
+`<<form.CHAVE>>`, onde `CHAVE` é a chave do campo (preset ou livre) do [formulário](/kyc/formularios) da mesma solicitação.
+
+### Campo extraído de um documento
+
+`<<doc.TIPO.campo>>`, por exemplo `<<doc.CONTRATO_SOCIAL.companyName>>`. O caminho pode ser aninhado (`<<doc.DIRPF.summary.netWorth>>`).
+
+<Note>
+  Termo que cita formulário ou documento **depende** daquele item. Com `blockSignatureUntilDependenciesMet` ligado (o padrão), a assinatura fica travada até a dependência concluir: termo assinado com lacuna é problema jurídico, não de experiência.
+</Note>
+
+A API devolve a lista de variáveis disponíveis para um termo, e permite pré-visualizar o termo renderizado com dados de exemplo antes de publicar.
+
+## Assinatura individual e conjunta
+
+| Modo | O que é |
+| --- | --- |
+| `INDIVIDUAL` | Cada pessoa responde por si e cada uma gera o próprio documento |
+| `JOINT` | **Um** documento com várias partes; só existe via assinada quando todas as partes obrigatórias assinarem |
+
+Item sem `signatureMode` é `INDIVIDUAL`.
+
+### Partes de um documento conjunto
+
+| Papel | |
+| --- | --- |
+| `SIGNATARIO` | Assina como parte |
+| `TESTEMUNHA` | Assina como testemunha |
+| `INTERVENIENTE` | Assina como interveniente |
+
+| Situação da parte | O que quer dizer |
+| --- | --- |
+| `PENDING` | Ainda não assinou |
+| `AWAITING_IDENTITY` | Assinou o texto, falta a verificação de identidade. **Não conta como assinada** |
+| `SIGNED` | Assinou |
+| `DECLINED` | Recusou |
+
+Teto padrão de 10 partes por item, configurável no modelo, com limite absoluto de 50.
+
+Com `allowSignatoryInvite`, uma parte pode incluir outra pela própria página do destinatário. Partes que o documento societário nomeou mas de quem ninguém tem o contato entram no quadro **sem link**, e alguém informa o contato depois.
+
+<Tip>
+  O comportamento `requireCoSignerContacts` existe para o caso em que a primeira pessoa assina, vai embora, e o documento fica parado para sempre esperando alguém que nunca foi convidado. Ligado, ninguém assina antes de toda parte obrigatória ter contato.
+</Tip>
+
+## Pacote de assinatura
+
+| Pacote | O que exige |
+| --- | --- |
+| `SIGNATURE` | Só a assinatura, com a trilha de sempre |
+| `SIGNATURE_AND_IDENTITY` | Assinatura **e** verificação de identidade aprovada |
+
+No segundo, a pessoa assina o texto, a parte fica em `AWAITING_IDENTITY`, e o item só fecha (e a via em PDF só existe) quando a identidade voltar aprovada.
+
+## Código de confirmação
+
+A assinatura pode exigir um código enviado por e-mail antes de ser registrada. É uma confirmação a mais, independente da verificação de identidade.
+
+## A via assinada
+
+Quando o item fecha, a plataforma gera o PDF da via assinada e o guarda. Ele carrega o código de verificação (`<<hash>>`) calculado sobre o próprio conteúdo, e o evento `collection.signature.document` avisa que ele existe.

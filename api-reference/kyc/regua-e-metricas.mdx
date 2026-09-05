@@ -1,0 +1,176 @@
+---
+title: "Régua de validação e indicadores"
+description: "Consultar, versionar e publicar a régua da organização, ler o catálogo de opções aceitas e acompanhar acurácia por tipo documental e por campo."
+icon: "sliders"
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+---
+
+<Info>
+  **Resumo:** a régua é a configuração da organização sobre o que exigir de cada tipo de documento. Ela é versionada, o catálogo de opções vem da própria API, e há uma rota de indicadores para acompanhar acurácia. As quatro rotas da régua exigem a capacidade `kycEnabled`.
+</Info>
+
+## Rotas
+
+| Método | Caminho | O que faz |
+| --- | --- | --- |
+| `GET` | `/registry/rule-set` | Régua vigente da organização |
+| `GET` | `/registry/rule-set/history` | Histórico de versões |
+| `GET` | `/registry/rule-set/catalog` | Opções aceitas: verificações, tipos e padrões |
+| `PUT` | `/registry/rule-set` | Publica uma versão nova |
+| `GET` | `/registry/metrics/accuracy` | Indicadores de acurácia |
+
+## Catálogo
+
+`GET /v1/registry/rule-set/catalog`
+
+Antes de montar a régua, leia o catálogo. Ele traz, com vocabulário de negócio:
+
+| Bloco | O que traz |
+| --- | --- |
+| Grupos de negócio | As três perguntas (autenticidade, titularidade, fé pública), com título e explicação |
+| Verificações | `id`, `code`, `label`, `description`, grupo, tipos em que roda, parâmetro que a acompanha e a nota do motor |
+| Parâmetros | Chave, rótulo, unidade, escopo e o caminho dentro de `rules` |
+| Tipos documentais | Rótulo e descrição de cada tipo, agrupados em PJ, PF e ambos |
+| Espécies de certificação | Lista ordenada, da mais fraca à mais forte |
+| Padrões do motor | Vigência por tipo, subtipos reconhecidos e subtipos aceitos por padrão |
+
+<Tip>
+  Use o catálogo em vez de fixar a lista no seu código. Verificação nova do pipeline aparece nele no mesmo deploy em que passa a existir, então a sua tela ou a sua automação não ficam desatualizadas em silêncio.
+</Tip>
+
+## Consultar a régua
+
+`GET /v1/registry/rule-set`
+
+Devolve a versão vigente e o objeto `rules` inteiro, com os padrões já aplicados.
+
+## Publicar uma versão
+
+`PUT /v1/registry/rule-set` (responde `200`)
+
+```json
+{
+  "rules": {
+    "thresholds": { "valido": 0.85, "inconclusivo": 0.6 },
+    "weights": {
+      "classification": 0.15,
+      "extraction": 0.35,
+      "deterministic": 0.3,
+      "reconciliation": 0.2
+    },
+    "blockingChecks": [
+      "EXPECTED_TYPE_MATCH",
+      "EXPECTED_DOCUMENT_MATCH",
+      "DOC_CHECKSUM",
+      "DOCUMENT_STRUCTURE",
+      "DOCUMENT_SUBTYPE"
+    ],
+    "disabledChecks": ["RECENCY"],
+    "warningIsBlocking": false,
+    "nameSimilarityMin": 0.85,
+    "qsaShareTolerance": 0.5,
+    "representationChecks": { "enabled": true, "blocking": false },
+    "capitalConsistency": { "tolerancePercent": 1, "blocking": false },
+    "structureChecks": {
+      "enabled": true,
+      "blocking": true,
+      "vigencyDaysByType": { "COMPROVANTE_RESIDENCIA": 30 },
+      "acceptedSubtypesByType": { "COMPROVANTE_RESIDENCIA": ["ENERGIA", "AGUA", "GAS"] }
+    },
+    "certificationChecks": {
+      "enabled": true,
+      "blocking": false,
+      "minimumByType": { "DECLARACAO_FATURAMENTO": "ASSINATURA_CONTADOR" },
+      "acceptedByType": {},
+      "requireSignatureCoverage": true,
+      "checkRevocation": true
+    },
+    "revenueChecks": { "minimumMonths": 12 },
+    "crossDocumentChecks": { "enabled": true, "blocking": false },
+    "statementChecks": {
+      "enabled": true,
+      "blocking": false,
+      "concentrationThreshold": 0.7,
+      "negativeBalanceDays": 5,
+      "roundTransferCount": 3
+    },
+    "forensicsChecks": {
+      "enabled": true,
+      "blocking": false,
+      "suspicionScore": 1,
+      "ignoredFindings": []
+    },
+    "renewal": {
+      "enabled": true,
+      "periodicityMonths": { "COMPANY": 12, "PERSON": 24 },
+      "templateSlug": { "COMPANY": "renovacao-pj", "PERSON": "renovacao-pf" },
+      "warningDays": 30
+    },
+    "categories": [],
+    "typeOverrides": []
+  }
+}
+```
+
+### Campos de `rules`
+
+| Campo | Tipo | Nota |
+| --- | --- | --- |
+| `thresholds.valido` / `.inconclusivo` | 0 a 1 | Score mínimo de cada parecer |
+| `weights` | 4 números | Pesos de classificação, extração, verificações determinísticas e conciliação. **A soma tem que ser 1** |
+| `blockingChecks` | lista de códigos | `FAIL` reprova o documento |
+| `disabledChecks` | lista de códigos | Saem `SKIP`; não entram no score e nunca reprovam |
+| `warningIsBlocking` | booleano | Trata toda ressalva como impeditiva |
+| `nameSimilarityMin` | 0 a 1 | Similaridade mínima do nome |
+| `qsaShareTolerance` | pontos percentuais | Tolerância da soma das participações |
+| `representationChecks` | `{ enabled, blocking }` | Poderes de representação |
+| `capitalConsistency` | `{ tolerancePercent, blocking }` | Quotas x capital social |
+| `structureChecks` | `{ enabled, blocking, vigencyDaysByType, acceptedSubtypesByType }` | Anatomia, autenticidade, subtipo e vigência |
+| `certificationChecks` | ver exemplo | Espécie mínima ou lista de espécies aceitas, por tipo |
+| `revenueChecks.minimumMonths` | inteiro | Meses de faturamento exigidos |
+| `crossDocumentChecks` | `{ enabled, blocking }` | Coerência entre os documentos do mesmo cadastro |
+| `statementChecks` | ver exemplo | Comportamento da conta no extrato |
+| `forensicsChecks` | ver exemplo | Camada forense; `ignoredFindings` silencia um indício específico |
+| `corporateRequirements` | objeto | Que tipos satisfazem cada requisito societário |
+| `renewal` | ver exemplo | Periodicidade, modelo de solicitação e antecedência do aviso |
+| `categories` | lista | Sobrescreve a régua por categoria documental |
+| `typeOverrides` | lista | Sobrescreve por tipo documental |
+
+<Warning>
+  Publicar **não sobrescreve** a versão anterior: cria uma nova. Todo parecer registra em `assessment.ruleSetVersion` qual versão o julgou, então mudar a régua não reescreve o passado.
+
+  O mesmo código em `disabledChecks` e `blockingChecks` é recusado com `400`.
+</Warning>
+
+### Escopos
+
+A régua tem três níveis, do mais geral ao mais específico: **organização** → **categoria** → **tipo documental**. O nível mais específico vence, e o rótulo da versão aplicada registra qual escopo sobrescreveu a base (por exemplo `org-v7:CATEGORIA+TIPO_DIRPF`).
+
+Nem todo parâmetro aceita override: `nameSimilarityMin` e `qsaShareTolerance` valem para a organização inteira; `vigencyDaysByType` e `minimumByType` já são mapas por tipo.
+
+## Histórico
+
+`GET /v1/registry/rule-set/history?skip=0&take=100`
+
+Cada entrada traz a versão, quem publicou, quando e o `rules` daquela versão. Nenhuma versão é sobrescrita.
+
+## Indicadores de acurácia
+
+`GET /v1/registry/metrics/accuracy`
+
+| Query | Nota |
+| --- | --- |
+| `from` | Início da janela, ISO 8601 |
+| `to` | Fim da janela, ISO 8601, inclusivo |
+| `limit` | Tamanho máximo da amostra usada nas médias de confiança. Padrão 1000, máximo 5000 |
+
+Sem janela, a consulta cobre todo o histórico da organização.
+
+A resposta traz, **por tipo documental e por campo**: volume, distribuição de vereditos, taxa de análise manual, taxa de reprocessamento e confiança média. O volume por status e por tipo é sempre exato; só as médias de confiança usam a amostra.
+
+<Tip>
+  É a rota para responder "vale a pena tornar esta verificação impeditiva?". Olhe a taxa de análise manual do tipo antes de subir uma ressalva a reprovação.
+</Tip>

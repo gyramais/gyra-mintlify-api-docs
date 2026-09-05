@@ -1,0 +1,146 @@
+---
+title: "Cadastros"
+description: "Criar, consultar, listar e remover o cadastro de um CNPJ/CPF, com árvore societária, renovação e trilha de auditoria."
+icon: "folder-open"
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+---
+
+<Info>
+  **Resumo:** o cadastro (`Registry`) é a entidade canônica do módulo. Toda rota abaixo aceita `can-generate-report` ou `can-use-registry-api`, exceto a remoção. Prefixo: `/v1/registry` (ou `/registry`, sem versão).
+</Info>
+
+## Rotas
+
+| Método | Caminho | O que faz |
+| --- | --- | --- |
+| `POST` | `/registry` | Cria (ou devolve) o cadastro de um CNPJ/CPF |
+| `GET` | `/registry` | Lista os cadastros da organização |
+| `GET` | `/registry/{id}` | Consulta um cadastro |
+| `GET` | `/registry/by-document/{document}` | Consulta pelo CNPJ/CPF |
+| `DELETE` | `/registry/{id}` | Remove (soft delete). Exige `can-remove-registry` |
+| `GET` | `/registry/{id}/renewal` | Plano de renovação periódica |
+| `PUT` | `/registry/{id}/renewal` | Define a exceção de renovação (data e contatos) |
+| `POST` | `/registry/{id}/basic-data/refresh` | Atualiza os dados básicos oficiais |
+| `GET` | `/registry/{id}/persons` | Árvore societária |
+| `POST` | `/registry/{id}/persons/{personId}/promote` | Cria/liga o cadastro próprio de uma pessoa da árvore |
+| `GET` | `/registry/{id}/audit` | Trilha de auditoria |
+
+## Criar cadastro
+
+`POST /v1/registry`
+
+```json
+{
+  "document": "12.345.678/0001-90",
+  "name": "Comércio Exemplo LTDA"
+}
+```
+
+| Campo | Tipo | Obrigatório | Nota |
+| --- | --- | --- | --- |
+| `document` | string | sim | CNPJ ou CPF, com ou sem máscara |
+| `name` | string | não | Razão social ou nome; a plataforma resolve pelos dados oficiais quando ausente |
+
+<Tip>
+  A rota é idempotente por documento: chamar de novo com o mesmo CNPJ devolve o cadastro que já existe, em vez de duplicar. É seguro chamá-la no início de qualquer jornada.
+</Tip>
+
+```json Resposta
+{
+  "id": "6612a7f30000000000000001",
+  "organizationId": "6612a7f30000000000000009",
+  "document": "12345678000190",
+  "entityType": "COMPANY",
+  "name": "COMERCIO EXEMPLO LTDA",
+  "kycStatus": "PENDING",
+  "completeness": 0,
+  "createdAt": "2026-09-05T13:02:11.000Z"
+}
+```
+
+## Listar cadastros
+
+`GET /v1/registry`
+
+| Query | Tipo | Nota |
+| --- | --- | --- |
+| `search` | string | Casa por nome ou por documento |
+| `entityType` | `COMPANY` \| `PERSON` | |
+| `kycStatus` | lista | Repetível. Valores: `PENDING`, `PROCESSING`, `UP_TO_DATE`, `ATTENTION`, `EXPIRED`, `RENEWING` |
+| `skip` | inteiro | Padrão 0 |
+| `take` | inteiro | Padrão 20, máximo 50 |
+
+```
+GET /v1/registry?kycStatus=ATTENTION&kycStatus=EXPIRED&take=50
+```
+
+<Warning>
+  `kycStatus` fora da lista é descartado em silêncio pela validação. Filtrar por um valor com typo devolve a **lista inteira** sem erro nenhum.
+</Warning>
+
+## Consultar cadastro
+
+`GET /v1/registry/{id}` e `GET /v1/registry/by-document/{document}` devolvem o mesmo corpo: os campos do cadastro, a situação, a completude e os dados básicos oficiais.
+
+## Renovação
+
+`GET /v1/registry/{id}/renewal` devolve o plano vigente: a data, a origem (`POLICY` ou `MANUAL`), os contatos e se está pausado.
+
+`PUT /v1/registry/{id}/renewal`
+
+```json
+{
+  "dueAt": "2027-03-31",
+  "contacts": [
+    {
+      "name": "Ana Souza",
+      "email": "ana@exemplo.com.br",
+      "phone": "+5551999998888",
+      "registryPersonId": "6612a7f30000000000000021"
+    }
+  ],
+  "paused": false
+}
+```
+
+| Campo | Tipo | Nota |
+| --- | --- | --- |
+| `dueAt` | data ou `null` | `null` remove a exceção e volta ao plano da política |
+| `contacts` | lista ou `null` | Para quem o pedido de renovação vai. `registryPersonId` liga o contato a uma pessoa da árvore |
+| `paused` | booleano | Pausar é reversível e mantém o dossiê |
+
+Pausar a renovação não exige permissão própria: qualquer perfil do módulo pode.
+
+## Árvore societária
+
+`GET /v1/registry/{id}/persons`
+
+Cada pessoa traz nome, documento, papel, participação e a origem:
+
+| `source` | De onde veio |
+| --- | --- |
+| `QSA_OFICIAL` | Quadro societário da fonte oficial |
+| `DOCUMENT_EXTRACTION` | Lido de contrato, estatuto, ata ou certidão |
+| `MANUAL` | Criado por um operador |
+
+`POST /v1/registry/{id}/persons/{personId}/promote` cria (ou liga) o cadastro próprio daquela pessoa, para você pedir documento de sócio sem sair do dossiê da empresa. Devolve o `Registry` da pessoa.
+
+## Trilha de auditoria
+
+`GET /v1/registry/{id}/audit?skip=0&take=100`
+
+| Query | Padrão | Máximo |
+| --- | --- | --- |
+| `skip` | 0 | |
+| `take` | | 100 |
+
+Cada linha traz a ação, quem fez (`USER`, `API_USER`, `RECIPIENT`, `SYSTEM`), o id do evento, o documento envolvido e o payload da ação. A trilha é append-only: correção se faz gravando linha nova.
+
+## Remover cadastro
+
+`DELETE /v1/registry/{id}`
+
+Soft delete. Exige `can-remove-registry`, que é concedida a **Administrador**, **Owner**, **Superuser** e **Gerente de Crédito**. Analista e coordenador recebem `403`.
