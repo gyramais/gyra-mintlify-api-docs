@@ -33,6 +33,10 @@ Módulo novo, no toolbox e na API: o dossiê documental de cada CNPJ/CPF, e o pe
 - **Chaves de API pelo painel:** `Configurações, API & MCP` passa a gerar, listar e revogar as credenciais da organização. Não é mais preciso pedir ao suporte. Ver [Chaves de API](/api-reference/api-keys).
 - **Webhooks pelo painel:** a mesma tela cadastra, testa e gira o segredo das assinaturas, com o catálogo de eventos por categoria. Os eventos de relatório e crédito ganharam nome público na mesma convenção (`report.finished`, `credit-policy.evaluated`), sem mudar nada para quem já integra.
 - **Versionamento de URI na API do módulo:** as rotas respondem em `/v1/registry/...` e `/registry/...`; use o caminho versionado em integração nova. Ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral).
+- **O cadastro documental no Comitê de Crédito IA:** o comitê passa a receber o recorte de capacidade de pagamento do dossiê (declaração de faturamento, DIRPF e ECF), sempre com procedência (tipo, versão, data-base e o que certifica o papel), e só de documento aprovado e vigente. Ele também distingue "não há cadastro" de "não consegui consultar". Ver [Comitê de Crédito IA](/concepts/comite-de-credito#o-cadastro-documental-no-comitê).
+- **Balanço pelo link do cliente:** um item `DEMONSTRACOES_FINANCEIRAS` numa solicitação faz o próprio cliente enviar o balanço, que é validado, arquivado no cadastro e extraído, com aviso pelo evento `registry.financial.extracted`. Nesse caminho também é aceito o ZIP do XBRL da Central de Balanços. Ver [Análise Financeira](/concepts/analise-financeira#como-enviar-os-balanços).
+- **Consumo do módulo documentado:** os dez eventos de cobrança, com a regra de cada um (documento analisado e não arquivo enviado, reprocessamento não cobra de novo, verificação de identidade cobra com qualquer veredito). Ver [O que é cobrado](/kyc/cobranca).
+- **Permissão nova `can-remove-registry`:** remover cadastro deixa de acompanhar "rodar análise" e passa a ser de Administrador, Owner, Superuser e Gestor de Crédito. Ver [Gerenciar Usuários e Permissões](/toolbox/gerenciar-usuarios-permissoes#cadastros-e-solicitações).
 
 ---
 

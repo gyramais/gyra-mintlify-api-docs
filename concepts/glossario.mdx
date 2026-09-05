@@ -266,8 +266,58 @@ Mesmo no modo automático, a análise manual sobrescreve o `status` (e o `policy
 
 ## Face Match
 
-**Definição:** Validação de identidade comparando uma selfie do cliente final com a foto do documento oficial. Faz parte do fluxo de Solicitações.
+**Definição:** Validação de identidade comparando uma selfie do cliente final com a foto do documento oficial. É um dos caminhos do item de identidade de uma solicitação.
 
-**Na plataforma:** "Solicitação de Face Match".
+**Na plataforma:** item **Identidade** numa solicitação.
 
-**Na API:** integrada ao fluxo de autorizações.
+**Na API:** [Verificação de identidade](/kyc/verificacao-de-identidade).
+
+---
+
+## Cadastro (dossiê documental)
+
+**Definição:** O conjunto de documentos de um CNPJ ou CPF dentro da sua organização, com versão, completude, situação de KYC, árvore societária, renovação e trilha de auditoria. É onde todo documento entregue vai parar.
+
+**Na plataforma:** menu **Cadastros**.
+
+**Na API:** `/v1/registry`. Ver [Cadastro documental](/kyc/cadastro-documental).
+
+---
+
+## Solicitação de coleta
+
+**Definição:** O pedido enviado ao cliente final por um link, com itens de documento, formulário, termo, assinatura e identidade. Tem prazo, lembretes e desfecho.
+
+**Na plataforma:** menu **Solicitações**.
+
+**Na API:** `/v1/collections`. Ver [Solicitações de coleta](/kyc/solicitacoes).
+
+---
+
+## Régua de validação
+
+**Definição:** A configuração da sua organização sobre o que exigir de cada tipo de documento: o que reprova, o que vira ressalva e o que nem roda. É versionada, e todo parecer registra qual versão o julgou.
+
+**Na plataforma:** *Cadastros, Validações*.
+
+**Na API:** `/v1/registry/rule-set`. Ver [Régua de validação](/kyc/regua-de-validacao).
+
+---
+
+## Valida+
+
+**Definição:** Verificação de identidade por um código enviado a um e-mail que o **bureau associa** àquele CPF ou CNPJ, e não a um endereço digitado por alguém. Convive com o face match: quando não resolve, o fluxo escala para a biometria.
+
+**Na plataforma:** item **Identidade**, quando a organização libera o método por e-mail.
+
+**Na API:** ver [Verificação de identidade](/kyc/verificacao-de-identidade).
+
+---
+
+## Requisito societário
+
+**Definição:** Um item de solicitação que pede o que se precisa **saber** (o documento constitutivo vigente, a prova de quem representa) em vez de um tipo fixo. O documento que responde depende da natureza jurídica: uma S.A. não tem contrato social, tem estatuto.
+
+**Na plataforma:** escolha do item ao montar um modelo de coleta.
+
+**Na API:** campo `requirement` no item do modelo. Ver [Tipos de documento](/kyc/tipos-de-documento#requisito-societário-em-vez-de-tipo-fixo).

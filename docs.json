@@ -67,7 +67,8 @@
           "kyc/formularios",
           "kyc/termos-e-assinatura",
           "kyc/verificacao-de-identidade",
-          "kyc/pagina-do-destinatario"
+          "kyc/pagina-do-destinatario",
+          "kyc/cobranca"
         ]
       },
       {

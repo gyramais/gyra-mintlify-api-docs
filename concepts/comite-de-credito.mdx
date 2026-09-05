@@ -159,6 +159,46 @@ Um relatório com status `SKIPPED` ainda pode ser levado a comitê manualmente.
 
 ---
 
+## O cadastro documental no comitê
+
+Quando a sua organização usa [Cadastros e Solicitações](/kyc/visao-geral), o comitê recebe também um recorte do dossiê documental daquele CNPJ ou CPF. É o que responde a pergunta que o relatório sozinho não responde: **quanto essa empresa (ou pessoa) fatura, e desde quando, segundo papel que alguém assinou**.
+
+### O que entra
+
+Três blocos, sempre com procedência:
+
+| Bloco | De onde vem |
+| --- | --- |
+| Declarações de faturamento | `DECLARACAO_FATURAMENTO`, com a série mês a mês |
+| Imposto de renda da pessoa física | `DIRPF`, com renda tributável, isenta e evolução patrimonial |
+| Imposto de renda da empresa | `IRPJ_ECF`, com receita bruta, lucro líquido e regime tributário |
+
+Ao lado do número viajam o tipo do documento, a versão, a data-base e **o que certifica o papel** (assinatura de contador com CRC, firma reconhecida, certificado digital, código do órgão emissor).
+
+<Note>
+  A procedência não é enfeite: sem ela o agente trataria "faturamento que a própria empresa declarou num papel sem contador" e "receita bruta da ECF entregue à Receita Federal" como a mesma evidência. O dado sozinho não carrega essa hierarquia; o bloco carrega.
+</Note>
+
+### Três regras que valem sempre
+
+1. **Só documento aprovado e vigente entra.** Documento em análise, reprovado ou de versão antiga não influencia limite de crédito. Um faturamento lido de um papel que o próprio sistema reprovou seria pior do que não ter faturamento nenhum, porque parece dado.
+2. **O comitê nunca recebe extração crua.** Ele lê blocos processados e tipados, não o JSON inteiro do documento.
+3. **O total impresso e a soma dos meses saem lado a lado.** A divergência entre os dois, quando existe, é informação; calcular um a partir do outro esconderia exatamente o que a verificação confere.
+
+### Quando não há cadastro
+
+O cadastro **enriquece** o comitê, não é pré-requisito dele. E o comitê distingue três situações, em vez de tratar todas como ausência:
+
+| Situação | O que o comitê sabe |
+| --- | --- |
+| Presente | Há cadastro com documento de capacidade de pagamento |
+| Ausente | A organização não tem cadastro para esse documento, ou o cadastro não tem nenhum documento desse tipo |
+| Indisponível | A consulta ao cadastro falhou |
+
+<Warning>
+  A distinção importa: sem ela, o agente fundamentaria a decisão em "ausência de comprovação" que na verdade foi indisponibilidade nossa. A decisão sairia com uma justificativa que não corresponde ao mundo.
+</Warning>
+
 ## Estados da deliberação
 
 | Status | Significado |

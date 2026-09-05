@@ -18,7 +18,29 @@ lang: nao-tecnica
 | ----- | :---: | :---: | :---: | :---: | :---: |
 | **Administrador** | ✅ | ✅ | ✅ | ✅ | Todos da organização |
 | **Gestor de Crédito** | ✅ | ✅ | ✅ | ✅ | Todos da organização |
+| **Coordenador de Crédito** | ✅ | ❌ | ❌ | ✅ | Todos da organização |
 | **Analista de Crédito** | ✅ | ❌ | ❌ | ✅ | Apenas os próprios |
+
+### Cadastros e Solicitações
+
+Quem tem o módulo de [Cadastros e Solicitações](/kyc/visao-geral) ganha estas ações, distribuídas assim:
+
+| Ação | Quem pode |
+| --- | --- |
+| Ver cadastro, enviar documento, reprocessar, decidir sobre o parecer | Todos os papéis acima |
+| Criar e enviar solicitação, revisar e dispensar item | Todos os papéis acima |
+| Pausar a renovação de um cadastro | Todos os papéis acima |
+| Editar a régua de validação, a marca e os canais de envio | Administrador e Gestor de Crédito |
+| Gerar e revogar credenciais de API, cadastrar webhooks | Administrador |
+| **Remover cadastro** | Administrador e Gestor de Crédito |
+
+<Note>
+  **Remover cadastro tem permissão própria** (`can-remove-registry`), e não acompanha "rodar análise". Coordenador e analista não removem: coordenar não é o mesmo que responder pelo acervo.
+
+  Pausar a renovação continua aberta a qualquer perfil: são decisões de peso diferente, porque pausar se desfaz com um clique e mantém o dossiê, enquanto remover tira o cadastro das listagens.
+</Note>
+
+Integrações servidor a servidor usam um **usuário de API** (`can-use-registry-api`), que não é um papel de pessoa: ele é criado junto com a credencial em *Configurações, API & MCP*. Ver [Chaves de API](/api-reference/api-keys).
 
 Cada usuário pertence a **uma** organização e tem **um** papel nela. Quem precisa atuar em mais de uma organização (consultorias, auditorias, operação terceirizada) usa **uma conta por organização**, cada uma com o seu próprio e-mail, já que o e-mail é único na plataforma.
 
