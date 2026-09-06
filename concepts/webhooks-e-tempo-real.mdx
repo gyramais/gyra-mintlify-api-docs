@@ -140,4 +140,4 @@ Estrutura de `data` para os demais tipos e exemplos completos em [Webhooks e API
 
 ## Retry
 
-A GYRA+ tenta entregar cada evento até **3 vezes** com backoff exponencial (1s, ~2s, ~5s). Se o seu endpoint retornar `429` com `Retry-After`, a GYRA+ respeita esse tempo. Após as tentativas, o evento é descartado — mantenha fallback com polling em `GET /v2/report/:id` para eventuais perdas e planeje idempotência no seu lado.
+A GYRA+ tenta entregar cada evento até **3 vezes** com backoff exponencial (1s, ~2s, ~5s). Se o seu endpoint retornar `429` com `Retry-After`, a GYRA+ respeita esse tempo. Após as tentativas, o evento é descartado, mantenha fallback com polling em `GET /v2/report/:id` para eventuais perdas e planeje idempotência no seu lado.

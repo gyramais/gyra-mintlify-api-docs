@@ -39,7 +39,7 @@ lang: tecnica
 curl --location 'https://gyra-core.gyramais.com.br/v1/registry/validate-document' \
   --header 'Authorization: Bearer <token>' \
   --form 'file=@"/caminho/comprovante.pdf"' \
-  --form 'expectedDocument="123.456.789-09"' \
+  --form 'expectedDocument="529.982.247-25"' \
   --form 'expectedName="Ana Souza"' \
   --form 'expectedType="COMPROVANTE_RESIDENCIA"' \
   --form 'waitSeconds="45"'
@@ -48,7 +48,7 @@ curl --location 'https://gyra-core.gyramais.com.br/v1/registry/validate-document
 ```javascript Node
 const form = new FormData();
 form.append("file", fs.createReadStream("comprovante.pdf"));
-form.append("expectedDocument", "12345678909");
+form.append("expectedDocument", "52998224725");
 form.append("expectedName", "Ana Souza");
 form.append("expectedType", "COMPROVANTE_RESIDENCIA");
 
@@ -74,7 +74,7 @@ with open("comprovante.pdf", "rb") as arquivo:
         headers={"Authorization": f"Bearer {token}"},
         files={"file": arquivo},
         data={
-            "expectedDocument": "12345678909",
+            "expectedDocument": "52998224725",
             "expectedName": "Ana Souza",
             "expectedType": "COMPROVANTE_RESIDENCIA",
         },
@@ -106,7 +106,7 @@ Continue por `GET` na `statusUrl` até o status ser terminal (`VALIDATED`, `FAIL
 
 ## Entrada única, saída que depende do documento
 
-Você não diz que documento está mandando. A plataforma identifica entre os [24 tipos](/kyc/tipos-de-documento), e o objeto `extraction` da resposta tem os campos **daquele tipo**: um contrato social devolve sócios, capital e cláusula de administração; um comprovante de residência devolve titular, concessionária, endereço e mês de referência.
+Você não diz que documento está mandando. A plataforma identifica entre os [25 tipos](/kyc/tipos-de-documento), e o objeto `extraction` da resposta tem os campos **daquele tipo**: um contrato social devolve sócios, capital e cláusula de administração; um comprovante de residência devolve titular, concessionária, endereço e mês de referência.
 
 O mapa completo, campo a campo, está em [Formatos de retorno por documento](/api-reference/kyc/formatos-de-retorno).
 

@@ -1,6 +1,6 @@
 ---
 title: "Tipos de documento aceitos"
-description: "Os 24 tipos documentais que a plataforma reconhece e analisa, com o que cada um é, o prazo de vigência padrão e os subtipos aceitos."
+description: "Os 25 tipos documentais que a plataforma analisa, com o que cada um é, o prazo de vigência padrão e os subtipos aceitos."
 icon: "files"
 surface: plataforma
 domain: cadastro
@@ -9,21 +9,25 @@ lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** a entrada é sempre a mesma, um arquivo. A plataforma reconhece sozinha qual dos 24 tipos abaixo aquele arquivo é, e o **formato do que ela devolve muda conforme o tipo identificado**. Os campos de cada tipo estão em [Formatos de retorno por documento](/api-reference/kyc/formatos-de-retorno).
+  **Resumo:** a entrada é sempre a mesma, um arquivo. A plataforma reconhece sozinha qual dos 25 tipos abaixo aquele arquivo é, e o **formato do que ela devolve muda conforme o tipo identificado**. Os campos de cada tipo estão em [Formatos de retorno por documento](/api-reference/kyc/formatos-de-retorno).
 </Info>
+
+<Note>
+  **24 dos 25 são reconhecidos sozinhos.** A exceção é `DEMONSTRACOES_FINANCEIRAS`: balanço e DRE têm leitura própria, mas a classificação automática não os emite. Mande `typeHint: DEMONSTRACOES_FINANCEIRAS` no envio, ou peça o item pelo tipo numa solicitação.
+</Note>
 
 ## Pessoa jurídica
 
 | Tipo | O que é | Vigência padrão |
 | --- | --- | --- |
-| `CONTRATO_SOCIAL` | Ato que cria a sociedade limitada e diz quem são os sócios e quem assina pela empresa | sem prazo |
-| `ALTERACAO_CONTRATUAL` | Altera o contrato social; a última alteração consolidada substitui o contrato original | sem prazo |
-| `ESTATUTO_SOCIAL` | Equivalente ao contrato social na sociedade anônima, na cooperativa e na associação | sem prazo |
-| `REQUERIMENTO_EMPRESARIO` | Ato de abertura do empresário individual e do MEI, que não têm contrato social | sem prazo |
+| `CONTRATO_SOCIAL` | Ato que cria a sociedade limitada e diz quem são os sócios e quem assina pela empresa | sem prazo padrão |
+| `ALTERACAO_CONTRATUAL` | Altera o contrato social; a última alteração consolidada substitui o contrato original | sem prazo padrão |
+| `ESTATUTO_SOCIAL` | Equivalente ao contrato social na sociedade anônima, na cooperativa e na associação | sem prazo padrão |
+| `REQUERIMENTO_EMPRESARIO` | Ato de abertura do empresário individual e do MEI, que não têm contrato social | sem prazo padrão |
 | `ATA_ASSEMBLEIA` | Elege a diretoria da S.A. e prova quem representa a empresa hoje; o mandato tem prazo e vence | 1095 dias |
 | `CERTIDAO_JUNTA` | Certidão da Junta Comercial: confirma na fonte oficial o que o contrato social afirma | 90 dias |
 | `PROCURACAO_PJ` | Transfere poderes de assinatura da empresa a um terceiro, com prazo e limites próprios | 365 dias |
-| `IRPJ_ECF` | Escrituração Contábil Fiscal entregue à Receita por quem é tributado pelo lucro real ou presumido; empresa do Simples não entrega, e o que prova a entrega é o recibo com número e hash | sem prazo |
+| `IRPJ_ECF` | Escrituração Contábil Fiscal entregue à Receita por quem é tributado pelo lucro real ou presumido; empresa do Simples não entrega, e o que prova a entrega é o recibo com número e hash | sem prazo padrão |
 | `DECLARACAO_FATURAMENTO` | Faturamento mês a mês declarado pela empresa e assinado pelo contador; não tem carimbo de órgão público | 90 dias |
 | `DEMONSTRACOES_FINANCEIRAS` | Balanço patrimonial e DRE assinados pelo contador; alimenta a análise financeira | 455 dias |
 | `CERTIDAO_PGFN_PJ` | Certidão conjunta da Receita e da PGFN: diz se a empresa deve tributo federal ou dívida ativa | 180 dias |
@@ -40,8 +44,8 @@ lang: nao-tecnica
 | --- | --- | --- |
 | `DOC_IDENTIDADE` | RG, CNH, CIN, RNE ou passaporte, com foto e assinatura visíveis | validade do próprio documento |
 | `COMPROVANTE_RESIDENCIA` | Conta de luz, água, gás ou telefone no nome da pessoa; é o documento em que a data mais importa | 60 dias |
-| `DIRPF` | Declaração anual da pessoa física; o que prova a entrega é o recibo, não a capa | sem prazo |
-| `COMPROVANTE_RENDA` | Holerite, pró-labore ou recibo que mostra quanto a pessoa recebe; não é o imposto de renda | sem prazo |
+| `DIRPF` | Declaração anual da pessoa física; o que prova a entrega é o recibo, não a capa | sem prazo padrão |
+| `COMPROVANTE_RENDA` | Holerite, pró-labore ou recibo que mostra quanto a pessoa recebe; não é o imposto de renda | sem prazo padrão |
 | `CERTIDAO_PF` | Certidão de débito, protesto ou distribuição no nome da pessoa física | 90 dias |
 | `PROCURACAO_PF` | Transfere poderes da pessoa física a um terceiro, com prazo e limites próprios | 365 dias |
 | `COMPROVACAO_ESTADO_CIVIL` | Certidão de casamento, nascimento ou óbito; o divórcio é anotado na margem da própria certidão | não caduca |

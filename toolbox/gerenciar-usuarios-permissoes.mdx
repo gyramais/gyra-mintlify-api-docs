@@ -30,11 +30,14 @@ Quem tem o módulo de [Cadastros e Solicitações](/kyc/visao-geral) ganha estas
 | Ver cadastro, enviar documento, reprocessar, decidir sobre o parecer | Todos os papéis acima |
 | Criar e enviar solicitação, revisar e dispensar item | Todos os papéis acima |
 | Pausar a renovação de um cadastro | Todos os papéis acima |
-| Editar a régua de validação, a marca e os canais de envio | Administrador e Gestor de Crédito |
-| Gerar e revogar credenciais de API, cadastrar webhooks | Administrador |
-| **Remover cadastro** | Administrador e Gestor de Crédito |
+| Editar a régua de validação | Todos os papéis acima |
+| Configurar marca, domínio e canais de envio | Administrador, Owner e Superuser |
+| Gerar e revogar credenciais de API, cadastrar webhooks | Administrador, Owner e Superuser |
+| **Remover cadastro** | Administrador, Owner, Superuser e Gestor de Crédito |
 
 <Note>
+  **Editar a régua acompanha "rodar análise"**, e não a permissão de configurações: qualquer perfil que gere relatório publica uma versão nova da régua. Se isso não é o que a sua operação quer, o controle hoje é de processo, não de permissão.
+
   **Remover cadastro tem permissão própria** (`can-remove-registry`), e não acompanha "rodar análise". Coordenador e analista não removem: coordenar não é o mesmo que responder pelo acervo.
 
   Pausar a renovação continua aberta a qualquer perfil: são decisões de peso diferente, porque pausar se desfaz com um clique e mantém o dossiê, enquanto remover tira o cadastro das listagens.

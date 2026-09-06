@@ -38,11 +38,11 @@ lang: tecnica
 ```json
 {
   "template": "onboarding-pj",
-  "document": "12.345.678/0001-90",
+  "document": "11.444.777/0001-61",
   "recipients": [
     {
       "name": "Ana Souza",
-      "document": "12345678909",
+      "document": "52998224725",
       "email": "ana@exemplo.com.br",
       "phone": "+5551999998888",
       "role": "Sócia administradora · 60%",
@@ -149,11 +149,9 @@ Traz a solicitação, seus itens (com status e parecer de cada um), os destinat�
 
 `POST /v1/collections/{id}/send`
 
-```json
-{ "message": "Reforçando o pedido, o prazo vence sexta." }
-```
+Sem corpo. Dispara o envio pelos canais do destinatário e devolve os links por destinatário. Serve tanto para o primeiro envio de um rascunho quanto para reenviar.
 
-Dispara o envio pelos canais do destinatário e devolve os links por destinatário. Serve tanto para o primeiro envio de um rascunho quanto para reenviar.
+O recado do operador é o que foi gravado na criação (`message`); o reenvio não aceita um texto novo.
 
 ## Reemitir link
 
@@ -201,12 +199,16 @@ Gera um link novo para aquele destinatário. Limite de 3 reemissões.
 ```json
 {
   "name": "Bruno Lima",
-  "document": "98765432100",
+  "document": "529.982.247-25",
   "email": "bruno@exemplo.com.br",
-  "signatureRole": "SIGNATARIO",
-  "signatureRequired": true
+  "role": "SIGNATARIO",
+  "required": true
 }
 ```
+
+<Warning>
+  Aqui os campos são `role` e `required`. Os nomes `signatureRole` e `signatureRequired` existem, mas no **destinatário** da criação da solicitação. Trocá-los faz o campo ser descartado em silêncio, e a parte entra com o padrão.
+</Warning>
 
 `POST /v1/collections/{id}/signatories/{signatoryId}/remove` remove uma parte que **ainda não assinou**.
 

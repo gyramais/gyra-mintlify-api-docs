@@ -64,11 +64,9 @@ Devolve a versão vigente e o objeto `rules` inteiro, com os padrões já aplica
     "blockingChecks": [
       "EXPECTED_TYPE_MATCH",
       "EXPECTED_DOCUMENT_MATCH",
-      "DOC_CHECKSUM",
-      "DOCUMENT_STRUCTURE",
-      "DOCUMENT_SUBTYPE"
+      "DOC_CHECKSUM"
     ],
-    "disabledChecks": ["RECENCY"],
+    "disabledChecks": ["ISSUER_UTILITY_ACTIVITY"],
     "warningIsBlocking": false,
     "nameSimilarityMin": 0.85,
     "qsaShareTolerance": 0.5,
@@ -121,7 +119,7 @@ Devolve a versão vigente e o objeto `rules` inteiro, com os padrões já aplica
 | --- | --- | --- |
 | `thresholds.valido` / `.inconclusivo` | 0 a 1 | Score mínimo de cada parecer |
 | `weights` | 4 números | Pesos de classificação, extração, verificações determinísticas e conciliação. **A soma tem que ser 1** |
-| `blockingChecks` | lista de códigos | `FAIL` reprova o documento |
+| `blockingChecks` | lista de códigos | `FAIL` reprova o documento. Só aceita **código de verificação**; os blocos que reúnem vários códigos ligam-se pelo próprio interruptor |
 | `disabledChecks` | lista de códigos | Saem `SKIP`; não entram no score e nunca reprovam |
 | `warningIsBlocking` | booleano | Trata toda ressalva como impeditiva |
 | `nameSimilarityMin` | 0 a 1 | Similaridade mínima do nome |

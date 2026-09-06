@@ -100,7 +100,7 @@ with open("contrato-social.pdf", "rb") as arquivo:
 
 ### Três coisas para acertar de primeira
 
-**Você não diz que documento é.** A plataforma reconhece entre [24 tipos](/kyc/tipos-de-documento). O `expectedType` não força nada: ele diz o que você **pediu**, e a plataforma confronta com o que leu. É o campo que pega o arquivo legítimo enviado no lugar errado.
+**Você não diz que documento é.** A plataforma reconhece entre [25 tipos](/kyc/tipos-de-documento). O `expectedType` não força nada: ele diz o que você **pediu**, e a plataforma confronta com o que leu. É o campo que pega o arquivo legítimo enviado no lugar errado.
 
 **Leia `assessment.effectiveVerdict`, não `assessment.verdict`.** O primeiro é o veredito que vale hoje; o segundo é o parecer da IA, que nunca é reescrito quando um operador discorda.
 
@@ -257,10 +257,10 @@ function conferir(req, segredo) {
 
 <CardGroup cols={2}>
   <Card title="Formatos de retorno" icon="table-list" href="/api-reference/kyc/formatos-de-retorno">
-    Os campos de cada um dos 24 tipos documentais.
+    Os campos de cada um dos 25 tipos documentais.
   </Card>
   <Card title="Eventos de webhook" icon="bolt-lightning" href="/api-reference/kyc/eventos-de-webhook">
-    Os 27 eventos, com payload.
+    Os 29 eventos, com payload.
   </Card>
   <Card title="Régua de validação" icon="ruler" href="/kyc/regua-de-validacao">
     O que reprova, o que ressalva e o que você configura.

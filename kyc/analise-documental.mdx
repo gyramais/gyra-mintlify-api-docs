@@ -16,7 +16,7 @@ lang: tecnica
 
 <Steps>
   <Step title="CLASSIFY: que documento é este?">
-    O modelo lê o arquivo e diz qual dos [24 tipos](/kyc/tipos-de-documento) ele é, com confiança e alternativas. Quando duas alternativas passam de 0,35 de confiança, o resultado vem marcado como `ambiguous` e o documento vai para revisão humana.
+    O modelo lê o arquivo e diz qual dos [25 tipos](/kyc/tipos-de-documento) ele é, com confiança e alternativas. Quando alguma alternativa passa de 0,35 de confiança, o resultado vem marcado como `ambiguous` e o documento vai para revisão humana.
 
     Esta etapa é **pulada** quando o envio traz `typeHint`, que afirma o tipo.
   </Step>

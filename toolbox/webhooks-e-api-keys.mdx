@@ -255,7 +255,7 @@ O payload é enxuto de propósito: decisão e síntese. Os votos individuais dos
 
 ### Retry
 
-A GYRA+ faz até **3 tentativas** de entrega com backoff exponencial (1s, ~2s, ~5s). Se o seu endpoint retornar `429` com header `Retry-After`, a GYRA+ respeita o tempo antes de tentar de novo. Depois disso, o envio é descartado — planeje idempotência e fallback com polling em `GET /v2/report/:id` para eventuais perdas.
+A GYRA+ faz até **3 tentativas** de entrega com backoff exponencial (1s, ~2s, ~5s). Se o seu endpoint retornar `429` com header `Retry-After`, a GYRA+ respeita o tempo antes de tentar de novo. Depois disso, o envio é descartado, planeje idempotência e fallback com polling em `GET /v2/report/:id` para eventuais perdas.
 
 ### Boas práticas
 

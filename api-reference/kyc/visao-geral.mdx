@@ -55,10 +55,12 @@ Regras de evolução:
 | --- | --- |
 | `can-use-registry-api` | Usuário de API (client credentials) |
 | `can-generate-report` | Usuário humano do toolbox |
-| `can-manage-settings` | Configuração: régua, marca, domínio, webhooks, credenciais |
+| `can-manage-settings` | Marca, domínio, remetente, WhatsApp, webhooks e credenciais. **Não** cobre a régua |
 | `can-remove-registry` | Remover cadastro: Administrador, Owner, Superuser e Gestor de Crédito |
 
-A maior parte das rotas aceita `can-generate-report` **ou** `can-use-registry-api`. Nenhuma rota do módulo é pública.
+A maior parte das rotas aceita `can-generate-report` **ou** `can-use-registry-api`, e isso inclui as quatro rotas da **régua**: quem gera relatório publica régua.
+
+As rotas do [link do destinatário](/api-reference/kyc/link-do-destinatario) são a única superfície pública, e o token do link é a credencial delas.
 
 ## Capacidades da organização
 
@@ -88,6 +90,12 @@ Sem a capacidade, a rota responde `404`: ela não existe para aquela organizaç�
 | Link do destinatário | `/public/collection/{token}` | [Link do destinatário](/api-reference/kyc/link-do-destinatario) |
 | Marca, domínio e canais | `/collection-branding`, `/collection-domain`, `/email-domain`, `/whatsapp-account` | [Configuração de envio](/api-reference/kyc/configuracao-de-envio) |
 | Webhooks | `/webhook` | [Webhooks](/api-reference/kyc/webhooks) |
+
+## Onde há playground
+
+As rotas com página própria em **Endpoints** têm playground e snippet gerados da especificação. São as que também existem como tools do [MCP](/mcp/ferramentas-disponiveis).
+
+As demais rotas do módulo (marca, domínio, remetente, WhatsApp, escrita de modelo e de termo, publicação da régua, e as rotas do link do destinatário) estão documentadas nas páginas-guia acima, com corpo e resposta descritos, mas sem playground. O critério é o mesmo das tools: configuração de uma vez por organização e operação destrutiva ficam fora.
 
 ## Formato dos identificadores
 

@@ -1,7 +1,7 @@
 {
   "_type": "export",
   "__export_format": 4,
-  "__export_date": "2026-09-06T20:34:13.517Z",
+  "__export_date": "2026-09-06T20:58:53.990Z",
   "__export_source": "gyra-mcp:generate-collections",
   "resources": [
     {
@@ -36,7 +36,7 @@
       "name": "Gerar token de acesso JWT",
       "method": "POST",
       "url": "{{ baseUrl }}/auth/authenticate",
-      "description": "Autentica via client credentials (client-id e client-secret) e retorna um JWT.\n\nEste e o primeiro passo para usar a API. O token retornado deve ser enviado\nno header Authorization de todas as requisicoes subsequentes.\n\nNOTA: No MCP server, a autenticacao e automatica — este tool e exposto apenas\npara uso manual ou debug. O server gerencia o token internamente.",
+      "description": "Autentica via client credentials (client-id e client-secret) e retorna um JWT.\n\nEste e o primeiro passo para usar a API. O token retornado deve ser enviado\nno header Authorization de todas as requisicoes subsequentes.\n\nNOTA: No MCP server, a autenticacao e automatica, e este tool e exposto apenas\npara uso manual ou debug. O server gerencia o token internamente.",
       "headers": [
         {
           "name": "gyra-client-id",
@@ -142,7 +142,7 @@
       "name": "Criar relatorio (padrao de integracao com webhook)",
       "method": "POST",
       "url": "{{ baseUrl }}/report",
-      "description": "PADRAO DE INTEGRACAO — use quando voce esta ajudando um desenvolvedor a\nimplementar integracao programatica com webhook. Para um usuario apenas\ngerando relatorio no chat, use create_report_and_wait.\n\nCria um novo relatorio de analise de credito para um CPF ou CNPJ.\n\nO processamento e ASSINCRONO: voce recebe o reportId imediatamente com\nstatus PENDING. O cliente acompanha o ciclo via:\n  1. Webhook configurado (create_webhook) — recomendado para integracoes.\n  2. Polling em get_report ate reportProgress.isFinalized === true.\n\nStatus (apos analyze_report manual): PENDING → APPROVED, DENIED ou ALERT.\nA maioria dos clientes deixa em PENDING e usa o resultado da politica.\n\nO tipo de relatorio (SIMPLES, ESSENCIAL, COMPLETO, COMPLETO+) e determinado\npela politica de credito (policyId) utilizada.\n\nUse list_policies (ou find_policy_by_name pra fluxo interativo) para obter\nos policyIds disponiveis na organizacao.",
+      "description": "PADRAO DE INTEGRACAO, use quando voce esta ajudando um desenvolvedor a\nimplementar integracao programatica com webhook. Para um usuario apenas\ngerando relatorio no chat, use create_report_and_wait.\n\nCria um novo relatorio de analise de credito para um CPF ou CNPJ.\n\nO processamento e ASSINCRONO: voce recebe o reportId imediatamente com\nstatus PENDING. O cliente acompanha o ciclo via:\n  1. Webhook configurado (create_webhook), recomendado para integracoes.\n  2. Polling em get_report ate reportProgress.isFinalized === true.\n\nStatus (apos analyze_report manual): PENDING → APPROVED, DENIED ou ALERT.\nA maioria dos clientes deixa em PENDING e usa o resultado da politica.\n\nO tipo de relatorio (SIMPLES, ESSENCIAL, COMPLETO, COMPLETO+) e determinado\npela politica de credito (policyId) utilizada.\n\nUse list_policies (ou find_policy_by_name pra fluxo interativo) para obter\nos policyIds disponiveis na organizacao.",
       "headers": [
         {
           "name": "Authorization",
@@ -198,7 +198,7 @@
       "name": "Exportar relatorio em PDF/Excel via webhook (padrao de integracao)",
       "method": "GET",
       "url": "{{ baseUrl }}/report/export/{id}",
-      "description": "PADRAO DE INTEGRACAO — use quando voce esta ajudando um desenvolvedor a\nimplementar integracao programatica com o Gyra+. Para um usuario apenas exportando\nno chat, use export_report_and_wait.\n\nSolicita a geracao de PDF/Excel de um relatorio. Processamento assincrono:\nretorna imediatamente com { status: \"processing\", reportId } e o arquivo e\nentregue via webhook configurado pelo cliente (create_webhook).\n\nUse quando:\n- O cliente ja tem (ou esta implementando) um endpoint pra receber webhook.\n- Precisa processar muitos relatorios em lote.\n- Latencia nao e critica e o webhook fecha o ciclo.\n\nPara fluxo interativo de agente (sem webhook), prefira export_report_and_wait.\nPara chamada bloqueante direta (cliente HTTP suporta long timeout), use\nexport_report_sync.",
+      "description": "PADRAO DE INTEGRACAO, use quando voce esta ajudando um desenvolvedor a\nimplementar integracao programatica com o Gyra+. Para um usuario apenas exportando\nno chat, use export_report_and_wait.\n\nSolicita a geracao de PDF/Excel de um relatorio. Processamento assincrono:\nretorna imediatamente com { status: \"processing\", reportId } e o arquivo e\nentregue via webhook configurado pelo cliente (create_webhook).\n\nUse quando:\n- O cliente ja tem (ou esta implementando) um endpoint pra receber webhook.\n- Precisa processar muitos relatorios em lote.\n- Latencia nao e critica e o webhook fecha o ciclo.\n\nPara fluxo interativo de agente (sem webhook), prefira export_report_and_wait.\nPara chamada bloqueante direta (cliente HTTP suporta long timeout), use\nexport_report_sync.",
       "headers": [
         {
           "name": "Authorization",
@@ -214,7 +214,7 @@
       "name": "Exportar relatorio bloqueante (padrao de integracao)",
       "method": "GET",
       "url": "{{ baseUrl }}/report/export-sync/{id}",
-      "description": "PADRAO DE INTEGRACAO — use quando voce esta ajudando um desenvolvedor a\nimplementar integracao com cliente HTTP que suporta timeout longo (>= 6 min).\nPara um usuario apenas exportando no chat, use export_report_and_wait.\n\nO endpoint BLOQUEIA ate a geracao concluir — pode levar ate 6 minutos para\nrelatorios completos. Cuidado: idle timeout de proxy/ALB tipico e 60s, entao\nisso so funciona se o cliente controla o caminho de rede (chamada server-to-server\nsem proxy intermediario).\n\nPode ser chamado a qualquer momento — nao exige que o relatorio esteja\nfinalizado nem analisado. Se o relatorio ainda esta processando, o PDF\ncontem apenas as secoes prontas ate o momento.\n\nPara fluxo interativo de agente, prefira export_report_and_wait (timeout\nprevisivel de 2min, com aviso quando relatorio nao esta finalizado).\nPara integracao com webhook, use export_report_via_webhook.",
+      "description": "PADRAO DE INTEGRACAO, use quando voce esta ajudando um desenvolvedor a\nimplementar integracao com cliente HTTP que suporta timeout longo (>= 6 min).\nPara um usuario apenas exportando no chat, use export_report_and_wait.\n\nO endpoint BLOQUEIA ate a geracao concluir, pode levar ate 6 minutos para\nrelatorios completos. Cuidado: idle timeout de proxy/ALB tipico e 60s, entao\nisso so funciona se o cliente controla o caminho de rede (chamada server-to-server\nsem proxy intermediario).\n\nPode ser chamado a qualquer momento, nao exige que o relatorio esteja\nfinalizado nem analisado. Se o relatorio ainda esta processando, o PDF\ncontem apenas as secoes prontas ate o momento.\n\nPara fluxo interativo de agente, prefira export_report_and_wait (timeout\nprevisivel de 2min, com aviso quando relatorio nao esta finalizado).\nPara integracao com webhook, use export_report_via_webhook.",
       "headers": [
         {
           "name": "Authorization",
@@ -451,7 +451,7 @@
       "name": "Validar um documento e receber o parecer",
       "method": "POST",
       "url": "{{ baseUrl }}/v1/registry/validate-document",
-      "description": "Manda UM arquivo (PDF, JPG ou PNG, ate 15MB) e recebe classificacao, campos extraidos, verificacoes e parecer.\n\nA ENTRADA E UNICA: voce nao diz que documento e. A plataforma reconhece entre 24 tipos\n(contrato social, alteracao contratual, estatuto, ata de assembleia, requerimento de\nempresario, procuracao PJ/PF, certidao da Junta, QSA, IRPJ/ECF, declaracao de faturamento,\ndemonstracoes financeiras, extrato bancario, certidao PGFN, FGTS, CADIN federal/estadual,\nSimples Nacional, eSocial, documento de identidade, comprovante de residencia, DIRPF,\ncomprovante de renda, certidao PF, estado civil).\n\nO FORMATO DA SAIDA DEPENDE DO TIPO IDENTIFICADO: o objeto `extraction` traz os campos\ndaquele tipo. Todo campo folha vem como { value, confidence, page }; campo ausente vem\ncom value null e confidence 0, nunca inventado.\n\nResponde 200 com o resultado quando o pipeline fecha dentro de `waitSeconds`, ou 202 com\n{ documentId, statusUrl } quando passa. No 202, continue com get_document_status.\n\nUse `expectedType` para conferir se veio o documento CERTO: a classificacao roda normal e o\ntipo lido e confrontado com o pedido. E o que pega o arquivo legitimo enviado no campo errado.\nUse `typeHint` so quando a origem ja garante o tipo: ele PULA a classificacao.\n\nO arquivo e arquivado no cadastro de `expectedDocument`, criando o cadastro se nao existir.",
+      "description": "Manda UM arquivo (PDF, JPG ou PNG, ate 15MB) e recebe classificacao, campos extraidos, verificacoes e parecer.\n\nA ENTRADA E UNICA: voce nao diz que documento e. A plataforma reconhece sozinha 24 tipos\n(contrato social, alteracao contratual, estatuto, ata de assembleia, requerimento de\nempresario, procuracao PJ/PF, certidao da Junta, QSA, IRPJ/ECF, declaracao de faturamento,\nextrato bancario, certidao PGFN, FGTS, CADIN federal/estadual, Simples Nacional, eSocial,\ndocumento de identidade, comprovante de residencia, DIRPF, comprovante de renda,\ncertidao PF, estado civil). O balanco (DEMONSTRACOES_FINANCEIRAS) e o 25o tipo com leitura\npropria, mas NAO e reconhecido sozinho: mande typeHint DEMONSTRACOES_FINANCEIRAS.\n\nO FORMATO DA SAIDA DEPENDE DO TIPO IDENTIFICADO: o objeto `extraction` traz os campos\ndaquele tipo. Todo campo folha vem como { value, confidence, page }; campo ausente vem\ncom value null e confidence 0, nunca inventado.\n\nResponde 200 com o resultado quando o pipeline fecha dentro de `waitSeconds`, ou 202 com\n{ documentId, statusUrl } quando passa. No 202, continue com get_document_status.\n\nUse `expectedType` para conferir se veio o documento CERTO: a classificacao roda normal e o\ntipo lido e confrontado com o pedido. E o que pega o arquivo legitimo enviado no campo errado.\nUse `typeHint` so quando a origem ja garante o tipo: ele PULA a classificacao.\n\nO arquivo e arquivado no cadastro de `expectedDocument`, criando o cadastro se nao existir.",
       "headers": [
         {
           "name": "Authorization",

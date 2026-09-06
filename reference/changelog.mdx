@@ -20,7 +20,7 @@ Módulo novo, no toolbox e na API: o dossiê documental de cada CNPJ/CPF, e o pe
 
 **Novidades**
 - **Cadastros:** dossiê por CNPJ ou CPF, com documentos versionados, completude, situação de KYC, árvore societária, renovação periódica e trilha de auditoria append-only. Ver [Cadastro documental](/kyc/cadastro-documental) e [Cadastros no toolbox](/toolbox/cadastros).
-- **Análise documental de 24 tipos:** a entrada é um arquivo só; a plataforma reconhece o tipo e extrai os campos daquele tipo, cada um com confiança e página. Ver [Tipos de documento](/kyc/tipos-de-documento) e o mapa completo em [Formatos de retorno por documento](/api-reference/kyc/formatos-de-retorno).
+- **Análise documental de 25 tipos:** a entrada é um arquivo só; a plataforma reconhece o tipo (24 deles sozinha, e o balanço por tipo afirmado) e extrai os campos daquele tipo, cada um com confiança e página. Ver [Tipos de documento](/kyc/tipos-de-documento) e o mapa completo em [Formatos de retorno por documento](/api-reference/kyc/formatos-de-retorno).
 - **Régua de validação configurável:** as verificações organizadas em três perguntas (autenticidade, titularidade, fé pública), com o que reprova, o que ressalva e o que nem roda, ajustável por tipo documental e versionada. Ver [Régua de validação](/kyc/regua-de-validacao).
 - **Validação síncrona:** `POST /v1/registry/validate-document` recebe o arquivo por multipart (até 15 MB) e devolve `200` com o parecer, ou `202` com `statusUrl` quando passa da janela. Ver [Validação síncrona](/api-reference/kyc/validacao-sincrona).
 - **Solicitações de coleta:** um link por destinatário, com itens de documento, formulário, termo, assinatura e identidade, prazo, lembretes e modo de resposta com ou sem revisão do operador. Ver [Solicitações de coleta](/kyc/solicitacoes) e [Solicitações no toolbox](/toolbox/solicitacoes).
@@ -29,7 +29,7 @@ Módulo novo, no toolbox e na API: o dossiê documental de cada CNPJ/CPF, e o pe
 - **Termos e assinatura:** modelos versionados em Markdown ou PDF, com variáveis do cadastro, do formulário e dos documentos extraídos, importação de contrato em Word, assinatura individual e **conjunta** (um documento, várias partes) e o pacote assinatura + identidade. Ver [Termos e assinatura](/kyc/termos-e-assinatura).
 - **Verificação de identidade em três caminhos:** face match com documento, **sem documento** (prova de vida e conferência contra a base oficial ligada ao CPF) e **Valida+**, o código enviado a um e-mail que o bureau associa ao CPF/CNPJ. Ver [Verificação de identidade](/kyc/verificacao-de-identidade).
 - **Página do destinatário com a sua marca:** logo, cores, domínio próprio do link, remetente próprio de e-mail e WhatsApp da sua empresa no convite. Ver [Página do destinatário](/kyc/pagina-do-destinatario).
-- **27 eventos de webhook novos**, com envelope único, assinatura HMAC que inclui o carimbo de tempo, segredo por assinatura e retentativa 5s/30s/120s. Ver [Eventos de webhook](/api-reference/kyc/eventos-de-webhook).
+- **29 eventos de webhook novos**, com envelope único, assinatura HMAC que inclui o carimbo de tempo, segredo por assinatura e retentativa 5s/30s/120s. Ver [Eventos de webhook](/api-reference/kyc/eventos-de-webhook).
 - **Chaves de API pelo painel:** `Configurações, API & MCP` passa a gerar, listar e revogar as credenciais da organização. Não é mais preciso pedir ao suporte. Ver [Chaves de API](/api-reference/api-keys).
 - **Webhooks pelo painel:** a mesma tela cadastra, testa e gira o segredo das assinaturas, com o catálogo de eventos por categoria. Os eventos de relatório e crédito ganharam nome público na mesma convenção (`report.finished`, `credit-policy.evaluated`), sem mudar nada para quem já integra.
 - **Versionamento de URI na API do módulo:** as rotas respondem em `/v1/registry/...` e `/registry/...`; use o caminho versionado em integração nova. Ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral).
@@ -75,7 +75,7 @@ Módulo novo, no toolbox e na API: o dossiê documental de cada CNPJ/CPF, e o pe
 
 ## Abril 2026
 
-### CNJ — Mandados de Prisão em Antecedente Criminal
+### CNJ, Mandados de Prisão em Antecedente Criminal
 
 **Novidades**
 - Nova fonte **CNJ (mandados de prisão)** integrada à seção `CRIMINAL_RECORD`. Disponível apenas para **PF** nos relatórios **COMPLETO** e **COMPLETO+**. Frequência de atualização: **mensal**.

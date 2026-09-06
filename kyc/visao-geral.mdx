@@ -27,7 +27,7 @@ O cadastro é o substrato: todo documento entregue numa solicitação é arquiva
 
 <CardGroup cols={2}>
   <Card title="Ler o documento" icon="file-magnifying-glass">
-    A entrada é um arquivo só. A plataforma reconhece **que documento é aquele** entre [24 tipos](/kyc/tipos-de-documento) e extrai os campos daquele tipo, cada um com confiança e página.
+    A entrada é um arquivo só. A plataforma reconhece **que documento é aquele** entre [25 tipos](/kyc/tipos-de-documento) e extrai os campos daquele tipo, cada um com confiança e página.
   </Card>
   <Card title="Conferir o documento" icon="shield-check">
     Autenticidade, titularidade e fé pública, com [régua configurável](/kyc/regua-de-validacao) por tipo documental: o que reprova, o que vira ressalva e o que nem roda.
@@ -48,7 +48,7 @@ Uma solicitação é uma lista de itens, e cada item é de uma espécie:
 | --- | --- |
 | `DOCUMENT` | Envia um arquivo (PDF, JPG ou PNG) |
 | `FORM` | Responde um [formulário](/kyc/formularios) montado pela sua organização |
-| `CONSENT` | Lê e aceita um [termo](/kyc/termos-e-assinatura) (o de SCR já vem pronto) |
+| `CONSENT` | Lê e aceita um [termo](/kyc/termos-e-assinatura). O de SCR já vem no catálogo |
 | `SIGNATURE` | Assina um documento, sozinho ou em conjunto com outras partes |
 | `IDENTITY` | Faz a verificação de identidade |
 

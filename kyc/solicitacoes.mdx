@@ -48,13 +48,15 @@ Modelos podem ser **duplicados** numa cópia editável e removidos logicamente.
 | `acceptedMimeTypes` | Formatos aceitos (padrão PDF, JPG, PNG) |
 | `allowMultipleFiles` | Aceita mais de um arquivo no mesmo item (desligado por padrão) |
 | `maxFiles` | Teto de arquivos quando o anterior está ligado |
-| `expectedTypes` | Conjunto de tipos que satisfaz o item, quando ele veio de um requisito |
 | `reuseIfValidWithinDays` | Reaproveita documento já validado dentro da janela |
 | `minFaceSimilarity`, `requireLiveness` | Exigências da [verificação de identidade](/kyc/verificacao-de-identidade) |
 | `identityMethods` | Como a identidade pode ser cumprida: `FACE_MATCH`, `EMAIL` ou os dois |
-| `documentless` | Verificação de identidade sem documento |
-| `requireIdentity` | O consentimento só pode ser aceito depois da identidade confirmada |
-| `consentTemplateKey` | Termo escolhido pela chave (acompanha a linhagem de versões) |
+
+<Warning>
+  Esta é a lista **inteira** que a API aceita em `rules`. Chave fora dela é descartada em silêncio, sem erro: o modelo salva, a resposta é `200` e a regra simplesmente não existe do outro lado.
+
+  O termo do item de consentimento escolhe-se por `consentTemplateId`, no próprio item, e não dentro de `rules`.
+</Warning>
 
 <Tip>
   `allowMultipleFiles` existe porque a resposta honesta a alguns pedidos é mais de um arquivo: contrato social com todas as alterações, extrato de três meses, documento fotografado frente e verso. Sem ele, quem está no celular manda a primeira página e espera ser reprovado.
@@ -69,7 +71,6 @@ Modelos podem ser **duplicados** numa cópia editável e removidos logicamente.
 | `notifyOnComplete` | `true` | Avisa quando tudo fecha |
 | `skipItemsAlreadyOnFile` | `true` | Não pede o que o cadastro já tem válido e vigente |
 | `blockSignatureUntilDependenciesMet` | `true` | Termo que cita resposta de formulário ou campo de documento só é assinável depois que aquele item concluir |
-| `requireCoSignerContacts` | `false` | Num documento conjunto, ninguém assina antes de toda parte obrigatória ter contato |
 
 ## Criar uma solicitação
 

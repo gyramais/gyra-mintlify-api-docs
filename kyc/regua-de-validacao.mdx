@@ -92,9 +92,13 @@ Cada verificação volta com `code`, `result`, `message`, `evidence` (página e 
 | `LATEST_VERSION` | Não existe alteração posterior registrada que já substituiu este ato | societários |
 | `VALIDITY` | Dentro do prazo de validade | certidões e procurações |
 | `CNH_VALIDITY` | Habilitação dentro da validade | `DOC_IDENTIDADE` |
-| `RECENCY` | Emitido há pouco tempo (aceita até 90 dias, ressalva até 180) | `COMPROVANTE_RESIDENCIA` |
+
 | `ISSUER_UTILITY_ACTIVITY` | O CNPJ da fatura tem CNAE de energia, gás, água/esgoto ou telecom | `COMPROVANTE_RESIDENCIA` |
 | `REPRESENTATION` | Regime de assinatura, alçadas, vedações e mandato de quem representa | societários com cláusula de administração |
+
+<Note>
+  A recência do comprovante de residência sai pela verificação de **anatomia** (`STRUCTURE`), que lê a vigência do próprio arquivo, e não por uma verificação separada. O prazo padrão é de 60 dias e se ajusta por tipo.
+</Note>
 
 <Note>
   `ISSUER_UTILITY_ACTIVITY` não é lista de emissores: autarquia municipal de saneamento passa pelo CNAE dela, e imobiliária, banco ou escola não passam por mais que o papel pareça fatura. Quando o CNPJ está ilegível ou a consulta não conclui, o parecer sai `INCONCLUSIVO` com o motivo, nunca válido.
@@ -106,7 +110,7 @@ A régua deixa você exigir uma espécie mínima **por tipo documental**. A orde
 
 | Espécie | O que é |
 | --- | --- |
-| `SEM_CERTIFICACAO` | Nenhuma marca de assinatura ou autenticação |
+| `SEM_CERTIFICACAO` | Nenhuma marca de assinatura ou autenticação. É resultado de leitura, não espécie exigível |
 | `ASSINATURA_MANUSCRITA` | Assinatura a caneta (ou imagem dela), sem mais |
 | `ASSINATURA_ELETRONICA` | Carimbo de plataforma de assinatura, sem menção a ICP-Brasil |
 | `ASSINATURA_CONTADOR` | Assinada por contador ou técnico identificado com CRC |
@@ -136,7 +140,7 @@ Sem espécie mínima configurada, a verificação apenas **informa** a espécie 
 
 | Chave | Padrão | O que faz |
 | --- | --- | --- |
-| `blockingChecks` | `EXPECTED_TYPE_MATCH`, `EXPECTED_DOCUMENT_MATCH`, `DOC_CHECKSUM`, `DOCUMENT_STRUCTURE`, `DOCUMENT_SUBTYPE` | Códigos que, ao falhar, reprovam o documento |
+| `blockingChecks` | `EXPECTED_TYPE_MATCH`, `EXPECTED_DOCUMENT_MATCH`, `DOC_CHECKSUM` | Códigos que, ao falhar, reprovam o documento |
 | `disabledChecks` | vazio | Códigos desligados: saem `SKIP`, não entram no score e nunca reprovam |
 | `warningIsBlocking` | `false` | Sobe toda ressalva a reprovação |
 | `representationChecks` | ligado, informando | Poderes de representação |

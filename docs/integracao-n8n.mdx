@@ -25,7 +25,7 @@ Seu Sistema → [Workflow 1] → GYRA+ API   (solicita análise)
 GYRA+ API   → [Workflow 2 ou 3] → Seu Sistema  (recebe decisão)
 ```
 
-O Workflow 1 é **síncrono**: seu sistema chama e recebe o `reportId` imediatamente. Os Workflows 2 e 3 são **assíncronos**: a GYRA+ envia a decisão via webhook quando o processamento terminar (geralmente 60–180 segundos para COMPLETO, até 5 min para COMPLETO+).
+O Workflow 1 é **síncrono**: seu sistema chama e recebe o `reportId` imediatamente. Os Workflows 2 e 3 são **assíncronos**: a GYRA+ envia a decisão via webhook quando o processamento terminar (geralmente 60 a 180 segundos para COMPLETO, até 5 min para COMPLETO+).
 
 ---
 
@@ -245,7 +245,7 @@ POST /webhook/gyra-decisao-sheets (GYRA+ → seu n8n)
 | Documento | CNPJ ou CPF |
 | Razão Social | Nome da empresa ou pessoa |
 | Tipo | CNPJ / CPF |
-| Score | Score 0–1000 |
+| Score | Score 0 a 1000 |
 | Decisão | APPROVED / ALERT / DENIED |
 | PEFIN (R$) | Total de pendências PEFIN |
 | Protestos | Quantidade de protestos em cartório |

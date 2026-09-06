@@ -106,10 +106,10 @@ Ver [Cadastros e Solicitações](/kyc/visao-geral) para o conceito.
 
 ### `validate_document`
 
-A porta de entrada do módulo: um arquivo, e o parecer volta. **A entrada é única**, você não diz que documento é: a plataforma reconhece entre os 24 tipos e o formato do retorno depende do tipo identificado.
+A porta de entrada do módulo: um arquivo, e o parecer volta. **A entrada é única**, você não diz que documento é: a plataforma reconhece entre os 25 tipos e o formato do retorno depende do tipo identificado.
 
 - **Parâmetros**: `file`, `expectedDocument` (CNPJ/CPF da jornada), `expectedName`, `expectedType` (para conferir se veio o documento certo), `typeHint` (afirma o tipo e pula a classificação), `waitSeconds`.
-- **Prompt típico**: *"lê esse contrato social e me diz se ele bate com o CNPJ 12.345.678/0001-90"*.
+- **Prompt típico**: *"lê esse contrato social e me diz se ele bate com o CNPJ 11.444.777/0001-61"*.
 
 ### `get_document_status`
 
@@ -135,7 +135,7 @@ O dossiê de um CNPJ/CPF. `create_registry` é idempotente por documento. `list_
 
 O que o dossiê já tem, e a árvore societária com a origem de cada pessoa.
 
-- **Prompt típico**: *"o que já temos do CNPJ 12.345.678/0001-90 e quem são os sócios?"*.
+- **Prompt típico**: *"o que já temos do CNPJ 11.444.777/0001-61 e quem são os sócios?"*.
 
 ### `presign_registry_document`, `confirm_registry_document`
 
@@ -195,7 +195,7 @@ Contatos que aquele documento já usou, e quem assina pela empresa segundo o doc
 
 ### `create_webhook`
 
-Cria um webhook para receber notificações de eventos. Um webhook por tipo — registre vários se precisa escutar mais de um.
+Cria um webhook para receber notificações de eventos. Um webhook por tipo, registre vários se precisa escutar mais de um.
 
 - **Parâmetros**: `type` (`REPORT`, `REPORT_FINISHED`, `REPORT_STATUS`, `REPORT_EXPORTED`, `CREDIT_POLICY`, `COMMITTEE_FINISHED`, `OPERATION`), `url`, `apiKey` (opcional, enviado como header `api-key` nas chamadas).
 - **Prompt típico**: *"configura webhook REPORT_FINISHED apontando para https://meu-backend/gyra"*.

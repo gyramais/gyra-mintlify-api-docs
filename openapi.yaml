@@ -89,7 +89,7 @@ paths:
           Este e o primeiro passo para usar a API. O token retornado deve ser enviado
           no header Authorization de todas as requisicoes subsequentes.
           
-          NOTA: No MCP server, a autenticacao e automatica — este tool e exposto apenas
+          NOTA: No MCP server, a autenticacao e automatica, e este tool e exposto apenas
           para uso manual ou debug. O server gerencia o token internamente.
       x-codeSamples:
         - lang: cURL
@@ -639,7 +639,7 @@ paths:
         - authorization: []
       summary: Criar relatorio (padrao de integracao com webhook)
       description: |
-          PADRAO DE INTEGRACAO — use quando voce esta ajudando um desenvolvedor a
+          PADRAO DE INTEGRACAO, use quando voce esta ajudando um desenvolvedor a
           implementar integracao programatica com webhook. Para um usuario apenas
           gerando relatorio no chat, use create_report_and_wait.
           
@@ -647,7 +647,7 @@ paths:
           
           O processamento e ASSINCRONO: voce recebe o reportId imediatamente com
           status PENDING. O cliente acompanha o ciclo via:
-            1. Webhook configurado (create_webhook) — recomendado para integracoes.
+            1. Webhook configurado (create_webhook), recomendado para integracoes.
             2. Polling em get_report ate reportProgress.isFinalized === true.
           
           Status (apos analyze_report manual): PENDING → APPROVED, DENIED ou ALERT.
@@ -1031,7 +1031,7 @@ paths:
           description: ID do relatorio a exportar.
       responses:
         '200':
-          description: 'Objeto { status: "processing", reportId } — o arquivo chega via webhook.'
+          description: 'Objeto { status: "processing", reportId }, o arquivo chega via webhook.'
           content:
             application/json:
               schema:
@@ -1087,7 +1087,7 @@ paths:
         - authorization: []
       summary: Exportar relatorio em PDF/Excel via webhook (padrao de integracao)
       description: |
-          PADRAO DE INTEGRACAO — use quando voce esta ajudando um desenvolvedor a
+          PADRAO DE INTEGRACAO, use quando voce esta ajudando um desenvolvedor a
           implementar integracao programatica com o Gyra+. Para um usuario apenas exportando
           no chat, use export_report_and_wait.
           
@@ -1198,16 +1198,16 @@ paths:
         - authorization: []
       summary: Exportar relatorio bloqueante (padrao de integracao)
       description: |
-          PADRAO DE INTEGRACAO — use quando voce esta ajudando um desenvolvedor a
+          PADRAO DE INTEGRACAO, use quando voce esta ajudando um desenvolvedor a
           implementar integracao com cliente HTTP que suporta timeout longo (>= 6 min).
           Para um usuario apenas exportando no chat, use export_report_and_wait.
           
-          O endpoint BLOQUEIA ate a geracao concluir — pode levar ate 6 minutos para
+          O endpoint BLOQUEIA ate a geracao concluir, pode levar ate 6 minutos para
           relatorios completos. Cuidado: idle timeout de proxy/ALB tipico e 60s, entao
           isso so funciona se o cliente controla o caminho de rede (chamada server-to-server
           sem proxy intermediario).
           
-          Pode ser chamado a qualquer momento — nao exige que o relatorio esteja
+          Pode ser chamado a qualquer momento, nao exige que o relatorio esteja
           finalizado nem analisado. Se o relatorio ainda esta processando, o PDF
           contem apenas as secoes prontas ate o momento.
           
@@ -2480,12 +2480,13 @@ paths:
       description: |
           Manda UM arquivo (PDF, JPG ou PNG, ate 15MB) e recebe classificacao, campos extraidos, verificacoes e parecer.
           
-          A ENTRADA E UNICA: voce nao diz que documento e. A plataforma reconhece entre 24 tipos
+          A ENTRADA E UNICA: voce nao diz que documento e. A plataforma reconhece sozinha 24 tipos
           (contrato social, alteracao contratual, estatuto, ata de assembleia, requerimento de
           empresario, procuracao PJ/PF, certidao da Junta, QSA, IRPJ/ECF, declaracao de faturamento,
-          demonstracoes financeiras, extrato bancario, certidao PGFN, FGTS, CADIN federal/estadual,
-          Simples Nacional, eSocial, documento de identidade, comprovante de residencia, DIRPF,
-          comprovante de renda, certidao PF, estado civil).
+          extrato bancario, certidao PGFN, FGTS, CADIN federal/estadual, Simples Nacional, eSocial,
+          documento de identidade, comprovante de residencia, DIRPF, comprovante de renda,
+          certidao PF, estado civil). O balanco (DEMONSTRACOES_FINANCEIRAS) e o 25o tipo com leitura
+          propria, mas NAO e reconhecido sozinho: mande typeHint DEMONSTRACOES_FINANCEIRAS.
           
           O FORMATO DA SAIDA DEPENDE DO TIPO IDENTIFICADO: o objeto `extraction` traz os campos
           daquele tipo. Todo campo folha vem como { value, confidence, page }; campo ausente vem
@@ -7106,7 +7107,7 @@ components:
           type: object
           nullable: true
           additionalProperties: true
-          description: 'Os campos lidos. A FORMA DEPENDE DO TIPO identificado: cada um dos 24 tipos tem o seu conjunto, documentado campo a campo em https://developers.gyramais.com.br/api-reference/kyc/formatos-de-retorno. Todo campo folha vem como { value, confidence, page }; campo ausente vem com value null e confidence 0.'
+          description: 'Os campos lidos. A FORMA DEPENDE DO TIPO identificado: cada um dos 25 tipos tem o seu conjunto, documentado campo a campo em https://developers.gyramais.com.br/api-reference/kyc/formatos-de-retorno. Todo campo folha vem como { value, confidence, page }; campo ausente vem com value null e confidence 0.'
         fieldConfidences:
           type: object
           nullable: true
