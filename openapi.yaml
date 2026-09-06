@@ -2,9 +2,11 @@ openapi: 3.0.0
 info:
   title: GYRA+ API - MCP Server
   description: API da Gyra+ para analise de credito. Spec curada para uso com agentes AI via MCP.
-  version: 1.0
+  version: '1.0'
   contact: {}
-servers: []
+servers:
+  - url: 'https://gyra-core.gyramais.com.br'
+    description: Producao
 paths:
   /auth/authenticate:
     post:
@@ -22,7 +24,7 @@ paths:
             type: string
       responses:
         200:
-          description: Objeto Session com accessToken (JWT), expiresAt (24h), userId e organizationId.
+          description: Objeto com accessToken (JWT) e expiresIn (tempo em segundos).
       tags:
         - auth
       summary: Gerar token de acesso JWT
@@ -53,20 +55,15 @@ paths:
       description: |
           Registra uma URL de webhook para receber notificacoes em tempo real.
           
-          Tipos de webhook disponiveis (um tipo por webhook, registre varios se precisar):
-          - REPORT: disparado a cada secao do relatorio concluida durante o processamento (granular)
-          - REPORT_FINISHED: disparado quando o processamento do relatorio finaliza completamente
-          - REPORT_STATUS: disparado quando um analista aprova ou rejeita o relatorio manualmente
-          - REPORT_EXPORTED: disparado quando a exportacao (PDF/XLS) de um relatorio e gerada (ou falha)
-          - CREDIT_POLICY: disparado quando a politica de credito e avaliada e o status muda
-          - COMMITTEE_FINISHED: disparado quando o Comite de Credito IA conclui (ou falha) a deliberacao do relatorio
-          - OPERATION: disparado quando uma operacao (fluxo multi-relatorio) conclui
-
+          Tipos de webhook disponiveis:
+          - REPORT: notificado quando um relatorio muda de status (PENDING → APPROVED/DENIED/ALERT)
+          - REPORT_FINISHED: notificado quando o processamento do relatorio finaliza
+          - REPORT_STATUS: notificado em cada mudanca de status intermediaria
+          - CREDIT_POLICY: notificado quando a politica de credito e avaliada
+          - OPTIN: notificado quando um opt-in e processado
+          
           O webhook recebe um POST na URL configurada com o payload do evento.
           Se apiKey for informada, sera enviada no header api-key da requisicao.
-
-          ATENCAO: os webhooks da organizacao sao copiados para o relatorio na criacao dele.
-          Um tipo registrado depois nao dispara para relatorios que ja existiam.
           
           RECOMENDADO: Sempre configure um webhook ao criar relatorios. Evita
           a necessidade de polling com get_report.
@@ -78,8 +75,8 @@ paths:
           required: false
           in: query
           description: 'ID do webhook especifico (opcional). Sem este parametro, retorna todos.'
-          example: 664b63037707171ba58cf311
           schema:
+            example: 664b63037707171ba58cf311
             type: string
       responses:
         200:
@@ -100,8 +97,8 @@ paths:
           required: true
           in: path
           description: ID do webhook a remover.
-          example: 664b63037707171ba58cf311
           schema:
+            example: 664b63037707171ba58cf311
             type: string
       responses:
         200:
@@ -135,12 +132,50 @@ paths:
           - Informacoes basicas (CNPJ/CPF, endereco, socios, QSA)
           - Processos judiciais
           - Protestos em cartorio
-          - Dividas Pefin (PEFIN) e Refin (REFIN)
+          - Dividas Pefin/Refin
           - Dados SCR / Open Finance (Banco Central)
-          - PEP (PEP) e sancoes (SANCTIONS)
+          - PEP e sancoes internacionais
           - Resultado da politica de credito
           
           Use get_report para obter a lista de secoes e seus IDs.
+  /report:
+    post:
+      operationId: ReportController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReportDto'
+      responses:
+        200:
+          description: 'Objeto do relatorio com id, status (PENDING), document, type e createdAt.'
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Criar relatorio (padrao de integracao com webhook)
+      description: |
+          PADRAO DE INTEGRACAO — use quando voce esta ajudando um desenvolvedor a
+          implementar integracao programatica com webhook. Para um usuario apenas
+          gerando relatorio no chat, use create_report_and_wait.
+          
+          Cria um novo relatorio de analise de credito para um CPF ou CNPJ.
+          
+          O processamento e ASSINCRONO: voce recebe o reportId imediatamente com
+          status PENDING. O cliente acompanha o ciclo via:
+            1. Webhook configurado (create_webhook) — recomendado para integracoes.
+            2. Polling em get_report ate reportProgress.isFinalized === true.
+          
+          Status (apos analyze_report manual): PENDING → APPROVED, DENIED ou ALERT.
+          A maioria dos clientes deixa em PENDING e usa o resultado da politica.
+          
+          O tipo de relatorio (SIMPLES, ESSENCIAL, COMPLETO, COMPLETO+) e determinado
+          pela politica de credito (policyId) utilizada.
+          
+          Use list_policies (ou find_policy_by_name pra fluxo interativo) para obter
+          os policyIds disponiveis na organizacao.
   /report/list:
     get:
       operationId: ReportController_list
@@ -230,6 +265,73 @@ paths:
           
           Suporta paginacao (take/skip) e filtros por status, documento, usuario, periodo,
           produtos, operacao, batch.
+  /report/count:
+    get:
+      operationId: ReportController_count
+      parameters:
+        - name: statusValue
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - APPROVED
+              - DENIED
+              - ALERT
+          description: Status do relatorio.
+        - name: document
+          in: query
+          required: false
+          schema:
+            type: string
+          description: CPF ou CNPJ (apenas numeros).
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: ID do usuario criador.
+        - name: createdAtBetween
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          description: 'Intervalo [startISO, endISO].'
+        - name: productIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          description: Filtrar por productIds.
+        - name: operationResultId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: ID do resultado de operacao.
+        - name: batchId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: ID do batch.
+      responses:
+        200:
+          description: Objeto com count (numero de relatorios).
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Contar relatorios
+      description: |
+          Retorna a contagem de relatorios que correspondem aos filtros aplicados.
+          Util para dashboards e analytics sem carregar os dados completos. Aceita os mesmos
+          filtros de list_reports.
   /report/export/{id}:
     get:
       operationId: ReportController_export
@@ -242,19 +344,29 @@ paths:
           description: ID do relatorio a exportar.
       responses:
         200:
-          description: 'Objeto { status: "processing", reportId } — o PDF chega via webhook.'
+          description: 'Objeto { status: "processing", reportId } — o arquivo chega via webhook.'
       tags:
         - report
       security:
         - authorization: []
-      summary: Exportar relatorio em PDF (assincrono)
+      summary: Exportar relatorio em PDF/Excel via webhook (padrao de integracao)
       description: |
-          Solicita a geracao de PDF de um relatorio. Processamento assincrono:
-          retorna imediatamente com status "processing" e o arquivo e entregue via webhook
-          quando pronto.
+          PADRAO DE INTEGRACAO — use quando voce esta ajudando um desenvolvedor a
+          implementar integracao programatica com o Gyra+. Para um usuario apenas exportando
+          no chat, use export_report_and_wait.
           
-          Use quando precisar processar varios relatorios em lote ou quando a latencia nao
-          for critica. Para receber o PDF na hora, use export_report_sync.
+          Solicita a geracao de PDF/Excel de um relatorio. Processamento assincrono:
+          retorna imediatamente com { status: "processing", reportId } e o arquivo e
+          entregue via webhook configurado pelo cliente (create_webhook).
+          
+          Use quando:
+          - O cliente ja tem (ou esta implementando) um endpoint pra receber webhook.
+          - Precisa processar muitos relatorios em lote.
+          - Latencia nao e critica e o webhook fecha o ciclo.
+          
+          Para fluxo interativo de agente (sem webhook), prefira export_report_and_wait.
+          Para chamada bloqueante direta (cliente HTTP suporta long timeout), use
+          export_report_sync.
   /report/export-sync/{id}:
     get:
       operationId: ReportController_exportSync
@@ -272,16 +384,59 @@ paths:
         - report
       security:
         - authorization: []
-      summary: Exportar relatorio em PDF
+      summary: Exportar relatorio bloqueante (padrao de integracao)
       description: |
-          Exporta um relatorio em PDF e retorna a URL de download na resposta.
+          PADRAO DE INTEGRACAO — use quando voce esta ajudando um desenvolvedor a
+          implementar integracao com cliente HTTP que suporta timeout longo (>= 6 min).
+          Para um usuario apenas exportando no chat, use export_report_and_wait.
           
           O endpoint BLOQUEIA ate a geracao concluir — pode levar ate 6 minutos para
-          relatorios completos. Use com timeout adequado do lado do cliente. Sempre
-          gera PDF do relatorio completo (todas as secoes).
+          relatorios completos. Cuidado: idle timeout de proxy/ALB tipico e 60s, entao
+          isso so funciona se o cliente controla o caminho de rede (chamada server-to-server
+          sem proxy intermediario).
           
-          Pre-requisito: o relatorio precisa estar finalizado (status APPROVED, DENIED
-          ou ALERT). Relatorios em PENDING nao podem ser exportados.
+          Pode ser chamado a qualquer momento — nao exige que o relatorio esteja
+          finalizado nem analisado. Se o relatorio ainda esta processando, o PDF
+          contem apenas as secoes prontas ate o momento.
+          
+          Para fluxo interativo de agente, prefira export_report_and_wait (timeout
+          previsivel de 2min, com aviso quando relatorio nao esta finalizado).
+          Para integracao com webhook, use export_report_via_webhook.
+  /report/{id}:
+    get:
+      operationId: ReportController_get
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio (ObjectId). Retornado pelo create_report.
+        - name: details
+          required: false
+          in: query
+          description: Defina como "false" para omitir detalhes das secoes. Util para verificar status rapidamente.
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'Relatorio completo com secoes, decisao e metadados.'
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Consultar relatorio por ID
+      description: |
+          Retorna o relatorio completo com secoes, decisao da politica e score.
+          
+          Se o relatorio esta em processamento, o status sera PENDING.
+          Quando pronto, o objeto retornado contem:
+          - status: APPROVED, DENIED ou ALERT
+          - policyResult: decisao automatica com regras avaliadas
+          - sections[]: array de secoes (BASIC_INFORMATION, PROCESSES, PROTESTS, SCR, etc.)
+          - commentary: analise do analista (se houver)
+          
+          Use details=false para obter apenas metadados sem o conteudo das secoes.
   /report/{id}/section/{sectionType}:
     get:
       operationId: ReportController_getReportSection
@@ -313,190 +468,10 @@ paths:
           - BASIC_INFORMATION: dados cadastrais, endereco, socios
           - PROCESSES: processos judiciais
           - PROTESTS: protestos em cartorio
-          - PEFIN: dividas Pefin
-          - REFIN: dividas Refin
+          - PEFIN_REFIN: dividas Pefin/Refin
           - SCR: dados do Sistema de Informacoes de Credito do Banco Central
-          - PEP: Pessoa Politicamente Exposta
-          - SANCTIONS: sancoes e listas restritivas
+          - PEP_SANCTIONS: Pessoa Politicamente Exposta e sancoes
           - CREDIT_POLICY: resultado da avaliacao da politica de credito
-          - BALANCE_SHEET: balanco patrimonial estruturado
-          - DRE: demonstracao do resultado do exercicio
-          - FINANCIAL_INDICATORS: indicadores financeiros calculados
-  /report/{id}/financial-tab:
-    post:
-      operationId: ReportController_financialSection
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-          description: ID do relatorio (CNPJ) que vai receber as demonstracoes.
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                files:
-                  type: array
-                  items:
-                    type: string
-                    format: binary
-                  description: |
-                      PDFs do balanco patrimonial e/ou da DRE. Repita o campo `files`
-                      para enviar mais de um arquivo. Ate 10 arquivos por chamada,
-                      50MB cada, somente PDF.
-              required:
-                - files
-      responses:
-        200:
-          description: Relatorio atualizado, com as secoes financeiras marcadas como em processamento.
-        400:
-          description: Nenhum arquivo enviado, arquivo que nao e um PDF valido ou mais de 10 arquivos.
-        404:
-          description: Relatorio nao encontrado ou de outra organizacao.
-        413:
-          description: Arquivo maior que 50MB.
-      tags:
-        - report
-      security:
-        - authorization: []
-      summary: Enviar balanco e DRE
-      description: |
-          Envia um ou mais PDFs de balanco patrimonial e DRE para um relatorio de CNPJ
-          ja existente. A extracao transforma as demonstracoes em dados estruturados
-          (balanco, DRE e indicadores) e as disponibiliza como secoes do relatorio.
-
-          A chamada e ASSINCRONA: responde 200 assim que os arquivos sao aceitos e
-          enfileirados, sem os dados estruturados. O resultado sai depois em
-          GET /report/{id}/section/BALANCE_SHEET (idem DRE e FINANCIAL_INDICATORS).
-
-          Envie apenas as paginas do balanco e da DRE: quanto mais enxuto o PDF,
-          mais rapido e barato o processamento.
-  /report/{id}/committee:
-    post:
-      operationId: ReportController_conveneCommittee
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-          description: ID do relatorio que vai a comite.
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                force:
-                  type: boolean
-                  description: 'Ignora o cache da deliberacao e reprocessa do zero. Padrao false.'
-                  default: false
-      responses:
-        200:
-          description: 'Deliberacao aceita e iniciada: { status: "RUNNING", trigger: "MANUAL" | "RERUN" }.'
-        400:
-          description: 'Relatorio ainda nao esta pronto para o comite (pareceres ou politica pendentes, ou parecer nao habilitado na politica).'
-        404:
-          description: Relatorio nao encontrado ou de outra organizacao.
-        409:
-          description: Ja existe uma deliberacao em andamento para este relatorio.
-      tags:
-        - report
-      security:
-        - authorization: []
-      summary: Convocar o Comite de Credito IA
-      description: |
-          Dispara manualmente a deliberacao do Comite de Credito IA sobre um relatorio.
-
-          Use quando a politica esta em "Nao convocar automaticamente" e o comite deve rodar
-          sob demanda, ou para reconvocar um relatorio que ja deliberou (DONE), falhou
-          (ERROR) ou foi pulado (SKIPPED).
-
-          Pre-requisitos (senao retorna 400):
-          - a politica do relatorio habilita o pipeline de parecer;
-          - os pareceres por secao ja finalizaram;
-          - a politica de credito ja concluiu (quando o relatorio tem politica).
-
-          A chamada e assincrona: o 200 confirma que a deliberacao iniciou, nao que terminou.
-          Convocacao manual sempre entra como sugestao e nao altera o status do relatorio,
-          mesmo numa politica em "Convocar comite e decisao automatica".
-          Para saber o resultado, registre o webhook COMMITTEE_FINISHED ou consulte
-          GET /report/{id}/insights.
-  /report/{id}/insights:
-    get:
-      operationId: ReportController_getReportInsights
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-          description: ID do relatorio.
-        - name: section
-          required: false
-          in: query
-          schema:
-            type: string
-          description: 'Filtra o parecer de UMA secao (ex: PROCESSES, SCR, BALANCE_SHEET). Sem o parametro, retorna todos os pareceres concluidos.'
-      responses:
-        200:
-          description: 'Envelope com reportId, document, committee { status, decision, result, at } e insights[] (parecer por secao).'
-        400:
-          description: Valor de section fora da lista de tipos de secao.
-        404:
-          description: Relatorio nao encontrado ou de outra organizacao.
-      tags:
-        - report
-      security:
-        - authorization: []
-      summary: Consultar pareceres do relatorio
-      description: |
-          Leitura enxuta do relatorio: apenas os pareceres de IA por secao (texto, score,
-          nivel de risco e destaques) e o resumo da deliberacao do comite. Nao traz os
-          payloads pesados de integracao.
-
-          Pensado para consumo barato por agentes de IA e para telas de resumo executivo.
-          Tambem serve para verificar se os pareceres ja terminaram antes de convocar o
-          comite com POST /report/{id}/committee.
-
-          Só entram no array insights[] as secoes com parecer concluido. Relatorio ainda em
-          processamento devolve insights vazio ou parcial e committee.status null.
-  /committee/deliberations/{reportId}:
-    get:
-      operationId: CommitteeController_getDeliberation
-      parameters:
-        - name: reportId
-          required: true
-          in: path
-          schema:
-            type: string
-          description: ID do relatorio que foi a comite.
-      responses:
-        200:
-          description: 'Deliberacao completa: agentOpinions[], synthesis, finalRecommendation, versoes de prompt e telemetria.'
-        404:
-          description: Nenhuma deliberacao encontrada para este relatorio.
-      tags:
-        - committee
-      security:
-        - authorization: []
-      summary: Consultar deliberacao do Comite de Credito IA
-      description: |
-          Retorna a deliberacao completa e auditavel do Comite de Credito IA para um
-          relatorio: o voto individual de cada um dos sete agentes (score, parecer,
-          redFlags, positiveFactors, recommendation), a sintese do Presidente (decisao,
-          justificativa, condicoes, registro de divergencia, alcada), a versao de prompt
-          usada por agente e a telemetria (modelos, tokens, custo, duracao).
-
-          Retorna sempre a deliberacao mais recente. Reconvocacoes (trigger RERUN) geram
-          uma nova deliberacao, e e ela que passa a ser devolvida.
-
-          Para o fluxo do dia a dia, GET /report/{id}/insights e mais leve.
   /report/analyze:
     post:
       operationId: ReportController_analyze
@@ -527,14 +502,13 @@ paths:
         - report
       security:
         - authorization: []
-      summary: Analisar relatorio manualmente
+      summary: Analisar/aprovar relatorio
       description: |
-          Registra uma ANALISE MANUAL de um relatorio por um usuario (ex.: analista de credito).
-
-          O usuario submete uma decisao (approved: true/false) com justificativa
-          (commentary). Nao reprocessa nem recoleta dados das fontes — apenas registra
-          a decisao humana sobre o relatorio existente. Para refazer uma analise manual
-          ja registrada, use re_analyze.
+          Registra a analise de um relatorio por um analista de credito.
+          
+          Define o status de aprovacao (approved: true/false), comentarios do analista
+          e decisao manual. Usado quando a decisao automatica da politica precisa de
+          revisao humana.
   /report/re-analyze:
     post:
       operationId: ReportController_reAnalyze
@@ -565,14 +539,12 @@ paths:
         - report
       security:
         - authorization: []
-      summary: Refazer analise manual do relatorio
+      summary: Re-analisar relatorio
       description: |
-          Refaz a ANALISE MANUAL de um relatorio que ja recebeu uma decisao humana
-          previa via /report/analyze. Exige permissao do usuario para revisar analises
-          manuais ja registradas.
-
-          Nao reprocessa nem recoleta dados das fontes — apenas substitui a decisao
-          humana (approved + commentary) anteriormente registrada.
+          Re-analisa um relatorio previamente analisado. Verifica se o usuario
+          tem permissao para editar relatorios com base na politica de credito configurada.
+          
+          Util quando dados adicionais foram obtidos ou a decisao precisa ser revisada.
   /credit-policy/policy:
     get:
       operationId: PolicyController_find
@@ -617,6 +589,40 @@ paths:
           Filtros opcionais:
           - enabled: true para ver apenas politicas ativas
           - protected: true para incluir politicas protegidas (padrao do sistema)
+  /insight:
+    post:
+      operationId: InsightController_generateInsight
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sectionId:
+                  type: string
+                  description: ID da secao do relatorio para gerar o insight.
+              required:
+                - sectionId
+      responses:
+        200:
+          description: 'Insight gerado com analise, pontos de atencao e recomendacoes.'
+      tags:
+        - insight
+      summary: Gerar insight com IA para secao do relatorio
+      description: |
+          Gera uma analise automatica com IA para uma secao especifica de um relatorio.
+          
+          A IA analisa os dados da secao e produz um resumo interpretativo com
+          pontos de atencao e recomendacoes. O insight e salvo como comentario
+          na secao do relatorio.
+          
+          Requisitos:
+          - A secao deve estar finalizada (processamento completo)
+          - A organizacao deve ter plano que suporte IA (nao disponivel em planos Trial ou Basic)
+          
+          Use get_report para obter os IDs das secoes disponiveis.
   /v2/report:
     post:
       operationId: ReportApiController_create
@@ -659,15 +665,915 @@ paths:
       description: |
           Versao v2 da consulta de relatorio. Retorna o relatorio com estrutura
           atualizada. Use get_report_v2 para novas integracoes.
+  /v1/registry:
+    post:
+      operationId: RegistryController_create
+      summary: Criar (ou recuperar) o cadastro de um CNPJ/CPF
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRegistryDto'
+      responses:
+        201:
+          description: 'Cadastro com id, document, entityType (COMPANY/PERSON), name, kycStatus e completeness.'
+      tags:
+        - registry
+      security:
+        - authorization: []
+      description: |
+          Cria o dossie documental de um CNPJ ou CPF na organizacao autenticada.
+          
+          IDEMPOTENTE POR DOCUMENTO: chamar de novo com o mesmo CNPJ devolve o cadastro que ja existe,
+          em vez de duplicar. E seguro chamar no inicio de qualquer jornada.
+    get:
+      operationId: RegistryController_list
+      summary: Listar cadastros da organizacao
+      parameters: []
+      responses:
+        200:
+          description: Pagina de cadastros com situacao e completude.
+      tags:
+        - registry
+      security:
+        - authorization: []
+      description: |
+          Lista os cadastros, com busca e filtro por situacao.
+          
+          Situacoes: PENDING (sem documento validado), PROCESSING (documento em analise),
+          UP_TO_DATE (tudo validado), ATTENTION (divergencia, vencimento proximo ou ressalva),
+          EXPIRED (renovacao vencida), RENEWING (renovacao em curso).
+          
+          ATENCAO: valor de kycStatus fora dessa lista e descartado em silencio pela validacao, e a
+          consulta devolve a lista INTEIRA sem erro. Confira o valor antes de concluir qualquer coisa.
+  /v1/registry/validate-document:
+    post:
+      operationId: RegistryController_validateDocument
+      summary: Validar um documento e receber o parecer
+      description: |
+          Manda UM arquivo (PDF, JPG ou PNG, ate 15MB) e recebe classificacao, campos extraidos, verificacoes e parecer.
+          
+          A ENTRADA E UNICA: voce nao diz que documento e. A plataforma reconhece entre 24 tipos
+          (contrato social, alteracao contratual, estatuto, ata de assembleia, requerimento de
+          empresario, procuracao PJ/PF, certidao da Junta, QSA, IRPJ/ECF, declaracao de faturamento,
+          demonstracoes financeiras, extrato bancario, certidao PGFN, FGTS, CADIN federal/estadual,
+          Simples Nacional, eSocial, documento de identidade, comprovante de residencia, DIRPF,
+          comprovante de renda, certidao PF, estado civil).
+          
+          O FORMATO DA SAIDA DEPENDE DO TIPO IDENTIFICADO: o objeto `extraction` traz os campos
+          daquele tipo. Todo campo folha vem como { value, confidence, page }; campo ausente vem
+          com value null e confidence 0, nunca inventado.
+          
+          Responde 200 com o resultado quando o pipeline fecha dentro de `waitSeconds`, ou 202 com
+          { documentId, statusUrl } quando passa. No 202, continue com get_document_status.
+          
+          Use `expectedType` para conferir se veio o documento CERTO: a classificacao roda normal e o
+          tipo lido e confrontado com o pedido. E o que pega o arquivo legitimo enviado no campo errado.
+          Use `typeHint` so quando a origem ja garante o tipo: ele PULA a classificacao.
+          
+          O arquivo e arquivado no cadastro de `expectedDocument`, criando o cadastro se nao existir.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - expectedDocument
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 'O arquivo, em multipart/form-data. PDF, JPG ou PNG, ate 15MB. Acima disso use presign_registry_document + confirm_registry_document.'
+                expectedDocument:
+                  type: string
+                  description: 'CNPJ ou CPF da jornada, com ou sem mascara. Obrigatorio: e o dono do cadastro onde o documento sera arquivado.'
+                expectedName:
+                  type: string
+                  description: Razao social ou nome da jornada. Alimenta a verificacao EXPECTED_NAME_MATCH.
+                waitSeconds:
+                  type: integer
+                  minimum: 5
+                  maximum: 55
+                  description: 'Espera maxima pela resposta sincrona, de 5 a 55. Padrao 45.'
+                typeHint:
+                  type: string
+                  enum:
+                    - CONTRATO_SOCIAL
+                    - ALTERACAO_CONTRATUAL
+                    - ESTATUTO_SOCIAL
+                    - REQUERIMENTO_EMPRESARIO
+                    - PROCURACAO_PJ
+                    - IRPJ_ECF
+                    - DECLARACAO_FATURAMENTO
+                    - CERTIDAO_JUNTA
+                    - ATA_ASSEMBLEIA
+                    - DOC_IDENTIDADE
+                    - COMPROVANTE_RESIDENCIA
+                    - DIRPF
+                    - COMPROVANTE_RENDA
+                    - CERTIDAO_PF
+                    - PROCURACAO_PF
+                    - FORA_DE_ESCOPO
+                    - NAO_IDENTIFICADO
+                    - CERTIDAO_PGFN_PJ
+                    - CERTIDAO_FGTS
+                    - CADIN_FEDERAL
+                    - CADIN_ESTADUAL
+                    - CERTIDAO_QSA
+                    - CERTIFICADO_SIMPLES_NACIONAL
+                    - ESOCIAL_PJ
+                    - COMPROVACAO_ESTADO_CIVIL
+                    - DEMONSTRACOES_FINANCEIRAS
+                    - EXTRATO_BANCARIO
+                  description: 'AFIRMA o tipo do arquivo: o pipeline adota e pula a classificacao. So use quando a origem ja garante o tipo.'
+                expectedType:
+                  type: string
+                  enum:
+                    - CONTRATO_SOCIAL
+                    - ALTERACAO_CONTRATUAL
+                    - ESTATUTO_SOCIAL
+                    - REQUERIMENTO_EMPRESARIO
+                    - PROCURACAO_PJ
+                    - IRPJ_ECF
+                    - DECLARACAO_FATURAMENTO
+                    - CERTIDAO_JUNTA
+                    - ATA_ASSEMBLEIA
+                    - DOC_IDENTIDADE
+                    - COMPROVANTE_RESIDENCIA
+                    - DIRPF
+                    - COMPROVANTE_RENDA
+                    - CERTIDAO_PF
+                    - PROCURACAO_PF
+                    - FORA_DE_ESCOPO
+                    - NAO_IDENTIFICADO
+                    - CERTIDAO_PGFN_PJ
+                    - CERTIDAO_FGTS
+                    - CADIN_FEDERAL
+                    - CADIN_ESTADUAL
+                    - CERTIDAO_QSA
+                    - CERTIFICADO_SIMPLES_NACIONAL
+                    - ESOCIAL_PJ
+                    - COMPROVACAO_ESTADO_CIVIL
+                    - DEMONSTRACOES_FINANCEIRAS
+                    - EXTRATO_BANCARIO
+                  description: 'PEDE um tipo: a classificacao roda e o tipo lido e confrontado (verificacao EXPECTED_TYPE_MATCH). E o campo que pega documento trocado.'
+      responses:
+        201:
+          description: 'Resultado completo (200) com type, extraction, validation.checks[] e assessment; ou { documentId, statusUrl } (202) quando ainda processa.'
+      tags:
+        - registry
+      security:
+        - authorization: []
+  /v1/registry/documents/{docId}/status:
+    get:
+      operationId: RegistryController_documentStatus
+      summary: Status e resultado de um documento em analise
+      description: |
+          Consulta um documento pelo id, sem precisar do id do cadastro. E o caminho de polling
+          depois de um 202 do validate_document.
+          
+          Status terminais: VALIDATED, FAILED, OUT_OF_SCOPE, MANUAL_REVIEW, REJECTED_QUALITY.
+          Enquanto nao for terminal, o documento ainda esta no pipeline.
+          
+          Devolve o mesmo corpo do resultado completo, incluindo `statusReason` (por que parou num
+          terminal que nao e falha tecnica) e `stages` (o que rodou e o que veio reaproveitado).
+          
+          PREFIRA WEBHOOK: assine registry.document.assessed em vez de fazer polling em laco.
+      parameters:
+        - name: docId
+          required: true
+          in: path
+          schema:
+            type: string
+          description: 'Id do documento, devolvido pelo validate_document ou pelo confirm_registry_document.'
+      responses:
+        200:
+          description: 'Documento com status, classification, extraction, validation e assessment.'
+      tags:
+        - registry
+      security:
+        - authorization: []
+  /v1/registry/metrics/accuracy:
+    get:
+      operationId: RegistryController_accuracyMetrics
+      summary: Indicadores de acuracia do cadastro documental
+      parameters:
+        - name: from
+          required: false
+          in: query
+          description: 'Inicio da janela, ISO 8601. Sem janela, cobre todo o historico.'
+          schema:
+            example: '2026-07-01T00:00:00.000Z'
+            type: string
+        - name: to
+          required: false
+          in: query
+          description: 'Fim da janela, ISO 8601, inclusivo.'
+          schema:
+            example: '2026-07-31T23:59:59.999Z'
+            type: string
+        - name: limit
+          required: false
+          in: query
+          description: 'Tamanho maximo da amostra das medias. Padrao 1000, maximo 5000.'
+          schema:
+            maximum: 5000
+            default: 1000
+            type: number
+      responses:
+        200:
+          description: Indicadores por tipo documental e por campo.
+      tags:
+        - registry
+      security:
+        - authorization: []
+      description: |
+          Volume, distribuicao de vereditos, taxa de analise manual, taxa de reprocessamento e
+          confianca media, POR TIPO DOCUMENTAL E POR CAMPO.
+          
+          E a tool para responder "vale a pena tornar esta verificacao impeditiva?": olhe a taxa de
+          analise manual do tipo antes de subir uma ressalva a reprovacao.
+          
+          O volume por status e por tipo e sempre exato; so as medias de confianca usam amostra.
+  /v1/registry/rule-set:
+    get:
+      operationId: RegistryController_getRuleSet
+      summary: Regua de validacao vigente da organizacao
+      parameters: []
+      responses:
+        200:
+          description: Versao vigente e o objeto rules com os defaults ja aplicados.
+      tags:
+        - registry
+      security:
+        - authorization: []
+      description: |
+          A configuracao que decide o que reprova, o que vira ressalva e o que nem roda em cada
+          tipo de documento. Versionada: todo parecer registra em assessment.ruleSetVersion qual versao o julgou.
+          
+          Para explicar uma reprovacao, cruze o check que deu FAIL com o que a regua diz sobre ele.
+  /v1/registry/rule-set/catalog:
+    get:
+      operationId: RegistryController_ruleSetCatalog
+      summary: 'Catalogo de verificacoes, tipos e padroes'
+      parameters: []
+      responses:
+        200:
+          description: 'Grupos de negocio, verificacoes, parametros, tipos documentais e padroes.'
+      tags:
+        - registry
+      security:
+        - authorization: []
+      description: |
+          O vocabulario da regua, em linguagem de negocio: as verificacoes agrupadas nas tres
+          perguntas (autenticidade, titularidade, fe publica), os tipos documentais com rotulo e descricao,
+          as especies de certificacao e os padroes do motor (vigencia por tipo, subtipos aceitos).
+          
+          LEIA DAQUI em vez de fixar a lista: verificacao nova aparece no catalogo no mesmo deploy em que
+          passa a existir.
+  /v1/registry/by-document/{document}:
+    get:
+      operationId: RegistryController_findByDocument
+      summary: Consultar o cadastro pelo CNPJ/CPF
+      parameters:
+        - name: document
+          required: true
+          in: path
+          schema:
+            type: string
+          description: 'CNPJ ou CPF, com ou sem mascara.'
+      responses:
+        200:
+          description: 'Cadastro com situacao, completude, dados basicos oficiais e as exigencias em aberto.'
+      tags:
+        - registry
+      security:
+        - authorization: []
+      description: |
+          Busca o dossie pelo documento, sem precisar saber o id.
+          
+          E a tool para responder "o que ja temos deste CNPJ?" antes de pedir documento ao cliente:
+          a completude e a situacao dizem se falta alguma coisa.
+  /v1/registry/{id}:
+    get:
+      operationId: RegistryController_findOne
+      summary: Consultar um cadastro pelo id
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id do cadastro.
+      responses:
+        200:
+          description: 'Cadastro completo, com completude aberta por exigencia.'
+      tags:
+        - registry
+      security:
+        - authorization: []
+      description: |
+          Detalhe do dossie: situacao, completude, dados basicos oficiais e o bloco de quem
+          pode assinar pela empresa (regime ISOLADA/CONJUNTA/MISTA/INDETERMINADO, quantas assinaturas
+          a regra geral exige e quem assina sozinho), consolidado do documento societario vigente.
+  /v1/registry/{id}/documents/presign:
+    post:
+      operationId: RegistryController_presignDocument
+      summary: Preparar o envio de um documento (URL assinada)
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id do cadastro.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresignRegistryDocumentDto'
+      responses:
+        201:
+          description: URL assinada para o PUT e a key a usar na confirmacao.
+      tags:
+        - registry
+      security:
+        - authorization: []
+      description: |
+          Primeiro passo do envio assincrono, para arquivos de ate 50MB (acima do teto de 15MB
+          do validate_document).
+          
+          Devolve a URL assinada para o PUT e a `key` do arquivo. Suba o arquivo direto nessa URL, com o
+          mesmo Content-Type e o mesmo tamanho declarados, e depois chame confirm_registry_document com a
+          key que veio aqui. Nunca monte a key voce mesmo.
+  /v1/registry/{id}/documents:
+    post:
+      operationId: RegistryController_confirmDocument
+      summary: Confirmar o upload e disparar a analise
+      description: |
+          Segundo passo do envio assincrono: confirma o arquivo que ja foi para o armazenamento e
+          dispara o pipeline. Responde 202 com o documentId.
+          
+          O resultado chega por webhook (registry.document.assessed) ou por get_document_status.
+          
+          Sobre os dois campos de tipo: `expectedType` PEDE um tipo e a conferencia roda; `typeHint`
+          AFIRMA o tipo e a classificacao e pulada. Enviando os dois, typeHint vence.
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id do cadastro.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmRegistryDocumentDto'
+      responses:
+        202:
+          description: documentId do documento em processamento (202).
+      tags:
+        - registry
+      security:
+        - authorization: []
+    get:
+      operationId: RegistryController_listDocuments
+      summary: Listar os documentos de um cadastro
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id do cadastro.
+      responses:
+        200:
+          description: 'Documentos com tipo, versao, status, veredito e data.'
+      tags:
+        - registry
+      security:
+        - authorization: []
+      description: |
+          Lista os documentos do dossie. Por padrao traz so a versao VIGENTE de cada tipo;
+          com includeHistory, traz todas as versoes.
+          
+          Nada e sobrescrito: uma alteracao contratual nova nao apaga a antiga, vira a versao vigente.
+  /v1/registry/{id}/documents/{docId}/result:
+    get:
+      operationId: RegistryController_documentResult
+      summary: Resultado completo de um documento
+      description: |
+          Da classificacao ao parecer, para um documento do cadastro.
+          
+          Traz `extraction` (os campos daquele tipo, cada um com value/confidence/page),
+          `validation.checks[]` (cada verificacao com PASS/WARN/FAIL/SKIP, mensagem e evidencia com
+          pagina e trecho) e `assessment`.
+          
+          USE assessment.effectiveVerdict, NAO assessment.verdict. O primeiro e o veredito que vale hoje;
+          o segundo e o parecer da IA, que nunca e reescrito. Quando um operador discorda, a decisao dele
+          entra em feedbackVerdict e effectiveVerdict passa a ser ela, com decidedByOperator true.
+          
+          Tambem devolve `statusReason` (por que parou), `stages` (o que rodou e o que foi reaproveitado)
+          e o par expectedType/type, que explica a verificacao EXPECTED_TYPE_MATCH.
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id do cadastro.
+        - name: docId
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id do documento.
+      responses:
+        200:
+          description: 'Classificacao, extracao, verificacoes e parecer, com o selo contentHash.'
+      tags:
+        - registry
+      security:
+        - authorization: []
+  /v1/registry/{id}/documents/{docId}/reprocess:
+    post:
+      operationId: RegistryController_reprocessDocument
+      summary: Reprocessar um documento
+      description: |
+          Roda o pipeline de novo. Sem `stages`, roda inteiro; com um subconjunto de
+          CLASSIFY/EXTRACT/VALIDATE, as etapas de fora reaproveitam a tentativa anterior.
+          
+          Duas regras que evitam surpresa: pular EXTRACT so funciona quando existe extracao gravada antes,
+          e reexecutar EXTRACT sempre revalida. Confira stages.executed e stages.reused no resultado.
+          
+          `forceType` corrige uma classificacao errada; como afirma o tipo, a conferencia
+          EXPECTED_TYPE_MATCH sai SKIP naquela tentativa.
+          
+          REPROCESSAR NAO COBRA DE NOVO: a cobranca e por documento, nao por tentativa.
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id do cadastro.
+        - name: docId
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id do documento.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReprocessRegistryDocumentDto'
+      responses:
+        202:
+          description: 'Confirmacao do reprocessamento (202), com a tentativa nova.'
+      tags:
+        - registry
+      security:
+        - authorization: []
+  /v1/registry/{id}/persons:
+    get:
+      operationId: RegistryController_persons
+      summary: Arvore societaria do cadastro
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id do cadastro.
+      responses:
+        200:
+          description: 'Pessoas com nome, documento, papel, participacao e origem.'
+      tags:
+        - registry
+      security:
+        - authorization: []
+      description: |
+          Socios e administradores do cadastro, com a origem de cada um:
+          QSA_OFICIAL (quadro societario da fonte oficial), DOCUMENT_EXTRACTION (lido de contrato,
+          estatuto, ata ou certidao) ou MANUAL.
+          
+          E a base para pedir documento de socio: cada pessoa pode ganhar cadastro proprio.
+  /v1/webhook/events:
+    get:
+      operationId: WebhookController_catalog
+      summary: Catalogo de eventos de webhook disponiveis
+      parameters: []
+      responses:
+        200:
+          description: 'Grupos com titulo e a lista de nomes de evento, mais a lista plana.'
+      tags:
+        - collections
+      security:
+        - authorization: []
+      description: |
+          Todos os eventos que a organizacao pode assinar, agrupados por categoria.
+          
+          Categorias: Documento (registry.document.*), Cadastro (registry.*), Solicitacao (collection.*),
+          Itens (collection.item.*), Formulario e assinatura, Mensagens, e Relatorios e credito
+          (report.finished, credit-policy.evaluated, committee.finished e os demais).
+          
+          LEIA DAQUI em vez de fixar a lista: evento novo aparece no catalogo no mesmo deploy.
+  /v1/webhook/endpoints:
+    get:
+      operationId: WebhookController_list
+      summary: Assinaturas de webhook configuradas
+      parameters: []
+      responses:
+        200:
+          description: 'Assinaturas com url, label, events, enabled, secretHint e ultimo status de entrega.'
+      tags:
+        - collections
+      security:
+        - authorization: []
+      description: |
+          As assinaturas da organizacao, com URL, rotulo, eventos escutados, se esta ativa e o
+          estado da ultima entrega.
+          
+          O segredo NAO volta aqui: so uma dica com os ultimos caracteres. Ele e mostrado uma unica vez,
+          na criacao e na rotacao.
+          
+          Assinatura que acumula 20 falhas seguidas e desligada sozinha, com o motivo. Se o cliente diz que
+          "parou de receber", e a primeira coisa a olhar.
+    post:
+      operationId: WebhookController_save
+      summary: Criar ou atualizar uma assinatura de webhook
+      description: |
+          Cria (sem id) ou atualiza (com id) uma assinatura do modulo de Cadastros e Solicitacoes.
+          
+          LISTA DE EVENTOS VAZIA QUER DIZER TODOS. Quem esta comecando nao sabe de quais precisa, e
+          escolher antes de conhecer produz assinatura errada e evento perdido em silencio.
+          
+          O segredo e gerado pela plataforma e devolvido UMA VEZ, na criacao. Ele e por assinatura: um
+          endpoint comprometido nao permite forjar evento para os outros.
+          
+          A URL precisa ser publica; endereco interno e recusado, e o nome e resolvido de novo a cada
+          tentativa de entrega.
+          
+          Confira a assinatura com HMAC_SHA256(segredo, "<X-Gyra-Timestamp>.<corpo cru>") e recuse o que
+          estiver fora de uma janela de cinco minutos.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveWebhookEndpointDto'
+      responses:
+        200:
+          description: 'Assinatura salva. Na criacao e na rotacao, inclui o secret em claro (unica vez).'
+      tags:
+        - collections
+      security:
+        - authorization: []
+  /v1/collections:
+    post:
+      operationId: CollectionController_create
+      summary: Criar uma solicitacao de documentos ao cliente
+      description: |
+          Cria o pedido a partir de um MODELO e manda o link para um ou mais destinatarios.
+          
+          O modelo diz O QUE se pede (documento, formulario, termo, assinatura, identidade); aqui voce diz
+          PARA QUEM e SOBRE QUEM. Use list_collection_templates para descobrir os modelos disponiveis.
+          
+          O cadastro e obrigatorio, por `document` (CNPJ/CPF, e o cadastro e resolvido ou criado) ou por
+          `registryId`. Um dos dois.
+          
+          CANAL: EMAIL, WHATSAPP, BOTH, ou NONE. Com NONE a plataforma NAO avisa ninguem: a solicitacao e
+          criada, os links voltam na resposta (publicUrl e links[]) e quem entrega e voce. Lembrete tambem
+          nao sai. E o caminho para quem ja fala com o cliente pelo canal proprio.
+          
+          O que o cadastro ja tem e validado nao e pedido de novo. Para pedir mesmo assim, liste as chaves
+          em `forceItemKeys`.
+          
+          Com `draft: true` (ou send: false), cria sem enviar.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCollectionDto'
+      responses:
+        201:
+          description: 'Solicitacao com id, status, dueAt, publicUrl, links[] por destinatario e a lista de itens.'
+      tags:
+        - collections
+      security:
+        - authorization: []
+    get:
+      operationId: CollectionController_list
+      summary: Listar solicitacoes
+      parameters:
+        - name: status
+          required: false
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - DRAFT
+                - SENT
+                - IN_PROGRESS
+                - COMPLETED
+                - EXPIRED
+                - CANCELED
+          description: Um ou mais status. Repita o parametro para varios.
+        - name: registryId
+          required: false
+          in: query
+          schema:
+            type: string
+          description: Filtra por cadastro.
+        - name: document
+          required: false
+          in: query
+          description: Filtra pelo CNPJ/CPF do cadastro.
+          schema:
+            type: string
+        - name: search
+          required: false
+          in: query
+          description: Casa por nome ou documento.
+          schema:
+            maxLength: 120
+            type: string
+        - name: templateId
+          required: false
+          in: query
+          schema:
+            type: string
+          description: Filtra por modelo.
+        - name: from
+          required: false
+          in: query
+          description: 'Inicio do periodo de criacao, ISO 8601.'
+          schema:
+            type: string
+        - name: to
+          required: false
+          in: query
+          description: 'Fim do periodo de criacao, ISO 8601.'
+          schema:
+            type: string
+        - name: skip
+          required: false
+          in: query
+          schema:
+            type: number
+          description: Deslocamento da pagina.
+        - name: take
+          required: false
+          in: query
+          schema:
+            maximum: 100
+            type: number
+          description: Tamanho da pagina.
+      responses:
+        200:
+          description: 'Pagina de solicitacoes com status, cadastro, prazo e progresso.'
+      tags:
+        - collections
+      security:
+        - authorization: []
+      description: |
+          Lista as solicitacoes da organizacao, com filtro por situacao, cadastro, modelo e periodo.
+          
+          Situacoes: DRAFT, SENT, IN_PROGRESS, COMPLETED, EXPIRED, CANCELED.
+          
+          E a tool para responder "quem esta devendo documento?" -- filtre por SENT e IN_PROGRESS e olhe
+          o prazo.
+  /v1/collections/{id}:
+    get:
+      operationId: CollectionController_findOne
+      summary: Detalhe de uma solicitacao
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id da solicitacao.
+      responses:
+        200:
+          description: 'Solicitacao com itens, destinatarios, links e trilha.'
+      tags:
+        - collections
+      security:
+        - authorization: []
+      description: |
+          Traz os itens (com status e o parecer de cada um), os destinatarios (com o estado da
+          entrega e o link) e a trilha.
+          
+          Status de item: PENDING, ALREADY_ON_FILE, SUBMITTED, PROCESSING, VALIDATED, REJECTED,
+          MANUAL_REVIEW, AWAITING_OPERATOR (a IA avaliou e espera decisao humana), WAIVED, EXPIRED.
+          
+          Estado do destinatario: PENDING, DELIVERED, OPENED, IN_PROGRESS, COMPLETED, FAILED e
+          NO_ITEMS (nao sobrou item para essa pessoa).
+          
+          FAILED no destinatario quer dizer que a MENSAGEM nao chegou. E o caso de ligar para o cliente.
+  /v1/collections/{id}/send:
+    post:
+      operationId: CollectionController_send
+      summary: Enviar ou reenviar uma solicitacao
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id da solicitacao.
+      responses:
+        200:
+          description: Links por destinatario e o novo estado da solicitacao.
+      tags:
+        - collections
+      security:
+        - authorization: []
+      description: |
+          Dispara o envio pelos canais do destinatario e devolve os links por destinatario.
+          
+          Serve tanto para o primeiro envio de um rascunho quanto para reenviar um pedido que o cliente
+          nao respondeu. Aceita um recado novo.
+  /v1/collections/{id}/cancel:
+    post:
+      operationId: CollectionController_cancel
+      summary: Cancelar uma solicitacao
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id da solicitacao.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelCollectionDto'
+      responses:
+        200:
+          description: Solicitacao em CANCELED.
+      tags:
+        - collections
+      security:
+        - authorization: []
+      description: |
+          Encerra a solicitacao. Os links param de funcionar e nenhum lembrete sai.
+          
+          O motivo fica na trilha.
+  /v1/collections/{id}/items/{itemId}/review:
+    post:
+      operationId: CollectionController_review
+      summary: Decidir sobre um item em revisao
+      description: |
+          A decisao do operador sobre um item em AWAITING_OPERATOR ou MANUAL_REVIEW.
+          
+          Tres saidas:
+          - APPROVED: o item fecha;
+          - RESEND_REQUESTED: o destinatario recebe o pedido de novo. O comentario e OBRIGATORIO aqui, e
+            e ele que o cliente le, entao escreva o que precisa ser corrigido, nao o codigo do check;
+          - WAIVED: o item sai do pedido.
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id da solicitacao.
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            type: string
+          description: Id do item.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewCollectionItemDto'
+      responses:
+        200:
+          description: Item com o status resultante.
+      tags:
+        - collections
+      security:
+        - authorization: []
+  /v1/collections/contact-suggestion/{document}:
+    get:
+      operationId: CollectionController_contactSuggestion
+      summary: Contatos que este CNPJ/CPF ja usou
+      description: |
+          Os e-mails e telefones que aquele documento ja usou em solicitacoes anteriores.
+          
+          Chame antes de criar a solicitacao: evita pedir contato que a organizacao ja tem, e evita mandar
+          o link para um endereco desatualizado.
+      parameters:
+        - name: document
+          required: true
+          in: path
+          schema:
+            type: string
+          description: CNPJ ou CPF.
+      responses:
+        200:
+          description: 'Contatos ja usados, com o quao recentes sao.'
+      tags:
+        - collections
+      security:
+        - authorization: []
+  /v1/collections/signatory-suggestion:
+    post:
+      operationId: CollectionController_signatorySuggestion
+      summary: 'Quem assina pela empresa, lido do documento societario'
+      description: |
+          Deduz quem pode assinar a partir do documento societario VIGENTE do cadastro: nome,
+          documento, papel, e o regime de assinatura ja lido (ISOLADA, CONJUNTA, MISTA ou INDETERMINADO).
+          
+          Use antes de montar uma assinatura conjunta: e o que diz quantas partes o contrato exige.
+          
+          RESSALVA: contrato brasileiro frequentemente nao repete o CPF do administrador. Nesses casos o
+          campo vem null em vez de inventado, e quem for criar o envelope precisa completar por outra fonte.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignatorySuggestionDto'
+      responses:
+        200:
+          description: 'Signatarios sugeridos com papel, e o regime de assinatura da sociedade.'
+      tags:
+        - collections
+      security:
+        - authorization: []
+  /v1/collection-templates:
+    get:
+      operationId: CollectionTemplateController_list
+      summary: Listar modelos de coleta
+      parameters:
+        - name: search
+          required: false
+          in: query
+          description: 'Casa por nome ou pela chave, sem acento e sem caixa.'
+          schema:
+            maxLength: 120
+            type: string
+        - name: itemKind
+          required: false
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: skip
+          required: false
+          in: query
+          schema:
+            type: number
+        - name: take
+          required: false
+          in: query
+          schema:
+            maximum: 100
+            type: number
+      responses:
+        200:
+          description: 'Modelos com slug, nome, descricao, itens e uso.'
+      tags:
+        - collections
+      security:
+        - authorization: []
+      description: |
+          Os modelos vigentes da organizacao, com metricas de uso. Cada um diz o que sera pedido.
+          
+          O `slug` daqui e o que entra em create_collection. Chame esta tool primeiro: criar solicitacao
+          com slug inventado falha.
 components:
   securitySchemes:
     authorization:
-      scheme: Bearer
+      type: http
+      scheme: bearer
       bearerFormat: JWT
-      type: apiKey
-      name: authorization
       description: Enter JWT token
-      in: header
   schemas:
     CreateWebhookDto:
       type: object
@@ -685,6 +1591,7 @@ components:
       required:
         - type
         - url
+        - apiKey
     WebhookTypeEnum:
       type: string
       description: Type Webhook
@@ -710,3 +1617,277 @@ components:
         - policyId
         - document
         - type
+    CreateRegistryDto:
+      type: object
+      properties: {}
+    PresignRegistryDocumentDto:
+      type: object
+      properties: {}
+    ConfirmRegistryDocumentDto:
+      type: object
+      properties:
+        typeHint:
+          type: string
+          enum:
+            - CONTRATO_SOCIAL
+            - ALTERACAO_CONTRATUAL
+            - ESTATUTO_SOCIAL
+            - REQUERIMENTO_EMPRESARIO
+            - PROCURACAO_PJ
+            - IRPJ_ECF
+            - DECLARACAO_FATURAMENTO
+            - CERTIDAO_JUNTA
+            - ATA_ASSEMBLEIA
+            - DOC_IDENTIDADE
+            - COMPROVANTE_RESIDENCIA
+            - DIRPF
+            - COMPROVANTE_RENDA
+            - CERTIDAO_PF
+            - PROCURACAO_PF
+            - FORA_DE_ESCOPO
+            - NAO_IDENTIFICADO
+            - CERTIDAO_PGFN_PJ
+            - CERTIDAO_FGTS
+            - CADIN_FEDERAL
+            - CADIN_ESTADUAL
+            - CERTIDAO_QSA
+            - CERTIFICADO_SIMPLES_NACIONAL
+            - ESOCIAL_PJ
+            - COMPROVACAO_ESTADO_CIVIL
+            - DEMONSTRACOES_FINANCEIRAS
+            - EXTRATO_BANCARIO
+          description: 'Afirma o tipo documental do arquivo: o pipeline ADOTA este tipo e PULA a etapa de classificação. Use quando a origem do arquivo já garante o tipo (o operador escolheu na tela, o formulário só aceita aquele documento). Como a classificação não roda, não existe leitura automática a confrontar e a verificação EXPECTED_TYPE_MATCH sai SKIP. Não use typeHint para dizer "eu pedi este documento": para isso existe o expectedType.'
+        expectedType:
+          type: string
+          enum:
+            - CONTRATO_SOCIAL
+            - ALTERACAO_CONTRATUAL
+            - ESTATUTO_SOCIAL
+            - REQUERIMENTO_EMPRESARIO
+            - PROCURACAO_PJ
+            - IRPJ_ECF
+            - DECLARACAO_FATURAMENTO
+            - CERTIDAO_JUNTA
+            - ATA_ASSEMBLEIA
+            - DOC_IDENTIDADE
+            - COMPROVANTE_RESIDENCIA
+            - DIRPF
+            - COMPROVANTE_RENDA
+            - CERTIDAO_PF
+            - PROCURACAO_PF
+            - FORA_DE_ESCOPO
+            - NAO_IDENTIFICADO
+            - CERTIDAO_PGFN_PJ
+            - CERTIDAO_FGTS
+            - CADIN_FEDERAL
+            - CADIN_ESTADUAL
+            - CERTIDAO_QSA
+            - CERTIFICADO_SIMPLES_NACIONAL
+            - ESOCIAL_PJ
+            - COMPROVACAO_ESTADO_CIVIL
+            - DEMONSTRACOES_FINANCEIRAS
+            - EXTRATO_BANCARIO
+          description: 'Tipo documental que a solicitação PEDIU. Não força nada e não pula etapa alguma: a classificação roda normalmente e o tipo lido é confrontado com este valor na verificação EXPECTED_TYPE_MATCH. Tipo lido igual ao pedido, a verificação passa; diferente, reprova o documento (ou vira ressalva quando a leitura do tipo está com pouca confiança). É o campo que pega o arquivo legítimo enviado no campo errado (uma declaração de IR subida como comprovante de residência), que sem ele seria classificado, validado e aprovado como o tipo que de fato é. Omitir significa envio livre no dossiê: sem pedido, a verificação sai SKIP. Combinado com typeHint no mesmo envio, o typeHint vence e a verificação sai SKIP (não há classificação a confrontar).'
+    ReprocessRegistryDocumentDto:
+      type: object
+      properties:
+        forceType:
+          type: string
+          enum:
+            - CONTRATO_SOCIAL
+            - ALTERACAO_CONTRATUAL
+            - ESTATUTO_SOCIAL
+            - REQUERIMENTO_EMPRESARIO
+            - PROCURACAO_PJ
+            - IRPJ_ECF
+            - DECLARACAO_FATURAMENTO
+            - CERTIDAO_JUNTA
+            - ATA_ASSEMBLEIA
+            - DOC_IDENTIDADE
+            - COMPROVANTE_RESIDENCIA
+            - DIRPF
+            - COMPROVANTE_RENDA
+            - CERTIDAO_PF
+            - PROCURACAO_PF
+            - FORA_DE_ESCOPO
+            - NAO_IDENTIFICADO
+            - CERTIDAO_PGFN_PJ
+            - CERTIDAO_FGTS
+            - CADIN_FEDERAL
+            - CADIN_ESTADUAL
+            - CERTIDAO_QSA
+            - CERTIFICADO_SIMPLES_NACIONAL
+            - ESOCIAL_PJ
+            - COMPROVACAO_ESTADO_CIVIL
+            - DEMONSTRACOES_FINANCEIRAS
+            - EXTRATO_BANCARIO
+          description: 'Força o tipo documental (corrige uma classificação errada) e, com isso, dispensa a etapa de classificação.'
+        stages:
+          type: array
+          example:
+            - VALIDATE
+          description: 'Etapas a reexecutar. Omitir significa reprocessar tudo (classificar, extrair e validar). Cada etapa de fora da lista é pulada e o resultado da tentativa anterior é reaproveitado, o que aparece no resultado do documento em stages.reused. Pular EXTRACT exige tentativa anterior com extração gravada: sem ela a etapa roda normalmente, nunca devolvendo resultado vazio. Reexecutar EXTRACT força a revalidação mesmo que VALIDATE não esteja na lista: parecer antigo sobre extração nova seria mentira.'
+          items:
+            type: string
+            enum:
+              - CLASSIFY
+              - EXTRACT
+              - VALIDATE
+        callbackUrl:
+          type: string
+          description: Webhook chamado quando o reprocessamento terminar.
+        overrideFeedback:
+          type: boolean
+          description: 'Confirma a substituição da decisão que um operador já tomou sobre o parecer. Sem ela, documento já decidido recusa o reprocessamento com 409: a decisão humana não pode ser apagada em silêncio pelo parecer da tentativa nova.'
+    SaveWebhookEndpointDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Ausente cria; presente atualiza.
+        url:
+          type: string
+          example: 'https://api.suaempresa.com/gyra/webhook'
+        label:
+          type: string
+          description: Como a assinatura aparece na tela.
+        events:
+          description: Vazio quer dizer TODOS os eventos.
+          type: array
+          items:
+            type: string
+        enabled:
+          type: boolean
+        apiKey:
+          type: string
+      required:
+        - url
+    CreateCollectionDto:
+      type: object
+      properties:
+        template:
+          type: string
+          description: 'Slug do modelo (ex.: onboarding-pj).'
+        document:
+          type: string
+          description: CNPJ ou CPF do cadastro.
+        registryId:
+          type: string
+          description: Identificador do cadastro (Registry).
+        recipients:
+          type: array
+          items:
+            $ref: '#/components/schemas/CollectionRecipientDto'
+        parties:
+          type: array
+          items:
+            $ref: '#/components/schemas/CollectionPartyDto'
+        dueInDays:
+          type: number
+          default: 7
+        message:
+          type: string
+          description: Recado do operador ao destinatário.
+        responseMode:
+          type: string
+          enum:
+            - AUTOMATIC
+            - REVIEW
+          description: Sobrepõe o modo de resposta do modelo.
+        channel:
+          type: string
+          enum:
+            - WHATSAPP
+            - EMAIL
+            - BOTH
+            - NONE
+          description: 'Sobrepõe o canal de envio do modelo. Use `NONE` para a plataforma não avisar ninguém: a solicitação é criada, os links são gerados e voltam na resposta (`publicUrl` quando há um destinatário, `links[]` sempre), e quem entrega é você. Lembrete também não sai.'
+        callbackUrl:
+          type: string
+          description: Webhook do integrador (mesmo HMAC X-Gyra-Signature do cadastro).
+        forceItemKeys:
+          type: array
+          items:
+            type: string
+        draft:
+          type: boolean
+          description: Cria a solicitação sem disparar o envio (rascunho).
+        send:
+          type: boolean
+          default: true
+      required:
+        - template
+        - recipients
+    CollectionRecipientDto:
+      type: object
+      properties:
+        name:
+          type: string
+        document:
+          type: string
+          description: CPF/CNPJ do destinatário (só dígitos).
+        email:
+          type: string
+        phone:
+          type: string
+          description: Telefone em E.164 (+5551900001234).
+        role:
+          type: string
+          description: 'Ex.: "Sócio administrador · 47%".'
+        registryPersonId:
+          type: string
+          description: Pessoa da árvore societária do cadastro.
+        signatureRole:
+          type: string
+          enum:
+            - SIGNATARIO
+            - TESTEMUNHA
+            - INTERVENIENTE
+          default: SIGNATARIO
+          description: Papel desta pessoa nos itens de assinatura conjunta. Ignorado quando a solicitação não tem item conjunto.
+        signatureRequired:
+          type: boolean
+          default: true
+      required:
+        - name
+    CollectionPartyDto:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 'Nome completo, como consta no documento.'
+        document:
+          type: string
+          description: CPF ou CNPJ da parte.
+        role:
+          type: string
+          enum:
+            - SIGNATARIO
+            - TESTEMUNHA
+            - INTERVENIENTE
+          default: SIGNATARIO
+        required:
+          type: boolean
+          default: true
+      required:
+        - name
+        - document
+    CancelCollectionDto:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Motivo do cancelamento.
+    ReviewCollectionItemDto:
+      type: object
+      properties:
+        decision:
+          type: string
+          enum:
+            - APPROVED
+            - RESEND_REQUESTED
+            - WAIVED
+        comment:
+          type: string
+      required:
+        - decision

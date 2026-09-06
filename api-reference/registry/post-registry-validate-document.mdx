@@ -1,0 +1,29 @@
+---
+title: "Validar Documento"
+description: "Validar um documento e receber o parecer"
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: post /v1/registry/validate-document
+---
+
+### Quando usar
+
+Você tem um arquivo e quer o parecer agora, sem montar fluxo. É a porta de entrada do módulo: uma chamada, um arquivo, e o resultado volta na resposta quando o pipeline fecha dentro da janela.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+
+### Capacidade
+
+A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
+
+### Caminho sem versão
+
+Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+
+<Note>
+  Contexto e o formato completo do retorno em [Validação síncrona de documento](/api-reference/kyc/validacao-sincrona).
+</Note>

@@ -1,0 +1,29 @@
+---
+title: "Preparar Upload de Documento"
+description: "Preparar o envio de um documento (URL assinada)"
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: post /v1/registry/{id}/documents/presign
+---
+
+### Quando usar
+
+Arquivo acima de 15 MB, ou quando você não quer segurar a conexão esperando o parecer. Primeiro passo do envio assíncrono.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+
+### Capacidade
+
+A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
+
+### Caminho sem versão
+
+Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+
+<Note>
+  Contexto e o formato completo do retorno em [Documentos do cadastro](/api-reference/kyc/documentos).
+</Note>

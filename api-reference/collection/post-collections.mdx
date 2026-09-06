@@ -1,0 +1,29 @@
+---
+title: "Criar Solicitação"
+description: "Criar uma solicitacao de documentos ao cliente"
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: post /v1/collections
+---
+
+### Quando usar
+
+Você quer que o próprio cliente entregue o que falta. Escolha o modelo, o cadastro e os destinatários.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+
+### Capacidade
+
+A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
+
+### Caminho sem versão
+
+Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+
+<Note>
+  Contexto e o formato completo do retorno em [Solicitações](/api-reference/kyc/solicitacoes).
+</Note>

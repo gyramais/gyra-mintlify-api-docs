@@ -1,0 +1,29 @@
+---
+title: "Consultar Régua de Validação"
+description: "Regua de validacao vigente da organizacao"
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: get /v1/registry/rule-set
+---
+
+### Quando usar
+
+Para explicar uma reprovação: cruze o check que deu `FAIL` com o que a régua diz sobre ele.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+
+### Capacidade
+
+A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
+
+### Caminho sem versão
+
+Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+
+<Note>
+  Contexto e o formato completo do retorno em [Régua de validação e indicadores](/api-reference/kyc/regua-e-metricas).
+</Note>

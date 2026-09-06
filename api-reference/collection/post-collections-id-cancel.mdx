@@ -1,0 +1,29 @@
+---
+title: "Cancelar Solicitação"
+description: "Cancelar uma solicitacao"
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: post /v1/collections/{id}/cancel
+---
+
+### Quando usar
+
+A operação caiu, ou o pedido foi criado errado. Os links param de funcionar e o lembrete não sai.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+
+### Capacidade
+
+A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
+
+### Caminho sem versão
+
+Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+
+<Note>
+  Contexto e o formato completo do retorno em [Solicitações](/api-reference/kyc/solicitacoes).
+</Note>
