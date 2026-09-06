@@ -1,6 +1,6 @@
 ---
 title: "Confirmar Upload e Analisar"
-description: "Confirmar o upload e disparar a analise"
+description: "Segundo passo do envio assíncrono: o arquivo já está no armazenamento e você dispara a análise."
 surface: api
 domain: cadastro
 audience: integrador
@@ -10,20 +10,14 @@ openapi: post /v1/registry/{id}/documents
 
 ### Quando usar
 
-Segundo passo do envio assíncrono: o arquivo já está no armazenamento e você dispara o pipeline.
+Segundo passo do envio assíncrono: o arquivo já está no armazenamento e você dispara a análise.
 
-### Autenticação
+### Os dois campos de tipo
 
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+`expectedType` **pede** um tipo e a conferência roda. `typeHint` **afirma** o tipo e a classificação é pulada. Enviando os dois, `typeHint` vence.
 
-### Capacidade
-
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
-
-### Caminho sem versão
-
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+O resultado chega pelo `callbackUrl`, pelo webhook da organização, ou por [Status do documento](/api-reference/registry/get-registry-documents-docid-status).
 
 <Note>
-  Contexto e o formato completo do retorno em [Documentos do cadastro](/api-reference/kyc/documentos).
+  Contexto e vocabulário em [Análise documental](/kyc/analise-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>

@@ -1,6 +1,6 @@
 ---
 title: "Consultar Cadastro"
-description: "Consultar um cadastro pelo id"
+description: "Quando você já tem o id e quer o dossiê completo."
 surface: api
 domain: cadastro
 audience: integrador
@@ -10,20 +10,14 @@ openapi: get /v1/registry/{id}
 
 ### Quando usar
 
-Quando você já tem o id e quer o dossiê completo, com a completude aberta por exigência e o bloco de quem assina pela empresa.
+Quando você já tem o id e quer o dossiê completo.
 
-### Autenticação
+### Só o detalhe traz estes dois
 
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+`completenessSlots` abre a completude por exigência, dizendo qual documento cobre cada uma. `signingAuthority` traz quem assina pela empresa, já achatado, lido do documento societário vigente.
 
-### Capacidade
-
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
-
-### Caminho sem versão
-
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+Na listagem eles não vêm: seria uma consulta por linha.
 
 <Note>
-  Contexto e o formato completo do retorno em [Cadastros](/api-reference/kyc/cadastros).
+  Contexto e vocabulário em [Cadastro documental](/kyc/cadastro-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>

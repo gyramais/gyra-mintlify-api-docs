@@ -1,6 +1,6 @@
 ---
 title: "Criar Solicitação"
-description: "Criar uma solicitacao de documentos ao cliente"
+description: "Você quer que o próprio cliente entregue o que falta."
 surface: api
 domain: cadastro
 audience: integrador
@@ -12,18 +12,18 @@ openapi: post /v1/collections
 
 Você quer que o próprio cliente entregue o que falta. Escolha o modelo, o cadastro e os destinatários.
 
-### Autenticação
+### O cadastro é obrigatório
 
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+Por `document` (o cadastro é resolvido ou criado) **ou** por `registryId`. Um dos dois.
 
-### Capacidade
+### Canal `NONE`: você entrega o link
 
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
+A plataforma não avisa ninguém. A solicitação é criada, os links voltam em `links[]`, e o lembrete também não sai. É o caminho para quem já fala com o cliente pelo canal próprio.
 
-### Caminho sem versão
+### O que o cadastro já tem não é pedido de novo
 
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+Para pedir mesmo assim, liste as chaves de item em `forceItemKeys`.
 
 <Note>
-  Contexto e o formato completo do retorno em [Solicitações](/api-reference/kyc/solicitacoes).
+  Contexto e vocabulário em [Solicitações de coleta](/kyc/solicitacoes). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>

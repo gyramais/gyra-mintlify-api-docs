@@ -1,6 +1,6 @@
 ---
 title: "Listar Modelos de Coleta"
-description: "Listar modelos de coleta"
+description: "Sempre antes de criar uma solicitação: o `slug` daqui é o que entra em `template`."
 surface: api
 domain: cadastro
 audience: integrador
@@ -12,18 +12,12 @@ openapi: get /v1/collection-templates
 
 Sempre antes de criar uma solicitação: o `slug` daqui é o que entra em `template`.
 
-### Autenticação
+<Tip>
+  Use o **`slug`**, não o `id`. Ele é o endereço estável entre versões: publicar uma versão nova do modelo não quebra a sua integração.
+</Tip>
 
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
-
-### Capacidade
-
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
-
-### Caminho sem versão
-
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+Os modelos são montados no toolbox. Ver [Solicitações de coleta](/kyc/solicitacoes).
 
 <Note>
-  Contexto e o formato completo do retorno em [Modelos de coleta e modelos de termo](/api-reference/kyc/modelos-e-termos).
+  Contexto e vocabulário em [Solicitações de coleta](/kyc/solicitacoes). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>

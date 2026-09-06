@@ -1,6 +1,6 @@
 ---
 title: "Status do Documento"
-description: "Status e resultado de um documento em analise"
+description: "O envio respondeu `202` e você precisa acompanhar."
 surface: api
 domain: cadastro
 audience: integrador
@@ -10,20 +10,14 @@ openapi: get /v1/registry/documents/{docId}/status
 
 ### Quando usar
 
-O envio respondeu `202` e você precisa acompanhar. Prefira assinar o webhook `registry.document.assessed` a fazer polling em laço.
+O envio respondeu `202` e você precisa acompanhar. Devolve o mesmo corpo do resultado completo.
 
-### Autenticação
+### Prefira webhook a polling
 
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+Status terminais: `VALIDATED`, `FAILED`, `OUT_OF_SCOPE`, `MANUAL_REVIEW`, `REJECTED_QUALITY`. Enquanto não for um deles, o documento ainda está no pipeline.
 
-### Capacidade
-
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
-
-### Caminho sem versão
-
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+Assinar `registry.document.assessed` evita o laço de polling por completo.
 
 <Note>
-  Contexto e o formato completo do retorno em [Documentos do cadastro](/api-reference/kyc/documentos).
+  Contexto e vocabulário em [Análise documental](/kyc/analise-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>

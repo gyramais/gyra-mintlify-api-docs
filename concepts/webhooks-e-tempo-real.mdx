@@ -8,11 +8,18 @@ audience: ambos
 lang: nao-tecnica
 ---
 
-<Note>
-**Esta página descreve os webhooks de relatório e crédito.** A configuração na plataforma fica em [API & MCP: chaves e webhooks](/toolbox/webhooks-e-api-keys). A configuração via API fica em [Criar Webhook](/api-reference/webhook/post-webhook).
+<Info>
+  **Existem duas famílias de evento**, e as duas aparecem na mesma tela de configuração do toolbox. Escolher a certa é a primeira decisão.
 
-Os eventos de **cadastros e solicitações** são outra família, com envelope e assinatura próprios: ver [Webhooks do módulo](/api-reference/kyc/webhooks) e [Eventos de webhook](/api-reference/kyc/eventos-de-webhook). As duas famílias aparecem na mesma tela de configuração.
-</Note>
+  | Família | Sobre o quê | Referência |
+  | --- | --- | --- |
+  | **Relatório e crédito** | Relatório concluído, política avaliada, comitê deliberado, PDF pronto | Esta página e [Criar Webhook](/api-reference/webhook/post-webhook) |
+  | **Cadastros e Solicitações** | Documento analisado, solicitação concluída, mensagem que não chegou | [Eventos de webhook](/api-reference/kyc/eventos-de-webhook) |
+
+  Elas têm **envelope e assinatura diferentes**: a primeira manda `{ organizationId, webhookType, data }` e opcionalmente um segredo no cabeçalho `api-key`; a segunda manda `{ id, event, occurredAt, organizationId, data }` com assinatura HMAC. Não tente escrever um parser só para as duas.
+
+  Configuração de ambas em *Configurações, API & MCP*. Ver [API & MCP: chaves e webhooks](/toolbox/webhooks-e-api-keys).
+</Info>
 
 ## Por que usar webhooks
 

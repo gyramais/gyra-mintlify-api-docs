@@ -1,6 +1,6 @@
 ---
 title: "Revisar Item"
-description: "Decidir sobre um item em revisao"
+description: "Modo de resposta com revisão: a IA avaliou e a decisão é sua."
 surface: api
 domain: cadastro
 audience: integrador
@@ -10,20 +10,20 @@ openapi: post /v1/collections/{id}/items/{itemId}/review
 
 ### Quando usar
 
-Modo de resposta com revisão: a IA avaliou e a decisão é sua. Aprovar, pedir de novo ou dispensar.
+Modo de resposta com revisão: a IA avaliou e a decisão é sua.
 
-### Autenticação
+### As três saídas
 
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+| `decision` | O que faz | `comment` |
+| --- | --- | --- |
+| `APPROVED` | O item fecha | opcional |
+| `RESEND_REQUESTED` | O destinatário recebe o pedido outra vez | **obrigatório** |
+| `WAIVED` | O item sai do pedido | opcional |
 
-### Capacidade
-
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
-
-### Caminho sem versão
-
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+<Warning>
+  Em `RESEND_REQUESTED`, o `comment` é o texto que **o cliente lê**. Escreva o que precisa ser corrigido, não o código da verificação.
+</Warning>
 
 <Note>
-  Contexto e o formato completo do retorno em [Solicitações](/api-reference/kyc/solicitacoes).
+  Contexto e vocabulário em [Solicitações de coleta](/kyc/solicitacoes). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>

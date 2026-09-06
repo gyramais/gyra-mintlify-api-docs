@@ -1,6 +1,6 @@
 ---
 title: "Criar ou Atualizar Assinatura"
-description: "Criar ou atualizar uma assinatura de webhook"
+description: "Para assinar os eventos do módulo e parar de fazer polling."
 surface: api
 domain: cadastro
 audience: integrador
@@ -10,20 +10,16 @@ openapi: post /v1/webhook/endpoints
 
 ### Quando usar
 
-Para assinar os eventos do módulo. Lista de eventos vazia quer dizer todos.
+Para assinar os eventos do módulo e parar de fazer polling.
 
-### Autenticação
+### Lista de eventos vazia quer dizer todos
 
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+Quem está começando não sabe de quais precisa, e escolher antes de conhecer produz assinatura errada e evento perdido em silêncio.
 
-### Capacidade
+### O segredo aparece uma vez
 
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
-
-### Caminho sem versão
-
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+Ele volta em claro **só nesta resposta**, na criação e na rotação. Confira a assinatura com `HMAC_SHA256(segredo, "<X-Gyra-Timestamp>.<corpo cru>")` e recuse o que estiver fora de uma janela de cinco minutos.
 
 <Note>
-  Contexto e o formato completo do retorno em [Webhooks](/api-reference/kyc/webhooks).
+  Contexto e vocabulário em [Eventos de webhook](/api-reference/kyc/eventos-de-webhook). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>

@@ -167,49 +167,50 @@
         "group": "API: Cadastros e Solicitações",
         "pages": [
           "api-reference/kyc/visao-geral",
-          "api-reference/kyc/cadastros",
-          "api-reference/kyc/documentos",
-          "api-reference/kyc/validacao-sincrona",
-          "api-reference/kyc/formatos-de-retorno",
-          "api-reference/kyc/regua-e-metricas",
-          "api-reference/kyc/solicitacoes",
-          "api-reference/kyc/modelos-e-termos",
-          "api-reference/kyc/link-do-destinatario",
-          "api-reference/kyc/configuracao-de-envio",
-          "api-reference/kyc/webhooks",
-          "api-reference/kyc/eventos-de-webhook",
           {
-            "group": "Endpoints",
+            "group": "Documento",
             "pages": [
               "api-reference/registry/post-registry-validate-document",
               "api-reference/registry/get-registry-documents-docid-status",
+              "api-reference/registry/post-registry-id-documents-presign",
+              "api-reference/registry/post-registry-id-documents",
+              "api-reference/registry/get-registry-id-documents-docid-result",
+              "api-reference/registry/post-registry-id-documents-docid-reprocess"
+            ]
+          },
+          {
+            "group": "Cadastro",
+            "pages": [
               "api-reference/registry/post-registry",
               "api-reference/registry/get-registry",
               "api-reference/registry/get-registry-id",
               "api-reference/registry/get-registry-by-document-document",
-              "api-reference/registry/post-registry-id-documents-presign",
-              "api-reference/registry/post-registry-id-documents",
               "api-reference/registry/get-registry-id-documents",
-              "api-reference/registry/get-registry-id-documents-docid-result",
-              "api-reference/registry/post-registry-id-documents-docid-reprocess",
-              "api-reference/registry/get-registry-id-persons",
-              "api-reference/registry/get-registry-rule-set",
-              "api-reference/registry/get-registry-rule-set-catalog",
-              "api-reference/registry/get-registry-metrics-accuracy",
+              "api-reference/registry/get-registry-id-persons"
+            ]
+          },
+          {
+            "group": "Solicitação",
+            "pages": [
+              "api-reference/collection/get-collection-templates",
               "api-reference/collection/post-collections",
               "api-reference/collection/get-collections",
               "api-reference/collection/get-collections-id",
               "api-reference/collection/post-collections-id-send",
               "api-reference/collection/post-collections-id-cancel",
-              "api-reference/collection/post-collections-id-items-itemid-review",
-              "api-reference/collection/get-collections-contact-suggestion-document",
-              "api-reference/collection/post-collections-signatory-suggestion",
-              "api-reference/collection/get-collection-templates",
+              "api-reference/collection/post-collections-id-items-itemid-review"
+            ]
+          },
+          {
+            "group": "Webhook",
+            "pages": [
               "api-reference/collection/get-webhook-events",
               "api-reference/collection/get-webhook-endpoints",
               "api-reference/collection/post-webhook-endpoints"
             ]
-          }
+          },
+          "api-reference/kyc/formatos-de-retorno",
+          "api-reference/kyc/eventos-de-webhook"
         ]
       },
       {

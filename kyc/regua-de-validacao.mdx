@@ -161,5 +161,6 @@ A régua é da organização. Um item de solicitação pode declarar `maxAgeDays
 
 ## Onde configurar
 
-- **Toolbox:** *Cadastros, Validações*, com as três abas de perguntas e a navegação por tipo (PJ, PF e ambos).
-- **API:** [régua de validação](/api-reference/kyc/regua-e-metricas). O catálogo de opções vem da própria API, então verificação nova aparece na tela no mesmo deploy em que passa a existir.
+No toolbox, em *Cadastros, Validações*: três abas, uma por pergunta, e navegação por tipo documental (pessoa jurídica, pessoa física e os que servem aos dois).
+
+Não há rota pública para publicar régua. É configuração versionada que afeta todo documento que entrar depois, e a tela mostra o efeito antes de salvar. O que a API devolve é o resultado: `assessment.ruleSetVersion`, em cada parecer, diz qual versão julgou aquele documento.

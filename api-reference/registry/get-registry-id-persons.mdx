@@ -1,6 +1,6 @@
 ---
 title: "Árvore Societária"
-description: "Arvore societaria do cadastro"
+description: "Para descobrir de quem pedir documento de sócio, e de onde veio cada pessoa."
 surface: api
 domain: cadastro
 audience: integrador
@@ -10,20 +10,18 @@ openapi: get /v1/registry/{id}/persons
 
 ### Quando usar
 
-Para descobrir de quem pedir documento de sócio, e de onde veio cada pessoa (fonte oficial, extração ou manual).
+Para descobrir de quem pedir documento de sócio, e de onde veio cada pessoa.
 
-### Autenticação
+### A origem importa
 
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+| `source` | De onde veio |
+| --- | --- |
+| `QSA_OFICIAL` | Quadro societário da fonte oficial. O CPF vem mascarado |
+| `DOCUMENT_EXTRACTION` | Lido de contrato, estatuto, ata ou certidão |
+| `MANUAL` | Criado por um operador |
 
-### Capacidade
-
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
-
-### Caminho sem versão
-
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+`layer` distingue o quadro direto (`1`) do sócio da sócia pessoa jurídica (`2`).
 
 <Note>
-  Contexto e o formato completo do retorno em [Cadastros](/api-reference/kyc/cadastros).
+  Contexto e vocabulário em [Cadastro documental](/kyc/cadastro-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>

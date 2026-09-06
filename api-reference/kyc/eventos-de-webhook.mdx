@@ -9,8 +9,101 @@ lang: tecnica
 ---
 
 <Info>
-  **Resumo:** 29 eventos, todos com o [mesmo envelope](/api-reference/kyc/webhooks#o-envelope). A convenção do nome é `<recurso>.<sub-recurso>.<o que aconteceu, no passado>`. Nome de evento é contrato público: ele não muda.
+  **Resumo:** 29 eventos, um envelope só e uma assinatura só. Você escreve um parser e um `switch` no campo `event`. A convenção do nome é `<recurso>.<sub-recurso>.<o que aconteceu, no passado>`, e nome de evento é contrato público: ele não muda.
 </Info>
+
+## O envelope
+
+Todo evento sai com a mesma forma:
+
+```json
+{
+  "id": "registry.document.assessed:6612a7f3...",
+  "event": "registry.document.assessed",
+  "occurredAt": "2026-09-05T13:07:44.812Z",
+  "organizationId": "6612a7f30000000000000009",
+  "data": { }
+}
+```
+
+<Warning>
+  **Deduplique por `id`.** Uma retentativa carrega o mesmo `id`; sem deduplicar, um retry vira um segundo pedido de reenvio para o seu cliente.
+</Warning>
+
+## Conferir a assinatura
+
+```
+assinatura_esperada = HMAC_SHA256(segredo, "<X-Gyra-Timestamp>.<corpo cru>")
+```
+
+Compare com `X-Gyra-Signature`, que vem como `sha256=<hex>`.
+
+<Warning>
+  Use o corpo **cru**, byte a byte. Reserializar o JSON muda espaços e ordem de chave, e a assinatura deixa de bater. É o erro mais comum de quem integra webhook assinado.
+
+  Recuse o que estiver fora de uma janela de cinco minutos. É isso que impede reenvio, e é por isso que o carimbo entra dentro da assinatura.
+</Warning>
+
+<CodeGroup>
+
+```javascript Node
+import crypto from "node:crypto";
+
+function conferir(req, segredo) {
+  const carimbo = req.headers["x-gyra-timestamp"];
+  const assinatura = req.headers["x-gyra-signature"];
+  const corpoCru = req.rawBody; // nunca JSON.stringify(req.body)
+
+  if (!carimbo || Math.abs(Date.now() / 1000 - Number(carimbo)) > 300) return false;
+
+  const esperada =
+    "sha256=" +
+    crypto.createHmac("sha256", segredo).update(`${carimbo}.${corpoCru}`).digest("hex");
+
+  return crypto.timingSafeEqual(Buffer.from(esperada), Buffer.from(assinatura));
+}
+```
+
+```python Python
+import hmac, hashlib, time
+
+def conferir(headers, corpo_cru: bytes, segredo: str) -> bool:
+    carimbo = headers.get("X-Gyra-Timestamp", "")
+    assinatura = headers.get("X-Gyra-Signature", "")
+    if not carimbo or abs(time.time() - int(carimbo)) > 300:
+        return False
+    esperada = "sha256=" + hmac.new(
+        segredo.encode(),
+        f"{carimbo}.".encode() + corpo_cru,
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(esperada, assinatura)
+```
+
+</CodeGroup>
+
+### Cabeçalhos
+
+| Cabeçalho | Conteúdo |
+| --- | --- |
+| `X-Gyra-Signature` | `sha256=<hex>` |
+| `X-Gyra-Timestamp` | Segundos Unix |
+| `X-Gyra-Event` | Nome do evento |
+| `X-Gyra-Delivery` | Id da entrega |
+
+## Entrega e retentativa
+
+| | |
+| --- | --- |
+| Tempo limite por tentativa | 10 segundos |
+| Tentativas | A inicial e mais 3 |
+| Espera entre tentativas | 5s, 30s, 120s |
+| Redirecionamento | **Não é seguido.** `3xx` conta como falha |
+| Falhas seguidas até desligar a assinatura | 20 |
+
+Responda `2xx` rápido e processe depois. O endereço é resolvido a cada tentativa, então domínio que passa a apontar para um endereço interno é recusado na hora da entrega.
+
+Para configurar, ver [Criar ou atualizar assinatura](/api-reference/collection/post-webhook-endpoints).
 
 ## Catálogo
 
@@ -83,7 +176,7 @@ Parecer terminal. É o evento principal do módulo.
 
 `reason` traz o `statusReason` quando o documento parou num terminal que não é falha técnica (fora de escopo, não identificado, qualidade insuficiente, parecer de análise manual).
 
-Para os campos extraídos e as verificações, chame o [resultado completo](/api-reference/kyc/documentos#4-ler-o-resultado).
+Para os campos extraídos e as verificações, chame o [resultado completo](/api-reference/registry/get-registry-id-documents-docid-result).
 
 ### `registry.document.failed`
 

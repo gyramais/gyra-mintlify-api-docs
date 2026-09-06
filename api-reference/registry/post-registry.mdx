@@ -1,6 +1,6 @@
 ---
 title: "Criar Cadastro"
-description: "Criar (ou recuperar) o cadastro de um CNPJ/CPF"
+description: "No início de uma jornada, para garantir que o dossiê daquele CNPJ ou CPF existe."
 surface: api
 domain: cadastro
 audience: integrador
@@ -10,20 +10,12 @@ openapi: post /v1/registry
 
 ### Quando usar
 
-No início de uma jornada, para garantir que o dossiê daquele CNPJ/CPF existe. É idempotente por documento, então chamar de novo devolve o que já existe.
+No início de uma jornada, para garantir que o dossiê daquele CNPJ ou CPF existe.
 
-### Autenticação
-
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
-
-### Capacidade
-
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
-
-### Caminho sem versão
-
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+<Tip>
+  **É idempotente por documento.** Chamar de novo com o mesmo CNPJ devolve o cadastro que já existe, em vez de duplicar. É seguro chamar sempre.
+</Tip>
 
 <Note>
-  Contexto e o formato completo do retorno em [Cadastros](/api-reference/kyc/cadastros).
+  Contexto e vocabulário em [Cadastro documental](/kyc/cadastro-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>

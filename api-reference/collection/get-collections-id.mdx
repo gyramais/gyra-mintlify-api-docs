@@ -1,6 +1,6 @@
 ---
 title: "Consultar Solicitação"
-description: "Detalhe de uma solicitacao"
+description: "Para acompanhar item a item e ver o estado de entrega de cada destinatário."
 surface: api
 domain: cadastro
 audience: integrador
@@ -12,18 +12,12 @@ openapi: get /v1/collections/{id}
 
 Para acompanhar item a item e ver o estado de entrega de cada destinatário.
 
-### Autenticação
+### O estado que mais importa
 
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+`recipients[].status` em **`FAILED`** quer dizer que a mensagem **não chegou**. É o caso de ligar para o cliente, e é por isso que vale assinar `collection.message.failed`.
 
-### Capacidade
-
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
-
-### Caminho sem versão
-
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+`items[].files[]` traz o parecer de cada arquivo, quando o item aceita mais de um.
 
 <Note>
-  Contexto e o formato completo do retorno em [Solicitações](/api-reference/kyc/solicitacoes).
+  Contexto e vocabulário em [Solicitações de coleta](/kyc/solicitacoes). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>

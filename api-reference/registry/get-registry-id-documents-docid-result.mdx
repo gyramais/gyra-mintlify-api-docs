@@ -1,6 +1,6 @@
 ---
 title: "Resultado do Documento"
-description: "Resultado completo de um documento"
+description: "Quando você precisa do detalhe: os campos lidos, cada verificação com evidência, e o parecer."
 surface: api
 domain: cadastro
 audience: integrador
@@ -12,18 +12,17 @@ openapi: get /v1/registry/{id}/documents/{docId}/result
 
 Quando você precisa do detalhe: os campos lidos, cada verificação com evidência, e o parecer.
 
-### Autenticação
+### O que olhar primeiro
 
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
+| Campo | Para quê |
+| --- | --- |
+| `assessment.effectiveVerdict` | O veredito que **vale hoje**. Não use `verdict` |
+| `validation.checks[]` | Cada verificação com `PASS`, `WARN`, `FAIL` ou `SKIP`, mensagem e evidência |
+| `statusReason` | Por que parou, quando não houve falha técnica |
+| `stages` | O que rodou nesta tentativa e o que veio reaproveitado |
 
-### Capacidade
-
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
-
-### Caminho sem versão
-
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+O objeto `extraction` tem os campos do tipo identificado. Ver [Formatos de retorno](/api-reference/kyc/formatos-de-retorno).
 
 <Note>
-  Contexto e o formato completo do retorno em [Documentos do cadastro](/api-reference/kyc/documentos).
+  Contexto e vocabulário em [Análise documental](/kyc/analise-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>

@@ -1,6 +1,6 @@
 ---
 title: "Listar Cadastros"
-description: "Listar cadastros da organizacao"
+description: "Para varrer a carteira por situação: quem está com pendência, quem venceu, quem está em renovação."
 surface: api
 domain: cadastro
 audience: integrador
@@ -12,18 +12,10 @@ openapi: get /v1/registry
 
 Para varrer a carteira por situação: quem está com pendência, quem venceu, quem está em renovação.
 
-### Autenticação
-
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
-
-### Capacidade
-
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
-
-### Caminho sem versão
-
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+<Warning>
+  Valor de `kycStatus` fora da lista é descartado pela validação, e a consulta devolve **a lista inteira** sem erro. Confira o valor antes de concluir qualquer coisa a partir do resultado.
+</Warning>
 
 <Note>
-  Contexto e o formato completo do retorno em [Cadastros](/api-reference/kyc/cadastros).
+  Contexto e vocabulário em [Cadastro documental](/kyc/cadastro-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>

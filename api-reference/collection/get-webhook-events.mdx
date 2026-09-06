@@ -1,6 +1,6 @@
 ---
 title: "Catálogo de Eventos"
-description: "Catalogo de eventos de webhook disponiveis"
+description: "Para montar a sua tela de configuração sem fixar a lista de eventos no código."
 surface: api
 domain: cadastro
 audience: integrador
@@ -12,18 +12,8 @@ openapi: get /v1/webhook/events
 
 Para montar a sua tela de configuração sem fixar a lista de eventos no código.
 
-### Autenticação
-
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
-
-### Capacidade
-
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
-
-### Caminho sem versão
-
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+Evento novo aparece aqui no mesmo deploy em que passa a existir. A lista completa, com payload, está em [Eventos de webhook](/api-reference/kyc/eventos-de-webhook).
 
 <Note>
-  Contexto e o formato completo do retorno em [Eventos de webhook](/api-reference/kyc/eventos-de-webhook).
+  Contexto e vocabulário em [Eventos de webhook](/api-reference/kyc/eventos-de-webhook). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>

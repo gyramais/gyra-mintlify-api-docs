@@ -1,7 +1,7 @@
 {
   "_type": "export",
   "__export_format": 4,
-  "__export_date": "2026-09-06T20:58:53.990Z",
+  "__export_date": "2026-09-06T21:39:25.039Z",
   "__export_source": "gyra-mcp:generate-collections",
   "resources": [
     {
@@ -480,10 +480,10 @@
       "_id": "req_28_get",
       "_type": "request",
       "parentId": "fld_cadastro_documental",
-      "name": "Indicadores de acuracia do cadastro documental",
+      "name": "Consultar o cadastro pelo CNPJ/CPF",
       "method": "GET",
-      "url": "{{ baseUrl }}/v1/registry/metrics/accuracy",
-      "description": "Volume, distribuicao de vereditos, taxa de analise manual, taxa de reprocessamento e\nconfianca media, POR TIPO DOCUMENTAL E POR CAMPO.\n\nE a tool para responder \"vale a pena tornar esta verificacao impeditiva?\": olhe a taxa de\nanalise manual do tipo antes de subir uma ressalva a reprovacao.\n\nO volume por status e por tipo e sempre exato; so as medias de confianca usam amostra.",
+      "url": "{{ baseUrl }}/v1/registry/by-document/{document}",
+      "description": "Busca o dossie pelo documento, sem precisar saber o id.\n\nE a tool para responder \"o que ja temos deste CNPJ?\" antes de pedir documento ao cliente:\na completude e a situacao dizem se falta alguma coisa.",
       "headers": [
         {
           "name": "Authorization",
@@ -496,54 +496,6 @@
       "_id": "req_29_get",
       "_type": "request",
       "parentId": "fld_cadastro_documental",
-      "name": "Regua de validacao vigente da organizacao",
-      "method": "GET",
-      "url": "{{ baseUrl }}/v1/registry/rule-set",
-      "description": "A configuracao que decide o que reprova, o que vira ressalva e o que nem roda em cada\ntipo de documento. Versionada: todo parecer registra em assessment.ruleSetVersion qual versao o julgou.\n\nPara explicar uma reprovacao, cruze o check que deu FAIL com o que a regua diz sobre ele.",
-      "headers": [
-        {
-          "name": "Authorization",
-          "value": "Bearer {{ accessToken }}"
-        }
-      ],
-      "metaSortKey": 29
-    },
-    {
-      "_id": "req_30_get",
-      "_type": "request",
-      "parentId": "fld_cadastro_documental",
-      "name": "Catalogo de verificacoes, tipos e padroes",
-      "method": "GET",
-      "url": "{{ baseUrl }}/v1/registry/rule-set/catalog",
-      "description": "O vocabulario da regua, em linguagem de negocio: as verificacoes agrupadas nas tres\nperguntas (autenticidade, titularidade, fe publica), os tipos documentais com rotulo e descricao,\nas especies de certificacao e os padroes do motor (vigencia por tipo, subtipos aceitos).\n\nLEIA DAQUI em vez de fixar a lista: verificacao nova aparece no catalogo no mesmo deploy em que\npassa a existir.",
-      "headers": [
-        {
-          "name": "Authorization",
-          "value": "Bearer {{ accessToken }}"
-        }
-      ],
-      "metaSortKey": 30
-    },
-    {
-      "_id": "req_31_get",
-      "_type": "request",
-      "parentId": "fld_cadastro_documental",
-      "name": "Consultar o cadastro pelo CNPJ/CPF",
-      "method": "GET",
-      "url": "{{ baseUrl }}/v1/registry/by-document/{document}",
-      "description": "Busca o dossie pelo documento, sem precisar saber o id.\n\nE a tool para responder \"o que ja temos deste CNPJ?\" antes de pedir documento ao cliente:\na completude e a situacao dizem se falta alguma coisa.",
-      "headers": [
-        {
-          "name": "Authorization",
-          "value": "Bearer {{ accessToken }}"
-        }
-      ],
-      "metaSortKey": 31
-    },
-    {
-      "_id": "req_32_get",
-      "_type": "request",
-      "parentId": "fld_cadastro_documental",
       "name": "Consultar um cadastro pelo id",
       "method": "GET",
       "url": "{{ baseUrl }}/v1/registry/{id}",
@@ -554,10 +506,10 @@
           "value": "Bearer {{ accessToken }}"
         }
       ],
-      "metaSortKey": 32
+      "metaSortKey": 29
     },
     {
-      "_id": "req_33_post",
+      "_id": "req_30_post",
       "_type": "request",
       "parentId": "fld_cadastro_documental",
       "name": "Preparar o envio de um documento (URL assinada)",
@@ -578,10 +530,10 @@
         "mimeType": "application/json",
         "text": "{\n  \"fileName\": \"contrato-social.pdf\",\n  \"size\": 1843200,\n  \"mimeType\": \"application/pdf\"\n}"
       },
-      "metaSortKey": 33
+      "metaSortKey": 30
     },
     {
-      "_id": "req_34_post",
+      "_id": "req_31_post",
       "_type": "request",
       "parentId": "fld_cadastro_documental",
       "name": "Confirmar o upload e disparar a analise",
@@ -602,10 +554,10 @@
         "mimeType": "application/json",
         "text": "{\n  \"key\": \"registry/6612a7f30000000000000001/8f2c9a1b-contrato-social.pdf\",\n  \"fileName\": \"contrato-social.pdf\",\n  \"expectedType\": \"CONTRATO_SOCIAL\",\n  \"callbackUrl\": \"https://api.suaempresa.com/gyra/kyc\"\n}"
       },
-      "metaSortKey": 34
+      "metaSortKey": 31
     },
     {
-      "_id": "req_35_get",
+      "_id": "req_32_get",
       "_type": "request",
       "parentId": "fld_cadastro_documental",
       "name": "Listar os documentos de um cadastro",
@@ -618,10 +570,10 @@
           "value": "Bearer {{ accessToken }}"
         }
       ],
-      "metaSortKey": 35
+      "metaSortKey": 32
     },
     {
-      "_id": "req_36_get",
+      "_id": "req_33_get",
       "_type": "request",
       "parentId": "fld_cadastro_documental",
       "name": "Resultado completo de um documento",
@@ -634,10 +586,10 @@
           "value": "Bearer {{ accessToken }}"
         }
       ],
-      "metaSortKey": 36
+      "metaSortKey": 33
     },
     {
-      "_id": "req_37_post",
+      "_id": "req_34_post",
       "_type": "request",
       "parentId": "fld_cadastro_documental",
       "name": "Reprocessar um documento",
@@ -658,10 +610,10 @@
         "mimeType": "application/json",
         "text": "{\n  \"stages\": [\n    \"VALIDATE\"\n  ],\n  \"forceType\": \"ALTERACAO_CONTRATUAL\"\n}"
       },
-      "metaSortKey": 37
+      "metaSortKey": 34
     },
     {
-      "_id": "req_38_get",
+      "_id": "req_35_get",
       "_type": "request",
       "parentId": "fld_cadastro_documental",
       "name": "Arvore societaria do cadastro",
@@ -674,17 +626,17 @@
           "value": "Bearer {{ accessToken }}"
         }
       ],
-      "metaSortKey": 38
+      "metaSortKey": 35
     },
     {
       "_id": "fld_solicitacoes",
       "_type": "request_group",
       "parentId": "wrk_gyra",
       "name": "Solicitacoes",
-      "metaSortKey": 39
+      "metaSortKey": 36
     },
     {
-      "_id": "req_40_get",
+      "_id": "req_37_get",
       "_type": "request",
       "parentId": "fld_solicitacoes",
       "name": "Catalogo de eventos de webhook disponiveis",
@@ -697,10 +649,10 @@
           "value": "Bearer {{ accessToken }}"
         }
       ],
-      "metaSortKey": 40
+      "metaSortKey": 37
     },
     {
-      "_id": "req_41_get",
+      "_id": "req_38_get",
       "_type": "request",
       "parentId": "fld_solicitacoes",
       "name": "Assinaturas de webhook configuradas",
@@ -713,10 +665,10 @@
           "value": "Bearer {{ accessToken }}"
         }
       ],
-      "metaSortKey": 41
+      "metaSortKey": 38
     },
     {
-      "_id": "req_42_post",
+      "_id": "req_39_post",
       "_type": "request",
       "parentId": "fld_solicitacoes",
       "name": "Criar ou atualizar uma assinatura de webhook",
@@ -737,10 +689,10 @@
         "mimeType": "application/json",
         "text": "{\n  \"url\": \"https://api.suaempresa.com/gyra/webhook\",\n  \"label\": \"Produção, esteira de crédito\",\n  \"events\": [\n    \"registry.document.assessed\",\n    \"collection.completed\",\n    \"collection.message.failed\"\n  ],\n  \"enabled\": true\n}"
       },
-      "metaSortKey": 42
+      "metaSortKey": 39
     },
     {
-      "_id": "req_43_post",
+      "_id": "req_40_post",
       "_type": "request",
       "parentId": "fld_solicitacoes",
       "name": "Criar uma solicitacao de documentos ao cliente",
@@ -761,10 +713,10 @@
         "mimeType": "application/json",
         "text": "{\n  \"template\": \"onboarding-pj\",\n  \"document\": \"11.444.777/0001-61\",\n  \"recipients\": [\n    {\n      \"name\": \"Ana Souza\",\n      \"document\": \"529.982.247-25\",\n      \"email\": \"ana@exemplo.com.br\",\n      \"phone\": \"+5551999998888\",\n      \"role\": \"Sócia administradora · 60%\"\n    }\n  ],\n  \"dueInDays\": 10,\n  \"channel\": \"BOTH\",\n  \"responseMode\": \"REVIEW\",\n  \"message\": \"Precisamos destes documentos para liberar seu limite.\",\n  \"callbackUrl\": \"https://api.suaempresa.com/gyra/kyc\",\n  \"send\": true\n}"
       },
-      "metaSortKey": 43
+      "metaSortKey": 40
     },
     {
-      "_id": "req_44_get",
+      "_id": "req_41_get",
       "_type": "request",
       "parentId": "fld_solicitacoes",
       "name": "Listar solicitacoes",
@@ -777,10 +729,10 @@
           "value": "Bearer {{ accessToken }}"
         }
       ],
-      "metaSortKey": 44
+      "metaSortKey": 41
     },
     {
-      "_id": "req_45_get",
+      "_id": "req_42_get",
       "_type": "request",
       "parentId": "fld_solicitacoes",
       "name": "Detalhe de uma solicitacao",
@@ -793,10 +745,10 @@
           "value": "Bearer {{ accessToken }}"
         }
       ],
-      "metaSortKey": 45
+      "metaSortKey": 42
     },
     {
-      "_id": "req_46_post",
+      "_id": "req_43_post",
       "_type": "request",
       "parentId": "fld_solicitacoes",
       "name": "Enviar ou reenviar uma solicitacao",
@@ -809,10 +761,10 @@
           "value": "Bearer {{ accessToken }}"
         }
       ],
-      "metaSortKey": 46
+      "metaSortKey": 43
     },
     {
-      "_id": "req_47_post",
+      "_id": "req_44_post",
       "_type": "request",
       "parentId": "fld_solicitacoes",
       "name": "Cancelar uma solicitacao",
@@ -833,10 +785,10 @@
         "mimeType": "application/json",
         "text": "{\n  \"reason\": \"Operação desistida pelo cliente.\"\n}"
       },
-      "metaSortKey": 47
+      "metaSortKey": 44
     },
     {
-      "_id": "req_48_post",
+      "_id": "req_45_post",
       "_type": "request",
       "parentId": "fld_solicitacoes",
       "name": "Decidir sobre um item em revisao",
@@ -857,50 +809,10 @@
         "mimeType": "application/json",
         "text": "{\n  \"decision\": \"RESEND_REQUESTED\",\n  \"comment\": \"O comprovante está no nome de outra pessoa. Envie um no seu nome.\"\n}"
       },
-      "metaSortKey": 48
+      "metaSortKey": 45
     },
     {
-      "_id": "req_49_get",
-      "_type": "request",
-      "parentId": "fld_solicitacoes",
-      "name": "Contatos que este CNPJ/CPF ja usou",
-      "method": "GET",
-      "url": "{{ baseUrl }}/v1/collections/contact-suggestion/{document}",
-      "description": "Os e-mails e telefones que aquele documento ja usou em solicitacoes anteriores.\n\nChame antes de criar a solicitacao: evita pedir contato que a organizacao ja tem, e evita mandar\no link para um endereco desatualizado.",
-      "headers": [
-        {
-          "name": "Authorization",
-          "value": "Bearer {{ accessToken }}"
-        }
-      ],
-      "metaSortKey": 49
-    },
-    {
-      "_id": "req_50_post",
-      "_type": "request",
-      "parentId": "fld_solicitacoes",
-      "name": "Quem assina pela empresa, lido do documento societario",
-      "method": "POST",
-      "url": "{{ baseUrl }}/v1/collections/signatory-suggestion",
-      "description": "Deduz quem pode assinar a partir do documento societario VIGENTE do cadastro: nome,\ndocumento, papel, e o regime de assinatura ja lido (ISOLADA, CONJUNTA, MISTA ou INDETERMINADO).\n\nUse antes de montar uma assinatura conjunta: e o que diz quantas partes o contrato exige.\n\nRESSALVA: contrato brasileiro frequentemente nao repete o CPF do administrador. Nesses casos o\ncampo vem null em vez de inventado, e quem for criar o envelope precisa completar por outra fonte.",
-      "headers": [
-        {
-          "name": "Authorization",
-          "value": "Bearer {{ accessToken }}"
-        },
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ],
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"document\": \"11.444.777/0001-61\"\n}"
-      },
-      "metaSortKey": 50
-    },
-    {
-      "_id": "req_51_get",
+      "_id": "req_46_get",
       "_type": "request",
       "parentId": "fld_solicitacoes",
       "name": "Listar modelos de coleta",
@@ -913,7 +825,7 @@
           "value": "Bearer {{ accessToken }}"
         }
       ],
-      "metaSortKey": 51
+      "metaSortKey": 46
     }
   ]
 }

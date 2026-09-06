@@ -1,6 +1,6 @@
 ---
 title: "Listar Assinaturas de Webhook"
-description: "Assinaturas de webhook configuradas"
+description: "Quando o cliente diz que parou de receber: aqui aparece se a assinatura foi desligada e por quê."
 surface: api
 domain: cadastro
 audience: integrador
@@ -12,18 +12,10 @@ openapi: get /v1/webhook/endpoints
 
 Quando o cliente diz que "parou de receber": aqui aparece se a assinatura foi desligada e por quê.
 
-### Autenticação
+Assinatura que acumula **20 falhas seguidas** é desligada sozinha. `consecutiveFailures`, `lastDeliveryStatus` e `lastDeliveryError` contam a história.
 
-Bearer JWT no header `Authorization`. A credencial é gerada por você em *Configurações, API & MCP*, ver [Chaves de API](/api-reference/api-keys).
-
-### Capacidade
-
-A rota exige o módulo liberado para a organização. Sem ele a resposta é `404`, ver [API de Cadastros e Solicitações](/api-reference/kyc/visao-geral#capacidades-da-organização).
-
-### Caminho sem versão
-
-Esta rota também responde sem o prefixo `/v1`, por compatibilidade com quem já integrou. Em integração nova, use o caminho versionado.
+O segredo não volta aqui: só uma dica com os últimos caracteres.
 
 <Note>
-  Contexto e o formato completo do retorno em [Webhooks](/api-reference/kyc/webhooks).
+  Contexto e vocabulário em [Eventos de webhook](/api-reference/kyc/eventos-de-webhook). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
 </Note>
