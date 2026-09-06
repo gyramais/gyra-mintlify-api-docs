@@ -116,6 +116,7 @@
         "group": "Guias",
         "pages": [
           "guides/primeiro-relatorio",
+          "guides/integrar-cadastro-documental",
           "guides/configurar-webhook",
           "guides/interpretar-decisao",
           "guides/criar-politica-personalizada"

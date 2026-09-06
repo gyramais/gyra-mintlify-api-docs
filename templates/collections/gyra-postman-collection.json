@@ -1,159 +1,89 @@
 {
   "info": {
     "name": "GYRA+ API",
-    "description": "Collection oficial da API GYRA+ para análise de crédito automatizada.\n\n## Como usar\n\n1. Importe esta collection no Postman\n2. Configure as variáveis `clientId` e `clientSecret` no environment\n3. Execute \"Autenticar\" primeiro para obter o token\n4. O token é salvo automaticamente na variável `accessToken`\n\n## Documentação completa\nhttps://developers.gyramais.com.br",
+    "description": "Gerada a partir da spec publica da GYRA+. Preencha as variaveis clientId e clientSecret, rode \"Gerar token de acesso JWT\" e o accessToken fica salvo para as demais requisicoes.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "https://gyra-core.gyramais.com.br",
-      "type": "string"
+      "value": "https://gyra-core.gyramais.com.br"
     },
     {
       "key": "clientId",
-      "value": "SEU_CLIENT_ID_AQUI",
+      "value": "",
       "type": "string"
     },
     {
       "key": "clientSecret",
-      "value": "SEU_CLIENT_SECRET_AQUI",
+      "value": "",
       "type": "string"
     },
     {
       "key": "accessToken",
       "value": "",
       "type": "string"
-    },
-    {
-      "key": "reportId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "policyId",
-      "value": "SEU_POLICY_ID_AQUI",
-      "type": "string"
-    },
-    {
-      "key": "webhookId",
-      "value": "",
-      "type": "string"
     }
   ],
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{accessToken}}",
-        "type": "string"
-      }
-    ]
-  },
   "item": [
     {
-      "name": "Auth",
-      "description": "Autenticação na API GYRA+. Use suas credenciais (Client ID + Client Secret) para obter um token JWT válido por 1 hora.",
+      "name": "Autenticacao",
       "item": [
         {
-          "name": "Autenticar",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    if (jsonData.accessToken) {",
-                  "        pm.collectionVariables.set('accessToken', jsonData.accessToken);",
-                  "        console.log('Token salvo automaticamente!');",
-                  "    }",
-                  "}"
-                ]
-              }
-            }
-          ],
+          "name": "Gerar token de acesso JWT",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
             "header": [
               {
                 "key": "gyra-client-id",
-                "value": "{{clientId}}",
-                "description": "Seu Client ID (painel GYRA+ ou bizdev@gyramais.com)"
+                "value": "{{clientId}}"
               },
               {
                 "key": "gyra-client-secret",
-                "value": "{{clientSecret}}",
-                "description": "Seu Client Secret"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+                "value": "{{clientSecret}}"
               }
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/authenticate",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "authenticate"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "authenticate"
+              ]
             },
-            "description": "Gera um token JWT (accessToken) válido por 1 hora.\n\nO token é salvo automaticamente na variável `accessToken` da collection após a execução."
+            "description": "Autentica via client credentials (client-id e client-secret) e retorna um JWT.\n\nEste e o primeiro passo para usar a API. O token retornado deve ser enviado\nno header Authorization de todas as requisicoes subsequentes.\n\nNOTA: No MCP server, a autenticacao e automatica — este tool e exposto apenas\npara uso manual ou debug. O server gerencia o token internamente."
           },
-          "response": [
+          "event": [
             {
-              "name": "Sucesso",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  { "key": "gyra-client-id", "value": "{{clientId}}" },
-                  { "key": "gyra-client-secret", "value": "{{clientSecret}}" },
-                  { "key": "Content-Type", "value": "application/json" }
-                ],
-                "url": {
-                  "raw": "{{baseUrl}}/auth/authenticate",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["auth", "authenticate"]
-                }
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const dados = pm.response.json();",
+                  "if (dados.accessToken) {",
+                  "  pm.collectionVariables.set(\"accessToken\", dados.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "Criar webhook para notificacoes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
               },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Report",
-      "description": "Endpoints para criar, consultar e listar relatórios de análise de crédito.",
-      "item": [
-        {
-          "name": "Criar Relatório",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 200 || pm.response.code === 201 || pm.response.code === 202) {",
-                  "    var jsonData = pm.response.json();",
-                  "    if (jsonData.id) {",
-                  "        pm.collectionVariables.set('reportId', jsonData.id);",
-                  "        console.log('reportId salvo: ' + jsonData.id);",
-                  "    }",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -161,290 +91,1193 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"document\": \"12345678000190\",\n  \"type\": \"CNPJ\",\n  \"reportType\": \"COMPLETO\",\n  \"policyId\": \"{{policyId}}\",\n  \"externalId\": \"pedido-001\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/report",
-              "host": ["{{baseUrl}}"],
-              "path": ["report"]
-            },
-            "description": "Cria uma nova análise de crédito para um CNPJ ou CPF.\n\n**Campos:**\n- `document` (obrigatório) — CNPJ (14 dígitos) ou CPF (11 dígitos) sem formatação\n- `type` (obrigatório) — `CNPJ` ou `CPF`\n- `reportType` — `SIMPLES`, `ESSENCIAL`, `COMPLETO` ou `COMPLETO_PLUS`\n- `policyId` — ID da política de crédito a aplicar\n- `externalId` — ID externo para correlação com seu sistema\n\nO `reportId` é salvo automaticamente na variável da collection."
-          },
-          "response": [
-            {
-              "name": "Relatório criado",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"id\": \"664b63037707171ba58cf311\",\n  \"document\": \"12345678000190\",\n  \"type\": \"CNPJ\",\n  \"status\": \"PENDING\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Consultar Relatório",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/report/{{reportId}}?details=true",
-              "host": ["{{baseUrl}}"],
-              "path": ["report", "{{reportId}}"],
-              "query": [
-                {
-                  "key": "tabType",
-                  "value": "",
-                  "description": "Tipo de aba (opcional)",
-                  "disabled": true
-                },
-                {
-                  "key": "details",
-                  "value": "true",
-                  "description": "Incluir detalhes das seções (true/false)"
-                }
-              ]
-            },
-            "description": "Retorna os dados completos de um relatório, incluindo todas as seções e a decisão da política de crédito.\n\nUse `details=false` para obter apenas o resumo sem os detalhes de cada seção."
-          },
-          "response": []
-        },
-        {
-          "name": "Consultar Seção do Relatório",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/report/{{reportId}}/section/CREDIT_POLICY",
-              "host": ["{{baseUrl}}"],
-              "path": ["report", "{{reportId}}", "section", "CREDIT_POLICY"],
-              "variable": []
-            },
-            "description": "Retorna uma seção específica de um relatório.\n\n**Seções disponíveis:**\n- `SUMMARY` — Resumo geral\n- `BASIC_INFO` — Informações cadastrais\n- `PEFIN` — Dívidas PEFIN/REFIN\n- `PROTESTS` — Protestos em cartório\n- `LAWSUITS` — Processos judiciais\n- `SCR` — Histórico bancário (Banco Central)\n- `PEP_SANCTIONS` — PEP e Sanções\n- `CREDIT_POLICY` — Decisão da política de crédito"
-          },
-          "response": []
-        },
-        {
-          "name": "Listar Relatórios",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/report/list",
-              "host": ["{{baseUrl}}"],
-              "path": ["report", "list"]
-            },
-            "description": "Lista todos os relatórios da organização."
-          },
-          "response": []
-        },
-        {
-          "name": "Aba Financeira",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/report/{{reportId}}/financial-tab",
-              "host": ["{{baseUrl}}"],
-              "path": ["report", "{{reportId}}", "financial-tab"]
-            },
-            "description": "Gera a aba financeira de um relatório (dados do SCR — Banco Central)."
-          },
-          "response": []
-        },
-        {
-          "name": "Analisar Relatório",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/report/analyze",
-              "host": ["{{baseUrl}}"],
-              "path": ["report", "analyze"]
-            },
-            "description": "Dispara a análise de um relatório existente com a política de crédito configurada."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Credit Policy",
-      "description": "Consulta as políticas de crédito configuradas na organização.",
-      "item": [
-        {
-          "name": "Listar Políticas de Crédito",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/credit-policy/policy?enabled=true",
-              "host": ["{{baseUrl}}"],
-              "path": ["credit-policy", "policy"],
-              "query": [
-                {
-                  "key": "enabled",
-                  "value": "true",
-                  "description": "Filtrar apenas políticas ativas"
-                },
-                {
-                  "key": "protected",
-                  "value": "false",
-                  "description": "Incluir políticas protegidas (templates)",
-                  "disabled": true
-                }
-              ]
-            },
-            "description": "Retorna as políticas de crédito da organização.\n\nUse o `id` de uma política como `policyId` ao criar relatórios."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Webhook",
-      "description": "Gerencie webhooks para receber notificações em tempo real quando um relatório é processado.",
-      "item": [
-        {
-          "name": "Registrar Webhook",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 200 || pm.response.code === 201) {",
-                  "    var jsonData = pm.response.json();",
-                  "    if (jsonData.id) {",
-                  "        pm.collectionVariables.set('webhookId', jsonData.id);",
-                  "        console.log('webhookId salvo: ' + jsonData.id);",
-                  "    }",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"type\": \"REPORT_FINISHED\",\n  \"url\": \"https://seu-sistema.com/webhooks/gyra\",\n  \"apiKey\": \"sua-chave-secreta\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"type\": \"REPORT_FINISHED\",\n  \"url\": \"https://api.suaempresa.com/gyra/webhook\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/webhook",
-              "host": ["{{baseUrl}}"],
-              "path": ["webhook"]
-            },
-            "description": "Registra um webhook para receber notificações.\n\n**Tipos disponíveis:**\n- `REPORT_FINISHED` — Quando o relatório é processado (mais usado)\n- `REPORT_STATUS` — Mudança de status do relatório\n- `CREDIT_POLICY` — Resultado da política de crédito\n- `REPORT` — Evento genérico de relatório\n- `OPTIN` — Evento de opt-in\n\nO campo `apiKey` será enviado como header `api-key` em cada chamada ao seu endpoint."
-          },
-          "response": [
-            {
-              "name": "Webhook criado",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"id\": \"664b63037707171ba58cf311\",\n  \"type\": \"REPORT_FINISHED\",\n  \"url\": \"https://seu-sistema.com/webhooks/gyra\",\n  \"createdAt\": \"2024-05-20T14:30:00.000Z\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Consultar Webhook",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/webhook/findBy?webhookId={{webhookId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["webhook", "findBy"],
-              "query": [
-                {
-                  "key": "webhookId",
-                  "value": "{{webhookId}}",
-                  "description": "ID do webhook (opcional — sem ele, lista todos da organização)"
-                }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook"
               ]
             },
-            "description": "Consulta webhooks registrados. Se não informar o `webhookId`, retorna todos os webhooks da organização."
-          },
-          "response": []
+            "description": "Registra uma URL de webhook para receber notificacoes em tempo real.\n\nTipos de webhook disponiveis:\n- REPORT: notificado quando um relatorio muda de status (PENDING → APPROVED/DENIED/ALERT)\n- REPORT_FINISHED: notificado quando o processamento do relatorio finaliza\n- REPORT_STATUS: notificado em cada mudanca de status intermediaria\n- CREDIT_POLICY: notificado quando a politica de credito e avaliada\n- OPTIN: notificado quando um opt-in e processado\n\nO webhook recebe um POST na URL configurada com o payload do evento.\nSe apiKey for informada, sera enviada no header api-key da requisicao.\n\nRECOMENDADO: Sempre configure um webhook ao criar relatorios. Evita\na necessidade de polling com get_report."
+          }
         },
         {
-          "name": "Remover Webhook",
+          "name": "Consultar webhooks cadastrados",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/webhook/findBy",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook",
+                "findBy"
+              ]
+            },
+            "description": "Busca webhooks cadastrados na organizacao.\n\nSe webhookId for informado, retorna o webhook especifico.\nCaso contrario, retorna todos os webhooks da organizacao autenticada."
+          }
+        },
+        {
+          "name": "Deletar webhook",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/webhook/{{webhookId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["webhook", "{{webhookId}}"]
+              "raw": "{{baseUrl}}/webhook/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook",
+                "{id}"
+              ]
             },
-            "description": "Remove um webhook registrado."
-          },
-          "response": []
+            "description": "Remove um webhook cadastrado. A URL deixa de receber notificacoes imediatamente."
+          }
         }
       ]
     },
     {
-      "name": "Health",
-      "description": "Verificação de saúde da API.",
+      "name": "Relatorios",
       "item": [
         {
-          "name": "Health Check",
+          "name": "Consultar secao por ID",
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["health"]
+              "raw": "{{baseUrl}}/report/section/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "report",
+                "section",
+                "{id}"
+              ]
             },
-            "description": "Verifica se a API está online. Não requer autenticação."
-          },
-          "response": [
-            {
-              "name": "API Online",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"status\": \"ok\",\n  \"info\": {\n    \"database\": { \"status\": \"up\" }\n  },\n  \"error\": {},\n  \"details\": {\n    \"database\": { \"status\": \"up\" }\n  }\n}"
-            }
-          ]
+            "description": "Retorna os dados detalhados de uma secao especifica de um relatorio.\n\nCada relatorio e composto por varias secoes que contem dados de diferentes fontes:\n- Informacoes basicas (CNPJ/CPF, endereco, socios, QSA)\n- Processos judiciais\n- Protestos em cartorio\n- Dividas Pefin/Refin\n- Dados SCR / Open Finance (Banco Central)\n- PEP e sancoes internacionais\n- Resultado da politica de credito\n\nUse get_report para obter a lista de secoes e seus IDs."
+          }
+        },
+        {
+          "name": "Criar relatorio (padrao de integracao com webhook)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"policyId\": \"6612a7f3625ea4ab00000000\",\n  \"document\": \"11.444.777/0001-61\",\n  \"type\": \"cnpj\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/report",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "report"
+              ]
+            },
+            "description": "PADRAO DE INTEGRACAO — use quando voce esta ajudando um desenvolvedor a\nimplementar integracao programatica com webhook. Para um usuario apenas\ngerando relatorio no chat, use create_report_and_wait.\n\nCria um novo relatorio de analise de credito para um CPF ou CNPJ.\n\nO processamento e ASSINCRONO: voce recebe o reportId imediatamente com\nstatus PENDING. O cliente acompanha o ciclo via:\n  1. Webhook configurado (create_webhook) — recomendado para integracoes.\n  2. Polling em get_report ate reportProgress.isFinalized === true.\n\nStatus (apos analyze_report manual): PENDING → APPROVED, DENIED ou ALERT.\nA maioria dos clientes deixa em PENDING e usa o resultado da politica.\n\nO tipo de relatorio (SIMPLES, ESSENCIAL, COMPLETO, COMPLETO+) e determinado\npela politica de credito (policyId) utilizada.\n\nUse list_policies (ou find_policy_by_name pra fluxo interativo) para obter\nos policyIds disponiveis na organizacao."
+          }
+        },
+        {
+          "name": "Listar relatorios da organizacao",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/report/list",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "report",
+                "list"
+              ]
+            },
+            "description": "Lista relatorios com filtros opcionais. Retorna relatorios da organizacao\nautenticada. Analistas de credito veem apenas os proprios relatorios.\n\nSuporta paginacao (take/skip) e filtros por status, documento, usuario, periodo,\nprodutos, operacao, batch."
+          }
+        },
+        {
+          "name": "Contar relatorios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/report/count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "report",
+                "count"
+              ]
+            },
+            "description": "Retorna a contagem de relatorios que correspondem aos filtros aplicados.\nUtil para dashboards e analytics sem carregar os dados completos. Aceita os mesmos\nfiltros de list_reports."
+          }
+        },
+        {
+          "name": "Exportar relatorio em PDF/Excel via webhook (padrao de integracao)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/report/export/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "report",
+                "export",
+                "{id}"
+              ]
+            },
+            "description": "PADRAO DE INTEGRACAO — use quando voce esta ajudando um desenvolvedor a\nimplementar integracao programatica com o Gyra+. Para um usuario apenas exportando\nno chat, use export_report_and_wait.\n\nSolicita a geracao de PDF/Excel de um relatorio. Processamento assincrono:\nretorna imediatamente com { status: \"processing\", reportId } e o arquivo e\nentregue via webhook configurado pelo cliente (create_webhook).\n\nUse quando:\n- O cliente ja tem (ou esta implementando) um endpoint pra receber webhook.\n- Precisa processar muitos relatorios em lote.\n- Latencia nao e critica e o webhook fecha o ciclo.\n\nPara fluxo interativo de agente (sem webhook), prefira export_report_and_wait.\nPara chamada bloqueante direta (cliente HTTP suporta long timeout), use\nexport_report_sync."
+          }
+        },
+        {
+          "name": "Exportar relatorio bloqueante (padrao de integracao)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/report/export-sync/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "report",
+                "export-sync",
+                "{id}"
+              ]
+            },
+            "description": "PADRAO DE INTEGRACAO — use quando voce esta ajudando um desenvolvedor a\nimplementar integracao com cliente HTTP que suporta timeout longo (>= 6 min).\nPara um usuario apenas exportando no chat, use export_report_and_wait.\n\nO endpoint BLOQUEIA ate a geracao concluir — pode levar ate 6 minutos para\nrelatorios completos. Cuidado: idle timeout de proxy/ALB tipico e 60s, entao\nisso so funciona se o cliente controla o caminho de rede (chamada server-to-server\nsem proxy intermediario).\n\nPode ser chamado a qualquer momento — nao exige que o relatorio esteja\nfinalizado nem analisado. Se o relatorio ainda esta processando, o PDF\ncontem apenas as secoes prontas ate o momento.\n\nPara fluxo interativo de agente, prefira export_report_and_wait (timeout\nprevisivel de 2min, com aviso quando relatorio nao esta finalizado).\nPara integracao com webhook, use export_report_via_webhook."
+          }
+        },
+        {
+          "name": "Consultar relatorio por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/report/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "report",
+                "{id}"
+              ]
+            },
+            "description": "Retorna o relatorio completo com secoes, decisao da politica e score.\n\nSe o relatorio esta em processamento, o status sera PENDING.\nQuando pronto, o objeto retornado contem:\n- status: APPROVED, DENIED ou ALERT\n- policyResult: decisao automatica com regras avaliadas\n- sections[]: array de secoes (BASIC_INFORMATION, PROCESSES, PROTESTS, SCR, etc.)\n- commentary: analise do analista (se houver)\n\nUse details=false para obter apenas metadados sem o conteudo das secoes."
+          }
+        },
+        {
+          "name": "Consultar secao especifica do relatorio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/report/{id}/section/{sectionType}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "report",
+                "{id}",
+                "section",
+                "{sectionType}"
+              ]
+            },
+            "description": "Retorna uma secao especifica de um relatorio pelo tipo.\n\nTipos de secao disponiveis:\n- BASIC_INFORMATION: dados cadastrais, endereco, socios\n- PROCESSES: processos judiciais\n- PROTESTS: protestos em cartorio\n- PEFIN_REFIN: dividas Pefin/Refin\n- SCR: dados do Sistema de Informacoes de Credito do Banco Central\n- PEP_SANCTIONS: Pessoa Politicamente Exposta e sancoes\n- CREDIT_POLICY: resultado da avaliacao da politica de credito"
+          }
+        },
+        {
+          "name": "Analisar/aprovar relatorio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"6612a7f3a19b467000000000\",\n  \"approved\": true,\n  \"commentary\": \"Aprovado após análise manual.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/report/analyze",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "report",
+                "analyze"
+              ]
+            },
+            "description": "Registra a analise de um relatorio por um analista de credito.\n\nDefine o status de aprovacao (approved: true/false), comentarios do analista\ne decisao manual. Usado quando a decisao automatica da politica precisa de\nrevisao humana."
+          }
+        },
+        {
+          "name": "Re-analisar relatorio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"6612a7f3a19b467000000000\",\n  \"approved\": false,\n  \"commentary\": \"Revisão: informação adicional identificou risco não mapeado. Decisão alterada para negado.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/report/re-analyze",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "report",
+                "re-analyze"
+              ]
+            },
+            "description": "Re-analisa um relatorio previamente analisado. Verifica se o usuario\ntem permissao para editar relatorios com base na politica de credito configurada.\n\nUtil quando dados adicionais foram obtidos ou a decisao precisa ser revisada."
+          }
+        },
+        {
+          "name": "Criar relatorio (API v2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document\": \"11.444.777/0001-61\",\n  \"type\": \"cnpj\",\n  \"policyId\": \"6612a7f3625ea4ab00000000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v2/report",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "report"
+              ]
+            },
+            "description": "Versao v2 da criacao de relatorio. Mesma funcionalidade de create_report\ncom payload revisado. Use create_report_v2 para novas integracoes."
+          }
+        },
+        {
+          "name": "Consultar relatorio (API v2)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v2/report/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v2",
+                "report",
+                "{id}"
+              ]
+            },
+            "description": "Versao v2 da consulta de relatorio. Retorna o relatorio com estrutura\natualizada. Use get_report_v2 para novas integracoes."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Politicas de credito",
+      "item": [
+        {
+          "name": "Listar politicas de credito",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/credit-policy/policy",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "credit-policy",
+                "policy"
+              ]
+            },
+            "description": "Lista as politicas de credito da organizacao.\n\nCada politica define:\n- Quais fontes de dados consultar (bureau de credito, SCR/Open Finance, etc.)\n- Regras de aprovacao automatica (score, limites, restricoes)\n- Tipo de relatorio gerado (SIMPLES, ESSENCIAL, COMPLETO, COMPLETO+)\n- Grupos de regras com pesos e thresholds\n\nO policyId retornado e necessario para criar relatorios (create_report).\n\nFiltros opcionais:\n- enabled: true para ver apenas politicas ativas\n- protected: true para incluir politicas protegidas (padrao do sistema)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pareceres de IA",
+      "item": [
+        {
+          "name": "Gerar insight com IA para secao do relatorio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportId\": \"6612a7f3a19b467000000000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/insight",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "insight"
+              ]
+            },
+            "description": "Gera uma analise automatica com IA para uma secao especifica de um relatorio.\n\nA IA analisa os dados da secao e produz um resumo interpretativo com\npontos de atencao e recomendacoes. O insight e salvo como comentario\nna secao do relatorio.\n\nRequisitos:\n- A secao deve estar finalizada (processamento completo)\n- A organizacao deve ter plano que suporte IA (nao disponivel em planos Trial ou Basic)\n\nUse get_report para obter os IDs das secoes disponiveis."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cadastro documental",
+      "item": [
+        {
+          "name": "Criar (ou recuperar) o cadastro de um CNPJ/CPF",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document\": \"11.444.777/0001-61\",\n  \"name\": \"AURORA COMPONENTES INDUSTRIAIS LTDA\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry"
+              ]
+            },
+            "description": "Cria o dossie documental de um CNPJ ou CPF na organizacao autenticada.\n\nIDEMPOTENTE POR DOCUMENTO: chamar de novo com o mesmo CNPJ devolve o cadastro que ja existe,\nem vez de duplicar. E seguro chamar no inicio de qualquer jornada."
+          }
+        },
+        {
+          "name": "Listar cadastros da organizacao",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry"
+              ]
+            },
+            "description": "Lista os cadastros, com busca e filtro por situacao.\n\nSituacoes: PENDING (sem documento validado), PROCESSING (documento em analise),\nUP_TO_DATE (tudo validado), ATTENTION (divergencia, vencimento proximo ou ressalva),\nEXPIRED (renovacao vencida), RENEWING (renovacao em curso).\n\nATENCAO: valor de kycStatus fora dessa lista e descartado em silencio pela validacao, e a\nconsulta devolve a lista INTEIRA sem erro. Confira o valor antes de concluir qualquer coisa."
+          }
+        },
+        {
+          "name": "Validar um documento e receber o parecer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry/validate-document",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry",
+                "validate-document"
+              ]
+            },
+            "description": "Manda UM arquivo (PDF, JPG ou PNG, ate 15MB) e recebe classificacao, campos extraidos, verificacoes e parecer.\n\nA ENTRADA E UNICA: voce nao diz que documento e. A plataforma reconhece entre 24 tipos\n(contrato social, alteracao contratual, estatuto, ata de assembleia, requerimento de\nempresario, procuracao PJ/PF, certidao da Junta, QSA, IRPJ/ECF, declaracao de faturamento,\ndemonstracoes financeiras, extrato bancario, certidao PGFN, FGTS, CADIN federal/estadual,\nSimples Nacional, eSocial, documento de identidade, comprovante de residencia, DIRPF,\ncomprovante de renda, certidao PF, estado civil).\n\nO FORMATO DA SAIDA DEPENDE DO TIPO IDENTIFICADO: o objeto `extraction` traz os campos\ndaquele tipo. Todo campo folha vem como { value, confidence, page }; campo ausente vem\ncom value null e confidence 0, nunca inventado.\n\nResponde 200 com o resultado quando o pipeline fecha dentro de `waitSeconds`, ou 202 com\n{ documentId, statusUrl } quando passa. No 202, continue com get_document_status.\n\nUse `expectedType` para conferir se veio o documento CERTO: a classificacao roda normal e o\ntipo lido e confrontado com o pedido. E o que pega o arquivo legitimo enviado no campo errado.\nUse `typeHint` so quando a origem ja garante o tipo: ele PULA a classificacao.\n\nO arquivo e arquivado no cadastro de `expectedDocument`, criando o cadastro se nao existir."
+          }
+        },
+        {
+          "name": "Status e resultado de um documento em analise",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry/documents/{docId}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry",
+                "documents",
+                "{docId}",
+                "status"
+              ]
+            },
+            "description": "Consulta um documento pelo id, sem precisar do id do cadastro. E o caminho de polling\ndepois de um 202 do validate_document.\n\nStatus terminais: VALIDATED, FAILED, OUT_OF_SCOPE, MANUAL_REVIEW, REJECTED_QUALITY.\nEnquanto nao for terminal, o documento ainda esta no pipeline.\n\nDevolve o mesmo corpo do resultado completo, incluindo `statusReason` (por que parou num\nterminal que nao e falha tecnica) e `stages` (o que rodou e o que veio reaproveitado).\n\nPREFIRA WEBHOOK: assine registry.document.assessed em vez de fazer polling em laco."
+          }
+        },
+        {
+          "name": "Indicadores de acuracia do cadastro documental",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry/metrics/accuracy",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry",
+                "metrics",
+                "accuracy"
+              ]
+            },
+            "description": "Volume, distribuicao de vereditos, taxa de analise manual, taxa de reprocessamento e\nconfianca media, POR TIPO DOCUMENTAL E POR CAMPO.\n\nE a tool para responder \"vale a pena tornar esta verificacao impeditiva?\": olhe a taxa de\nanalise manual do tipo antes de subir uma ressalva a reprovacao.\n\nO volume por status e por tipo e sempre exato; so as medias de confianca usam amostra."
+          }
+        },
+        {
+          "name": "Regua de validacao vigente da organizacao",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry/rule-set",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry",
+                "rule-set"
+              ]
+            },
+            "description": "A configuracao que decide o que reprova, o que vira ressalva e o que nem roda em cada\ntipo de documento. Versionada: todo parecer registra em assessment.ruleSetVersion qual versao o julgou.\n\nPara explicar uma reprovacao, cruze o check que deu FAIL com o que a regua diz sobre ele."
+          }
+        },
+        {
+          "name": "Catalogo de verificacoes, tipos e padroes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry/rule-set/catalog",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry",
+                "rule-set",
+                "catalog"
+              ]
+            },
+            "description": "O vocabulario da regua, em linguagem de negocio: as verificacoes agrupadas nas tres\nperguntas (autenticidade, titularidade, fe publica), os tipos documentais com rotulo e descricao,\nas especies de certificacao e os padroes do motor (vigencia por tipo, subtipos aceitos).\n\nLEIA DAQUI em vez de fixar a lista: verificacao nova aparece no catalogo no mesmo deploy em que\npassa a existir."
+          }
+        },
+        {
+          "name": "Consultar o cadastro pelo CNPJ/CPF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry/by-document/{document}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry",
+                "by-document",
+                "{document}"
+              ]
+            },
+            "description": "Busca o dossie pelo documento, sem precisar saber o id.\n\nE a tool para responder \"o que ja temos deste CNPJ?\" antes de pedir documento ao cliente:\na completude e a situacao dizem se falta alguma coisa."
+          }
+        },
+        {
+          "name": "Consultar um cadastro pelo id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry",
+                "{id}"
+              ]
+            },
+            "description": "Detalhe do dossie: situacao, completude, dados basicos oficiais e o bloco de quem\npode assinar pela empresa (regime ISOLADA/CONJUNTA/MISTA/INDETERMINADO, quantas assinaturas\na regra geral exige e quem assina sozinho), consolidado do documento societario vigente."
+          }
+        },
+        {
+          "name": "Preparar o envio de um documento (URL assinada)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileName\": \"contrato-social.pdf\",\n  \"size\": 1843200,\n  \"mimeType\": \"application/pdf\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry/{id}/documents/presign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry",
+                "{id}",
+                "documents",
+                "presign"
+              ]
+            },
+            "description": "Primeiro passo do envio assincrono, para arquivos de ate 50MB (acima do teto de 15MB\ndo validate_document).\n\nDevolve a URL assinada para o PUT e a `key` do arquivo. Suba o arquivo direto nessa URL, com o\nmesmo Content-Type e o mesmo tamanho declarados, e depois chame confirm_registry_document com a\nkey que veio aqui. Nunca monte a key voce mesmo."
+          }
+        },
+        {
+          "name": "Confirmar o upload e disparar a analise",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"registry/6612a7f30000000000000001/8f2c9a1b-contrato-social.pdf\",\n  \"fileName\": \"contrato-social.pdf\",\n  \"expectedType\": \"CONTRATO_SOCIAL\",\n  \"callbackUrl\": \"https://api.suaempresa.com/gyra/kyc\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry/{id}/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry",
+                "{id}",
+                "documents"
+              ]
+            },
+            "description": "Segundo passo do envio assincrono: confirma o arquivo que ja foi para o armazenamento e\ndispara o pipeline. Responde 202 com o documentId.\n\nO resultado chega por webhook (registry.document.assessed) ou por get_document_status.\n\nSobre os dois campos de tipo: `expectedType` PEDE um tipo e a conferencia roda; `typeHint`\nAFIRMA o tipo e a classificacao e pulada. Enviando os dois, typeHint vence."
+          }
+        },
+        {
+          "name": "Listar os documentos de um cadastro",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry/{id}/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry",
+                "{id}",
+                "documents"
+              ]
+            },
+            "description": "Lista os documentos do dossie. Por padrao traz so a versao VIGENTE de cada tipo;\ncom includeHistory, traz todas as versoes.\n\nNada e sobrescrito: uma alteracao contratual nova nao apaga a antiga, vira a versao vigente."
+          }
+        },
+        {
+          "name": "Resultado completo de um documento",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry/{id}/documents/{docId}/result",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry",
+                "{id}",
+                "documents",
+                "{docId}",
+                "result"
+              ]
+            },
+            "description": "Da classificacao ao parecer, para um documento do cadastro.\n\nTraz `extraction` (os campos daquele tipo, cada um com value/confidence/page),\n`validation.checks[]` (cada verificacao com PASS/WARN/FAIL/SKIP, mensagem e evidencia com\npagina e trecho) e `assessment`.\n\nUSE assessment.effectiveVerdict, NAO assessment.verdict. O primeiro e o veredito que vale hoje;\no segundo e o parecer da IA, que nunca e reescrito. Quando um operador discorda, a decisao dele\nentra em feedbackVerdict e effectiveVerdict passa a ser ela, com decidedByOperator true.\n\nTambem devolve `statusReason` (por que parou), `stages` (o que rodou e o que foi reaproveitado)\ne o par expectedType/type, que explica a verificacao EXPECTED_TYPE_MATCH."
+          }
+        },
+        {
+          "name": "Reprocessar um documento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stages\": [\n    \"VALIDATE\"\n  ],\n  \"forceType\": \"ALTERACAO_CONTRATUAL\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry/{id}/documents/{docId}/reprocess",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry",
+                "{id}",
+                "documents",
+                "{docId}",
+                "reprocess"
+              ]
+            },
+            "description": "Roda o pipeline de novo. Sem `stages`, roda inteiro; com um subconjunto de\nCLASSIFY/EXTRACT/VALIDATE, as etapas de fora reaproveitam a tentativa anterior.\n\nDuas regras que evitam surpresa: pular EXTRACT so funciona quando existe extracao gravada antes,\ne reexecutar EXTRACT sempre revalida. Confira stages.executed e stages.reused no resultado.\n\n`forceType` corrige uma classificacao errada; como afirma o tipo, a conferencia\nEXPECTED_TYPE_MATCH sai SKIP naquela tentativa.\n\nREPROCESSAR NAO COBRA DE NOVO: a cobranca e por documento, nao por tentativa."
+          }
+        },
+        {
+          "name": "Arvore societaria do cadastro",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/registry/{id}/persons",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "registry",
+                "{id}",
+                "persons"
+              ]
+            },
+            "description": "Socios e administradores do cadastro, com a origem de cada um:\nQSA_OFICIAL (quadro societario da fonte oficial), DOCUMENT_EXTRACTION (lido de contrato,\nestatuto, ata ou certidao) ou MANUAL.\n\nE a base para pedir documento de socio: cada pessoa pode ganhar cadastro proprio."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Solicitacoes",
+      "item": [
+        {
+          "name": "Catalogo de eventos de webhook disponiveis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/webhook/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "webhook",
+                "events"
+              ]
+            },
+            "description": "Todos os eventos que a organizacao pode assinar, agrupados por categoria.\n\nCategorias: Documento (registry.document.*), Cadastro (registry.*), Solicitacao (collection.*),\nItens (collection.item.*), Formulario e assinatura, Mensagens, e Relatorios e credito\n(report.finished, credit-policy.evaluated, committee.finished e os demais).\n\nLEIA DAQUI em vez de fixar a lista: evento novo aparece no catalogo no mesmo deploy."
+          }
+        },
+        {
+          "name": "Assinaturas de webhook configuradas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/webhook/endpoints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "webhook",
+                "endpoints"
+              ]
+            },
+            "description": "As assinaturas da organizacao, com URL, rotulo, eventos escutados, se esta ativa e o\nestado da ultima entrega.\n\nO segredo NAO volta aqui: so uma dica com os ultimos caracteres. Ele e mostrado uma unica vez,\nna criacao e na rotacao.\n\nAssinatura que acumula 20 falhas seguidas e desligada sozinha, com o motivo. Se o cliente diz que\n\"parou de receber\", e a primeira coisa a olhar."
+          }
+        },
+        {
+          "name": "Criar ou atualizar uma assinatura de webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://api.suaempresa.com/gyra/webhook\",\n  \"label\": \"Produção, esteira de crédito\",\n  \"events\": [\n    \"registry.document.assessed\",\n    \"collection.completed\",\n    \"collection.message.failed\"\n  ],\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/webhook/endpoints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "webhook",
+                "endpoints"
+              ]
+            },
+            "description": "Cria (sem id) ou atualiza (com id) uma assinatura do modulo de Cadastros e Solicitacoes.\n\nLISTA DE EVENTOS VAZIA QUER DIZER TODOS. Quem esta comecando nao sabe de quais precisa, e\nescolher antes de conhecer produz assinatura errada e evento perdido em silencio.\n\nO segredo e gerado pela plataforma e devolvido UMA VEZ, na criacao. Ele e por assinatura: um\nendpoint comprometido nao permite forjar evento para os outros.\n\nA URL precisa ser publica; endereco interno e recusado, e o nome e resolvido de novo a cada\ntentativa de entrega.\n\nConfira a assinatura com HMAC_SHA256(segredo, \"<X-Gyra-Timestamp>.<corpo cru>\") e recuse o que\nestiver fora de uma janela de cinco minutos."
+          }
+        },
+        {
+          "name": "Criar uma solicitacao de documentos ao cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"template\": \"onboarding-pj\",\n  \"document\": \"11.444.777/0001-61\",\n  \"recipients\": [\n    {\n      \"name\": \"Ana Souza\",\n      \"document\": \"529.982.247-25\",\n      \"email\": \"ana@exemplo.com.br\",\n      \"phone\": \"+5551999998888\",\n      \"role\": \"Sócia administradora · 60%\"\n    }\n  ],\n  \"dueInDays\": 10,\n  \"channel\": \"BOTH\",\n  \"responseMode\": \"REVIEW\",\n  \"message\": \"Precisamos destes documentos para liberar seu limite.\",\n  \"callbackUrl\": \"https://api.suaempresa.com/gyra/kyc\",\n  \"send\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/collections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "collections"
+              ]
+            },
+            "description": "Cria o pedido a partir de um MODELO e manda o link para um ou mais destinatarios.\n\nO modelo diz O QUE se pede (documento, formulario, termo, assinatura, identidade); aqui voce diz\nPARA QUEM e SOBRE QUEM. Use list_collection_templates para descobrir os modelos disponiveis.\n\nO cadastro e obrigatorio, por `document` (CNPJ/CPF, e o cadastro e resolvido ou criado) ou por\n`registryId`. Um dos dois.\n\nCANAL: EMAIL, WHATSAPP, BOTH, ou NONE. Com NONE a plataforma NAO avisa ninguem: a solicitacao e\ncriada, os links voltam na resposta (publicUrl e links[]) e quem entrega e voce. Lembrete tambem\nnao sai. E o caminho para quem ja fala com o cliente pelo canal proprio.\n\nO que o cadastro ja tem e validado nao e pedido de novo. Para pedir mesmo assim, liste as chaves\nem `forceItemKeys`.\n\nCom `draft: true` (ou send: false), cria sem enviar."
+          }
+        },
+        {
+          "name": "Listar solicitacoes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/collections",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "collections"
+              ]
+            },
+            "description": "Lista as solicitacoes da organizacao, com filtro por situacao, cadastro, modelo e periodo.\n\nSituacoes: DRAFT, SENT, IN_PROGRESS, COMPLETED, EXPIRED, CANCELED.\n\nE a tool para responder \"quem esta devendo documento?\" -- filtre por SENT e IN_PROGRESS e olhe\no prazo."
+          }
+        },
+        {
+          "name": "Detalhe de uma solicitacao",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/collections/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "collections",
+                "{id}"
+              ]
+            },
+            "description": "Traz os itens (com status e o parecer de cada um), os destinatarios (com o estado da\nentrega e o link) e a trilha.\n\nStatus de item: PENDING, ALREADY_ON_FILE, SUBMITTED, PROCESSING, VALIDATED, REJECTED,\nMANUAL_REVIEW, AWAITING_OPERATOR (a IA avaliou e espera decisao humana), WAIVED, EXPIRED.\n\nEstado do destinatario: PENDING, DELIVERED, OPENED, IN_PROGRESS, COMPLETED, FAILED e\nNO_ITEMS (nao sobrou item para essa pessoa).\n\nFAILED no destinatario quer dizer que a MENSAGEM nao chegou. E o caso de ligar para o cliente."
+          }
+        },
+        {
+          "name": "Enviar ou reenviar uma solicitacao",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/collections/{id}/send",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "collections",
+                "{id}",
+                "send"
+              ]
+            },
+            "description": "Dispara o envio pelos canais do destinatario e devolve os links por destinatario.\n\nServe tanto para o primeiro envio de um rascunho quanto para reenviar um pedido que o cliente\nnao respondeu. Aceita um recado novo."
+          }
+        },
+        {
+          "name": "Cancelar uma solicitacao",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Operação desistida pelo cliente.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/collections/{id}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "collections",
+                "{id}",
+                "cancel"
+              ]
+            },
+            "description": "Encerra a solicitacao. Os links param de funcionar e nenhum lembrete sai.\n\nO motivo fica na trilha."
+          }
+        },
+        {
+          "name": "Decidir sobre um item em revisao",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"RESEND_REQUESTED\",\n  \"comment\": \"O comprovante está no nome de outra pessoa. Envie um no seu nome.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/collections/{id}/items/{itemId}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "collections",
+                "{id}",
+                "items",
+                "{itemId}",
+                "review"
+              ]
+            },
+            "description": "A decisao do operador sobre um item em AWAITING_OPERATOR ou MANUAL_REVIEW.\n\nTres saidas:\n- APPROVED: o item fecha;\n- RESEND_REQUESTED: o destinatario recebe o pedido de novo. O comentario e OBRIGATORIO aqui, e\n  e ele que o cliente le, entao escreva o que precisa ser corrigido, nao o codigo do check;\n- WAIVED: o item sai do pedido."
+          }
+        },
+        {
+          "name": "Contatos que este CNPJ/CPF ja usou",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/collections/contact-suggestion/{document}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "collections",
+                "contact-suggestion",
+                "{document}"
+              ]
+            },
+            "description": "Os e-mails e telefones que aquele documento ja usou em solicitacoes anteriores.\n\nChame antes de criar a solicitacao: evita pedir contato que a organizacao ja tem, e evita mandar\no link para um endereco desatualizado."
+          }
+        },
+        {
+          "name": "Quem assina pela empresa, lido do documento societario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document\": \"11.444.777/0001-61\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/collections/signatory-suggestion",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "collections",
+                "signatory-suggestion"
+              ]
+            },
+            "description": "Deduz quem pode assinar a partir do documento societario VIGENTE do cadastro: nome,\ndocumento, papel, e o regime de assinatura ja lido (ISOLADA, CONJUNTA, MISTA ou INDETERMINADO).\n\nUse antes de montar uma assinatura conjunta: e o que diz quantas partes o contrato exige.\n\nRESSALVA: contrato brasileiro frequentemente nao repete o CPF do administrador. Nesses casos o\ncampo vem null em vez de inventado, e quem for criar o envelope precisa completar por outra fonte."
+          }
+        },
+        {
+          "name": "Listar modelos de coleta",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/v1/collection-templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "collection-templates"
+              ]
+            },
+            "description": "Os modelos vigentes da organizacao, com metricas de uso. Cada um diz o que sera pedido.\n\nO `slug` daqui e o que entra em create_collection. Chame esta tool primeiro: criar solicitacao\ncom slug inventado falha."
+          }
         }
       ]
     }

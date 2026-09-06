@@ -1,0 +1,271 @@
+---
+title: "Integrar Cadastros e Solicitações"
+description: "Do zero ao webhook chegando: credencial, primeiro documento validado, dossiê montado e o cliente entregando o que falta pelo link."
+icon: "route"
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+---
+
+<Info>
+  **Resumo:** este guia vai da credencial até o webhook chegando no seu endpoint. São quatro etapas, e cada uma funciona sozinha: dá para parar na 2 e já ter valor.
+</Info>
+
+## O que você vai ter no fim
+
+| Etapa | O que passa a funcionar |
+| --- | --- |
+| 1. Credencial | Chamadas autenticadas |
+| 2. Primeiro documento | Você manda um arquivo e recebe o parecer |
+| 3. Dossiê | O que já foi entregue fica arquivado por CNPJ/CPF |
+| 4. Pedido ao cliente | O cliente entrega pelo link e o seu sistema é avisado |
+
+## Etapa 1: credencial
+
+<Steps>
+  <Step title="Gere o par no painel">
+    Toolbox, *Configurações, API & MCP*, seção **Credenciais de API**. Dê um nome que você reconheça na hora de revogar (`backend-producao`).
+
+    O `clientSecret` aparece **uma vez**. Guarde no seu cofre de segredos.
+  </Step>
+  <Step title="Troque por um token">
+    ```bash
+    curl --request POST 'https://gyra-core.gyramais.com.br/auth/authenticate' \
+      --header 'gyra-client-id: SEU_CLIENT_ID' \
+      --header 'gyra-client-secret: SEU_CLIENT_SECRET'
+    ```
+
+    O token vale **24 horas**. Renove antes de expirar, e guarde em memória em vez de pedir um novo a cada chamada.
+  </Step>
+</Steps>
+
+<Warning>
+  Se a resposta for `404` em qualquer rota deste guia, quase sempre é **capacidade**, não caminho errado: o módulo precisa estar liberado para a sua organização. Ver [capacidades](/api-reference/kyc/visao-geral#capacidades-da-organização).
+</Warning>
+
+## Etapa 2: o primeiro documento
+
+A chamada mais curta que entrega valor. Um arquivo, e o parecer volta.
+
+<CodeGroup>
+
+```bash cURL
+curl --request POST 'https://gyra-core.gyramais.com.br/v1/registry/validate-document' \
+  --header 'Authorization: Bearer <token>' \
+  --form 'file=@"/caminho/contrato-social.pdf"' \
+  --form 'expectedDocument="11.444.777/0001-61"' \
+  --form 'expectedName="AURORA COMPONENTES INDUSTRIAIS LTDA"' \
+  --form 'expectedType="CONTRATO_SOCIAL"'
+```
+
+```javascript Node
+const form = new FormData();
+form.append("file", new Blob([await fs.readFile("contrato-social.pdf")]), "contrato-social.pdf");
+form.append("expectedDocument", "11444777000161");
+form.append("expectedName", "AURORA COMPONENTES INDUSTRIAIS LTDA");
+form.append("expectedType", "CONTRATO_SOCIAL");
+
+const resposta = await fetch(
+  "https://gyra-core.gyramais.com.br/v1/registry/validate-document",
+  { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form },
+);
+
+if (resposta.status === 202) {
+  const { documentId, statusUrl } = await resposta.json();
+  // o pipeline não fechou na janela: acompanhe por webhook ou por statusUrl
+} else {
+  const resultado = await resposta.json();
+  console.log(resultado.assessment.effectiveVerdict);
+}
+```
+
+```python Python
+import requests
+
+with open("contrato-social.pdf", "rb") as arquivo:
+    resposta = requests.post(
+        "https://gyra-core.gyramais.com.br/v1/registry/validate-document",
+        headers={"Authorization": f"Bearer {token}"},
+        files={"file": arquivo},
+        data={
+            "expectedDocument": "11444777000161",
+            "expectedName": "AURORA COMPONENTES INDUSTRIAIS LTDA",
+            "expectedType": "CONTRATO_SOCIAL",
+        },
+    )
+```
+
+</CodeGroup>
+
+### Três coisas para acertar de primeira
+
+**Você não diz que documento é.** A plataforma reconhece entre [24 tipos](/kyc/tipos-de-documento). O `expectedType` não força nada: ele diz o que você **pediu**, e a plataforma confronta com o que leu. É o campo que pega o arquivo legítimo enviado no lugar errado.
+
+**Leia `assessment.effectiveVerdict`, não `assessment.verdict`.** O primeiro é o veredito que vale hoje; o segundo é o parecer da IA, que nunca é reescrito quando um operador discorda.
+
+**Trate o `202` como caminho normal.** Documento longo ou digitalizado passa dos 55 segundos. Não é erro.
+
+```json 200
+{
+  "documentId": "6612a7f30000000000000031",
+  "type": "CONTRATO_SOCIAL",
+  "status": "VALIDATED",
+  "assessment": {
+    "verdict": "VALIDO",
+    "score": 0.91,
+    "effectiveVerdict": "VALIDO",
+    "decidedByOperator": false
+  }
+}
+```
+
+O objeto `extraction` traz os campos **daquele tipo**. O mapa completo dos 24 formatos está em [Formatos de retorno por documento](/api-reference/kyc/formatos-de-retorno).
+
+## Etapa 3: o dossiê
+
+O documento da etapa 2 já foi arquivado no cadastro de `expectedDocument`. Agora você consulta o que existe antes de pedir de novo:
+
+```bash
+curl 'https://gyra-core.gyramais.com.br/v1/registry/by-document/11444777000161' \
+  --header 'Authorization: Bearer <token>'
+```
+
+Dois campos respondem quase tudo:
+
+| Campo | Para quê |
+| --- | --- |
+| `kycStatus` | `UP_TO_DATE` libera; `ATTENTION` e `EXPIRED` pedem ação |
+| `completenessSlots` | Qual exigência está coberta e por qual documento |
+
+Para arquivos acima de 15 MB, use o caminho assíncrono: `presign` devolve a URL assinada, você sobe o arquivo direto nela, e `confirm` dispara a análise. Ver [Documentos do cadastro](/api-reference/kyc/documentos).
+
+## Etapa 4: pedir ao cliente
+
+<Steps>
+  <Step title="Descubra os modelos">
+    ```bash
+    curl 'https://gyra-core.gyramais.com.br/v1/collection-templates' \
+      --header 'Authorization: Bearer <token>'
+    ```
+
+    Use o **`slug`**, não o id: ele é estável entre versões do modelo.
+  </Step>
+  <Step title="Crie a solicitação">
+    ```bash
+    curl --request POST 'https://gyra-core.gyramais.com.br/v1/collections' \
+      --header 'Authorization: Bearer <token>' \
+      --header 'Content-Type: application/json' \
+      --data '{
+        "template": "onboarding-pj",
+        "document": "11.444.777/0001-61",
+        "recipients": [
+          { "name": "Ana Souza", "email": "ana@exemplo.com.br", "phone": "+5551999998888" }
+        ],
+        "dueInDays": 10,
+        "channel": "BOTH",
+        "callbackUrl": "https://api.suaempresa.com/gyra/kyc"
+      }'
+    ```
+  </Step>
+  <Step title="Ou entregue o link você mesmo">
+    Com `"channel": "NONE"` a plataforma não avisa ninguém. Os links voltam em `links[]` e quem entrega é você, pelo seu próprio canal.
+  </Step>
+</Steps>
+
+## Etapa 5: receber o aviso
+
+Polling é o caminho errado aqui: o pipeline leva de segundos a minutos e a solicitação leva dias.
+
+```bash
+curl --request POST 'https://gyra-core.gyramais.com.br/v1/webhook/endpoints' \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "url": "https://api.suaempresa.com/gyra/webhook",
+    "label": "Producao",
+    "events": [
+      "registry.document.assessed",
+      "collection.completed",
+      "collection.message.failed"
+    ]
+  }'
+```
+
+O `secret` volta **uma vez**, nesta resposta.
+
+### Conferindo a assinatura
+
+```javascript
+import crypto from "node:crypto";
+
+function conferir(req, segredo) {
+  const carimbo = req.headers["x-gyra-timestamp"];
+  const assinatura = req.headers["x-gyra-signature"];
+  const corpoCru = req.rawBody; // nunca JSON.stringify(req.body)
+
+  if (!carimbo || Math.abs(Date.now() / 1000 - Number(carimbo)) > 300) return false;
+
+  const esperada =
+    "sha256=" +
+    crypto.createHmac("sha256", segredo).update(`${carimbo}.${corpoCru}`).digest("hex");
+
+  return crypto.timingSafeEqual(Buffer.from(esperada), Buffer.from(assinatura));
+}
+```
+
+<Warning>
+  Use o corpo **cru**. Reserializar o JSON muda espaços e ordem de chave, e a assinatura deixa de bater. Esse é o erro mais comum de quem integra webhook assinado.
+</Warning>
+
+### Três eventos que resolvem a maioria dos casos
+
+| Evento | Por que assinar |
+| --- | --- |
+| `registry.document.assessed` | O parecer saiu. É o evento principal |
+| `collection.completed` | O cliente entregou tudo |
+| `collection.message.failed` | A mensagem **não** chegou. Sem ele, você acha que avisou e descobre no vencimento |
+
+**Deduplique por `id`.** A retentativa carrega o mesmo `id` do evento.
+
+## Erros que você vai encontrar
+
+| Código | O que costuma ser |
+| --- | --- |
+| `400` | Campo faltando ou enum errado. A mensagem lista todas as falhas de uma vez |
+| `401` | Token expirado. Ele vale 24 horas |
+| `403` | O usuário de API não tem a permissão daquela rota |
+| `404` | Recurso inexistente **ou** capacidade não liberada |
+| `413` | Arquivo acima do teto (15 MB no síncrono, 50 MB no presign) |
+
+<Warning>
+  Campo que a API não conhece é **descartado em silêncio**, não recusado. Se algo que você mandou não aparece na resposta, confira o nome antes de investigar o resto.
+</Warning>
+
+## Checklist antes de ir para produção
+
+- [ ] O `clientSecret` está no cofre, não no repositório
+- [ ] O token é reaproveitado até expirar, e renovado antes das 24 horas
+- [ ] O `202` do `validate-document` é tratado como caminho normal
+- [ ] Você lê `effectiveVerdict`, não `verdict`
+- [ ] O webhook confere a assinatura HMAC com o corpo cru e recusa carimbo velho
+- [ ] Você deduplica evento por `id`
+- [ ] `collection.message.failed` está assinado
+- [ ] O seu parser tolera valor novo de enum sem quebrar
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Formatos de retorno" icon="table-list" href="/api-reference/kyc/formatos-de-retorno">
+    Os campos de cada um dos 24 tipos documentais.
+  </Card>
+  <Card title="Eventos de webhook" icon="bolt-lightning" href="/api-reference/kyc/eventos-de-webhook">
+    Os 27 eventos, com payload.
+  </Card>
+  <Card title="Régua de validação" icon="ruler" href="/kyc/regua-de-validacao">
+    O que reprova, o que ressalva e o que você configura.
+  </Card>
+  <Card title="MCP da GYRA+" icon="plug" href="/mcp/o-que-e">
+    As mesmas rotas como tools de um agente.
+  </Card>
+</CardGroup>
