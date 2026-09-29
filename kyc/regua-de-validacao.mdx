@@ -1,0 +1,166 @@
+---
+title: "Régua de validação"
+description: "As verificações que a plataforma faz em cada documento, o que reprova, o que vira ressalva e o que você configura por tipo documental."
+icon: "ruler"
+surface: plataforma
+domain: cadastro
+audience: operador
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** a régua é a configuração da sua organização sobre o que exigir de cada tipo de documento. Ela é **versionada**: salvar publica uma versão nova e a anterior nunca é reescrita, então todo parecer registra qual versão da régua o julgou.
+</Info>
+
+## As três perguntas
+
+As verificações se organizam pelas três perguntas que um analista de cadastro faz:
+
+<CardGroup cols={3}>
+  <Card title="1. Autenticidade" icon="stamp">
+    Estrutura, integridade e completude do arquivo. Olha a anatomia antes do conteúdo: seções esperadas do tipo, identificadores no formato certo e coerência interna. É o que impede um arquivo qualquer de passar por outro documento.
+  </Card>
+  <Card title="2. Titularidade" icon="fingerprint">
+    Confronto com a solicitação e com a fonte oficial. O que foi lido bate com o CNPJ/CPF e o nome da análise, e com o quadro societário oficial?
+  </Card>
+  <Card title="3. Fé pública" icon="certificate">
+    Certificação e vigência. Registro, autenticação, prazo e poderes de quem assina. É o que separa a via registrada da cópia solta que o cliente tem em mãos.
+  </Card>
+</CardGroup>
+
+## Resultado de cada verificação
+
+| Resultado | O que quer dizer |
+| --- | --- |
+| `PASS` | Passou |
+| `WARN` | Ressalva: aparece no parecer, não reprova sozinha |
+| `FAIL` | Reprovou |
+| `SKIP` | Não rodou (não se aplica, foi desligada ou faltou insumo) |
+
+Cada verificação volta com `code`, `result`, `message`, `evidence` (página e trecho) e a origem (`DETERMINISTIC`, `RECONCILIATION` ou `LLM`).
+
+## Catálogo de verificações
+
+### 1. Autenticidade
+
+| Verificação | O que confere | Onde roda |
+| --- | --- | --- |
+| `QUALITY` | Nitidez e resolução suficientes para leitura automática | todos |
+| `COMPLETENESS` | Todas as páginas e seções esperadas do tipo, sem cláusula interrompida nem folha faltando | todos |
+| `TAMPERING_HINTS` | Datas impossíveis, páginas fora do padrão do arquivo, divergência entre ocorrências do mesmo dado | todos |
+| `EXPECTED_TYPE_MATCH` | O arquivo enviado é o documento que a solicitação pediu | todos |
+| `STRUCTURE` | Âncoras estruturais, marcas de autenticação, subtipo alegado e vigência (um interruptor para quatro verificações) | todos |
+| `FILE_TAMPERING` | Rastro de edição nos bytes do arquivo (camada forense) | todos |
+| `PREAMBLE_SIGNATURES_CONSISTENCY` | Quem é qualificado no preâmbulo assina o documento | societários |
+| `DATE_COHERENCE` | Assinatura, registro e vigência seguem uma ordem possível no tempo | societários |
+| `NIRE_FORMAT` | O número de registro na Junta tem o tamanho e a composição que a Junta emite | societários |
+| `YEAR_COHERENCE` | Ano-calendário coerente com o exercício | `IRPJ_ECF` |
+| `RECEIPT_NUMBER_FORMAT` | Número do recibo no formato que o programa da Receita gera | `IRPJ_ECF` |
+| `RECEIPT_PRESENT` | Recibo de entrega anexado (prova de que a declaração foi transmitida) | `IRPJ_ECF`, `DIRPF` |
+| `NET_WORTH_ARITHMETIC` | A evolução patrimonial fecha a conta | `DIRPF` |
+| `ASSET_SUM` | A tabela de bens e direitos fecha com o total da ficha | `DIRPF` |
+| `INCOME_POSITIVE` | Renda declarada maior que zero | `COMPROVANTE_RENDA` |
+| `PHOTO_SIGNATURE` | Foto e assinatura visíveis | `DOC_IDENTIDADE` |
+| `REVENUE_PERIOD_CONTINUITY` | A série de faturamento não tem mês faltando nem repetido | `DECLARACAO_FATURAMENTO` |
+| `REVENUE_PERIOD_COVERAGE` | A declaração cobre o período que a análise precisa | `DECLARACAO_FATURAMENTO` |
+
+### 2. Titularidade
+
+| Verificação | O que confere | Onde roda |
+| --- | --- | --- |
+| `DOC_CHECKSUM` | O CNPJ/CPF lido passa no dígito verificador | todos |
+| `EXPECTED_DOCUMENT_MATCH` | O identificador lido é o mesmo CNPJ/CPF que a solicitação informou | todos |
+| `EXPECTED_NAME_MATCH` | O nome confere com o da análise, com tolerância de similaridade | todos |
+| `CPF_CHECKSUM` | Dígito verificador do CPF impresso | `DOC_IDENTIDADE` |
+| `HOLDER_MATCH` | Titular do comprovante é a pessoa analisada | `COMPROVANTE_RESIDENCIA` |
+| `EMPLOYER_CNPJ_CHECKSUM` | Dígito verificador do CNPJ que emitiu o comprovante | `COMPROVANTE_RENDA` |
+| `GRANTOR_MATCH` | O outorgante da procuração é o dono do cadastro | procurações |
+| `INCOME_COMPATIBILITY` | A renda da declaração bate com a informada na análise | `DIRPF` |
+| `QSA_OFFICIAL_MATCH` | Sócios lidos conferem com o quadro da fonte oficial | societários e certidão da Junta |
+| `QSA_SHARE_SUM` | As participações somam 100%, dentro da tolerância | societários |
+| `QSA_CAPITAL_CONSISTENCY` | O valor das quotas somado bate com o capital declarado | societários |
+| `CROSS_DOCUMENT` | Endereço, titular, identidade societária e ano-calendário conferem **entre os documentos vigentes do mesmo cadastro** | escopo de dossiê |
+
+### 3. Fé pública
+
+| Verificação | O que confere | Onde roda |
+| --- | --- | --- |
+| `CERTIFICATION` | O que dá fé ao documento, contra a espécie mínima que você exige | todos |
+| `DOCUMENT_SIGNATURE_INTEGRITY` | A assinatura digital cobre o documento inteiro | todos com assinatura digital |
+| `OFFICIAL_EXISTS` | O documento, ou o ato que ele registra, foi localizado na fonte oficial | todos |
+| `AUTH_CODE_PRESENT` | Código de autenticação da certidão presente | certidões |
+| `LATEST_VERSION` | Não existe alteração posterior registrada que já substituiu este ato | societários |
+| `VALIDITY` | Dentro do prazo de validade | certidões e procurações |
+| `CNH_VALIDITY` | Habilitação dentro da validade | `DOC_IDENTIDADE` |
+
+| `ISSUER_UTILITY_ACTIVITY` | O CNPJ da fatura tem CNAE de energia, gás, água/esgoto ou telecom | `COMPROVANTE_RESIDENCIA` |
+| `REPRESENTATION` | Regime de assinatura, alçadas, vedações e mandato de quem representa | societários com cláusula de administração |
+
+<Note>
+  A recência do comprovante de residência sai pela verificação de **anatomia** (`STRUCTURE`), que lê a vigência do próprio arquivo, e não por uma verificação separada. O prazo padrão é de 60 dias e se ajusta por tipo.
+</Note>
+
+<Note>
+  `ISSUER_UTILITY_ACTIVITY` não é lista de emissores: autarquia municipal de saneamento passa pelo CNAE dela, e imobiliária, banco ou escola não passam por mais que o papel pareça fatura. Quando o CNPJ está ilegível ou a consulta não conclui, o parecer sai `INCONCLUSIVO` com o motivo, nunca válido.
+</Note>
+
+## Espécies de certificação
+
+A régua deixa você exigir uma espécie mínima **por tipo documental**. A ordem é da mais fraca à mais forte:
+
+| Espécie | O que é |
+| --- | --- |
+| `SEM_CERTIFICACAO` | Nenhuma marca de assinatura ou autenticação. É resultado de leitura, não espécie exigível |
+| `ASSINATURA_MANUSCRITA` | Assinatura a caneta (ou imagem dela), sem mais |
+| `ASSINATURA_ELETRONICA` | Carimbo de plataforma de assinatura, sem menção a ICP-Brasil |
+| `ASSINATURA_CONTADOR` | Assinada por contador ou técnico identificado com CRC |
+| `FIRMA_RECONHECIDA` | Selo de cartório reconhecendo firma |
+| `ORGAO_EMISSOR` | Emitido por órgão público com código de autenticidade conferível |
+| `CERTIFICADO_DIGITAL` | Assinatura digital com certificado ICP-Brasil embutida no arquivo |
+
+<Tip>
+  A espécie é conferida contra o **arquivo**, não contra o que ele diz. Documento que se declara assinado digitalmente mas não traz assinatura embutida é rebaixado; documento com assinatura ICP-Brasil válida é promovido mesmo sem dizer nada no texto.
+</Tip>
+
+Sem espécie mínima configurada, a verificação apenas **informa** a espécie no parecer.
+
+## Parâmetros ajustáveis
+
+| Parâmetro | Unidade | Escopo | Padrão |
+| --- | --- | --- | --- |
+| Similaridade mínima do nome | proporção | organização | 0,85 |
+| Diferença tolerada na soma das quotas | pontos percentuais | organização | 0,5 |
+| Diferença tolerada no capital | % do capital | por categoria/tipo | 1 |
+| Prazo de vigência do documento | dias | por tipo | [padrão do tipo](/kyc/tipos-de-documento) |
+| Espécie mínima de certificação | espécie | por tipo | não exigida |
+| Meses de faturamento exigidos | meses | organização | 12 |
+| Corte de suspeição forense | pontos | organização | 1 |
+
+## Interruptores
+
+| Chave | Padrão | O que faz |
+| --- | --- | --- |
+| `blockingChecks` | `EXPECTED_TYPE_MATCH`, `EXPECTED_DOCUMENT_MATCH`, `DOC_CHECKSUM` | Códigos que, ao falhar, reprovam o documento |
+| `disabledChecks` | vazio | Códigos desligados: saem `SKIP`, não entram no score e nunca reprovam |
+| `warningIsBlocking` | `false` | Sobe toda ressalva a reprovação |
+| `representationChecks` | ligado, informando | Poderes de representação |
+| `capitalConsistency` | tolerância 1%, informando | Quotas x capital social |
+| `structureChecks` | ligado, impeditivo | Anatomia, autenticidade, subtipo e vigência |
+| `certificationChecks` | ligado, informando | Certificação e cobertura da assinatura digital |
+| `revenueChecks` | 12 meses | Cobertura da declaração de faturamento |
+| `statementChecks` | ligado, informando | Comportamento da conta no extrato bancário |
+| `forensicsChecks` | ligado, informando, corte 1 | Camada forense do arquivo |
+
+<Warning>
+  Desligar vence impedir: o mesmo código em `disabledChecks` e `blockingChecks` sai **desligado**. A API recusa a régua que traz o conflito.
+</Warning>
+
+## O que não é configurável por item
+
+A régua é da organização. Um item de solicitação pode declarar `maxAgeDays`, que **vence** o prazo da régua para aquele pedido (é o nível mais específico). Todo o resto (o que reprova, o que é ressalva, a espécie mínima) mora na régua e em nenhum outro lugar.
+
+## Onde configurar
+
+No toolbox, em *Cadastros, Validações*: três abas, uma por pergunta, e navegação por tipo documental (pessoa jurídica, pessoa física e os que servem aos dois).
+
+Não há rota pública para publicar régua. É configuração versionada que afeta todo documento que entrar depois, e a tela mostra o efeito antes de salvar. O que a API devolve é o resultado: `assessment.ruleSetVersion`, em cada parecer, diz qual versão julgou aquele documento.

@@ -1,0 +1,103 @@
+---
+title: "Análise documental"
+description: "Como um arquivo vira parecer: classificação, extração, validação e parecer, com status, motivos e reprocessamento seletivo."
+icon: "microscope"
+surface: plataforma
+domain: cadastro
+audience: integrador
+lang: tecnica
+---
+
+<Info>
+  **Resumo:** todo arquivo passa pelo mesmo pipeline de três etapas e termina num parecer. A entrada é única (você manda o arquivo), o **formato da saída depende do tipo identificado**, e o caminho pode ser síncrono (resposta em segundos) ou assíncrono (webhook e polling).
+</Info>
+
+## O pipeline
+
+<Steps>
+  <Step title="CLASSIFY: que documento é este?">
+    O modelo lê o arquivo e diz qual dos [25 tipos](/kyc/tipos-de-documento) ele é, com confiança e alternativas. Quando alguma alternativa passa de 0,35 de confiança, o resultado vem marcado como `ambiguous` e o documento vai para revisão humana.
+
+    Esta etapa é **pulada** quando o envio traz `typeHint`, que afirma o tipo.
+  </Step>
+  <Step title="EXTRACT: o que está escrito nele?">
+    A extração usa o schema **daquele tipo**. Cada campo folha volta como a tripla `{ value, confidence, page }`. Campo ausente no documento vem com `value: null` e `confidence: 0`, nunca inventado.
+  </Step>
+  <Step title="VALIDATE: ele passa nas verificações?">
+    As verificações da [régua](/kyc/regua-de-validacao) rodam sobre o que foi lido: autenticidade, titularidade e fé pública. Cada uma devolve `PASS`, `FAIL`, `WARN` ou `SKIP`, com evidência.
+  </Step>
+  <Step title="Parecer">
+    Veredito, score, justificativa e evidências, selados com um `contentHash` conferível.
+  </Step>
+</Steps>
+
+## Status do documento
+
+| Status | Terminal | O que quer dizer |
+| --- | --- | --- |
+| `RECEIVED` | não | Upload confirmado, aguardando o pipeline |
+| `CLASSIFYING` / `CLASSIFIED` | não | Etapa de classificação |
+| `EXTRACTING` / `EXTRACTED` | não | Etapa de extração |
+| `VALIDATING` | não | Etapa de validação |
+| `VALIDATED` | **sim** | Pipeline concluído com parecer |
+| `FAILED` | **sim** | Erro técnico; reprocessar é possível |
+| `MANUAL_REVIEW` | **sim** | Parecer de análise manual ou classificação ambígua |
+| `OUT_OF_SCOPE` | **sim** | Documento legítimo, fora dos tipos analisados |
+| `REJECTED_QUALITY` | **sim** | Qualidade insuficiente para analisar |
+
+Quando o documento chega num status terminal, o campo `statusReason` explica **por que ele parou ali** nos casos em que não houve falha técnica.
+
+## Veredito
+
+| Veredito | O que quer dizer |
+| --- | --- |
+| `VALIDO` | Passou na régua |
+| `INVALIDO` | Reprovou numa verificação impeditiva |
+| `INCONCLUSIVO` | Não deu para afirmar (leitura ruim, consulta que não concluiu) |
+| `ANALISE_MANUAL` | Precisa de olho humano |
+
+O operador pode discordar do parecer e registrar a decisão dele. O parecer da IA **não é reescrito**: `verdict` continua sendo o que a IA disse e o que o `contentHash` sela, e o resultado passa a expor também `feedbackVerdict`, `effectiveVerdict` e `decidedByOperator`. Quem lê o resultado usa `effectiveVerdict`.
+
+## Tipo afirmado x tipo pedido
+
+Os dois campos de tipo do envio parecem sinônimos e não são:
+
+| Campo | O que faz | Efeito na verificação `EXPECTED_TYPE_MATCH` |
+| --- | --- | --- |
+| `typeHint` | **Afirma** o tipo. O pipeline adota o valor e pula a classificação | Sai `SKIP` (não há classificação a confrontar) |
+| `expectedType` | **Pede** um tipo. A classificação roda e o tipo lido é confrontado com o pedido | Roda: igual passa, diferente reprova |
+
+<Tip>
+  Para conferir se o cliente mandou o documento certo, use `expectedType`. É ele que pega o arquivo legítimo enviado no campo errado (uma declaração de IR subida como comprovante de residência), que sem ele seria classificado, validado e aprovado como o tipo que de fato é.
+
+  Enviando os dois, `typeHint` vence e a conferência sai `SKIP`.
+</Tip>
+
+Quando o item nasceu de um [requisito societário](/kyc/tipos-de-documento#requisito-societário-em-vez-de-tipo-fixo), o pedido é um **conjunto** de tipos (`expectedTypes`), e qualquer um deles satisfaz.
+
+## Reprocessamento seletivo
+
+Reprocessar sem informar nada roda o pipeline inteiro. Informando um subconjunto de `CLASSIFY`, `EXTRACT` e `VALIDATE`, as etapas de fora **reaproveitam** o resultado da tentativa anterior.
+
+O resultado traz `stages.executed` (o que rodou nesta tentativa) e `stages.reused` (o que veio reaproveitado e de qual tentativa).
+
+Duas regras que economizam surpresa:
+
+- Pular `EXTRACT` só funciona quando existe tentativa anterior com extração gravada. Sem ela, a etapa roda.
+- Reexecutar `EXTRACT` sempre revalida, mesmo sem `VALIDATE` na lista.
+
+`forceType` corrige uma classificação errada. Como ele afirma o tipo, a conferência `EXPECTED_TYPE_MATCH` sai `SKIP` naquela tentativa.
+
+## Camada forense
+
+Independente do conteúdo, a plataforma lê os **bytes** do arquivo em busca de rastro de edição: texto desenhado por cima de um documento digitalizado, revisão incremental de PDF, recompressão que não bate entre as páginas, e a cobertura da assinatura digital.
+
+Por padrão o indício vira **ressalva**, não reprovação: todo rastro forte tem explicação honesta possível (documento girado num editor, frente e verso remontados, arquivo recomprimido para caber no e-mail). O indício aparece sempre no parecer, com a evidência técnica, mesmo quando não reprova. O corte de suspeição é ajustável na régua.
+
+## Confiança dos campos
+
+Além do `confidence` de cada campo, o resultado traz `fieldConfidences`. Campos **críticos** de cada tipo (o CNPJ, o nome, a data de assinatura, o número do recibo, conforme o tipo) puxam o parecer para baixo quando vêm com confiança fraca, enquanto um campo acessório mal lido não derruba o documento.
+
+## Documento com várias peças
+
+Um arquivo pode conter mais de um documento (a declaração e o recibo no mesmo PDF, a frente e o verso, o contrato com todas as alterações). Nesse caso o arquivo enviado vira o documento **pai**, que fica em `CLASSIFIED`, e cada peça vira um documento filho que segue o pipeline por conta própria. O pai não atinge status terminal por contrato.

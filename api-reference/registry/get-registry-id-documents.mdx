@@ -1,0 +1,21 @@
+---
+title: "Listar Documentos do Cadastro"
+description: "Para saber o que o dossiê já tem antes de pedir de novo."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: get /v1/registry/{id}/documents
+---
+
+### Quando usar
+
+Para saber o que o dossiê já tem antes de pedir de novo.
+
+### Versão vigente por padrão
+
+Nada é sobrescrito: a alteração contratual nova não apaga a antiga, vira a versão vigente. Por padrão a listagem traz só a vigente de cada tipo; com `includeHistory`, traz todas.
+
+<Note>
+  Contexto e vocabulário em [Cadastro documental](/kyc/cadastro-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+</Note>

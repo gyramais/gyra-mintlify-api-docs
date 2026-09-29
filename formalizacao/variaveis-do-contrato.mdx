@@ -1,0 +1,311 @@
+---
+title: "Variáveis do contrato"
+description: "O catálogo completo de variáveis do modelo de contrato: sintaxe, raízes, pessoas, oferta e cronograma, filtros de formatação, em branco e blocos prontos."
+icon: "brackets-curly"
+surface: conceito
+domain: formalizacao
+audience: operador
+lang: tecnica
+---
+
+Esta é a referência para quem escreve o modelo: abra o Word ao lado e copie as tags daqui.
+
+<Info>
+  **Resumo:** cada variável é um caminho em português entre chaves, como `{emitente.razaoSocial}`. Listas repetem trechos, condições ligam e desligam cláusulas e filtros formatam o valor. Toda variável é obrigatória: se faltar um dado, o contrato não sai.
+</Info>
+
+<Tip>
+  No toolbox, **Catálogo de variáveis** mostra esta mesma lista com exemplo e botão de copiar. Veja [Contratos no toolbox](/toolbox/contratos).
+</Tip>
+
+## Sintaxe
+
+```text
+{emitente.razaoSocial}                         variável
+{oferta.valor | moeda}                         variável com filtro
+{#avalistas}{nome}, CPF {cpf | cpf}; {/avalistas}   repetição (um trecho por avalista)
+{#oferta.carencia}Carência de {oferta.carencia} meses.{/oferta.carencia}   condição: entra se houver valor
+{^conjuge}solteiro(a){/conjuge}                inverso: entra se NÃO houver valor
+{#oferta.indexador == "CDI"}Cláusula de CDI.{/oferta.indexador == "CDI"}  condição com expressão
+```
+
+- **Dentro de uma repetição**, os campos são do item: em `{#avalistas}...{/avalistas}`, `{nome}` é o nome de cada avalista.
+- **Repetições aninhadas** funcionam: os representantes de cada avalista PJ, por exemplo.
+- **Cabeçalho e rodapé** aceitam variáveis.
+- **Troca de delimitador**: se o seu texto precisa de chaves literais, `{=<% %>=}` passa a usar `<% %>` a partir daquele ponto.
+- **Filtros encadeiam**: `{oferta.prazo | numeroExtenso | capitalizar}`.
+
+## Toda variável é obrigatória
+
+Na geração real, uma variável sem valor bloqueia o contrato e entra na lista do que falta. Uma repetição ou condição sobre um dado ausente também bloqueia, porque sem o dado a plataforma não sabe se o trecho entra ou sai.
+
+Há dois jeitos de aceitar o vazio de propósito:
+
+| Jeito | Onde | Efeito |
+| --- | --- | --- |
+| Filtro `padrao` | No Word: `{emitente.endereco.complemento \| padrao:"-"}` | Entra o texto indicado quando o valor está vazio |
+| **Deixar em branco** | No mapeamento da variável, no toolbox | A tag sai vazia e não conta como falta |
+
+Os outros filtros devolvem vazio quando recebem vazio. Isso é proposital: um valor ausente nunca vira "R$ 0,00" ou "zero reais" escondido no contrato.
+
+## Raízes do catálogo
+
+| Raiz | O que traz |
+| --- | --- |
+| `hoje`, `hojeExtenso` | Data de hoje (dd/mm/aaaa) e por extenso |
+| `ccb` | Número, data de emissão e praça de pagamento |
+| `proposta` | Dados da proposta |
+| `oferta` | A oferta firme escolhida, com o cronograma |
+| `emitente` | A tomadora (PJ ou PF) |
+| `avalistas[]` | Avalistas, PF ou PJ |
+| `intervenientes[]` | Intervenientes, PF ou PJ |
+| `conjuges[]` | Cônjuges dos avalistas |
+| `conjugesQueAssinam[]` | Cônjuges que assinam, sem repetição, com o papel de cada um |
+| `credora` | A sua instituição |
+| `testemunhas[]` | Testemunhas |
+| `garantias[]` | Garantias |
+| `bndes` | Retorno do pedido de financiamento no BNDES |
+| `api.*` | Saídas das etapas [Chamada de API](/esteiras/chamada-de-api) |
+| `esteira.*` | Variáveis da execução da esteira |
+| `formulario.*` | Respostas do formulário |
+| `documento.TIPO.campo` | Campos extraídos dos documentos validados |
+
+`[]` indica lista: use com repetição (`{#avalistas}...{/avalistas}`).
+
+### `ccb`
+
+| Variável | O que é | Exemplo |
+| --- | --- | --- |
+| `ccb.numero` | Número do contrato, atribuído na geração. Veja [numeração](/formalizacao/modelos-de-contrato#numere-o-contrato) | 2026/000001 |
+| `ccb.dataEmissao` | Data de emissão | use `\| data` |
+| `ccb.praca` | Praça de pagamento (cidade/UF da emitente) | Florianópolis/SC |
+
+### `proposta`
+
+| Variável | O que é | Exemplo |
+| --- | --- | --- |
+| `proposta.numero` | Número da proposta | 64F1A2B3 |
+| `proposta.produto` | Nome do produto | Capital de giro PME |
+| `proposta.produtoChave` | Chave do produto | giro-pme |
+| `proposta.finalidade` | Finalidade | Capital de giro |
+| `proposta.valorSolicitado` | Valor pedido, em reais | use `\| moeda` |
+| `proposta.prazoSolicitado` | Prazo pedido, em meses | 36 |
+
+### `oferta`
+
+A oferta firme que o cliente escolheu. Valores em reais; taxas já em percentual (1,85 quer dizer 1,85%).
+
+| Variável | O que é |
+| --- | --- |
+| `oferta.valor` | Valor do crédito |
+| `oferta.prazo` | Prazo, em meses |
+| `oferta.carencia` | Carência, em meses |
+| `oferta.taxaMensal` | Taxa ao mês (%) |
+| `oferta.taxaAnual` | Taxa ao ano (%) |
+| `oferta.cet` | CET ao ano (%) |
+| `oferta.iof` | IOF, em reais |
+| `oferta.tarifas[]` | Tarifas: `nome`, `valor` |
+| `oferta.parcela` | Valor da parcela |
+| `oferta.primeiroVencimento` | Data do primeiro vencimento |
+| `oferta.ultimoVencimento` | Data do último vencimento |
+| `oferta.vencimentosCarencia[]` | Datas dos vencimentos de juros na carência |
+| `oferta.ultimoVencimentoCarencia` | Último vencimento da carência |
+| `oferta.dataLiberacao` | Data de liberação |
+| `oferta.sistema` | Sistema de amortização |
+| `oferta.indexador` | Indexador (PRE, CDI, IPCA...) |
+| `oferta.cronograma[]` | Cronograma de parcelas |
+
+Cada linha de `oferta.cronograma` tem:
+
+| Campo | O que é |
+| --- | --- |
+| `numero` | Número da parcela |
+| `vencimento` | Data de vencimento |
+| `amortizacao` | Amortização |
+| `juros` | Juros |
+| `parcela` | Valor da parcela |
+| `saldo` | Saldo devedor |
+
+Uma tabela de cronograma no Word, com uma linha por parcela:
+
+```text
+| {#oferta.cronograma}{numero} | {vencimento | data} | {amortizacao | moeda} | {juros | moeda} | {parcela | moeda} | {saldo | moeda}{/oferta.cronograma} |
+```
+
+Ponha a abertura `{#oferta.cronograma}` na primeira célula e o fechamento na última célula da mesma linha: a linha inteira se repete.
+
+### `emitente`
+
+| Variável | O que é |
+| --- | --- |
+| `emitente.tipo` | PF ou PJ |
+| `emitente.razaoSocial` | Razão social |
+| `emitente.nomeFantasia` | Nome fantasia |
+| `emitente.cnpj` | CNPJ |
+| `emitente.nome` | Nome (quando PF) |
+| `emitente.cpf` | CPF (quando PF) |
+| `emitente.email` | E-mail |
+| `emitente.telefone` | Telefone |
+| `emitente.endereco` | Endereço da sede (veja [Endereço](#endereço)) |
+| `emitente.qualificacao` | Qualificação em frase pronta |
+| `emitente.representantes[]` | Representantes (cada um é uma [Pessoa](#pessoa)) |
+| `emitente.clausulaRepresentacao` | Cláusula de representação |
+
+### `avalistas`, `intervenientes`, `conjuges`, `testemunhas`
+
+`avalistas[]` e `intervenientes[]` são listas de partes PF ou PJ: têm todos os campos de [Pessoa](#pessoa) e mais `tipo`, `razaoSocial`, `cnpj` e `representantes[]`. `conjuges[]` e `testemunhas[]` são listas de [Pessoa](#pessoa).
+
+### `conjugesQueAssinam`
+
+Um item por cônjuge que assina, sem repetir quem já apareceu.
+
+| Campo | O que é |
+| --- | --- |
+| `nome` | Nome |
+| `cpf` | CPF |
+| `conjugeDe` | Nome de quem é cônjuge |
+| `avalista` | Sim ou não: comparece como avalista |
+| `anuente` | Sim ou não: comparece como anuente (Código Civil, art. 1.647) |
+
+### `credora`
+
+| Variável | O que é |
+| --- | --- |
+| `credora.razaoSocial` | Razão social |
+| `credora.cnpj` | CNPJ |
+| `credora.endereco` | Endereço |
+| `credora.representantes[]` | Representantes |
+
+<Warning>
+  Os dados da credora não vêm de um cadastro: eles chegam por variáveis da esteira. Sem elas, qualquer tag `credora.*` do modelo bloqueia o contrato.
+</Warning>
+
+### `garantias`
+
+| Campo | O que é |
+| --- | --- |
+| `tipo` | Tipo da garantia |
+| `descricao` | Descrição |
+| `valor` | Valor, em reais |
+
+As garantias chegam pela esteira. A proposta não tem cadastro de garantias.
+
+### `bndes`
+
+Preenchido pela etapa Integração com o [pedido de financiamento no BNDES Online](/formalizacao/bndes).
+
+| Variável | O que é |
+| --- | --- |
+| `bndes.numeroContrato` | Número do contrato no BNDES |
+| `bndes.dataHomologacao` | Data de homologação |
+| `bndes.protocolo` | Protocolo |
+| `bndes.condicaoOperacional` | Condição operacional |
+
+### Raízes abertas
+
+| Raiz | De onde vem | Exemplo |
+| --- | --- | --- |
+| `api.<apelido>` | A saída de uma Chamada de API, pelo apelido que você deu | `{api.numeroContrato}` |
+| `esteira.<nome>` | Uma variável da execução da esteira | `{esteira.nomeDaVariavel}` |
+| `formulario.<campo>` | A resposta de um formulário | `{formulario.nomeDoCampo}` |
+| `documento.TIPO.campo` | Um campo extraído de um documento validado do cadastro | `{documento.TIPO.campo}` |
+
+Os nomes depois da raiz são os que você definiu na etapa, no formulário ou no tipo de documento. A plataforma não os conhece de antemão, então confira a grafia.
+
+Variáveis da esteira também preenchem as raízes `api`, `esteira`, `bndes`, `ccb`, `formulario`, `credora`, `garantias`, `documento` e `proposta`. Um nome solto, sem raiz conhecida, vira `esteira.<nome>`. Emitente, avalistas e oferta nunca são sobrescritos por variável da esteira.
+
+## Pessoa
+
+Emitente, representantes, avalistas, intervenientes, cônjuges e testemunhas compartilham estes campos:
+
+| Campo | O que é |
+| --- | --- |
+| `nome` | Nome |
+| `cpf` | CPF |
+| `rg` | RG |
+| `orgaoEmissor` | Órgão emissor |
+| `nascimento` | Data de nascimento |
+| `nacionalidade` | Nacionalidade |
+| `estadoCivil` | Estado civil |
+| `regimeBens` | Regime de bens |
+| `profissao` | Profissão |
+| `email` | E-mail |
+| `telefone` | Telefone |
+| `endereco` | Endereço (veja abaixo) |
+| `qualificacao` | Qualificação em frase pronta |
+| `papel` | Papel no contrato |
+| `conjuge` | O cônjuge, com os mesmos campos, mais `papel` (AVALISTA ou ANUENTE) e `assina` (sim ou não). Vazio quando o cônjuge não entra no contrato |
+| `conjugeTexto` | O cônjuge em uma frase, como " com João Souza, CPF nº 987.654.321-00". Vazio quando não há |
+
+Quem decide se o cônjuge entra no contrato é a [política de partes](/formalizacao/partes-e-assinaturas) da esteira. Por isso `{#conjuge}...{/conjuge}` e `{^conjuge}...{/conjuge}` são o jeito certo de escrever a qualificação: o mesmo modelo serve casado e solteiro.
+
+## Endereço
+
+| Campo | O que é |
+| --- | --- |
+| `logradouro` | Logradouro |
+| `numero` | Número |
+| `complemento` | Complemento |
+| `bairro` | Bairro |
+| `cidade` | Cidade |
+| `uf` | UF |
+| `cep` | CEP |
+| `completo` | Endereço completo em uma linha |
+
+`complemento` costuma faltar. Se o seu modelo usa, prefira `{endereco.complemento | padrao:""}` ou deixe o complemento dentro de `{endereco.completo}`.
+
+## Filtros
+
+Escreva depois da barra: `{variavel | filtro}`. Filtros com parâmetro usam dois-pontos: `{variavel | filtro:"parâmetro"}`.
+
+| Filtro | O que faz | Exemplo |
+| --- | --- | --- |
+| `moeda` | Valor em reais com símbolo | `{oferta.valor \| moeda}` → R$ 250.000,00 |
+| `decimal` | Número com milhar e vírgula, sem símbolo. Aceita casas: `decimal:4` | `{oferta.valor \| decimal}` → 250.000,00 |
+| `extenso` | Valor em reais por extenso | `{oferta.valor \| extenso}` → duzentos e cinquenta mil reais |
+| `numeroExtenso` | Número por extenso, sem moeda | `{oferta.prazo \| numeroExtenso}` → trinta e seis |
+| `data` | Data dd/mm/aaaa | `{oferta.primeiroVencimento \| data}` → 25/10/2026 |
+| `dataExtenso` | Data por extenso | `{ccb.dataEmissao \| dataExtenso}` → 25 de setembro de 2026 |
+| `formatoData` | Data em formato livre: `DD`, `D`, `MM`, `YYYY` e o mês por extenso (`mmmm`, `Mmmm`, `MMMM`) | `{hoje \| formatoData:"D de Mmmm de YYYY"}` → 23 de Setembro de 2026 |
+| `mesAno` | Mês e ano por extenso | `{ccb.dataEmissao \| mesAno}` → setembro de 2026 |
+| `cpf` | CPF com pontos e traço | `{cpf \| cpf}` → 123.456.789-09 |
+| `cnpj` | CNPJ com pontos, barra e traço | `{emitente.cnpj \| cnpj}` → 11.222.333/0001-81 |
+| `cep` | CEP com traço | `{endereco.cep \| cep}` → 88010-000 |
+| `percentual` | Percentual com vírgula. O valor já está em % | `{oferta.taxaMensal \| percentual}` → 2,50% |
+| `capitalizar` | Primeira letra maiúscula | `{oferta.valor \| numeroExtenso \| capitalizar}` → Duzentos e cinquenta mil |
+| `maiusculas` | Tudo em maiúsculas | `{nome \| maiusculas}` → MARIA SOUZA |
+| `minusculas` | Tudo em minúsculas | `{email \| minusculas}` |
+| `padrao` | Texto que entra quando o valor está vazio. Torna a variável não obrigatória | `{complemento \| padrao:"-"}` → - |
+
+Valor com extenso, do jeito que um contrato de crédito escreve:
+
+```text
+{oferta.valor | moeda} ({oferta.valor | extenso})
+→ R$ 250.000,00 (duzentos e cinquenta mil reais)
+```
+
+## Blocos prontos
+
+Copie e cole no Word. Os dois cobrem o caso mais trabalhoso de um contrato com aval: a qualificação dos cônjuges.
+
+**Qualificação com cônjuge / solteiro(a).** Um parágrafo por avalista, com o cônjuge quando ele entra no contrato e sem ele quando não entra.
+
+```text
+{#avalistas}{nome}, brasileiro(a), {#conjuge}{estadoCivil} sob o regime de {conjuge.regimeBens} com {conjuge.nome}, CPF {conjuge.cpf | cpf}{/conjuge}{^conjuge}{estadoCivil}{/conjuge}, {profissao}, CPF {cpf | cpf}, residente em {endereco.completo};{/avalistas}
+```
+
+**Cônjuges que assinam.** Um parágrafo por cônjuge que assina, como avalista ou como anuente.
+
+```text
+{#conjugesQueAssinam}{nome}, CPF {cpf | cpf}, cônjuge de {conjugeDe}, que comparece como {#avalista}avalista, obrigando-se solidariamente{/avalista}{^avalista}anuente, nos termos do art. 1.647 do Código Civil{/avalista};{/conjugesQueAssinam}
+```
+
+## Modelos antigos
+
+Modelos que a sua operação já usava antes continuam funcionando. Os nomes de variável antigos mais comuns (razão social, CNPJ, endereço, avalistas e cônjuges, valor total por extenso, datas de pagamento, número do contrato) são traduzidos automaticamente para o catálogo e aparecem como **Apelido do legado** na revisão do modelo. Para modelos novos, use os caminhos desta página.
+
+## Veja também
+
+- [Modelos de contrato](/formalizacao/modelos-de-contrato)
+- [Partes e assinaturas](/formalizacao/partes-e-assinaturas)
+- [Chamada de API](/esteiras/chamada-de-api)

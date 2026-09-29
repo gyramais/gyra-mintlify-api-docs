@@ -1,0 +1,163 @@
+---
+title: "Contratos no toolbox"
+description: "Subir e publicar modelos de contrato, configurar a etapa Contrato e assinatura e acompanhar o contrato de cada proposta na aba Contrato."
+icon: "file-contract"
+surface: plataforma
+domain: formalizacao
+audience: operador
+lang: nao-tecnica
+---
+
+Três lugares do toolbox cuidam do contrato: o menu **Modelos de contrato**, a etapa **Contrato e assinatura** no construtor da esteira e a aba **Contrato** de cada proposta.
+
+<Info>
+  **Resumo:** o jurídico sobe o Word e publica o modelo. Quem configura a esteira diz qual modelo usar e como assinar. O analista acompanha, resolve pendências e decide a etapa na proposta. Gerar e enviar o contrato é trabalho da esteira: não há botão manual para isso.
+</Info>
+
+<Note>
+  Estas telas fazem parte do módulo de Formalização. Sem o módulo, o menu não aparece e, no construtor da esteira, o atalho **Contrato e assinatura** aparece com cadeado. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Modelos de contrato
+
+Menu lateral, **Modelos de contrato**. A lista mostra cada modelo com **Versão**, **Situação**, **Papéis que assinam** e quando foi **Atualizado**. Filtre por tipo (CCB, Contrato, Aditivo, Termo, Outro) ou busque pelo nome.
+
+### Suba um modelo
+
+<Steps>
+  <Step title="Novo modelo">
+    Clique em **Novo modelo**. Informe **Nome do modelo** (ex.: "CCB Pré-fixada PME"), **Tipo** e o **Arquivo do Word (.docx)**. Clique em **Enviar modelo**.
+  </Step>
+  <Step title="Revise as variáveis">
+    O cartão **Variáveis do modelo** lista cada tag do Word, onde ela aparece (corpo, cabeçalho, rodapé) e a **Situação**. O filtro **Para revisar** mostra só o que precisa de você.
+  </Step>
+  <Step title="Mapeie o que ficou desconhecido">
+    Para cada tag **Desconhecida**, escolha em **Mapear para** um caminho do catálogo ou **Deixar em branco**. **Desfazer** volta atrás. Clique em **Salvar mapeamento**.
+  </Step>
+  <Step title="Confira papéis e numeração">
+    **Papéis que assinam** mostra quem recebe o contrato. **Número do contrato** define o **Tipo de numeração** e o **Formato**.
+  </Step>
+  <Step title="Pré-visualize">
+    Em **Pré-visualização**, escolha **Dados de exemplo** ou **Uma proposta** e clique em **Pré-visualizar PDF**. O que falta aparece destacado; o PDF de verdade sai limpo.
+  </Step>
+  <Step title="Publique">
+    Clique em **Publicar vN** e confirme. Os contratos gerados daí em diante usam esta versão; os que já foram gerados continuam com a versão com que nasceram.
+  </Step>
+</Steps>
+
+O botão de publicar fica desligado enquanto houver erro de sintaxe no Word ou tag desconhecida sem mapeamento. A explicação das situações de cada tag e das regras de publicação está em [Modelos de contrato](/formalizacao/modelos-de-contrato).
+
+### Outras ações no modelo
+
+| Ação | O que faz |
+| --- | --- |
+| **Catálogo de variáveis** | Abre o catálogo, com busca, grupos, exemplos, filtros e **Blocos prontos**. Copie a tag e cole no Word |
+| **Renomear** | Troca o nome de todas as versões |
+| **Enviar nova versão** | Sobe um Word novo como rascunho, levando os mapeamentos da versão anterior |
+
+O cartão **Arquivo** mostra a chave do modelo, a versão, o hash do arquivo e o link para baixar o Word.
+
+## A etapa Contrato e assinatura
+
+No construtor da esteira, a etapa **Contrato e assinatura** diz qual contrato gerar, quem assina, em que ordem e como cada papel confirma quem é. Veja [Etapas](/esteiras/etapas) para o construtor.
+
+| Bloco | O que você configura |
+| --- | --- |
+| **Qual contrato gerar** | Regras em ordem, cada uma com fórmula, modelo e rótulo. A primeira verdadeira escolhe o modelo. Em **Quando nenhuma regra vale**, escolha **Mandar para o analista escolher** ou **Gerar um modelo padrão** |
+| **Número do contrato** | Para modelos com numeração gerada por sistema externo: a saída de uma Chamada de API anterior (`api.<apelido>`) |
+| **Canal e prazo** | **Pela Assinatura Gyra** ou **Pela Clicksign**, conta Clicksign, prazo, lembrete |
+| **Fluxo de assinatura** | **Todos ao mesmo tempo** ou em etapas |
+| **Como cada papel confirma quem é** | Essencial, Reforçado ou Qualificado, e o canal do código |
+| **Credora e testemunhas** | Pessoas da sua instituição que assinam todo contrato desta esteira |
+
+As fórmulas usam a mesma sintaxe do **Roda se**, com as variáveis da oferta: por exemplo, `AND(oferta.indexador = "PRE", oferta.taxaMensal <= 2.5)`. Detalhes em [Partes e assinaturas](/formalizacao/partes-e-assinaturas#configure-a-assinatura).
+
+## A aba Contrato da proposta
+
+No detalhe da proposta, a aba **Contrato** mostra tudo o que acontece com o contrato daquela proposta.
+
+### Resumo
+
+Três indicadores no topo: **Contrato**, **Partes** e **Assinaturas**.
+
+| Situação do contrato | O que significa |
+| --- | --- |
+| **Ainda não gerado** (selo **Na fila**) | A esteira gera o PDF quando o quadro de partes fica completo |
+| **Gerado** | O PDF saiu e foi para assinatura |
+| **Bloqueado** | Faltam dados; a etapa está parada no analista |
+| **Assinado** | Todas as partes assinaram |
+| **Recusado** | Uma parte recusou |
+| **Cancelado** | O contrato foi cancelado |
+| **Vencido** | O prazo para assinar venceu |
+| **Substituído** | Um contrato novo tomou o lugar deste |
+
+O indicador **Partes** mostra quantas pessoas estão no contrato, quantas assinam e quantas pendências há.
+
+| Situação das assinaturas | O que significa |
+| --- | --- |
+| **Na fila** | Abrem quando o contrato é gerado |
+| **Em andamento** | Partes assinando. Mostra quantas já assinaram e, no fluxo em etapas, a etapa atual |
+| **Concluído** | Todos assinaram |
+| **Encerrado** | Fechou sem todas as assinaturas (por exemplo, prazo vencido) |
+| **Recusado** | Uma parte recusou |
+| **Cancelada** | O contrato foi cancelado |
+
+### Pendências
+
+Quando falta algo, a aba mostra o cartão **Geração bloqueada** (o contrato não saiu) ou **Pendências** (o que ainda precisa de atenção). Para cada item:
+
+| Ação | Quando usar |
+| --- | --- |
+| **Abrir cadastro** | O dado existe e está errado ou incompleto no cadastro da pessoa |
+| **Pedir ao cliente** | Só o cliente tem o dado ou o documento |
+| **Marcar como em branco no modelo** | A cláusula pode sair vazia de propósito |
+
+### Quadro de partes
+
+O **Quadro de partes** mostra cada pessoa, o papel, se assina, de onde veio a informação e a regra que a pôs ali. Em **Ajustar**, você muda uma parte com motivo, enquanto o contrato ainda não saiu. Veja [Partes e assinaturas](/formalizacao/partes-e-assinaturas#o-quadro-de-partes).
+
+Por parte, a assinatura aparece como:
+
+| Situação da parte | O que significa |
+| --- | --- |
+| **Pendente** | Ainda não assinou |
+| **Aguardando** | Esperando a vez ou o envio |
+| **Falta a identidade** | Falta concluir a verificação de identidade |
+| **Assinando** | Abriu o convite e está assinando |
+| **Assinou** | Assinou |
+| **Recusou** | Recusou a assinatura |
+| **Cancelado** | O contrato foi cancelado ou o prazo venceu |
+
+### Linha do tempo
+
+A linha do tempo registra geração, envio, cada assinatura e o desfecho. O último passo é **Formalizado**. Quando a assinatura fecha sem valer, o fim mostra o motivo: **Uma parte recusou**, **Contrato cancelado** ou **O prazo para assinar venceu**.
+
+### Ações
+
+| Ação | Quando aparece | O que faz |
+| --- | --- | --- |
+| **Gerar contrato de novo** | Contrato bloqueado | Gera com os dados de agora, mantendo o número |
+| **Gerar contrato novo** | A assinatura fechou sem valer (recusa, prazo ou cancelamento) | Gera outro contrato com o quadro de partes de agora |
+| **Reenviar aviso** | Contrato aberto na Clicksign | Avisa de novo quem ainda não assinou |
+| **Cancelar** | Contrato aberto na Clicksign | Abre **Cancelar o contrato?**; **Cancelar contrato** confirma |
+| **Via assinada** | Contrato assinado | Abre o PDF com as assinaturas |
+| **Abrir PDF** | Contrato gerado | Abre o PDF do contrato |
+| **Original (sem assinaturas)** | Contrato assinado | Abre o PDF como foi enviado |
+
+Com o contrato já enviado e ainda aberto, gerar de novo é recusado: "O contrato desta etapa já foi enviado para assinatura: decida a etapa."
+
+### Decida a etapa
+
+Com o contrato assinado, a esteira segue sozinha. Nos outros casos, o analista decide a etapa na execução:
+
+- Aprovar sem assinatura é recusado: "O contrato não foi assinado: gere de novo ou reprove a formalização."
+- Reprovar a formalização pula as etapas seguintes. O crédito continua aprovado; o que não seguiu foi a formalização.
+
+Veja [Acompanhar execuções](/toolbox/acompanhar-execucoes).
+
+## Veja também
+
+- [Formalização](/formalizacao/visao-geral)
+- [Variáveis do contrato](/formalizacao/variaveis-do-contrato)
+- [Clicksign](/formalizacao/clicksign)
+- [Propostas no toolbox](/toolbox/propostas)

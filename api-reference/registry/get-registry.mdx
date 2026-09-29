@@ -1,0 +1,21 @@
+---
+title: "Listar Cadastros"
+description: "Para varrer a carteira por situação: quem está com pendência, quem venceu, quem está em renovação."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: get /v1/registry
+---
+
+### Quando usar
+
+Para varrer a carteira por situação: quem está com pendência, quem venceu, quem está em renovação.
+
+<Warning>
+  Valor de `kycStatus` fora da lista é descartado pela validação, e a consulta devolve **a lista inteira** sem erro. Confira o valor antes de concluir qualquer coisa a partir do resultado.
+</Warning>
+
+<Note>
+  Contexto e vocabulário em [Cadastro documental](/kyc/cadastro-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+</Note>

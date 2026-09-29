@@ -1,0 +1,25 @@
+---
+title: "Preparar Upload de Documento"
+description: "Arquivo acima de 15 MB, ou quando você não quer segurar a conexão esperando o parecer."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: post /v1/registry/{id}/documents/presign
+---
+
+### Quando usar
+
+Arquivo acima de 15 MB, ou quando você não quer segurar a conexão esperando o parecer. Primeiro passo do envio assíncrono.
+
+### Como continuar
+
+Suba o arquivo direto na `uploadUrl` com um `PUT`, usando o mesmo `Content-Type` e o mesmo tamanho declarados. Depois chame [Confirmar upload](/api-reference/registry/post-registry-id-documents) com a `key` que veio aqui.
+
+<Warning>
+  Use a `key` exatamente como ela voltou. Montar a chave no cliente não funciona.
+</Warning>
+
+<Note>
+  Contexto e vocabulário em [Análise documental](/kyc/analise-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+</Note>

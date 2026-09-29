@@ -1,0 +1,160 @@
+---
+title: "Formalização"
+description: "Da oferta firme ao contrato assinado: a fase da esteira que gera o contrato, colhe as assinaturas e conversa com o BNDES e com o seu sistema."
+icon: "file-contract"
+surface: conceito
+domain: formalizacao
+audience: ambos
+lang: nao-tecnica
+---
+
+A formalização transforma um crédito aprovado em contrato assinado, sem Word editado à mão, sem PDF anexado em e-mail e sem planilha de quem já assinou.
+
+<Info>
+  **Resumo:** é a última fase da [esteira](/esteiras/visao-geral). Com o crédito aprovado, a esteira pode abrir uma Solicitação, chamar o BNDES ou o seu sistema, gerar o contrato a partir do seu modelo em Word e colher as assinaturas pela Assinatura Gyra ou pela Clicksign.
+</Info>
+
+<Note>
+  Formalização é um módulo contratado à parte, independente de Propostas. Clicksign e BNDES Online são conectores liberados separadamente. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Onde a formalização entra na esteira
+
+Uma esteira tem três fases: análise, decisão e formalização. Revisão, Comitê e Alçada vivem antes. A formalização só começa depois do resultado de crédito, e só quando ele saiu **aprovado** ou **em alerta**. Crédito reprovado não chega aqui.
+
+| Etapa | O que faz | Só existe na formalização? |
+| --- | --- | --- |
+| **Solicitação** | Pede ao cliente documentos, formulário ou dados que faltam para o contrato | Não |
+| **Integração** | Envia o pedido ao BNDES Online ou chama uma API sua ([Chamada de API](/esteiras/chamada-de-api)) | Os conectores do BNDES, sim |
+| **Contrato e assinatura** | Escolhe o modelo, gera o contrato e colhe as assinaturas | Sim |
+| **Fechamento externo** | Espera o seu sistema dizer que a operação foi liberada | Sim |
+
+O catálogo completo de etapas, com a configuração de cada uma, está em [Etapas](/esteiras/etapas).
+
+<Steps>
+  <Step title="O crédito sai aprovado">
+    A análise e a decisão terminam. Com resultado aprovado ou em alerta, a esteira entra na fase de formalização.
+  </Step>
+  <Step title="A oferta firme alimenta o contrato">
+    Valor, prazo, carência, taxas, CET, IOF, tarifas, parcela e vencimentos vêm da oferta que o cliente escolheu. Veja [Pré-aprovação e oferta](/propostas/pre-aprovacao-e-oferta).
+  </Step>
+  <Step title="As integrações rodam">
+    O BNDES recebe o pedido de financiamento e devolve o número do contrato. Uma Chamada de API pode trazer dados ou o número do contrato do seu sistema.
+  </Step>
+  <Step title="O contrato é gerado">
+    A etapa escolhe o [modelo de contrato](/formalizacao/modelos-de-contrato), preenche as [variáveis](/formalizacao/variaveis-do-contrato), numera e gera o PDF.
+  </Step>
+  <Step title="As partes assinam">
+    Quem assina sai da [política de partes](/formalizacao/partes-e-assinaturas) da esteira. A assinatura corre pela Assinatura Gyra ou pela [Clicksign](/formalizacao/clicksign).
+  </Step>
+  <Step title="A operação fecha">
+    Com o contrato assinado, a esteira segue. Se houver Fechamento externo, ela espera o seu sistema confirmar.
+  </Step>
+</Steps>
+
+## A oferta firme vira contrato
+
+O contrato não repete a conta: ele usa a oferta firme que a esteira guardou. Estas são as variáveis da oferta que chegam ao modelo:
+
+`oferta.valor`, `oferta.prazo`, `oferta.carencia`, `oferta.taxaMensal`, `oferta.taxaAnual`, `oferta.cet`, `oferta.iof`, `oferta.parcela`, `oferta.tarifas`, `oferta.indexador`, `oferta.sistema`, `oferta.primeiroVencimento`, `oferta.ultimoVencimento`.
+
+Quando uma regra da etapa Contrato depende de uma condição que o cliente escolhe (por exemplo, o indexador ou o prazo), a esteira precisa ter, antes, uma Pré-aprovação que espera a escolha do cliente. Sem ela, a condição ainda não existe no momento em que o contrato é gerado.
+
+## A formalização não muda a decisão de crédito
+
+Falhar na formalização não reprova o crédito. O selo da execução continua seguindo a decisão de crédito, e enquanto a fase roda a execução aparece como **Em formalização**.
+
+Isso separa duas perguntas que costumam se misturar:
+
+- **O crédito foi aprovado?** Responde a análise e a decisão.
+- **O contrato foi assinado?** Responde a formalização.
+
+Uma parte que recusa assinar, ou um prazo de assinatura que vence, encerra a formalização sem mexer na aprovação do crédito.
+
+## O que segura o contrato
+
+O contrato nunca sai com lacuna. Se falta um dado que o modelo pede, a etapa para no analista com a lista do que falta:
+
+> O contrato não foi gerado: faltam X, Y... Corrija e reenvie.
+
+Os motivos mais comuns:
+
+| O que falta | Como resolver |
+| --- | --- |
+| Uma variável sem valor (CPF do cônjuge, endereço, profissão) | Corrigir o cadastro, pedir ao cliente ou marcar a variável como em branco no modelo |
+| Uma parte sem e-mail ou celular | Completar o contato no cadastro |
+| Pendência no quadro de partes (procuração, alvará, responsável legal) | Resolver o documento ou ajustar o quadro com motivo |
+| O número do contrato de um sistema externo não veio | Conferir a Chamada de API que traz o número |
+
+O número do contrato fica reservado enquanto a etapa está bloqueada. Corrigido o problema, **Gerar contrato de novo** gera com os dados de agora e mantém o número.
+
+## Os desfechos da etapa Contrato e assinatura
+
+| Situação | O que acontece |
+| --- | --- |
+| Todas as partes assinaram | A esteira segue para a próxima etapa |
+| Contrato bloqueado por falta de dado | A etapa para no analista até a correção |
+| Uma parte recusou, o prazo venceu ou o contrato foi cancelado | A assinatura fecha sem valer. O analista pode **Gerar contrato novo** ou reprovar a formalização |
+| O analista reprova a formalização | As etapas seguintes são puladas |
+| A proposta foi encerrada (cancelada, rejeitada ou vencida) | As execuções em andamento fecham e as etapas pendentes são puladas |
+
+Duas travas protegem a decisão do analista:
+
+- Com um contrato já enviado e ainda aberto, não dá para gerar de novo: "O contrato desta etapa já foi enviado para assinatura: decida a etapa."
+- Aprovar a etapa sem assinatura é recusado: "O contrato não foi assinado: gere de novo ou reprove a formalização."
+
+## Para quem integra
+
+| Você quer | Como |
+| --- | --- |
+| Saber quando a execução muda | O webhook `OPERATION` da execução. Não existe um evento próprio de contrato. Veja [Execuções](/esteiras/execucoes) |
+| Registrar a escolha da oferta pelo seu canal | `POST /v1/proposals/:id/offers/:offerId/choose`. Veja [Pré-aprovação e oferta](/propostas/pre-aprovacao-e-oferta) |
+| Dizer à esteira que a operação foi liberada | `POST /operation/close`, usado pela etapa Fechamento externo |
+| Trazer o número do contrato do seu sistema | Uma [Chamada de API](/esteiras/chamada-de-api) antes da etapa Contrato, com uma saída `api.<apelido>` |
+
+Os modelos de contrato e a política de partes são configurados no toolbox. Eles não têm API pública.
+
+## Cobrança
+
+Não há item de cobrança próprio do contrato. A assinatura pela Assinatura Gyra é cobrada por parte que assinou, como evento de assinatura do módulo de Cadastros e Solicitações. A assinatura pela Clicksign é paga pela sua organização direto na sua conta Clicksign.
+
+## Contrato e termo não são a mesma coisa
+
+A plataforma tem dois jeitos de colher assinatura, e eles resolvem problemas diferentes.
+
+| | [Termos e assinatura](/kyc/termos-e-assinatura) | Formalização |
+| --- | --- | --- |
+| O que é | Termo avulso: consentimento, autorização, declaração | Contrato de crédito: CCB, contrato, aditivo |
+| Modelo | Markdown no editor ou PDF com campos posicionados | O seu Word (.docx), com variáveis, repetições e condições |
+| Dados | Variáveis do termo | Catálogo de crédito: CCB, oferta, cronograma, avalistas, cônjuges, credora, BNDES |
+| Quem dispara | Você, numa Solicitação | A esteira, na etapa Contrato e assinatura |
+| Quem assina | Signatário, testemunha, interveniente | Papéis de crédito decididos pela política de partes |
+| Ordem | Uma pessoa (individual) ou várias no mesmo documento (conjunta) | Em paralelo ou em etapas, por papel |
+| Identidade | Código por e-mail, com verificação de identidade opcional | Três níveis por papel |
+| Canal | Página da Gyra | Assinatura Gyra ou Clicksign |
+| Numeração | Não tem | Sem numeração, sequencial ou vinda do seu sistema |
+
+Por baixo, os dois usam o mesmo trilho: o contrato gerado vira um item de assinatura conjunta numa Solicitação aberta pela esteira.
+
+## Continue
+
+<CardGroup cols={2}>
+  <Card title="Modelos de contrato" icon="file-word" href="/formalizacao/modelos-de-contrato">
+    Suba o seu Word, revise as variáveis e publique.
+  </Card>
+  <Card title="Variáveis do contrato" icon="brackets-curly" href="/formalizacao/variaveis-do-contrato">
+    O catálogo completo, com filtros e blocos prontos.
+  </Card>
+  <Card title="Partes e assinaturas" icon="users" href="/formalizacao/partes-e-assinaturas">
+    Quem entra no contrato, quem assina e em que ordem.
+  </Card>
+  <Card title="Clicksign" icon="signature" href="/formalizacao/clicksign">
+    Assine pela sua conta Clicksign.
+  </Card>
+  <Card title="BNDES" icon="building-columns" href="/formalizacao/bndes">
+    Impedimentos, financiamento e contratação no BNDES Online.
+  </Card>
+  <Card title="Contratos no toolbox" icon="window" href="/toolbox/contratos">
+    Modelos de contrato e a aba Contrato da proposta.
+  </Card>
+</CardGroup>

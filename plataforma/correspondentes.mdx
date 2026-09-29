@@ -1,0 +1,118 @@
+---
+title: "Correspondentes"
+description: "Credencie correspondentes para originar crédito em seu nome: produtos que cada um oferece, área de atuação, agentes e bloqueio, tudo pela tela Correspondentes."
+icon: "handshake"
+surface: plataforma
+domain: plataforma
+audience: operador
+lang: nao-tecnica
+---
+
+O canal de correspondentes deixa parceiros credenciados originarem crédito para a sua instituição, cada um com os produtos, a região e as pessoas que você autorizou.
+
+<Info>
+  **Resumo:** na tela **Correspondentes** você cadastra a empresa parceira, escolhe os produtos que ela oferece, delimita onde ela atua e cria os usuários (agentes) que digitam as propostas. Os agentes entram num portal próprio do parceiro, separado do Toolbox. Bloquear um correspondente para a originação na hora, sem apagar o histórico.
+</Info>
+
+<Note>
+  Correspondentes é um módulo contratado à parte. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Onde fica e quem acessa
+
+Menu lateral, grupo **Operação**, item **Correspondentes**. A tela aparece para quem gerencia as configurações da organização (Administrador), e só quando a organização tem o módulo. Sem o módulo, o item não aparece (não há cadeado).
+
+## Como funciona o canal
+
+<Steps>
+  <Step title="Você credencia o correspondente">
+    Cadastra a empresa pelo CNPJ e configura produtos, área de atuação e usuários.
+  </Step>
+  <Step title="O agente entra no portal do parceiro">
+    Cada usuário recebe um e-mail para criar a senha do **portal do parceiro**. O acesso ao portal é separado do Toolbox: uma conta de um não entra no outro.
+  </Step>
+  <Step title="O correspondente origina">
+    Pelo portal, o correspondente abre operações só com os produtos e dentro da área que você liberou, preenchendo o modelo de cadastro de cada produto.
+  </Step>
+  <Step title="A sua esteira analisa">
+    A proposta segue a esteira do produto, com as mesmas regras de qualquer outra origem. Ver [Propostas](/propostas/visao-geral) e [Esteiras](/esteiras/visao-geral).
+  </Step>
+</Steps>
+
+## Credenciar um correspondente
+
+A lista mostra cada correspondente com **Produtos**, **Área**, **Usuários ativos**, **Prontidão** e **Situação**. Use a busca *Buscar por nome ou CNPJ* e o filtro de situação (**Ativos**, **Bloqueados**, **Todos**).
+
+<Steps>
+  <Step title="Cadastrar correspondente">
+    Informe o **CNPJ** e o **Nome da empresa** (pelo menos 3 caracteres). O CNPJ é conferido pelo dígito verificador, inclusive no formato alfanumérico. Ao salvar: *Correspondente cadastrado. Agora configure produtos, área e usuários.*
+  </Step>
+  <Step title="Configurar no detalhe">
+    Clique no correspondente para abrir o detalhe e editar cada seção: dados, produtos, área de atuação e usuários.
+  </Step>
+</Steps>
+
+### Produtos
+
+Escolha os produtos que o correspondente pode oferecer. Cada produto entra com o **modelo de cadastro** que o correspondente preenche ao digitar a proposta.
+
+Produto sem modelo de cadastro aparece com o aviso *Sem modelo de cadastro: não abre operação*. A esteira que analisa a proposta não se configura aqui: ela vem do próprio produto ou do modelo de cadastro. Ver [Produtos](/propostas/produtos).
+
+### Área de atuação
+
+Delimite onde o correspondente pode originar, por **municípios** e por **faixas de prefixo de CEP** (de 2 a 8 dígitos). A área vale para todos os usuários do correspondente, e o endereço cadastral da empresa tomadora é conferido quando a operação é criada. Sem área definida, o correspondente atua em **qualquer lugar**.
+
+### Usuários (agentes)
+
+Os agentes são as pessoas do correspondente que digitam as propostas. Para adicionar, informe **nome completo**, **e-mail** e **CPF**.
+
+- O agente recebe por e-mail o convite para criar a senha do portal do parceiro. O link leva ao portal, não ao login do Toolbox.
+- Se o convite não sair, a tela avisa: *Agente criado, mas o convite não saiu. Peça para ele usar "Esqueci minha senha" no portal.*
+- **Bloquear um usuário** preserva a leitura: ele continua vendo as operações dele, mas não inicia novas.
+
+### Administrador do correspondente
+
+Marque um agente com **Tornar administrador** para que ele gerencie os usuários do próprio correspondente pelo portal. A instituição marca o primeiro administrador; depois, ele mesmo cuida da equipe pelo portal. **Remover administrador** desfaz.
+
+## Pronto para originar
+
+A coluna **Prontidão** mostra **Pronto** quando o correspondente tem tudo para trabalhar, e **Incompleto** quando falta algo. Para estar pronto, ele precisa:
+
+- não estar bloqueado;
+- ter ao menos um produto com modelo de cadastro;
+- ter ao menos um usuário ativo.
+
+A prontidão é um aviso para você. A conferência que vale é feita quando o agente tenta abrir a operação.
+
+## Bloquear um correspondente
+
+**Bloquear** interrompe a originação de uma vez: o correspondente e todos os agentes dele continuam lendo a carteira, mas não criam novas operações. **Desbloquear** devolve o acesso. Nada é apagado.
+
+## Autorização do SCR no canal
+
+Numa proposta que chega pelo canal de correspondentes, a solicitação da esteira **pede de novo** a autorização de consulta ao SCR, mesmo que o CNPJ já tenha uma autorização válida na sua organização: o sócio informado assina a cada proposta. Fora do canal, a regra de reaproveitar a autorização existente não muda.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="O correspondente acessa o Toolbox?">
+    Não. Os agentes entram no portal do parceiro, com acesso próprio. Um login do Toolbox não entra no portal, e um login do portal não entra no Toolbox.
+  </Accordion>
+  <Accordion title="Posso apagar um correspondente?">
+    Use **Bloquear**. O histórico de operações do correspondente continua disponível para consulta.
+  </Accordion>
+  <Accordion title="Quem vê as operações de um agente bloqueado?">
+    O próprio agente continua vendo as operações dele, só não abre novas. O bloqueio não apaga nada do que ele já originou.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Produtos" icon="box" href="/propostas/produtos">
+    O que o correspondente oferece.
+  </Card>
+  <Card title="Esteiras" icon="diagram-project" href="/esteiras/visao-geral">
+    Como a proposta é analisada.
+  </Card>
+</CardGroup>

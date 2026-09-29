@@ -40,7 +40,7 @@ flowchart LR
 
 <Steps>
   <Step title="Fontes de dados" icon="database">
-    De onde vêm os dados que esta política usa. Começa pelo **Relatório base**, que define o tipo de documento (CPF ou CNPJ) e o nível da análise, e a partir dele você liga só as fontes que fizerem sentido. **Esta etapa destrava as outras**: o Relatório base é o que determina quais variáveis existem para escrever regra em cima.
+    De onde vêm os dados que esta política usa. Começa pelo **Relatório base**, que define o nível da análise, e pelo tipo de documento (toda política é de CPF **ou** de CNPJ), e a partir deles você liga só as fontes que fizerem sentido. **Esta etapa destrava as outras**: o Relatório base é o que determina quais variáveis existem para escrever regra em cima.
   </Step>
   <Step title="Minhas variáveis" icon="code">
     Fórmulas reutilizáveis criadas por você, referenciadas por `#nome` em qualquer regra, faixa de risco ou fórmula de preço. Serve para escrever uma vez o cálculo que a sua casa repete em toda política.
@@ -71,13 +71,15 @@ A primeira etapa é uma lista de cartões que você liga ou desliga. Só o que e
 
 | Fonte | O que faz |
 | ----- | --------- |
-| **Relatório base** | Obrigatório. Tipo de documento (CPF ou CNPJ) e nível: **Simples**, **Essencial**, **Completo** ou **Completo+**. Define o conjunto de dados e, por consequência, as variáveis disponíveis. |
+| **Relatório base** | Uma escolha só: **Simples**, **Essencial**, **Completo** ou **Completo+**, ou, fora da fileira, **Nenhum. A política entra num relatório que já existe** (a política de camada, usada na etapa Aprofundar da esteira, que consulta só as fontes escolhidas sem gerar relatório novo). Junto, o tipo de documento: CPF ou CNPJ. Define o conjunto de dados e, por consequência, as variáveis disponíveis. |
 | **Bureau de crédito** | Escolha **única** entre os bureaus disponíveis, ou nenhum. Detalhe das opções em [Bureau de Crédito](/sources/bureau-credito#qual-bureau-usar). |
 | **SCR, Banco Central** | Endividamento no sistema financeiro. Ver [SCR / Open Finance](/sources/scr-open-finance). |
 | **Cenprot** | Protestos em nível nacional, direto da Central Nacional de Protestos, com cobertura mais completa que a do bureau. Fonte adicional. Ver [Protestos](/sources/protestos#como-escolher-a-fonte). |
 | **Núclea** | Indicadores baseados em transações reais (antiga CIP), selecionados individualmente. Só PJ. Fonte adicional. Ver [Inteligência de Pagamentos](/sources/inteligencia-pagamentos). |
 | **Balanço patrimonial** | Habilita as variáveis de balanço nas condições e fórmulas desta política. Ver [Análise Financeira](/concepts/analise-financeira). |
-| **Bases externas** | Dados próprios da sua organização, configurados em *Configurações de integrações*, disponíveis como variáveis. |
+| **Consultas adicionais** | Add-ons individuais de bureau, de empresa ou de pessoa física (pendências financeiras, protestos, ações cíveis, score, renda presumida, entre outros). Cada um entra como um bloco no relatório. Ver [Bureau de Crédito](/sources/bureau-credito#consultas-adicionais-add-ons). |
+| **Indicadores do SCR** | Recortes do endividamento no sistema financeiro (dívida em aberto, meses em aberto, quantidade de credores, carteiras por modalidade), só para CNPJ. São os únicos add-ons que viram regra, sempre por faixa. Ver [SCR e Open Finance](/sources/scr-open-finance#indicadores-do-scr). |
+| **Bases externas** | Dados próprios da sua organização, configurados em *Configurações, Fontes de dados*, disponíveis como variáveis. |
 
 <Warning>
   Sem **Relatório base** definido, as demais etapas ficam bloqueadas: não há variáveis para escrever condição, faixa ou fórmula. É sempre o primeiro passo.
@@ -88,8 +90,31 @@ A primeira etapa é uma lista de cartões que você liga ou desliga. Só o que e
 </Note>
 
 <Tip>
-  Cenprot e Núclea são **fontes adicionais**, com custo por consulta além do relatório base. Ligue quando o dado for mudar a decisão, não por padrão. As demais fontes acompanham o nível do relatório contratado.
+  Cenprot, Núclea, as consultas adicionais e os Indicadores do SCR são **fontes adicionais**, com custo por consulta além do relatório base. Ligue quando o dado for mudar a decisão, não por padrão. As demais fontes acompanham o nível do relatório contratado.
 </Tip>
+
+### Cada condição precisa de uma fonte declarada
+
+Uma regra só pode avaliar um dado que alguma fonte da política traz. Se você escreve uma condição de score e a política não declara nenhum bureau nem um add-on de score, o editor avisa e não salva: *A camada não pode ser salva enquanto essa regra estiver sem fonte.* O seletor de regra também diz o que falta, por exemplo *Escolha um bureau nas Fontes de dados.* ou *Declare o add-on "Quantidade de credores" nas Fontes de dados.*
+
+Pela API, salvar uma política nessa situação devolve `422` com a condição e a fonte que falta:
+
+```text
+A condição "Score mínimo" precisa do add-on "Score de crédito (empresa)", que esta política não declara. Declare essa fonte nas Fontes de dados ou remova a condição.
+```
+
+A análise consulta exatamente as fontes declaradas. Uma regra de score não liga, por baixo, todos os bureaus: ela exige que você escolha a fonte.
+
+### Dados de entrada nas regras
+
+Além das fontes, uma regra pode usar os **dados de entrada** do caso: o que chegou pela proposta, pelo formulário, pelos documentos ou pelas verificações. Eles aparecem no seletor de fórmula como variáveis `inputs.<chave>`, com o rótulo *Dado de entrada: ...*, agrupadas em **Proposta**, **Formulário**, **Documentos** e **Verificações**.
+
+- A política só espera os dados de entrada quando alguma regra os usa.
+- Dado de entrada ausente deixa a regra em erro (*Indisponível*), em vez de aprovar ou negar por acidente.
+- Uma fórmula não mistura dado de entrada com outra fonte: o editor recusa ao salvar.
+- No relatório, os valores aparecem na seção **Dados de entrada**, legíveis (Sim/Não, datas, valores em reais).
+
+Detalhes em [Dados de entrada](/esteiras/dados-de-entrada).
 
 ---
 
@@ -104,7 +129,7 @@ A primeira etapa é uma lista de cartões que você liga ou desliga. Só o que e
 | `ALERT` | 5 | Requer revisão manual |
 | `NOT_APPLIED` | 8 | Regra não aplicável ao documento |
 
-Esse é o `policyStatus` retornado em todo relatório. Se ele deve ou não virar o `status` do relatório depende da configuração da política — veja [Status do relatório × Status da política](/concepts/relatorio#status-do-relat%C3%B3rio-status-da-pol%C3%ADtica).
+Esse é o `policyStatus` retornado em todo relatório. Se ele deve ou não virar o `status` do relatório depende da configuração da política. Veja [Status do relatório × Status da política](/concepts/relatorio#status-do-relat%C3%B3rio-status-da-pol%C3%ADtica).
 
 ---
 
@@ -135,7 +160,7 @@ O comitê só é convocado depois que os pareceres por seção e o resultado da 
   Com **"Usar resultado da política no relatório"** ligado, o comitê só é convocado quando a política **aprova**. Política rejeitada não vai a comitê (o relatório fica com o comitê em `SKIPPED`, e ainda assim pode ser levado a comitê manualmente).
 </Note>
 
-Nos planos **Business** e **Enterprise**, a mesma tela permite escrever **instruções adicionais por agente**, com o apetite de risco e os critérios internos da sua instituição. Detalhes em [Comitê de Crédito IA](/concepts/comite-de-credito#instru%C3%A7%C3%B5es-da-sua-institui%C3%A7%C3%A3o-nos-agentes).
+Com o recurso de instruções do comitê habilitado na organização, a mesma tela permite escrever **instruções adicionais por agente**, com o apetite de risco e os critérios internos da sua instituição. Detalhes em [Comitê de Crédito IA](/concepts/comite-de-credito#instru%C3%A7%C3%B5es-da-sua-institui%C3%A7%C3%A3o-nos-agentes).
 
 ---
 
@@ -182,6 +207,20 @@ A faixa em que o score final cair determina o `statusToApply` configurado em `Ri
 
 ---
 
+## Versões da política
+
+Cada relatório registra a versão da política que rodou, e a versão só sobe quando algo que **afeta a decisão** muda.
+
+| Mudança | Versão |
+| --- | --- |
+| Regras e condições, faixas de risco, fórmulas de preço, fontes de dados, add-ons | Sobe 0,01 |
+| Nome, ligar ou desligar, parecer, permissões | Não muda |
+| Editar ou excluir uma variável sua (`#nome`) | Sobe a versão de **todas** as políticas ativas que a usam, de uma vez |
+
+Assim, rodar a análise de novo no mesmo dia depois de mudar a regra gera um resultado com a versão nova, e nunca mistura regras diferentes sob o mesmo número.
+
+---
+
 ## Opções de uso
 
 Você tem três formas de trabalhar com políticas:
@@ -198,7 +237,7 @@ Você tem três formas de trabalhar com políticas:
   </Card>
 </CardGroup>
 
-Para criar ou editar políticas pelo painel, acesse **Políticas de Decisão** no menu do Toolbox.
+Para criar ou editar políticas pelo painel, acesse **Motor de crédito**, **Políticas** no menu do Toolbox.
 Para gerenciar via API, veja a [referência do endpoint de políticas](/api-reference/credit-policypolicy/get-credit-policypolicy).
 
 <Note>

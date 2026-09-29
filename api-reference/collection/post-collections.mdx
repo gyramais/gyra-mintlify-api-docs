@@ -1,0 +1,29 @@
+---
+title: "Criar Solicitação"
+description: "Você quer que o próprio cliente entregue o que falta."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: post /v1/collections
+---
+
+### Quando usar
+
+Você quer que o próprio cliente entregue o que falta. Escolha o modelo, o cadastro e os destinatários.
+
+### O cadastro é obrigatório
+
+Por `document` (o cadastro é resolvido ou criado) **ou** por `registryId`. Um dos dois.
+
+### Canal `NONE`: você entrega o link
+
+A plataforma não avisa ninguém. A solicitação é criada, os links voltam em `links[]`, e o lembrete também não sai. É o caminho para quem já fala com o cliente pelo canal próprio.
+
+### O que o cadastro já tem não é pedido de novo
+
+Para pedir mesmo assim, liste as chaves de item em `forceItemKeys`.
+
+<Note>
+  Contexto e vocabulário em [Solicitações de coleta](/kyc/solicitacoes). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+</Note>

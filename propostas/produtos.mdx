@@ -1,0 +1,118 @@
+---
+title: "Produtos e carteiras"
+description: "O catálogo das suas linhas de crédito: quem pode pedir, quanto, em quanto tempo, a que taxa, com quais documentos e qual análise roda. E as carteiras que agrupam tudo."
+icon: "box"
+surface: conceito
+domain: proposta
+audience: ambos
+lang: nao-tecnica
+---
+
+Um produto é uma linha de crédito da sua organização descrita uma vez só: para quem é, quanto pode ser pedido, a estrutura financeira, os documentos exigidos e a análise que roda. Com o produto bem montado, cada pedido já nasce com as regras certas, sem ninguém digitar condições à mão.
+
+<Info>
+  **Resumo:** o produto define valor, prazo, taxa, carência, documentos e análise. A proposta **congela** o produto do dia em que nasce. Carteiras são opcionais e agrupam produtos para você acompanhar volume em análise e volume emitido.
+</Info>
+
+<Note>
+  Produtos fazem parte do módulo de Propostas, contratado à parte, e só aparecem para quem pode gerenciar a política de crédito. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## O que um produto configura
+
+| Parte | O que decide |
+| --- | --- |
+| **Chave** | O identificador estável do produto. Formulários e esteiras apontam para ele |
+| **Nome** | Como o produto aparece para você e para o cliente |
+| **Tipo** | **Financiamento** ou **Venda a prazo** |
+| **Finalidade** | O objetivo de crédito, vindo do catálogo de objetivos da [política de crédito](/concepts/politica-de-credito) |
+| **Carteira** | Onde o produto é agrupado (obrigatória quando as carteiras estão ligadas) |
+| **Atende** | Pessoa jurídica, pessoa física ou os dois |
+| **Valor do produto** | Fixo, faixa ou livre, e se o cliente vê a faixa |
+| **Estrutura financeira** | Amortização, periodicidade, taxa, carência, encargos, base de dias e limites de prazo. Veja [Precificação](/propostas/precificacao) |
+| **Documentos** | O que o cliente precisa enviar, somado ao que o modelo do formulário já pede |
+| **Ao concluir** | A política ou a esteira que roda quando os documentos chegam |
+
+### A chave não muda
+
+A chave é o que formulários e fórmulas de esteira citam (por exemplo, `produto = "CAPGIRO"` numa condição). Por isso ela é única na organização e não muda depois de criada. Use letras, números, `-` e `_`, sem espaço, com até 60 caracteres. O nome aceita até 120 caracteres.
+
+### Para quem o produto é
+
+**Atende** limita o público: o formulário público só oferece o produto a quem se identifica com o tipo de documento certo (CNPJ para pessoa jurídica, CPF para pessoa física). Com **Os dois**, qualquer documento serve.
+
+### Como o valor é definido
+
+| Modo | Como funciona | Quando usar |
+| --- | --- | --- |
+| **Fixo** | O valor do catálogo manda. O pedido digitado é guardado, mas a proposta nasce com o valor do produto | Kit de equipamento, pacote com preço fechado |
+| **Faixa** | Valor mínimo e máximo. Pedido fora da faixa não é recusado: a proposta nasce com um alerta | Capital de giro de R$ 50 mil a R$ 500 mil |
+| **Livre** | Qualquer valor | Linhas sem teto de catálogo |
+
+A opção **Mostrar a faixa de valor para quem preenche** vale para o formulário público e para a página da oferta. Desligada, o cliente não vê a faixa: vê só um valor.
+
+Os limites de prazo (mínimo e máximo, em meses) ficam na estrutura financeira. Uma simulação fora deles é recusada com a mensagem do limite.
+
+### Documentos e análise do produto
+
+Os documentos do produto são **acrescentados** aos do modelo do formulário. Assim, um único formulário pode oferecer capital de giro e financiamento de veículo, e cada um pede só o que precisa. Pedir documentos exige o módulo de Onboarding; sem ele, os documentos do produto são ignorados.
+
+Em **Ao concluir**, o produto pode sobrepor o que o modelo dispara quando os documentos chegam: uma política (gera um relatório) ou uma esteira. Deixe **O que o modelo do formulário dispara** para seguir o modelo. Veja [Esteiras](/esteiras/visao-geral).
+
+## Começar de um modelo
+
+Você não precisa montar a estrutura financeira do zero. **Começar de um modelo** preenche tudo a partir de um formato de mercado, e você ajusta os números depois:
+
+- Capital de giro pré-fixado
+- Capital de giro pós-fixado (CDI)
+- Repasse BNDES (TLP), (Taxa Fixa) e (LCD)
+- Programa com fundo garantidor
+- Crédito rural (periodicidade anual)
+- Imobiliário
+- Venda parcelada sem juros
+- Venda com juros do lojista
+- Bullet
+
+Os modelos de repasse BNDES já vêm com carência de até 24 meses e juros pagos a cada 3 meses.
+
+## Ligar e desligar
+
+Desligar um produto o tira do formulário e impede pedidos novos. Propostas que já o congelaram não mudam. Ao religar, a GYRA+ confere de novo a carteira (ela precisa estar ligada, se as carteiras estiverem em uso).
+
+## Carteiras
+
+Carteiras agrupam produtos para você enxergar a operação por linha de negócio, por exemplo "Capital de giro", "Repasse BNDES" e "Varejo". Elas são **opcionais** e começam desligadas.
+
+Com as carteiras ligadas, cada carteira mostra:
+
+| Número | O que soma |
+| --- | --- |
+| **Produtos** | Quantos produtos estão nela |
+| **Em análise** | Valor das propostas **Em análise**, **Esperando o cliente** e **Esperando você** |
+| **Emitido 30d** | Valor das propostas que chegaram a **Oferta emitida** nos últimos 30 dias |
+
+O valor de cada proposta é o valor de catálogo, quando o produto tem valor fixo, ou o valor pedido. Os números usam a carteira **congelada na proposta**: mover um produto de carteira não reescreve o passado.
+
+### Regras das carteiras
+
+- **Ao ligar**, todo produto sem carteira vai para a carteira **Geral** (a existente com esse nome ou uma nova).
+- **Com carteiras ligadas**, todo produto precisa de uma carteira, e carteira desligada não pode ser escolhida.
+- **Ao desligar**, nada é apagado: as carteiras e os vínculos ficam guardados para quando você ligar de novo.
+- **Renomear** não muda o passado: a proposta guarda o nome do dia em que nasceu.
+- **Excluir** só funciona com a carteira vazia, sem nenhum produto (ligado ou desligado). Mova os produtos antes. A carteira sai das listas, e as propostas que nasceram nela continuam com o nome gravado.
+- O nome da carteira aceita até 80 caracteres.
+
+## Pela API
+
+Produtos, carteiras, modelos de estrutura financeira, índices de mercado e simulação têm rotas na API. Valores vão em **centavos** e taxas em **pontos-base** ao ano (10.000 = 100%). Veja [API de Propostas](/api-reference/propostas/visao-geral).
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Precificação" icon="calculator" href="/propostas/precificacao">
+    Como a estrutura financeira vira taxa, parcela e CET.
+  </Card>
+  <Card title="Produtos no toolbox" icon="box-open" href="/toolbox/produtos">
+    O editor de produto, a simulação ao vivo e a tela de carteiras.
+  </Card>
+</CardGroup>

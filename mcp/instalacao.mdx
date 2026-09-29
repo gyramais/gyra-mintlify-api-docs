@@ -14,7 +14,7 @@ lang: tecnica
 
 ## Entre com o seu login
 
-Não existe credencial de MCP para pedir ao suporte. Suas credenciais são as que você já tem:
+Não existe credencial específica de MCP. Suas credenciais são as que você já tem:
 
 | Campo | O que informar |
 | ----- | -------------- |
@@ -233,8 +233,8 @@ console.log(tools);
 
 Depois de conectar, no cliente MCP:
 
-1. Pergunte: *"quais tools da gyra estão disponíveis?"* — deve listar `create_report`, `list_reports`, `list_policies`, etc.
-2. Pergunte: *"quais políticas tenho ativas?"* — deve chamar `list_policies` e retornar a lista.
+1. Pergunte: *"quais tools da gyra estão disponíveis?"*, deve listar `create_report`, `list_reports`, `list_policies`, etc.
+2. Pergunte: *"quais políticas tenho ativas?"*, deve chamar `list_policies` e retornar a lista.
 
 Se as tools não aparecem, consulte [Troubleshooting](/mcp/troubleshooting).
 
@@ -294,7 +294,7 @@ Quando o stdio for necessário:
     Não. A sessão do MCP carrega o seu usuário e o seu papel. Se você não enxerga um relatório no toolbox, o agente também não enxerga; se você não tem permissão para gerenciar políticas, a tool correspondente falha do mesmo jeito que a tela falharia.
   </Accordion>
   <Accordion title="Preciso pedir credenciais ao suporte?">
-    Não para o MCP: use o seu login da plataforma. Credenciais emitidas pelo suporte continuam existindo para **integrações servidor a servidor** na API REST, que é outro caso de uso. Ver [API Keys](/toolbox/webhooks-e-api-keys).
+    Não. O MCP usa o seu login da plataforma. As credenciais de **integração servidor a servidor** na API REST são outro caso de uso, e você mesmo as gera em *Configurações, API & MCP*. Ver [Chaves de API](/api-reference/api-keys).
   </Accordion>
   <Accordion title="Uso SSO (Google ou Microsoft). Como conecto?">
     Este fluxo exige senha. Se você nunca definiu uma, fale com o administrador da sua organização antes de configurar o MCP.

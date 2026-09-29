@@ -58,6 +58,16 @@ lang: tecnica
 | `401` | `"Você não tem permissão para reanalisar esse relatório."` | **Verificado.** Credencial de integração não reanalisa; exige usuário com alçada de revisão. |
 | `401` | `"Não autorizado."` | Acesso negado sem detalhamento. |
 
+### Módulo não contratado
+
+A rota existe, mas a sua organização não tem o módulo. O `403` é proposital (e não `404`), para você saber que não é um endereço errado. Não repita: é configuração de conta. Ver [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+
+| Código | Mensagem | Causa |
+|---|---|---|
+| `403` | `"Sua organização não tem o módulo de Propostas habilitado."` | Rotas de propostas, produtos, carteiras e simulação sem o módulo de Propostas. |
+| `403` | `"Sua organização não tem o módulo de Formalização habilitado."` | Rotas de modelos de contrato e formalização sem o módulo de Formalização. |
+| `403` | `"A customização dos prompts do Comitê não está habilitada para esta organização."` | Ler ou gravar instruções dos agentes do comitê sem o recurso habilitado. |
+
 ---
 
 ## Relatório
@@ -89,6 +99,21 @@ lang: tecnica
 | `400` | `"Não existe política de crédito associada"` | O relatório foi criado sem política. |
 | `400` | `"A política encontrou um erro ao ser processada."` | Falha na avaliação das regras. |
 | `404` | `"Política não encontrada."` | `policyId` inexistente ou removido. |
+| `409` | `"Conflito de versões"` | Você salvou a política a partir de uma versão anterior à gravada: outra pessoa ou integração salvou no meio. Releia a política e aplique a mudança de novo. |
+| `422` | `A condição "<nome>" precisa do add-on "<add-on>", que esta política não declara. Declare essa fonte nas Fontes de dados ou remova a condição.` | Regra sem fonte declarada. Variantes: *precisa de um bureau ou do add-on ...*, *precisa de uma fonte de score* (ou de faturamento presumido, renda presumida, protestos etc.), *usa um dado que nenhuma fonte declarada nesta política traz*. Ver [Cada condição precisa de uma fonte declarada](/concepts/politica-de-credito#cada-condi%C3%A7%C3%A3o-precisa-de-uma-fonte-declarada). |
+| `422` | `"Esta política não tem um relatório base definido. Selecione o tipo de relatório da política: ..."` | A política não tem relatório base nem tipo de documento. Escolha o relatório base na etapa Fontes de dados. |
+| `422` | `"Esta é uma política de camada de aprofundamento e não roda sozinha. ..."` | Você tentou rodar sozinha uma política sem relatório base (camada). Ela só roda na etapa Aprofundar de uma esteira. Use uma política de análise. |
+| `422` | `"Esta camada de aprofundamento não define se consulta CNPJ ou CPF. ..."` | Camada sem tipo de documento. Escolha CPF ou CNPJ na política. |
+
+---
+
+## Esteira
+
+| Código | Mensagem | Causa |
+|---|---|---|
+| `409` | `"Conflito de versões: a esteira foi alterada depois que você abriu. Descarte e sincronize."` | Outra pessoa salvou a esteira depois que você a abriu. Recarregue a esteira e refaça a alteração. |
+
+Erros da execução de esteiras e de propostas estão nas páginas de [Esteiras](/esteiras/execucoes) e de [Propostas](/propostas/visao-geral).
 
 ---
 

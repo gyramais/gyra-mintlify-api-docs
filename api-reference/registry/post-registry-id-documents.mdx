@@ -1,0 +1,23 @@
+---
+title: "Confirmar Upload e Analisar"
+description: "Segundo passo do envio assíncrono: o arquivo já está no armazenamento e você dispara a análise."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: post /v1/registry/{id}/documents
+---
+
+### Quando usar
+
+Segundo passo do envio assíncrono: o arquivo já está no armazenamento e você dispara a análise.
+
+### Os dois campos de tipo
+
+`expectedType` **pede** um tipo e a conferência roda. `typeHint` **afirma** o tipo e a classificação é pulada. Enviando os dois, `typeHint` vence.
+
+O resultado chega pelo `callbackUrl`, pelo webhook da organização, ou por [Status do documento](/api-reference/registry/get-registry-documents-docid-status).
+
+<Note>
+  Contexto e vocabulário em [Análise documental](/kyc/analise-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+</Note>

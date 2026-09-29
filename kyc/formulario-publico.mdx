@@ -1,0 +1,171 @@
+---
+title: "Formulário público"
+description: "Um link aberto do modelo de solicitação: qualquer pessoa abre, se apresenta, confirma o contato e começa o próprio cadastro ou pedido."
+icon: "globe"
+surface: plataforma
+domain: cadastro
+audience: operador
+lang: nao-tecnica
+---
+
+O formulário público é um link único, ligado ao modelo de solicitação, que você publica no seu site, no seu app ou numa campanha para o cliente começar o cadastro sozinho, sem esperar um operador.
+
+<Info>
+  **Resumo:** um link, muitas pessoas. Quem abre informa CPF ou CNPJ, nome e contato, confirma o contato por um código e segue para a mesma [página do destinatário](/kyc/pagina-do-destinatario) de sempre. O cadastro é criado (ou reaproveitado) a partir do documento informado.
+</Info>
+
+<Note>
+  O formulário público faz parte do módulo de Cadastros e Solicitações. O pedido de financiamento ou de venda a prazo pelo formulário depende também do módulo de Propostas. Ver [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Um link por modelo, não por pessoa
+
+Na [solicitação](/kyc/solicitacoes) de sempre, você escolhe o cadastro, informa os destinatários e cada um recebe um link próprio. No formulário público a ordem se inverte: o link vem primeiro, a pessoa responde e o cadastro nasce da resposta.
+
+| | Solicitação enviada por você | Formulário público |
+| --- | --- | --- |
+| Quem abre | Operador, integração, esteira ou renovação automática | A própria pessoa, pelo link |
+| Link | Um por destinatário | Um por modelo |
+| Cadastro | Escolhido antes do envio | Resolvido pelo CPF ou CNPJ que a pessoa informa |
+| Depois da identificação | Página do destinatário | A mesma página do destinatário |
+
+Tudo o que vem depois da identificação (documentos, formulário, termo, assinatura, identidade e o que acontece ao concluir) é igual ao de uma solicitação comum.
+
+<Tip>
+  O item `FORM`, que o destinatário responde dentro de uma solicitação, é outra coisa: está em [Formulários](/kyc/formularios). Esta página trata do link aberto que dá início à solicitação.
+</Tip>
+
+## Ligue o link no modelo
+
+<Steps>
+  <Step title="Abra o modelo">
+    Em **Solicitações**, **Modelos**, abra o modelo que a pessoa vai responder ou crie um novo.
+  </Step>
+  <Step title="Ligue o link público">
+    Na seção **Link público**, ligue **Receber por link aberto** e ajuste as opções abaixo.
+  </Step>
+  <Step title="Salve e copie o endereço">
+    Ao salvar, o modelo ganha o **Endereço**. Use **Copiar endereço** e publique onde o seu cliente vai encontrar.
+  </Step>
+</Steps>
+
+| Opção | O que decide | Padrão |
+| --- | --- | --- |
+| **Aceita** | **CPF e CNPJ**, **Só CNPJ** ou **Só CPF** | CPF e CNPJ |
+| **Confirmar o contato por** | **E-mail** ou **SMS**. O código sai pelo canal do modelo, não pelo que a pessoa prefere | E-mail |
+| **Teto de solicitações por dia** | Quantas respostas o link aceita em 24 horas, de 1 a 10.000 | 50 |
+| **Horas até aceitar uma nova resposta do mesmo cadastro** | Por quantas horas quem já concluiu não abre outra solicitação, de 0 a 720. Zero desliga a regra | 24 |
+
+### O endereço
+
+O endereço tem o formato `/form/{código}`, no domínio da plataforma ou no seu [domínio próprio](/kyc/pagina-do-destinatario#domínio-próprio-do-link), quando ele estiver verificado. O código é gerado pela plataforma: são 43 caracteres aleatórios, impossíveis de adivinhar, e não dá para escolher um nome legível.
+
+- **Não muda quando você edita o modelo.** Toda versão nova do modelo responde no mesmo endereço.
+- **Desligar não apaga.** Ligar de novo reencontra o mesmo endereço e a mesma configuração.
+
+## O que a pessoa vê
+
+<Steps>
+  <Step title="Abre o link">
+    A página mostra a sua marca, o nome e a descrição do modelo e uma prévia do que será pedido depois.
+  </Step>
+  <Step title="Se identifica">
+    Informa CPF ou CNPJ, nome, e-mail e celular. Com confirmação por SMS o e-mail é opcional; com confirmação por e-mail, o celular é opcional. O documento tem o dígito verificador conferido antes de qualquer código sair.
+  </Step>
+  <Step title="Confirma o contato">
+    Recebe um código de 6 dígitos e digita na página. Nada é criado antes disso.
+  </Step>
+  <Step title="Segue para a página do destinatário">
+    Com o código certo, a pessoa vai direto para a [página do destinatário](/kyc/pagina-do-destinatario) daquela solicitação. Quando a solicitação é nova, ela também recebe o link pelo canal do modelo, para voltar depois.
+  </Step>
+</Steps>
+
+O nome informado só vale para cadastro novo. Se o CPF ou CNPJ já tem cadastro na sua organização, o nome do cadastro não é reescrito.
+
+## Quem já respondeu não abre outra
+
+Antes de criar, a plataforma procura solicitações do mesmo cadastro vindas do mesmo modelo, em qualquer versão dele.
+
+| Situação | O que a pessoa vê |
+| --- | --- |
+| Solicitação em andamento, e a pessoa confirmou o mesmo contato de um destinatário dela | Volta para a mesma solicitação, do ponto onde parou |
+| Solicitação em andamento de outro contato | **Já recebemos o seu pedido**, sem link. Nada é criado |
+| Solicitação concluída dentro da janela de horas do modelo | **Já recebemos o seu pedido** |
+| Nenhuma das anteriores | Uma solicitação nova |
+
+<Note>
+  A segunda linha é de propósito: quem conhece o CPF ou CNPJ de alguém não consegue, só com isso, entrar na solicitação dessa pessoa. O link de uma solicitação em andamento só volta para quem prova o mesmo contato.
+</Note>
+
+## Receba pedidos de financiamento ou venda a prazo
+
+Com o módulo de Propostas, o **Objetivo** do link pode ser **Pedido de financiamento** ou **Pedido de venda a prazo**, além de **Cadastro (documentos)**. Nesses casos, cada envio cria uma [proposta](/propostas/visao-geral).
+
+| Opção | O que faz |
+| --- | --- |
+| **Produtos oferecidos** | Os [produtos](/propostas/produtos) entre os quais a pessoa escolhe. Os documentos que o produto pede entram na solicitação junto com os do modelo |
+| **Pedir o valor** | Em reais, com nome do campo, **Valor mínimo** e **Valor máximo** opcionais. Valor fora da faixa do produto não é recusado: vira alerta na proposta |
+| **Pedir o prazo** | A pessoa escolhe entre os prazos listados, em meses |
+
+Um modelo de pedido pode não ter item nenhum: nesse caso a pessoa só faz o pedido e vê **Recebemos seu pedido.**
+
+A proposta nasce a cada envio. O que muda é o que acontece com a solicitação:
+
+| Situação | Resultado |
+| --- | --- |
+| Nenhuma solicitação anterior | Proposta nova e solicitação nova, e a pessoa segue para os documentos |
+| Solicitação em andamento, mesmo contato | Proposta nova ligada a ela. Os documentos do produto novo são acrescentados e a pessoa volta para a solicitação |
+| Solicitação concluída na janela, mesmo contato | Proposta nova ligada à solicitação concluída, sem pedir os documentos de novo |
+| Solicitação concluída na janela, outro contato | Recusado: a pessoa precisa confirmar o mesmo e-mail ou telefone usado no envio dos documentos |
+| Solicitação em andamento, outro contato | Nada é criado |
+
+## Ao concluir
+
+O que o modelo manda fazer quando a solicitação fecha (nada, gerar um relatório ou rodar uma esteira) vale também para as solicitações do formulário. Ver [Ao concluir](/kyc/solicitacoes#ao-concluir).
+
+Como ninguém da sua equipe abriu a solicitação, o relatório ou a esteira rodam em nome de quem publicou a versão do modelo. Se a versão não tem um usuário responsável, o disparo não acontece.
+
+<Warning>
+  Um link aberto com **Ao concluir** ligado roda análise para cada pessoa que conclui. O teto diário existe para limitar esse custo: ajuste-o ao volume que você espera.
+</Warning>
+
+## Segurança
+
+| Proteção | Como funciona |
+| --- | --- |
+| Verificação anti-robô | Invisível para a pessoa, conferida antes de qualquer código sair |
+| Código de confirmação | 6 dígitos, vale por 10 minutos e aceita 5 tentativas erradas. Cada código só serve uma vez |
+| Códigos por contato | No máximo 5 por dia para o mesmo e-mail ou celular no mesmo link |
+| Teto diário do link | Ao atingir o teto em 24 horas, o link se desliga sozinho |
+
+### Quando o teto desliga o link
+
+O link passa a responder como indisponível. Quem publicou a versão do modelo recebe um e-mail com o botão **Abrir o modelo**, e a seção **Link público** mostra o aviso do teto. Para voltar a receber, reveja o teto e ligue o link de novo: só esse ato reabre o formulário.
+
+### O que o link não revela
+
+- **Se o endereço existe.** Link desligado e link inexistente mostram a mesma tela.
+- **O que o cadastro já tem.** A pessoa não vê se o cadastro já existia, nem os contatos que ele conhece, nem os detalhes internos dos itens do modelo.
+- **Os contatos certos.** O contato informado nunca substitui o que o cadastro já conhece. Quando diverge, a solicitação mostra o aviso ao operador e nada muda no cadastro.
+
+## Depois do envio
+
+- Na tela da solicitação, a origem aparece como **Veio do link público**.
+- A solicitação emite os mesmos [webhooks](/api-reference/kyc/eventos-de-webhook) de qualquer outra, a começar por `collection.created`, com `actorType` `SYSTEM`. O formulário não tem eventos próprios.
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Solicitações de coleta" icon="paper-plane" href="/kyc/solicitacoes">
+    Modelos, itens, estados e o que acontece ao concluir.
+  </Card>
+  <Card title="Página do destinatário" icon="link" href="/kyc/pagina-do-destinatario">
+    Para onde a pessoa vai depois do código.
+  </Card>
+  <Card title="Propostas" icon="file-invoice-dollar" href="/propostas/visao-geral">
+    O pedido que nasce do formulário.
+  </Card>
+  <Card title="Solicitações no toolbox" icon="table-columns" href="/toolbox/solicitacoes">
+    A tela do modelo, passo a passo.
+  </Card>
+</CardGroup>

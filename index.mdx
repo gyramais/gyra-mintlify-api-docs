@@ -1,29 +1,57 @@
 ---
 title: GYRA+ Toolbox API
-description: APIs modernas, documentadas e prontas para automação de crédito e integração com dados públicos, SCR Bacen, bureaus e muito mais.
+description: Infraestrutura de crédito de ponta a ponta. Do pedido do cliente ao contrato assinado, com dados, decisão e formalização numa só plataforma.
 icon: "lightning"
 ---
 
-Conecte crédito à sua operação com performance e confiança
+A GYRA+ é a infraestrutura de crédito da sua operação. Receba o pedido, conheça o cliente, decida com dados e formalize o contrato, pela tela ou pela API, sem costurar cinco fornecedores.
 
-A **GYRA+ API** entrega **integração direta com dados públicos, bureaus, SCR (Bacen)**, certidões, processos judiciais e mais de **500 variáveis de decisão**, tudo com performance e arquitetura moderna.
+## O que você constrói com a GYRA+
 
-Use nossas APIs para:
+<CardGroup cols={2}>
+  <Card title="Análise de crédito" icon="magnifying-glass-chart" href="/concepts/relatorio">
+    Relatório de CPF ou CNPJ com bureaus, SCR, processos, protestos, certidões e mais de 500 variáveis, decidido pela sua política.
+  </Card>
+  <Card title="Cadastros e Solicitações" icon="folder-open" href="/kyc/visao-geral">
+    O dossiê documental de cada cliente, lido e validado por IA, e o link para ele entregar o que falta.
+  </Card>
+  <Card title="Propostas" icon="inbox" href="/propostas/visao-geral">
+    O pedido de crédito do cliente final, com produto, preço e pré-aprovação que ele escolhe numa página própria.
+  </Card>
+  <Card title="Esteiras" icon="diagram-project" href="/esteiras/visao-geral">
+    O fluxo completo da decisão: análise em camadas, documentos, sua API, alçada, comitê IA e contrato, em etapas versionadas.
+  </Card>
+  <Card title="Formalização" icon="file-signature" href="/formalizacao/visao-geral">
+    Contrato em Word gerado com os dados da oferta, partes definidas por regra e assinatura pela GYRA+ ou pela Clicksign.
+  </Card>
+  <Card title="Agentes e automação" icon="robot" href="/mcp/o-que-e">
+    Servidor MCP oficial, webhooks assinados e o Assistente GYRA+ dentro do toolbox.
+  </Card>
+</CardGroup>
 
-- Automatizar análise de crédito com dados públicos, privados e judiciais  
-- Consultar **SCR Bacen** com autorização e interpretar o histórico  
-- Emitir **certidões em tempo real** federais e estaduais  
-- Avaliar **risco político, criminal, judicial e financeiro** de empresas e pessoas  
-- Personalizar fluxos com **políticas de decisão customizadas**
+## Comece em três chamadas
 
-## Como começar
+<Steps>
+  <Step title="Autentique">
+    Gere a sua [chave de API](/api-reference/api-keys) no painel e troque por um token em [Autenticação](/api-reference/auth/post-authauthenticate).
+  </Step>
+  <Step title="Analise">
+    [Crie um relatório](/api-reference/report-v2/post-v2report) com um CPF ou CNPJ, ou [crie uma proposta](/api-reference/propostas/visao-geral) quando quiser o pedido, a oferta e o contrato.
+  </Step>
+  <Step title="Receba o resultado">
+    [Assine um webhook](/guides/configurar-webhook) e receba a decisão sem polling.
+  </Step>
+</Steps>
 
-👉 Endpoints principais:
+## Atalhos para quem integra
 
-- [Autenticação](/api-reference/auth/post-authauthenticate), gere um token JWT para acessar todos os endpoints com segurança.  
-- [Criar relatório](/api-reference/report/post-report), dispare a análise de crédito completa com CPF ou CNPJ em segundos.  
+- [Validar um documento](/api-reference/registry/post-registry-validate-document): mande o arquivo e receba a leitura e o parecer na mesma chamada.
+- [Criar uma solicitação](/api-reference/collection/post-collections): gere um link para o cliente enviar documento, formulário, termo, assinatura e identidade.
+- [Fechamento externo](/api-reference/esteiras/fechamento-externo): devolva à esteira o desfecho que aconteceu no seu sistema.
+- [Guia ponta a ponta do cadastro documental](/guides/integrar-cadastro-documental): da credencial ao webhook chegando.
 
-## URL Base
+## URL base
 
 ```txt
 https://gyra-core.gyramais.com.br
+```

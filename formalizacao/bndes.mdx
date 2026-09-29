@@ -1,0 +1,111 @@
+---
+title: "BNDES"
+description: "Consulta de impedimentos, pedido de financiamento e contratação no BNDES Online, direto da esteira, com envio validado e acompanhamento automático."
+icon: "building-columns"
+surface: conceito
+domain: formalizacao
+audience: operador
+lang: nao-tecnica
+---
+
+Para operações de repasse, a esteira conversa com o BNDES Online por você: envia o pedido, acompanha a resposta e traz o número do contrato para dentro da CCB.
+
+<Info>
+  **Resumo:** três conectores, cada um uma etapa **Integração** na fase de formalização. O pedido é validado contra o leiaute oficial do BNDES antes de sair, e a plataforma acompanha a resposta sozinha por até 72 horas.
+</Info>
+
+<Note>
+  O conector BNDES Online é liberado à parte, além do módulo de Formalização. Ele usa a credencial da sua própria instituição no BNDES. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Os três conectores
+
+| Conector na etapa | O que faz | Resultado |
+| --- | --- | --- |
+| **BNDES Online · Consulta de impedimentos** | Pergunta ao BNDES se a beneficiária tem impedimento | "NÃO IMPEDIDO" aprova; "IMPEDIDO" reprova |
+| **BNDES Online · Pedido de financiamento** | Envia a proposta de financiamento | Aprovada, devolve o número do contrato no BNDES e a data de homologação |
+| **BNDES Online · Contratação** | Envia a contratação | Exige um pedido de financiamento antes, na mesma esteira |
+
+Os conectores do BNDES só rodam na fase de formalização. Veja [Etapas](/esteiras/etapas).
+
+## Conecte a sua credencial
+
+Em **Configurações > Integrações**, no conector **BNDES Online**:
+
+| Campo | O que é |
+| --- | --- |
+| **Ambiente** | Homologação ou Produção |
+| **Nome da conta** | Um nome para reconhecer a conta |
+| **CNPJ do agente financeiro** | O CNPJ da sua instituição no BNDES |
+| **Como autenticar** | **Chave de API (recomendado)**: **Consumer key** e **Consumer secret**. Ou **Certificado e-CNPJ**: **Arquivo do certificado A1 (.pfx)** e **Senha do certificado** |
+
+**Testar conexão** confere a credencial direto no BNDES. Como na Clicksign, você pode ter várias contas, com uma padrão. Veja [Integrações no toolbox](/toolbox/integracoes).
+
+## Envio validado antes de sair
+
+Antes de chamar o BNDES, a plataforma monta o pedido no leiaute oficial e o valida. Um campo obrigatório vazio, um número fora do formato ou um documento que falta no cadastro reprovam a etapa na hora, sem gastar uma chamada ao BNDES e sem consumir o número da proposta.
+
+O número da proposta no BNDES é sequencial por organização e por ano.
+
+Quando o BNDES pede anexos, a plataforma envia os documentos que a etapa declarou, arquivo por arquivo, a partir do cadastro.
+
+## Acompanhamento automático
+
+O BNDES responde de forma assíncrona. Depois do envio, a plataforma consulta o resultado periodicamente, com intervalos que crescem com o tempo, até o BNDES responder ou até 72 horas. Falhas passageiras de comunicação são repetidas sozinhas.
+
+| Situação na etapa | O que significa |
+| --- | --- |
+| **Na fila** ou **Agendado** | Aguardando para sair (por exemplo, fora do horário do BNDES) |
+| **Enviado** | O BNDES recebeu o pedido |
+| **Processando no BNDES** | O BNDES está analisando |
+| **Aguardando anexos** | O BNDES pediu anexos, e a plataforma está enviando |
+| **Não impedido**, **Homologado** ou **Contratado** | O BNDES aprovou (consulta, financiamento ou contratação) |
+| **Impedido** ou **Rejeitado** | O BNDES recusou, ou a validação local barrou o pedido |
+| **Falhou** | Credencial recusada, protocolo não encontrado ou sem resposta em 72 horas |
+
+## Horário do BNDES
+
+Em produção, o BNDES só recebe pedidos em dias úteis, das 8h às 20h (horário de Brasília). Fora da janela, o pedido fica na fila e sai no próximo horário útil. Os feriados nacionais contam como dia não útil. Em homologação, o envio funciona a qualquer hora.
+
+## O retorno entra no contrato
+
+O pedido de financiamento aprovado preenche as variáveis `bndes.*` do [contrato](/formalizacao/variaveis-do-contrato#bndes):
+
+| Variável | O que é |
+| --- | --- |
+| `bndes.numeroContrato` | Número do contrato no BNDES |
+| `bndes.dataHomologacao` | Data de homologação |
+| `bndes.protocolo` | Protocolo |
+| `bndes.condicaoOperacional` | Condição operacional |
+
+A condição operacional também pode compor o [número do contrato](/formalizacao/modelos-de-contrato#numere-o-contrato).
+
+## Reenvie
+
+Uma execução encerrada sem aprovação pode ser reenviada, com o mesmo número de proposta e a mesma credencial. Uma execução em andamento ou já aprovada não se reenvia:
+
+- "A execução ainda está em andamento; aguarde o resultado antes de reenviar."
+- "Esta execução já foi aprovada; reenviar geraria um pedido duplicado."
+
+## Mensagens que você pode ver
+
+| Mensagem | O que fazer |
+| --- | --- |
+| O BNDES recusou a credencial da organização. | Revise a credencial BNDES em Configurações > Integrações e reenvie |
+| A credencial BNDES usada nesta execução não existe mais. | Reative a conta ou escolha outra na etapa |
+| Não foi possível obter o token do BNDES (HTTP N). Verifique a consumer key e o secret. | Confira a chave de API |
+| Certificado .pfx inválido ou senha incorreta. | Envie o certificado de novo |
+| Campo obrigatório não informado: campo. | Complete o dado e reenvie |
+| O XML não passou na validação do leiaute oficial do BNDES: ... | Corrija o dado indicado e reenvie |
+| Documento obrigatório não encontrado no cadastro: ... | Envie o documento ao cadastro |
+| O BNDES pediu anexos, mas a etapa não declarou nenhum documento. | Declare os anexos na etapa |
+| O BNDES não devolveu o resultado dentro do prazo de espera. | Confira o pedido no BNDES Online e reenvie se preciso |
+| O BNDES não encontrou o protocolo X. | Reenvie |
+
+As taxas do BNDES usadas no preço da proposta estão em [Precificação](/propostas/precificacao).
+
+## Veja também
+
+- [Formalização](/formalizacao/visao-geral)
+- [Integrações no toolbox](/toolbox/integracoes)
+- [Etapas](/esteiras/etapas)

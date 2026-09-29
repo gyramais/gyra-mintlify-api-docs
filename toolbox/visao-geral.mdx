@@ -1,6 +1,6 @@
 ---
 title: "Visão Geral do Toolbox"
-description: "Tour pelas seções principais da plataforma: input sempre visível, Política de Crédito, Análises, Lotes de Clientes, Configurações."
+description: "Mapa do Toolbox: input sempre visível, menu por grupos (Operação, Onboarding, Motor de crédito), menu da organização e Assistente GYRA+."
 icon: "compass"
 surface: plataforma
 domain: usuarios
@@ -9,24 +9,25 @@ lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** o toolbox é organizado em torno de um **input sempre visível** no topo (ponto de entrada para qualquer análise) e um **menu lateral** com as áreas de configuração e gestão. Esta página é um mapa rápido: o que existe, para que serve e onde clicar.
+  **Resumo:** o toolbox é organizado em torno de um **input sempre visível** no topo (ponto de entrada para qualquer análise), um **menu lateral** agrupado em Operação, Onboarding e Motor de crédito, e o **menu da organização**, onde ficam as configurações. Esta página é um mapa rápido: o que existe, para que serve e onde clicar.
 </Info>
 
 ## Estrutura da tela
 
 ```text
-┌─────────────────────────────────────────────────────────┐
-│  [INPUT SEMPRE VISÍVEL: digitar CPF/CNPJ]      [perfil] │
-├──────────┬──────────────────────────────────────────────┤
-│          │                                              │
-│  Menu    │                                              │
-│  lateral │            Conteúdo da seção                 │
-│          │                                              │
-│          │                                              │
-└──────────┴──────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ [logo da organização ▾] │ [INPUT: digitar CPF/CNPJ]  [Pergunte à GYRA+] │
+├─────────────────────────┼───────────────────────────────────────┤
+│  Início                 │                                       │
+│  Operação               │                                       │
+│  Onboarding             │         Conteúdo da seção             │
+│  Motor de crédito       │                                       │
+│                         │                                       │
+│  Ajuda e documentação   │                                       │
+└─────────────────────────┴───────────────────────────────────────┘
 ```
 
-Todo o toolbox gira em torno dessas duas áreas: o **input** dispara análises em qualquer momento; o **menu lateral** dá acesso a configurações, políticas e históricos.
+Quatro áreas organizam o Toolbox: o **input** dispara análises a qualquer momento; o **menu lateral** leva às áreas de trabalho; o **menu da organização**, no logo do topo do menu, reúne o que é da conta; e o **Assistente GYRA+** abre ao lado da tela em que você está.
 
 ## O input sempre visível
 
@@ -35,35 +36,48 @@ Ponto de entrada universal. Em qualquer tela, você pode:
 1. Digitar um **CPF ou CNPJ**, que o sistema identifica automaticamente.
 2. Selecionar a política no dropdown que abre abaixo (com a ação *tornar padrão* ao lado de cada uma).
 3. Apertar **Enter** para disparar a análise e ir direto para o relatório.
-4. Clicar no **+** no canto do input para iniciar um **Lote de Clientes** (análise em massa).
+4. Clicar no **+** no canto do input para iniciar uma análise **em lote**.
 
 Detalhes em [Rodar uma Análise](/toolbox/rodar-operacao).
 
-## Menu lateral: seções principais
+## Menu lateral
 
-### Análises
+O menu é dividido em grupos, na ordem do caminho de um caso: a proposta entra, o cliente é cadastrado, o motor de crédito decide.
 
-Histórico de todas as análises rodadas pelos usuários da organização. Filtros por documento, política, status, período, autor. Cada linha abre o relatório individual.
+### Início
 
-### Lotes de Clientes
+A tela inicial da organização.
 
-Onde ficam os lotes criados pelo **+** do input. Cada lote mostra progresso do processamento, total de documentos, status agregado, e link para o XLS consolidado e relatórios individuais.
+### Operação
 
-### Política de Crédito
+| Item | O que é |
+| --- | --- |
+| **Propostas** | Os pedidos de crédito, da entrada à oferta. Ver [Propostas](/propostas/visao-geral). |
+| **Análises de crédito** | Histórico das análises da organização, em duas abas: **Individuais** e **Em lote**. A aba **Em lote** mostra os lotes criados pelo **+** do input, com progresso, total de documentos e o XLS consolidado. Cada linha abre o relatório. |
+| **Correspondentes** | Parceiros credenciados que originam crédito para você. Ver [Correspondentes](/plataforma/correspondentes). |
 
-Subdividida em:
+### Onboarding
 
-- **Políticas**, lista das políticas da organização (habilitadas e rascunhos). Aqui você cria, edita, habilita, desabilita.
-- **Templates**, catálogo de políticas prontas mantido pela GYRA+. Ponto de partida para organizações novas. Ver [Usar Templates](/toolbox/usar-templates).
-- **Produtos**, cadastro opcional de produtos financeiros vinculados às políticas (ex: Capital de Giro, Antecipação de Recebíveis).
+| Item | O que é |
+| --- | --- |
+| **Clientes** | O dossiê documental de cada CPF ou CNPJ. Ver [Clientes](/toolbox/cadastros). |
+| **Solicitações** | Pedidos enviados ao cliente final: documentos, formulário, autorização do SCR e identidade. Ver [Solicitações](/toolbox/solicitacoes). |
+| **Validação de identidade** | Todas as verificações de identidade da organização, com resultado e método. Ver [Validação de identidade](/toolbox/validacao-de-identidade). |
 
-### Solicitações
+### Motor de crédito
 
-Onde você dispara fluxos que exigem o envolvimento direto do cliente final: **opt-in de SCR** (autorização para consultar o Banco Central) e **Face Match** com liveness (validação de identidade no onboarding). Tudo via WhatsApp do cliente. Detalhes em [Solicitações](/toolbox/solicitacoes).
+| Item | O que é |
+| --- | --- |
+| **Esteiras** | O caminho completo de um caso: análise, decisão e formalização. Ver [Esteiras](/esteiras/visao-geral). |
+| **Políticas** | As regras de decisão da organização e os templates prontos. Ver [Política de Crédito](/concepts/politica-de-credito) e [Usar Templates](/toolbox/usar-templates). |
+| **Produtos** | Linhas de crédito com regra, taxa e prazo, e carteiras. Ver [Produtos](/propostas/produtos). |
+| **Modelos de contrato** | Contratos em Word com variáveis, usados na formalização. Ver [Formalização](/formalizacao/visao-geral). |
 
-### Operações (feature opcional)
+No rodapé do menu fica **Ajuda e documentação**.
 
-Só aparece se a organização usa a feature de cadeias de políticas baseadas em relacionamentos (sócios, filiais, parentes). Detalhes em [Operações](/concepts/operacoes).
+### Item com cadeado
+
+Módulos que a sua organização não contratou continuam no menu, em cinza, com cadeado e o selo **Upgrade**. Clicar abre a apresentação do módulo, com o botão para pedir. Itens que dependem só do seu papel não aparecem quando você não tem acesso. Ver [Módulos e capacidades](/plataforma/modulos-e-capacidades).
 
 ### Pareceres GYRA+ IA (IA no relatório)
 
@@ -71,18 +85,48 @@ Nos relatórios **COMPLETO** e **COMPLETO+**, cada seção chega com um **parece
 
 Disponibilidade depende do plano contratado.
 
-### Configurações
+## Menu da organização
 
-- **Usuários**, convidar, remover, atribuir papéis. Ver [Gerenciar Usuários e Permissões](/toolbox/gerenciar-usuarios-permissoes).
-- **Integrações**, credenciais próprias de bureau (BYOC Serasa) e demais bases externas com contrato direto.
+Clique no logo da sua organização, no topo do menu lateral (com o menu recolhido, aparece o ícone). O menu reúne o que é da conta:
+
+| Item | Leva a | Quem vê |
+| --- | --- | --- |
+| **Configurações** | As abas de configuração. Atalho: **⌘ ,** (Mac) ou **Ctrl ,** | Quem gerencia configurações ou usuários |
+| **Usuários e permissões** | Aba **Usuários** | Quem gerencia usuários |
+| **Integrações** | Aba **Integrações** | Quem gerencia configurações |
+| **API e MCP** | Aba **API & MCP** | Quem gerencia configurações |
+| **Marca e envio** | Aba **Marca** | Quem gerencia configurações |
+
+Embaixo ficam o seu nome, o seu e-mail e **Sair**. Não há troca de organização: cada usuário pertence a uma organização só.
+
+### Abas de Configurações
+
+| Aba | O que você configura |
+| --- | --- |
+| **Fontes de dados** | O que entra no relatório, incluindo credenciais próprias de bureau (como a sua credencial Serasa) e bases externas. |
+| **Exportação** | Os modelos do PDF exportado. |
+| **Integrações** | Contas que a esteira usa para agir: Clicksign e BNDES Online (quando contratados) e Conexões de API com o seu sistema. Ver [Integrações](/toolbox/integracoes). |
+| **Marca** | Logo e ícone da organização, que valem no menu, na tela de início, na capa do PDF, no e-mail de solicitação e na página do destinatário. |
+| **Envio** | Domínio próprio do link, remetente próprio de e-mail e WhatsApp da sua empresa. |
+| **API & MCP** | Gerar e revogar credenciais de API, cadastrar e testar webhooks, ligar o conector de IA. Ver [API & MCP: chaves e webhooks](/toolbox/webhooks-e-api-keys). |
+| **Usuários** | Criar, editar e excluir usuários e atribuir o cargo. Ver [Usuários e permissões](/toolbox/gerenciar-usuarios-permissoes). |
+
+Quem só gerencia usuários entra em Configurações direto na aba **Usuários** e não vê as demais.
 
 <Note>
-  **Não configura pelo toolbox:** API Keys e webhooks (solicite/configure via suporte ou API, ver [Webhooks e API Keys](/toolbox/webhooks-e-api-keys)), logo e branding da organização (configurado pela equipe da GYRA+ no provisionamento) e dados de faturamento (gestão via contrato, ainda sem tela no toolbox).
+  **Não configura pelo toolbox:** dados de faturamento (gestão via contrato, ainda sem tela no toolbox) e o login SSO-only, que a equipe da GYRA+ habilita a pedido.
 </Note>
+
+## Assistente GYRA+
+
+O botão **Pergunte à GYRA+**, no cabeçalho, abre o assistente num painel à direita (atalho **⌘J** ou **Ctrl+J**). Ele responde dúvidas, lê relatórios e consumo e monta política, esteira, produto e formulário, sempre com prévia e confirmação antes de gravar. Ver [Assistente GYRA+](/plataforma/assistente-gyra).
 
 ## Fluxos principais do dia a dia
 
 <CardGroup cols={2}>
+  <Card title="Pedir documentos ao cliente" icon="paper-plane" href="/toolbox/solicitacoes">
+    Escolher o modelo, o destinatário, e mandar o link.
+  </Card>
   <Card title="Analisar um documento" icon="play" href="/toolbox/rodar-operacao">
     Input sempre visível, digitar, Enter.
   </Card>
@@ -90,16 +134,16 @@ Disponibilidade depende do plano contratado.
     Clicar no + do input, colar lista, criar lote.
   </Card>
   <Card title="Criar ou ajustar política" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
-    Política de Crédito, Políticas ou Templates.
+    Motor de crédito, Políticas.
   </Card>
-  <Card title="Convidar usuário" icon="user-plus" href="/toolbox/gerenciar-usuarios-permissoes">
-    Configurações, Usuários.
+  <Card title="Adicionar usuário" icon="user-plus" href="/toolbox/gerenciar-usuarios-permissoes">
+    Menu da organização, Usuários e permissões.
   </Card>
   <Card title="Configurar webhook" icon="webhook" href="/toolbox/webhooks-e-api-keys">
     Via API (POST /webhook).
   </Card>
-  <Card title="Ler um relatório" icon="chart-line" href="/toolbox/interpretar-resultado-operacao">
-    Clicar em qualquer linha na lista de Análises.
+  <Card title="Ler um relatório" icon="chart-line" href="/concepts/relatorio">
+    Clicar em qualquer linha de Análises de crédito.
   </Card>
 </CardGroup>
 
@@ -107,9 +151,12 @@ Disponibilidade depende do plano contratado.
 
 | Papel | Vê |
 | ----- | -- |
-| **Administrador** | Tudo. Usuários, políticas, integrações, webhooks, todas as análises da organização. |
-| **Gestor de Crédito** | Políticas, templates, produtos, todas as análises da organização. |
-| **Analista de Crédito** | Input de análise, apenas as análises que ele próprio rodou, relatórios. Não edita política. |
+| **Administrador** | Tudo. Usuários, configurações, integrações, API, políticas, esteiras, todas as análises da organização. |
+| **Gestor de Crédito** | Políticas, templates, produtos, esteiras, usuários, todas as análises da organização. |
+| **Coordenador de Crédito** | Input de análise, todas as análises da organização, usuários analistas. Não edita política nem esteira. |
+| **Analista de Crédito** | Input de análise, apenas as análises que ele próprio rodou, relatórios. Não edita política nem esteira. |
+
+Módulos contratados à parte (Propostas, Onboarding, Formalização, Correspondentes) só aparecem quando a organização os tem. Ver [Módulos e capacidades](/plataforma/modulos-e-capacidades).
 
 Detalhamento em [Gerenciar Usuários e Permissões](/toolbox/gerenciar-usuarios-permissoes).
 
@@ -126,14 +173,17 @@ Detalhamento em [Gerenciar Usuários e Permissões](/toolbox/gerenciar-usuarios-
   <Accordion title="Abri o toolbox e está vazio, o que faço?">
     Provavelmente a plataforma foi recém-provisionada. Vá em [Primeiro Acesso](/toolbox/primeiro-acesso) e siga os passos: ativar templates, configurar padrão, rodar primeira análise.
   </Accordion>
-  <Accordion title="Não vejo o menu Operações.">
-    Operações é feature opcional. Se a organização não contratou, o menu não aparece. Para análise simples, basta o input no topo. Detalhes em [Operações](/concepts/operacoes).
+  <Accordion title="Não vejo um item do menu.">
+    Se o item aparece com cadeado, a organização não contratou o módulo: clique para ver a apresentação e pedir. Se o item não aparece, é o seu papel que não dá acesso (por exemplo, **Políticas** só aparece para quem monta política). Ver [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+  </Accordion>
+  <Accordion title="Onde foram parar Lotes de Clientes e Gerenciar usuários?">
+    Lotes virou a aba **Em lote** de **Análises de crédito**. Gerenciar usuários virou a aba **Usuários** de Configurações, aberta pelo menu da organização em **Usuários e permissões**. Os endereços antigos continuam funcionando.
   </Accordion>
   <Accordion title="Posso usar o toolbox no celular?">
     O toolbox é otimizado para desktop. Funciona em tablet, mas o editor de políticas e a tela de relatório completo ficam melhor em tela grande.
   </Accordion>
   <Accordion title="Existe modo escuro?">
-    Não no momento. O toolbox segue o design system `gyra-design` com tema claro padrão.
+    Não no momento. O toolbox usa tema claro.
   </Accordion>
 </AccordionGroup>
 
@@ -149,7 +199,7 @@ Detalhamento em [Gerenciar Usuários e Permissões](/toolbox/gerenciar-usuarios-
   <Card title="Usar Templates" icon="sparkles" href="/toolbox/usar-templates">
     Ativar políticas prontas.
   </Card>
-  <Card title="Interpretar resultado" icon="chart-line" href="/toolbox/interpretar-resultado-operacao">
-    Ler o relatório com confiança.
+  <Card title="Assistente GYRA+" icon="sparkles" href="/plataforma/assistente-gyra">
+    Peça em linguagem natural.
   </Card>
 </CardGroup>

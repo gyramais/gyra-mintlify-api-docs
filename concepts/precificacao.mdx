@@ -36,7 +36,7 @@ As três são opcionais. Política que não define fórmula entrega o valor soli
     Cada campo aceita uma expressão no estilo Excel. Validação automática impede salvar uma fórmula mal formada.
 
     <Note>
-    A precificação **sempre roda**, independentemente do status final da política. Como todas as variáveis usadas pelas fórmulas já estão consolidadas após a coleta de dados, a fórmula é executada — não depende de `APPROVED`.
+    A precificação **sempre roda**, independentemente do status final da política. Como todas as variáveis usadas pelas fórmulas já estão consolidadas após a coleta de dados, a fórmula é executada e não depende de `APPROVED`.
     </Note>
   </Step>
   <Step title="Rodar uma operação de teste">
@@ -200,7 +200,7 @@ Também visível no toolbox na tela de detalhe da operação, aba *Precificaçã
     O editor do toolbox tem um campo *pré-visualizar* onde você informa valores de teste para cada variável e vê o resultado da fórmula em tempo real.
   </Accordion>
   <Accordion title="Fórmulas são versionadas?">
-    Sim. Toda edição em `periodFormula`, `interestFormula` ou `amountFormula` é registrada em `PolicyChange`, com diff entre versões, autor e timestamp. Ver [Operações](/concepts/operacoes) para detalhes de versionamento.
+    Sim. Toda edição em `periodFormula`, `interestFormula` ou `amountFormula` é registrada em `PolicyChange`, com diff entre versões, autor e timestamp. Ver [Versões da política](/concepts/politica-de-credito#versões-da-política).
   </Accordion>
   <Accordion title="Qual nível de relatório habilita precificação?">
     Precificação funciona em qualquer nível de relatório. Os campos que a fórmula pode consultar variam com o nível: fórmulas que usam SCR, por exemplo, só funcionam em COMPLETO ou COMPLETO+.
@@ -213,7 +213,7 @@ Também visível no toolbox na tela de detalhe da operação, aba *Precificaçã
   <Card title="Criar política" icon="wand-magic-sparkles" href="/toolbox/criar-politica">
     Passo a passo no toolbox.
   </Card>
-  <Card title="Operações" icon="diagram-project" href="/concepts/operacoes">
+  <Card title="Esteiras" icon="diagram-project" href="/esteiras/visao-geral">
     Como a operação consome o resultado da precificação.
   </Card>
   <Card title="Templates de política" icon="file-lines" href="/concepts/templates-de-politica">

@@ -1,0 +1,23 @@
+---
+title: "Listar Modelos de Coleta"
+description: "Sempre antes de criar uma solicitação: o `slug` daqui é o que entra em `template`."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: get /v1/collection-templates
+---
+
+### Quando usar
+
+Sempre antes de criar uma solicitação: o `slug` daqui é o que entra em `template`.
+
+<Tip>
+  Use o **`slug`**, não o `id`. Ele é o endereço estável entre versões: publicar uma versão nova do modelo não quebra a sua integração.
+</Tip>
+
+Os modelos são montados no toolbox. Ver [Solicitações de coleta](/kyc/solicitacoes).
+
+<Note>
+  Contexto e vocabulário em [Solicitações de coleta](/kyc/solicitacoes). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+</Note>

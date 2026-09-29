@@ -1,0 +1,172 @@
+---
+title: "Montar uma esteira"
+description: "Guia da tela do construtor: criar a esteira, adicionar e configurar etapas, salvar versões, validar e ativar."
+icon: "screwdriver-wrench"
+surface: plataforma
+domain: esteira
+audience: operador
+lang: nao-tecnica
+---
+
+O construtor é onde você desenha o caminho do crédito uma vez, confere se ele está de pé e publica, sem precisar de ninguém do time técnico.
+
+<Info>
+  **Resumo:** em **Esteiras**, aba **Esteiras**, clique em **Nova esteira**. Comece por uma Análise ou um Checkpoint, adicione as próximas etapas, configure cada uma no painel lateral, clique em **Salvar** e depois em **Ativar esteira**. Nada vale para execuções até você salvar e ativar.
+</Info>
+
+Para montar e editar esteiras você precisa da permissão `can-manage-operations`. O conceito está em [Esteiras](/esteiras/visao-geral) e o catálogo de etapas em [Etapas](/esteiras/etapas).
+
+## Onde fica
+
+No menu lateral, grupo **Motor de crédito**, item **Esteiras**. A tela tem três abas:
+
+| Aba | Para quê |
+| --- | --- |
+| **Execuções** | Acompanhar as rodadas das esteiras. Veja [Acompanhar execuções](/toolbox/acompanhar-execucoes). |
+| **Minhas aprovações** | Ofertas esperando o seu voto na alçada |
+| **Esteiras** | A lista das esteiras e o botão **Nova esteira** |
+
+A lista mostra **Esteira**, **Resumo** (a sequência de etapas em uma frase), **Etapas**, **Última edição** e a chave **Ativa**. Filtre por **Nome**, **Criado por** e **Política**.
+
+## Criar uma esteira
+
+<Steps>
+  <Step title="Clique em Nova esteira">
+    O construtor abre com o título **Nova esteira**.
+  </Step>
+  <Step title="Dê um nome">
+    O nome é único na organização. Sem nome, a tela avisa: "Dê um nome à esteira antes de adicionar a primeira etapa."
+  </Step>
+  <Step title="Comece de um modelo, se quiser">
+    Em **Comece com um modelo**, escolha uma estrutura pronta: **Governança completa**, **Análise rápida**, **Decisão assistida**, **Oferta automática**, **Oferta revisada**, **Comitê IA**, **Alçada por valor**, **Comitê e alçada**, **Revisão e alçada** ou **Pré-check operacional**. Você ajusta políticas, fórmulas e aprovadores depois.
+  </Step>
+  <Step title="Adicione a primeira etapa">
+    A primeira etapa é uma **Análise** ou um **Checkpoint**, e é ela que cria a esteira. Escolha a política principal nos grupos **CNPJ** ou **CPF**: ela define o tipo de documento que a esteira analisa.
+  </Step>
+</Steps>
+
+A esteira nasce **Inativa**. A tela confirma: "Esteira criada. Continue montando as etapas."
+
+## A tela do construtor
+
+| Área | O que mostra |
+| --- | --- |
+| Topo | Nome, pílula **Ativa** ou **Inativa**, e os botões **Histórico de versões**, **Validar configuração** e **Ativar esteira** (ou **Desativar esteira**) |
+| Cartões de sinal | **Entrada** (CPF ou CNPJ), número de etapas, fontes reaproveitadas das etapas anteriores e se a estrutura está **Pronta para ativação** ou com **Configuração incompleta** |
+| **Fluxo de decisão** | A sequência de etapas. Clique numa etapa para configurá-la |
+| **Configuração da etapa** | O painel lateral da etapa selecionada |
+| Rodapé | O estado geral ("Esteira pronta", "Configuração incompleta") e se há **Alterações pendentes** |
+
+## Adicionar etapas
+
+Use **Adicionar próxima etapa**, ou os atalhos por tipo abaixo do fluxo. No modal **Nova etapa**, escolha o **Tipo da etapa** e, se quiser, o **Nome da etapa (opcional)**. Sem nome, a etapa usa o nome do tipo.
+
+- O atalho **Decisão** cria o bloco de decisão. Com ele montado, Revisão da oferta, Comitê e Alçada deixam de aparecer como atalhos: você os liga dentro da Decisão.
+- Etapas que só existem na formalização avisam no modal: "Esta etapa entra na Formalização: só roda se a proposta for aprovada."
+- Sem o módulo de Formalização, **Contrato e assinatura** aparece com o selo **Upgrade** e leva à apresentação do módulo.
+
+## Configurar cada etapa
+
+O painel **Configuração da etapa** mostra o tipo, a posição ("Etapa N"), o nome e os campos do tipo. Três partes se repetem em todas:
+
+- **O que acontece aqui**: uma frase sobre o que a etapa faz.
+- **Executar quando**: **Sempre**, **Se aprovado**, **Se aprovado ou alerta**, **Se alerta severo** ou **Personalizada**. A primeira etapa fica travada ("A primeira etapa inicia sempre.").
+- A validação da etapa: **Tudo certo**, **Fora de ordem** ou **Falta configurar**, com a mensagem.
+
+Os campos de cada tipo estão em [Etapas](/esteiras/etapas). Alguns tipos abrem uma gaveta própria: **Contrato e assinatura**, **Chamada de API** e os grupos de **Vínculos**.
+
+### Condição personalizada
+
+Em **Personalizada**, escreva a fórmula, por exemplo `valor_escolhido > 500000` ou `produto = "IMOB"`. Digite `#` para escolher variáveis das etapas anteriores, use **resposta.campo** para um campo de formulário e **Variáveis (N)** para os [dados de entrada](/esteiras/dados-de-entrada). A tela mostra a condição em português ("Roda quando ...") e clique em **Salvar condição**. Referência inválida aparece como "Revise a condição: ...".
+
+## Ordem das etapas
+
+O construtor não trava a ordem enquanto você trabalha. Uma etapa fora do lugar ganha o aviso **Fora de ordem**, com o que fazer. Exemplos:
+
+- "O Aprofundar precisa vir depois de uma Análise que crie o relatório. Mova esta etapa para baixo de uma Análise."
+- "A Pré-aprovação precisa vir antes da Decisão. Mova esta etapa para cima."
+- "A esteira aceita uma Decisão só. Remova esta etapa ou a outra Decisão."
+- "Fora da ordem do bloco de Decisão: Decisão, Revisão antes do Comitê IA, Comitê IA, Revisão depois do Comitê IA e Alçada. Mova esta etapa."
+- "O Aguardar fechamento externo vem depois de um Contrato e assinatura ou como a última etapa. Mova esta etapa para baixo."
+
+Numa esteira inativa você salva mesmo com etapas fora de ordem. Numa esteira **ativa**, não: "A esteira está ativa: arrume as etapas fora de ordem antes de salvar."
+
+## Salvar e versões
+
+Nada é gravado enquanto você edita. As mudanças ficam no rascunho, e a barra **Alterações pendentes** aparece embaixo.
+
+<Steps>
+  <Step title="Salvar">
+    Grava tudo de uma vez e cria uma versão nova: "Esteira salva (versão X.XX)." O estado de salvamento passa a mostrar "Salva na versão X.XX".
+  </Step>
+  <Step title="Descartar alterações">
+    Volta para a última versão salva.
+  </Step>
+  <Step title="Histórico de versões">
+    Lista cada versão com data, autor, nome e etapas. **Ver alterações por etapa** mostra o que mudou. **Restaurar no rascunho** traz a versão de volta: "Versão X.XX restaurada no rascunho. Revise e salve para publicar."
+  </Step>
+</Steps>
+
+Se alguém salvou a esteira depois que você abriu, o seu Salvar é recusado: "Você está tentando salvar uma versão nova da esteira a partir de uma versão desatualizada." Clique em **Descartar e sincronizar** para carregar a versão atual e refazer o seu ajuste.
+
+Salvar não afeta execuções em andamento: cada uma continua na versão em que começou.
+
+## Validar e ativar
+
+<Steps>
+  <Step title="Validar configuração">
+    Confere a esteira inteira sem ativar. Tudo certo: "Configuração válida. A esteira está pronta para ativação." Caso contrário, a mensagem diz o que corrigir, como "Abra a etapa Decisão e salve para concluir a configuração." ou "Corrija as fórmulas inválidas em "X"."
+  </Step>
+  <Step title="Salve antes">
+    Com alterações pendentes, ativar e desativar ficam bloqueados: "Salve as alterações antes de ativar ou desativar a esteira."
+  </Step>
+  <Step title="Ativar esteira">
+    A plataforma confere ordem, fórmulas, fontes, alçadas e contas dos conectores. Ativada: "Esteira ativada."
+  </Step>
+</Steps>
+
+Você também ativa e desativa pela chave **Ativa** na lista. Uma esteira com problema aparece com um ícone de alerta: **Esteira com aviso** ou **Esteira inválida**.
+
+### Avisos de fonte
+
+- **Esteira ativa com fontes em conflito**: a esteira já estava ativa com duas fontes para o mesmo dado. Ela continua rodando, mas não poderá ser reativada se for desativada.
+- **Regra sem fonte**: a camada de uma etapa tem regra que nenhuma fonte declarada atende. Declare a fonte na política da camada ou remova a regra.
+- **Fonte ausente**: a etapa depende de uma fonte que nenhuma etapa anterior traz.
+
+Detalhes em [Camadas e add-ons](/esteiras/camadas-e-add-ons).
+
+## Partes e assinaturas
+
+Esteiras com Contrato e assinatura ou Solicitação têm também a política de partes (quem assina e em que papel). Se as regras de partes estão salvas mas a esteira não tem nenhuma dessas etapas, a tela avisa que elas estão sem efeito. Veja [Partes e assinaturas](/formalizacao/partes-e-assinaturas).
+
+## Excluir uma esteira
+
+Na lista, **Ações**, excluir. A tela pede confirmação ("Deseja realmente excluir a esteira?") e confirma com "Esteira excluída."
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Por que só aparecem Análise e Checkpoint?">
+    Numa esteira nova, a primeira etapa é que cria a esteira. Depois de criá-la, todos os tipos ficam disponíveis, conforme os módulos da sua organização.
+  </Accordion>
+  <Accordion title="Mudei a política de uma etapa. As execuções antigas mudam?">
+    Não. Cada execução roda o retrato da versão da esteira em que começou.
+  </Accordion>
+  <Accordion title="Posso trocar o tipo de uma etapa?">
+    Não. Remova a etapa e adicione outra do tipo certo.
+  </Accordion>
+  <Accordion title="A política de uma etapa aparece como indisponível">
+    A esteira aponta para uma política que não está entre as políticas ativas da organização. O vínculo continua salvo; reative a política ou escolha outra.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Etapas" icon="list-ol" href="/esteiras/etapas">
+    Os campos de cada tipo de etapa.
+  </Card>
+  <Card title="Acompanhar execuções" icon="list-check" href="/toolbox/acompanhar-execucoes">
+    O que fazer depois que a esteira roda.
+  </Card>
+</CardGroup>

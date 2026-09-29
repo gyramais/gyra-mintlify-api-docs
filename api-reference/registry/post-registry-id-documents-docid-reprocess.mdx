@@ -1,0 +1,25 @@
+---
+title: "Reprocessar Documento"
+description: "A classificação errou o tipo, a régua mudou, ou a leitura merece outra tentativa."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: post /v1/registry/{id}/documents/{docId}/reprocess
+---
+
+### Quando usar
+
+A classificação errou o tipo, a régua mudou, ou a leitura merece outra tentativa.
+
+### Reprocessar não cobra de novo
+
+A cobrança é por documento, não por tentativa.
+
+Sem `stages`, roda o pipeline inteiro. Com um subconjunto de `CLASSIFY`, `EXTRACT` e `VALIDATE`, as etapas de fora reaproveitam a tentativa anterior. Confira `stages.executed` e `stages.reused` no resultado.
+
+`forceType` corrige uma classificação errada. Como ele afirma o tipo, a conferência `EXPECTED_TYPE_MATCH` sai `SKIP` naquela tentativa.
+
+<Note>
+  Contexto e vocabulário em [Análise documental](/kyc/analise-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+</Note>

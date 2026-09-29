@@ -1,0 +1,23 @@
+---
+title: "Consultar Cadastro"
+description: "Quando você já tem o id e quer o dossiê completo."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: get /v1/registry/{id}
+---
+
+### Quando usar
+
+Quando você já tem o id e quer o dossiê completo.
+
+### Só o detalhe traz estes dois
+
+`completenessSlots` abre a completude por exigência, dizendo qual documento cobre cada uma. `signingAuthority` traz quem assina pela empresa, já achatado, lido do documento societário vigente.
+
+Na listagem eles não vêm: seria uma consulta por linha.
+
+<Note>
+  Contexto e vocabulário em [Cadastro documental](/kyc/cadastro-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+</Note>

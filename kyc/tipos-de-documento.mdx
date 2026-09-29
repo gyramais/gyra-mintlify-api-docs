@@ -1,0 +1,125 @@
+---
+title: "Tipos de documento aceitos"
+description: "Os 25 tipos documentais que a plataforma analisa, com o que cada um é, o prazo de vigência padrão e os subtipos aceitos."
+icon: "files"
+surface: plataforma
+domain: cadastro
+audience: operador
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** a entrada é sempre a mesma, um arquivo. A plataforma reconhece sozinha qual dos 25 tipos abaixo aquele arquivo é, e o **formato do que ela devolve muda conforme o tipo identificado**. Os campos de cada tipo estão em [Formatos de retorno por documento](/api-reference/kyc/formatos-de-retorno).
+</Info>
+
+<Note>
+  **24 dos 25 são reconhecidos sozinhos.** A exceção é `DEMONSTRACOES_FINANCEIRAS`: balanço e DRE têm leitura própria, mas a classificação automática não os emite. Mande `typeHint: DEMONSTRACOES_FINANCEIRAS` no envio, ou peça o item pelo tipo numa solicitação.
+</Note>
+
+## Pessoa jurídica
+
+| Tipo | O que é | Vigência padrão |
+| --- | --- | --- |
+| `CONTRATO_SOCIAL` | Ato que cria a sociedade limitada e diz quem são os sócios e quem assina pela empresa | sem prazo padrão |
+| `ALTERACAO_CONTRATUAL` | Altera o contrato social; a última alteração consolidada substitui o contrato original | sem prazo padrão |
+| `ESTATUTO_SOCIAL` | Equivalente ao contrato social na sociedade anônima, na cooperativa e na associação | sem prazo padrão |
+| `REQUERIMENTO_EMPRESARIO` | Ato de abertura do empresário individual e do MEI, que não têm contrato social | sem prazo padrão |
+| `ATA_ASSEMBLEIA` | Elege a diretoria da S.A. e prova quem representa a empresa hoje; o mandato tem prazo e vence | 1095 dias |
+| `CERTIDAO_JUNTA` | Certidão da Junta Comercial: confirma na fonte oficial o que o contrato social afirma | 90 dias |
+| `PROCURACAO_PJ` | Transfere poderes de assinatura da empresa a um terceiro, com prazo e limites próprios | 365 dias |
+| `IRPJ_ECF` | Escrituração Contábil Fiscal entregue à Receita por quem é tributado pelo lucro real ou presumido; empresa do Simples não entrega, e o que prova a entrega é o recibo com número e hash | sem prazo padrão |
+| `DECLARACAO_FATURAMENTO` | Faturamento mês a mês declarado pela empresa e assinado pelo contador; não tem carimbo de órgão público | 90 dias |
+| `DEMONSTRACOES_FINANCEIRAS` | Balanço patrimonial e DRE assinados pelo contador; alimenta a análise financeira | 455 dias |
+| `CERTIDAO_PGFN_PJ` | Certidão conjunta da Receita e da PGFN: diz se a empresa deve tributo federal ou dívida ativa | 180 dias |
+| `CERTIDAO_FGTS` | Certificado de Regularidade do FGTS (CRF), emitido pela Caixa | 30 dias |
+| `CADIN_FEDERAL` | Cadastro de inadimplentes com órgão federal; pendência ali impede contratar com a União | 30 dias |
+| `CADIN_ESTADUAL` | Mesmo cadastro, no âmbito do estado; cada unidade da federação emite o seu | 30 dias |
+| `CERTIDAO_QSA` | Lista de sócios e participações na base da Receita, para conferir contra o contrato social | 90 dias |
+| `CERTIFICADO_SIMPLES_NACIONAL` | Comprova que a empresa é optante do Simples, o regime que dispensa a ECF | 90 dias |
+| `ESOCIAL_PJ` | Recibo de entrega das obrigações trabalhistas; mostra que a empresa declara os empregados que tem | 120 dias |
+
+## Pessoa física
+
+| Tipo | O que é | Vigência padrão |
+| --- | --- | --- |
+| `DOC_IDENTIDADE` | RG, CNH, CIN, RNE ou passaporte, com foto e assinatura visíveis | validade do próprio documento |
+| `COMPROVANTE_RESIDENCIA` | Conta de luz, água, gás ou telefone no nome da pessoa; é o documento em que a data mais importa | 60 dias |
+| `DIRPF` | Declaração anual da pessoa física; o que prova a entrega é o recibo, não a capa | sem prazo padrão |
+| `COMPROVANTE_RENDA` | Holerite, pró-labore ou recibo que mostra quanto a pessoa recebe; não é o imposto de renda | sem prazo padrão |
+| `CERTIDAO_PF` | Certidão de débito, protesto ou distribuição no nome da pessoa física | 90 dias |
+| `PROCURACAO_PF` | Transfere poderes da pessoa física a um terceiro, com prazo e limites próprios | 365 dias |
+| `COMPROVACAO_ESTADO_CIVIL` | Certidão de casamento, nascimento ou óbito; o divórcio é anotado na margem da própria certidão | não caduca |
+
+## Pessoa física e jurídica
+
+| Tipo | O que é | Vigência padrão |
+| --- | --- | --- |
+| `EXTRATO_BANCARIO` | Movimentação da conta: comprova a titularidade da conta de desembolso e mostra entradas, saídas e gasto de risco | 90 dias |
+
+## Tipos de controle
+
+Não são documentos que você pede, são desfechos da classificação:
+
+| Tipo | Quando aparece |
+| --- | --- |
+| `FORA_DE_ESCOPO` | Documento legítimo que não é nenhum dos tipos acima |
+| `NAO_IDENTIFICADO` | A análise não reconheceu o documento; costuma ser foto ilegível ou página em branco |
+
+## Subtipos
+
+Alguns tipos têm subtipo, e o subtipo importa para a decisão.
+
+### Comprovante de residência
+
+É o único tipo com lista fechada de subtipos aceitos. Por padrão a plataforma aceita **energia, gás, água/esgoto e telecom**; os demais são reconhecidos mas ficam de fora até a sua organização marcá-los como aceitos na régua.
+
+| Subtipo | Aceito por padrão |
+| --- | --- |
+| `ENERGIA` | sim |
+| `GAS` | sim |
+| `AGUA` | sim |
+| `TELECOM` | sim |
+| `IPTU` | não |
+| `ALUGUEL` | não |
+| `CONDOMINIO` | não |
+| `BANCO` | não |
+
+<Note>
+  Carnê de IPTU, rateio de condomínio e fatura de cartão são documentos legítimos que simplesmente não são conta de serviço de utilidade. Por isso o padrão os recusa, e por isso a régua deixa a sua organização aceitá-los.
+</Note>
+
+### Outros subtipos reconhecidos
+
+| Tipo | Campo | Valores |
+| --- | --- | --- |
+| `DIRPF` | `documentSubtype` | `DECLARACAO`, `RECIBO`, `CAPA`, `DECLARACAO_E_RECIBO` |
+| `IRPJ_ECF` | `documentSubtype` | `RECIBO`, `ESCRITURACAO`, `CAPA`, `ESCRITURACAO_E_RECIBO` |
+| `ATA_ASSEMBLEIA` | `documentSubtype` | `ELEICAO_DIRETORIA`, `ALTERACAO_ESTATUTO`, `AUMENTO_CAPITAL`, `OUTROS` |
+| `COMPROVACAO_ESTADO_CIVIL` | `documentKind` | `CERTIDAO_NASCIMENTO`, `CERTIDAO_CASAMENTO`, `AVERBACAO_DIVORCIO`, `ATESTADO_OBITO_CONJUGE`, `OUTRO` |
+| `DOC_IDENTIDADE` | `documentKind` | `RG`, `CNH`, `RNE`, `PASSAPORTE` |
+| `COMPROVANTE_RENDA` | `kind` | `HOLERITE`, `INFORME_RENDIMENTOS`, `PRO_LABORE`, `DECORE`, `EXTRATO_INSS`, `OUTRO` |
+| `CERTIDAO_JUNTA` | `certificateType` | `SIMPLIFICADA`, `ESPECIFICA`, `INTEIRO_TEOR` |
+
+## Formatos de arquivo
+
+| Onde | Formatos | Tamanho |
+| --- | --- | --- |
+| Envio ao cadastro (presign + confirm) | PDF, JPG, PNG | até 50 MB |
+| Validação síncrona (`POST /registry/validate-document`) | PDF, JPG, PNG | até 15 MB |
+| Item de solicitação | PDF, JPG, PNG por padrão, ajustável por item | até 50 MB |
+| Balanço e DRE na análise financeira | PDF e ZIP do XBRL da Central de Balanços | até 50 MB |
+
+<Warning>
+  Balanço fotografado não entra: a análise financeira precisa de densidade de texto que a foto não tem, e aceitar produziria extração ruim em vez de recusa clara. Planilha também não, o motor não lê XLSX.
+</Warning>
+
+## Requisito societário em vez de tipo fixo
+
+Numa solicitação, um item de documento pode pedir um **requisito** no lugar de um tipo. O documento que responde ao requisito depende da natureza jurídica da empresa:
+
+| Requisito | O que se quer saber | Quem responde |
+| --- | --- | --- |
+| `CONSTITUTIVO_VIGENTE` | O que a empresa é (objeto, capital, sede) | Contrato social ou alteração consolidada na LTDA; estatuto na S.A.; requerimento no MEI |
+| `REPRESENTACAO_VIGENTE` | Quem pode assinar por ela | Contrato social na LTDA; ata de eleição da diretoria na S.A. |
+
+O destinatário nunca vê a palavra "requisito": na criação da solicitação ele vira item com tipo e nome concretos.

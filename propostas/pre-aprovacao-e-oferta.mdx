@@ -1,0 +1,171 @@
+---
+title: "Pré-aprovação e oferta"
+description: "As duas rodadas da oferta: a faixa pré-aprovada que o cliente escolhe numa página com a sua marca, e a oferta firme com cronograma congelado que segue para o contrato."
+icon: "hand-holding-dollar"
+surface: conceito
+domain: proposta
+audience: ambos
+lang: nao-tecnica
+---
+
+A pré-aprovação deixa o cliente escolher, dentro do que a sua análise aprovou, o valor, o prazo e a carência que cabem no caixa dele, vendo as parcelas antes de confirmar. Você decide os limites; ele decide dentro deles. O resultado é menos ida e volta por telefone e uma oferta final que o cliente já conhece.
+
+<Info>
+  **Resumo:** a oferta acontece em rodadas. Na **pré-aprovação**, a esteira calcula uma faixa e envia um link ao cliente, que escolhe valor, prazo e carência. Na **oferta firme**, a esteira aprova as condições finais e a GYRA+ congela o cronograma que vai para o contrato.
+</Info>
+
+## As duas rodadas
+
+| Rodada | Na tela | O que é | Quem define |
+| --- | --- | --- | --- |
+| Pré-aprovação | **Pré-aprovação** | Uma faixa: valor mínimo e máximo, prazos e carências permitidos, spread de risco | A etapa **Pré-aprovação** da esteira, por fórmula |
+| Oferta firme | **Oferta firme** | As condições finais, com cronograma congelado | O resultado da esteira, depois da escolha do cliente e das aprovações |
+
+Cada rodada é uma oferta nova registrada na proposta. Quando uma rodada nova começa, as ofertas ainda abertas das rodadas anteriores ficam **Substituída**. Ofertas **Escolhida** e **Vencida** ficam como história.
+
+| Situação da oferta | O que significa |
+| --- | --- |
+| **Rascunho** | Registrada, mas não enviada ao cliente |
+| **Enviada** | O link está com o cliente, esperando a escolha |
+| **Escolhida** | O cliente (ou você, em nome dele) escolheu as condições |
+| **Vencida** | Passou da validade sem escolha |
+| **Substituída** | Uma rodada nova tomou o lugar dela |
+| **Emitida** | A oferta firme registrada no fim da esteira |
+
+## Rodada 1: a faixa pré-aprovada
+
+A faixa nasce da etapa **Pré-aprovação** da [esteira](/esteiras/etapas). Ela precisa vir antes da **Decisão**, e cada fórmula pode usar o que a análise já produziu.
+
+| Campo da etapa | O que define | Exemplo |
+| --- | --- | --- |
+| **Valor mínimo (R$)** | Fórmula do menor valor | `#valor_pedido * 0.5` |
+| **Valor máximo (R$)** | Fórmula do maior valor | `#valor_pedido` |
+| **Prazos permitidos (meses)** | As opções de prazo | 12, 18, 24 |
+| **Prazo máximo por fórmula (opcional)** | Corta os prazos acima do resultado | |
+| **Carências permitidas (meses)** | As opções de carência (vazio = sem carência) | 0, 3, 6 |
+| **Spread de risco (opcional)** | O spread do cliente, em pontos-base ao ano, limitado ao teto do produto | `250` (2,5% a.a.) |
+| **Validade (dias)** | Por quanto tempo o link vale (1 a 365, padrão 15) | 15 |
+| **Enviar ao cliente** | Manda o link por **E-mail**, **SMS** ou os dois | |
+| **Esperar a escolha** | A esteira para até o cliente escolher | |
+| **Ao vencer** | O que fazer se o link vencer sem escolha | |
+
+Para o pedido de R$ 200 mil em 24 meses, as fórmulas acima dão uma faixa de R$ 100 mil a R$ 200 mil, em 12, 18 ou 24 meses, com 0, 3 ou 6 meses de carência.
+
+<Tip>
+  Se a fórmula não produz uma faixa válida (sem valor, mínimo maior que o máximo, nenhum prazo cabe ou spread negativo), a etapa não inventa oferta: ela para e espera um analista, com o motivo na tela. Execução sem proposta ligada pula a etapa.
+</Tip>
+
+A etapa pode aparecer mais de uma vez na esteira. Cada uma abre uma rodada, que pode ter sua própria revisão da oferta, comitê IA e alçada. Veja [Decisão, alçada e comitê](/esteiras/decisao-alcada-e-comite).
+
+### Enviar ou só registrar
+
+- **Enviar ao cliente** ligado: a GYRA+ gera o link, avisa o cliente e a proposta vai para **Esperando o cliente**.
+- **Enviar ao cliente** desligado: a oferta fica registrada como **Rascunho**, visível para a sua equipe, sem link.
+
+Esperar a escolha sem enviar não faz sentido, e a etapa não deixa salvar essa combinação.
+
+## O aviso ao cliente
+
+Quando a pré-aprovação é enviada, o cliente recebe um aviso com a marca da sua organização (nome, logo e cores):
+
+- **E-mail:** "Seu pedido de *produto* foi pré-aprovado" (com o nome do produto), com o botão **Escolher valor e prazo**, a validade e o lembrete de que ainda passa por análise final e não é contrato.
+- **SMS:** uma mensagem curta com o nome da sua organização, o produto e o link.
+
+O aviso não traz valor, taxa nem prazo: o cliente vê as condições só na página da oferta. Ele vai para o contato da proposta (o e-mail e o celular informados no pedido) ou, sem ele, para o destinatário da solicitação ligada.
+
+<Note>
+  Este é o único aviso que a GYRA+ manda ao cliente final sobre a proposta. O resultado final você comunica pelo seu canal. Para saber quando ele chega, consulte a proposta pela API ou use o webhook de fim da execução. Veja [Acompanhar e avisar o cliente](/propostas/visao-geral#acompanhar-e-avisar-o-cliente).
+</Note>
+
+## A página da oferta
+
+O link abre uma página com a marca da sua organização, sem login. O cliente vê:
+
+<Steps>
+  <Step title="A faixa">
+    "Seu pedido foi pré-aprovado", com a faixa de valor, e o convite a escolher o valor e o prazo que cabem no caixa.
+  </Step>
+  <Step title="As escolhas">
+    **Quanto você quer** (um controle deslizante dentro da faixa), o prazo e a carência entre as opções da oferta.
+  </Step>
+  <Step title="As parcelas">
+    **1ª parcela**, **Maior parcela**, **Total a pagar**, **CET** e o **Cronograma** completo, recalculados a cada mudança. Com índice pós-fixado, o cronograma aparece como estimado.
+  </Step>
+  <Step title="A confirmação">
+    **Confirmar estas condições**. A página confirma o recebimento e avisa que a proposta segue para a análise final.
+  </Step>
+</Steps>
+
+Se o produto não mostra a faixa, a página não revela o mínimo e o máximo: o cliente vê um valor único (o valor pedido, limitado à faixa) e escolhe prazo e carência.
+
+A escolha vale **uma vez só**. Depois dela, o link mostra "Você já escolheu suas condições". Com a escolha, a proposta volta a **Em análise** e a esteira segue com o valor, o prazo e a carência escolhidos (nas fórmulas, `valor_escolhido`, `prazo_escolhido` e `carencia_escolhida`).
+
+<Accordion title="O que o cliente pode ver no lugar da oferta">
+  | Na página | Por quê |
+  | --- | --- |
+  | "Não encontramos esta oferta" | O endereço está errado ou incompleto, ou é um link antigo que um reenvio substituiu |
+  | "Esta pré-aprovação venceu" | Passou da validade, a proposta foi encerrada ou uma rodada nova tomou o lugar desta oferta |
+  | "Você já escolheu suas condições" | A escolha já foi feita |
+  | "Muitas tentativas seguidas" | Muitas chamadas em pouco tempo; basta esperar um instante |
+  | "Esta oferta está incompleta" | A oferta não tem o que a página precisa para simular |
+  | "Não conseguimos carregar a página" | Falha temporária; tentar de novo resolve |
+</Accordion>
+
+## Quando você escolhe pelo cliente
+
+Nem todo cliente escolhe pelo link. Enquanto a proposta está **Esperando o cliente**, o detalhe da proposta mostra o painel **Esperando o cliente escolher**, com três ações:
+
+| Ação | O que faz |
+| --- | --- |
+| **Copiar link** | Copia o link vigente para você mandar pelo seu canal (WhatsApp, chat, e-mail próprio). Não gera link novo |
+| **Reenviar e-mail** | Gera um link novo e avisa o cliente de novo, por todos os canais que o contato tem. **O link anterior deixa de abrir** |
+| **Registrar escolha do cliente** | Registra valor, prazo e carência que o cliente escolheu fora da página (ligação, e-mail, presencial) |
+
+Registrar a escolha segue as mesmas regras da página (valor dentro da faixa, prazo e carência entre as opções) e exige um **motivo** de até 500 caracteres, como "o cliente escolheu por telefone com a gerente Ana". A GYRA+ guarda quem registrou e por quê, e a esteira segue exatamente como se o cliente tivesse escolhido pelo link.
+
+<Accordion title="Quando não há link para copiar">
+  **Copiar link** não devolve link quando a proposta está encerrada, o cliente já escolheu, a oferta não tem link (não foi enviada) ou já venceu. Links emitidos antes de a cópia existir não podem ser recuperados: use **Reenviar e-mail** para gerar um novo.
+</Accordion>
+
+## Validade e vencimento
+
+A pré-aprovação vale 15 dias por padrão (de 1 a 365, definido na etapa). O link para de aceitar escolha no horário exato da validade. A situação da oferta, da proposta e da execução é atualizada numa verificação que roda a cada 15 minutos, então a tela pode levar alguns minutos para mostrar **Vencida**.
+
+O que acontece no vencimento depende de **Ao vencer**:
+
+| Opção | O que acontece |
+| --- | --- |
+| **Parar para o analista** (padrão) | A execução continua parada, esperando alguém da sua equipe decidir |
+| **Encerrar a proposta como vencida** | A execução termina sem decisão e a proposta vai para **Vencida** |
+| **Seguir sem a escolha** | A esteira continua sem a escolha do cliente |
+
+Uma oferta vencida não pode ser reenviada. Para dar outra chance ao cliente, rode a análise de novo e emita uma rodada nova.
+
+## Rodada 2: a oferta firme
+
+Quando a execução termina aprovada com oferta, a GYRA+ registra a **oferta firme**: o valor e o prazo aprovados, a carência, a taxa, o CET e o **cronograma congelado**, calculado com os índices do dia. A proposta vai para **Oferta emitida**.
+
+A oferta firme é o que alimenta o contrato na [formalização](/formalizacao/visao-geral): valor, prazo, parcelas e datas saem dela, sem redigitação. Ela não tem validade padrão.
+
+A **Foto da aprovação** da decisão final guarda a oferta firme junto com o cadastro, os sócios e os documentos que sustentaram a decisão.
+
+## Pela API
+
+A proposta traz as ofertas de cada rodada, e a API tem rotas para copiar e reenviar o link e para registrar a escolha em nome do cliente. Na API, valores vão em **centavos** (R$ 150.000,00 é `15000000`) e o spread de risco em **pontos-base** ao ano. Veja [API de Propostas](/api-reference/propostas/visao-geral).
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Precificação" icon="calculator" href="/propostas/precificacao">
+    Como as parcelas da página da oferta são calculadas.
+  </Card>
+  <Card title="Etapas da esteira" icon="list-check" href="/esteiras/etapas">
+    Onde a etapa Pré-aprovação se encaixa.
+  </Card>
+  <Card title="Formalização" icon="file-signature" href="/formalizacao/visao-geral">
+    Da oferta firme ao contrato assinado.
+  </Card>
+  <Card title="Propostas no toolbox" icon="table-list" href="/toolbox/propostas">
+    O painel da pré-aprovação no detalhe da proposta.
+  </Card>
+</CardGroup>

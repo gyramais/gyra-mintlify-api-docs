@@ -1,0 +1,169 @@
+---
+title: "Fechamento externo"
+description: "Avise a GYRA+ que o contrato foi fechado no seu sistema: a execução que espera na etapa Aguardar fechamento externo conclui e a esteira segue."
+icon: "flag-checkered"
+surface: api
+domain: esteira
+audience: integrador
+lang: tecnica
+---
+
+O fechamento externo é a chamada que o seu sistema faz quando o crédito foi liberado do seu lado. Ela conclui a etapa **Aguardar fechamento externo** da esteira, sem ninguém precisar abrir a tela.
+
+<Info>
+  **Resumo:** `POST /operation/close` com o número do contrato, o CPF ou CNPJ do tomador e a data. A plataforma acha a execução que espera o fechamento, conclui a etapa e a esteira continua. Repetir a mesma chamada é seguro.
+</Info>
+
+<Note>
+  A etapa **Aguardar fechamento externo** faz parte da fase de formalização da esteira e exige o módulo de Formalização. Veja [Execuções](/esteiras/execucoes) e [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Como o fechamento funciona
+
+<Steps>
+  <Step title="A execução para na etapa">
+    Com o crédito aprovado e a formalização em dia, a execução chega em **Aguardar fechamento externo** e espera. Na tela, ela aparece como "aguardando fechamento externo".
+  </Step>
+  <Step title="O seu sistema chama a API">
+    Quando o contrato é fechado do seu lado, você envia número do contrato, documento e data.
+  </Step>
+  <Step title="A esteira segue">
+    A etapa conclui aprovada, as etapas seguintes rodam e, ao terminar, a execução dispara o webhook `OPERATION`, como qualquer execução.
+  </Step>
+</Steps>
+
+Se a etapa tem prazo e ele vence sem a sua chamada, a espera passa a um analista. Até o analista decidir, você ainda pode fechar pela API.
+
+Os dados do fechamento ficam disponíveis para as etapas seguintes nas variáveis `fechamento.referencia`, `fechamento.data` e `fechamento.documento`.
+
+---
+
+## Fechar a operação
+
+```http
+POST /operation/close
+```
+
+Esta rota não tem o prefixo `/v1`. A organização sai do token: você só encontra execuções da sua organização.
+
+<ParamField body="referenceId" type="string">
+  Número do contrato. Até 100 caracteres. Número JSON é aceito e convertido em texto.
+</ParamField>
+<ParamField body="ccbNumber" type="string">
+  Sinônimo de `referenceId`, para quem chama o número de CCB.
+</ParamField>
+<ParamField body="externalId" type="string">
+  Sinônimo de `referenceId`.
+</ParamField>
+<ParamField body="document" type="string" required>
+  CPF ou CNPJ do tomador, com ou sem máscara, inclusive CNPJ alfanumérico. Até 30 caracteres.
+</ParamField>
+<ParamField body="date" type="string" required>
+  Data do fechamento no formato `AAAA-MM-DD`. Precisa ser uma data que existe.
+</ParamField>
+<ParamField body="operationId" type="string">
+  Id da execução (ou da esteira) para escolher qual fechar quando mais de uma casa com os dados. É o id que vem na mensagem do `409` de ambiguidade.
+</ParamField>
+
+Informe o número do contrato em **um** dos três campos. Se mandar mais de um, eles precisam ter o mesmo valor. A comparação ignora espaços e maiúsculas: `30392026g 0000101` casa com `30392026G0000101`.
+
+<CodeGroup>
+```bash Requisição
+curl -X POST https://gyra-core.gyramais.com.br/operation/close \
+  -H "Authorization: Bearer $GYRA_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ccbNumber": "30392026G0000101",
+    "document": "11.222.333/0001-81",
+    "date": "2026-09-21"
+  }'
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+{
+  "status": "CLOSED",
+  "operationResultId": "66f1e1b0c7d2e30012b3c101",
+  "operationId": "66e2b7f1a9c3d20011c4e210",
+  "proposalId": "66f1e0a3c2b9d40012a1b001",
+  "referenceId": "30392026G0000101",
+  "contractNumber": "30392026G0000101",
+  "document": "11222333000181",
+  "date": "2026-09-21",
+  "closedAt": "2026-09-21T17:04:31.000Z",
+  "executionStatus": "APPROVED",
+  "formalizationStatus": "DONE"
+}
+```
+</CodeGroup>
+
+<ResponseField name="status" type="string">Sempre `CLOSED`.</ResponseField>
+<ResponseField name="operationResultId" type="string">Id da execução fechada. É o mesmo do webhook `OPERATION`.</ResponseField>
+<ResponseField name="operationId" type="string">Id da esteira.</ResponseField>
+<ResponseField name="proposalId" type="string | null">Proposta ligada à execução, quando há.</ResponseField>
+<ResponseField name="referenceId" type="string">Número do contrato informado, sem espaços e em maiúsculas.</ResponseField>
+<ResponseField name="contractNumber" type="string">Número do contrato da operação depois do fechamento.</ResponseField>
+<ResponseField name="document" type="string">Documento só com dígitos.</ResponseField>
+<ResponseField name="date" type="string">Data do fechamento, `AAAA-MM-DD`.</ResponseField>
+<ResponseField name="closedAt" type="string">Quando o fechamento foi registrado. Na repetição, é o do primeiro fechamento.</ResponseField>
+<ResponseField name="executionStatus" type="string">Situação da execução depois do fechamento, por exemplo `APPROVED` quando terminou, ou `PENDING` quando ainda há etapas rodando.</ResponseField>
+<ResponseField name="formalizationStatus" type="string | null">Situação da formalização: `PENDING`, `DONE` ou `FAILED`.</ResponseField>
+
+## Como a execução é encontrada
+
+1. **Pelo número do contrato e pelo documento.** Se a execução já tem número de contrato, ele manda.
+2. **Pelo documento**, entre as execuções que esperam o fechamento, quando nenhuma tem aquele número.
+
+Se a execução já tem um número gerado pela GYRA+ e você manda outro, o fechamento é recusado. Se o número da execução veio do seu sistema, ou se ela ainda não tem número, o número que você mandar passa a ser o do contrato.
+
+Quando mais de uma execução casa, a resposta é `409` com os ids na mensagem. Repita a chamada com `operationId`.
+
+## Repetir é seguro
+
+| Situação | Resposta |
+| --- | --- |
+| Mesma chamada de novo (mesmo número, documento e data) | `200` com o mesmo resultado |
+| Operação já fechada, com dados diferentes | `409`, e o fechamento não é refeito |
+| Duas chamadas ao mesmo tempo | A operação fecha uma vez só. A outra chamada recebe `200` com o mesmo resultado ou `409` pedindo para tentar de novo em instantes |
+
+## Erros
+
+| Status | Mensagem | O que fazer |
+| --- | --- | --- |
+| `400` | `"Informe o número do contrato (referenceId, ccbNumber ou externalId)."` | Envie um dos três campos |
+| `400` | `"referenceId, ccbNumber e externalId são o mesmo número do contrato: informe só um, ou todos com o mesmo valor."` | Mande um só campo |
+| `400` | `"O número do contrato deve ter no máximo 100 caracteres."` | Encurte o número |
+| `400` | `"Informe o CPF ou o CNPJ do tomador."` | Envie `document` |
+| `400` | `"Informe o CPF ou o CNPJ do tomador (11 ou 14 caracteres, com ou sem máscara)."` | Confira a quantidade de caracteres do documento |
+| `400` | `"Documento inválido."` | `document` com mais de 30 caracteres |
+| `400` | `"Informe a data do fechamento no formato AAAA-MM-DD (ex.: 2026-09-21)."` | Corrija o formato ou use uma data que existe |
+| `400` | `"O operationId informado não é um id válido."` | Use o id de 24 caracteres da execução |
+| `404` | `"Nenhuma operação aguardando fechamento externo foi encontrada para esse número de contrato e documento."` | Confira número e documento. A execução pode não ter chegado à formalização |
+| `409` | `"Mais de uma operação aguarda fechamento externo para esses dados. Informe o operationId (id da execução) para escolher qual fechar. Execuções: {ids}."` | Repita com `operationId` |
+| `409` | `"A operação ainda não chegou à etapa de fechamento externo (o contrato pode estar em assinatura). Tente de novo depois."` | Aguarde a etapa anterior, por exemplo a assinatura |
+| `409` | `"A esteira desta operação não tem a etapa \"Aguardar fechamento externo\"."` | A esteira não espera fechamento. Nada a fazer pela API |
+| `409` | `"A etapa de fechamento externo desta operação não vai rodar (formalização interrompida ou crédito não aprovado)."` | A execução não vai formalizar |
+| `409` | `"A etapa de fechamento externo desta operação já foi decidida por um analista."` | Um analista decidiu antes da sua chamada |
+| `409` | `"A operação está sendo fechada por outra chamada neste momento. Tente de novo em instantes."` | Repita em alguns segundos |
+| `409` | `"Este número de contrato já pertence a outra operação da organização. Confira o número ou informe o operationId."` | Confira o número |
+| `409` | `"O número do contrato informado ({número}) não confere com o número gerado pela Gyra para esta operação ({número da operação}). Confira o número ou informe o operationId da operação certa."` | Use o número do contrato gerado pela plataforma |
+| `409` | `"Esta operação já foi fechada com outros dados (contrato {número}, data {DD/MM/AAAA}). O fechamento não é refeito."` | O fechamento já existe; confira os seus dados |
+| `403` | `"Você não tem permissão para acessar este recurso."` | A credencial não tem permissão para fechar operações |
+
+<Tip>
+  Trate `409` de "ainda não chegou à etapa" e de "outra chamada neste momento" como temporários e tente de novo mais tarde. Os demais `409` pedem correção dos dados ou uma decisão sua.
+</Tip>
+
+## Depois do fechamento
+
+A execução segue as etapas que vêm depois do fechamento. Ao terminar, o webhook `OPERATION` chega com o `operationResultId` e a situação final. Cadastre a URL em [Webhooks](/api-reference/webhook/post-webhook).
+
+<CardGroup cols={2}>
+  <Card title="Execuções" icon="list-check" href="/esteiras/execucoes">
+    Estados da execução, esperas e o webhook `OPERATION`.
+  </Card>
+  <Card title="API de Propostas" icon="file-invoice-dollar" href="/api-reference/propostas/visao-geral">
+    Do pedido à oferta escolhida.
+  </Card>
+</CardGroup>

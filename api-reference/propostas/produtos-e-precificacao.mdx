@@ -1,0 +1,416 @@
+---
+title: "Produtos e precificação"
+description: "Leia produtos e carteiras, consulte os índices de mercado e simule o cronograma de parcelas de uma estrutura financeira."
+icon: "calculator"
+surface: api
+domain: proposta
+audience: integrador
+lang: tecnica
+---
+
+O produto diz o que você oferece e como cobra: tipo, faixa de valor, prazos, taxa e encargos. Estas rotas leem o catálogo e calculam parcelas com os índices de mercado do dia.
+
+<Info>
+  **Resumo:** pela API você **lê** produtos e carteiras e **simula** parcelas. Criar e editar produto é feito na tela de Produtos. Conceitos em [Produtos](/propostas/produtos) e [Precificação](/propostas/precificacao).
+</Info>
+
+---
+
+## Ler a configuração de propostas
+
+```http
+GET /v1/proposal-settings
+```
+
+Diz se a organização organiza os produtos em carteiras. Quando as carteiras estão ligadas, todo produto tem uma.
+
+<CodeGroup>
+```bash Requisição
+curl https://gyra-core.gyramais.com.br/v1/proposal-settings \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+{
+  "portfoliosEnabled": true
+}
+```
+</CodeGroup>
+
+<ResponseField name="portfoliosEnabled" type="boolean">`true` quando as carteiras estão ligadas. Desligado por padrão.</ResponseField>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `502` | `"Não foi possível carregar a configuração de propostas."` | Falha interna |
+
+---
+
+## Listar carteiras
+
+```http
+GET /v1/portfolios
+```
+
+Lista as carteiras com os números de cada uma. Carteira agrupa produtos para acompanhar volume e rentabilidade.
+
+<CodeGroup>
+```bash Requisição
+curl https://gyra-core.gyramais.com.br/v1/portfolios \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+[
+  {
+    "id": "66e0c1d2a3b4c50010d0a001",
+    "name": "Varejo",
+    "enabled": true,
+    "productCount": 3,
+    "inAnalysisCents": 125000000,
+    "issued30dCents": 480000000
+  }
+]
+```
+</CodeGroup>
+
+<ResponseField name="productCount" type="integer">Produtos na carteira.</ResponseField>
+<ResponseField name="inAnalysisCents" type="integer">Soma das propostas em `IN_ANALYSIS`, `WAITING_CUSTOMER` e `WAITING_OPERATOR`, em centavos.</ResponseField>
+<ResponseField name="issued30dCents" type="integer">Soma das propostas que chegaram a `OFFER_ISSUED` nos últimos 30 dias, em centavos.</ResponseField>
+
+O valor de cada proposta nas somas é o valor fixo do produto ou, sem ele, o valor pedido. A carteira considerada é a que a proposta congelou ao nascer.
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `502` | `"Não foi possível listar as carteiras."` | Falha interna |
+
+---
+
+## Listar produtos
+
+```http
+GET /v1/products
+```
+
+Lista os produtos da organização, ordenados por nome.
+
+<ParamField query="kind" type="string">`FINANCING` (financiamento) ou `INSTALLMENT_SALE` (venda a prazo).</ParamField>
+<ParamField query="portfolioId" type="string">Id da carteira.</ParamField>
+<ParamField query="enabled" type="string">`true` para só os ligados, `false` para só os desligados. Ausente: todos.</ParamField>
+
+<CodeGroup>
+```bash Requisição
+curl "https://gyra-core.gyramais.com.br/v1/products?enabled=true" \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+A resposta é uma lista de produtos no formato de [Ler um produto](#ler-um-produto).
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `"O tipo informado não é válido."` | `kind` fora da lista |
+| `400` | `"Carteira inválida."` | `portfolioId` fora do formato |
+| `400` | `"Filtro de ativo inválido (use true ou false)."` | `enabled` diferente de `true` e `false` |
+| `502` | `"Não foi possível listar os produtos."` | Falha interna |
+
+---
+
+## Ler um produto
+
+```http
+GET /v1/products/{key}
+```
+
+Devolve um produto pela chave. A chave é a mesma usada em `productKey` ao criar a proposta.
+
+<ParamField path="key" type="string" required>Chave do produto: letras, números, `-` e `_`, sem espaço, até 60 caracteres.</ParamField>
+
+<CodeGroup>
+```bash Requisição
+curl https://gyra-core.gyramais.com.br/v1/products/capital-giro \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+{
+  "id": "66e0c3f4a5b6c70010e0b002",
+  "key": "capital-giro",
+  "name": "Capital de giro",
+  "kind": "FINANCING",
+  "purpose": null,
+  "portfolioId": "66e0c1d2a3b4c50010d0a001",
+  "entityTypes": ["COMPANY"],
+  "showAmount": true,
+  "amount": { "mode": "RANGE", "minCents": 1000000, "maxCents": 100000000 },
+  "pricing": {
+    "version": 1,
+    "amortization": "PRICE",
+    "periodicityMonths": 1,
+    "rate": [
+      { "kind": "FIXED", "bpsYear": 2200, "label": "Taxa base" },
+      { "kind": "RISK", "maxBpsYear": 1200 }
+    ],
+    "grace": { "maxMonths": 3, "interest": "PAID", "everyMonths": 1 },
+    "fees": [
+      { "kind": "IOF", "base": "PRINCIPAL", "financed": true },
+      { "kind": "TAC", "label": "Tarifa de cadastro", "cents": 50000, "base": "PRINCIPAL", "financed": false }
+    ],
+    "dayCount": "BUS252",
+    "limits": {
+      "amount": { "minCents": 1000000, "maxCents": 100000000 },
+      "termMonths": { "min": 6, "max": 36 }
+    }
+  },
+  "items": [],
+  "onCompleted": { "kind": "OPERATION", "id": "66e2b7f1a9c3d20011c4e210" },
+  "enabled": true,
+  "createdAt": "2026-09-10T12:00:00.000Z",
+  "updatedAt": "2026-09-22T18:30:00.000Z"
+}
+```
+</CodeGroup>
+
+<ResponseField name="key" type="string">Chave estável do produto. Não muda depois de criada.</ResponseField>
+<ResponseField name="kind" type="string">`FINANCING` ou `INSTALLMENT_SALE`.</ResponseField>
+<ResponseField name="purpose" type="string | null">Finalidade, do catálogo de objetivos da política de crédito.</ResponseField>
+<ResponseField name="entityTypes" type="string[]">`COMPANY`, `PERSON` ou os dois. Vazio: atende os dois.</ResponseField>
+<ResponseField name="showAmount" type="boolean">Se o cliente vê o valor e a faixa na página da oferta.</ResponseField>
+<ResponseField name="amount" type="object | null">Como o valor é definido: `mode` `FIXED` (com `valueCents`), `RANGE` (com `minCents` e ou `maxCents`) ou `FREE`.</ResponseField>
+<ResponseField name="pricing" type="object">Estrutura financeira. Veja [abaixo](#estrutura-financeira).</ResponseField>
+<ResponseField name="items" type="object[]">Documentos que o produto pede ao cliente, somados aos do modelo de solicitação.</ResponseField>
+<ResponseField name="onCompleted" type="object | null">O que roda quando a solicitação conclui: `kind` `POLICY` ou `OPERATION` e o `id` da política ou da esteira.</ResponseField>
+<ResponseField name="enabled" type="boolean">Produto desligado não aceita proposta nova. Propostas que já o usaram não mudam.</ResponseField>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `"A chave do produto informada não é válida."` | Chave fora do formato |
+| `404` | `"Produto não encontrado."` | Chave inexistente nesta organização |
+| `502` | `"Não foi possível carregar o produto."` | Falha interna |
+
+---
+
+## Estrutura financeira
+
+A estrutura financeira (`pricing`) é o mesmo objeto no produto, na proposta (`pricingSnapshot`) e na simulação. Dinheiro em centavos, taxas em pontos-base.
+
+| Campo | Valores | O que define |
+| --- | --- | --- |
+| `version` | `1` | Versão do formato |
+| `amortization` | `PRICE`, `SAC`, `BULLET` (americano), `SINGLE` (parcela única), `EQUAL` (sem juros) | Sistema de amortização |
+| `periodicityMonths` | `1`, `3`, `6`, `12` | Intervalo entre parcelas |
+| `rate` | lista de componentes | Composição da taxa, somada |
+| `grace` | `{ maxMonths, interest, everyMonths }` | Carência máxima; `interest` `PAID` (paga juros) ou `CAPITALIZED` (juros vão ao saldo); `everyMonths` `1`, `3`, `6` ou `12` para o pagamento dos juros |
+| `fees` | lista de encargos | `kind` `IOF`, `TAC`, `INSURANCE`, `GUARANTEE_FUND` ou `CUSTOM`; `base` `PRINCIPAL`, `BALANCE` ou `INSTALLMENT`; `bps` ou `cents`; `financed` |
+| `dayCount` | `BUS252`, `D30_360`, `D365` | Base de dias |
+| `limits` | `{ amount: { minCents, maxCents }, termMonths: { min, max }, downPaymentBps }` | Limites do produto |
+| `assumptions` | `{ cdiBpsYear, selicBpsYear, ipcaBpsYear, igpmBpsYear, trBpsYear, tlpRealBpsYear, tfbBpsYear, lcdSpreadBpsYear }` | Valores de índice de reserva |
+| `fixedAssumptions` | lista de chaves de `assumptions` | Índices que o produto fixa, no lugar do valor de mercado |
+| `interestFreeUpToTerm` | inteiro | Sem juros até este número de parcelas |
+
+Componentes de `rate`:
+
+| `kind` | Campos | Efeito |
+| --- | --- | --- |
+| `FIXED` | `bpsYear` | Taxa pré-fixada ao ano |
+| `INDEX` | `index` (`CDI`, `SELIC`, `IPCA`, `IGPM`, `TR`, `TLP`, `TFB`, `LCD`), `pctBps`, `mode` (`FLOATING` ou `CORRECT_BALANCE`) | Percentual de um índice, somado aos juros ou corrigindo o saldo |
+| `RISK` | `maxBpsYear` | Spread de risco, no máximo um por estrutura. A oferta define o valor, limitado a este teto |
+
+A fórmula de cada componente está em [Precificação](/propostas/precificacao).
+
+---
+
+## Listar modelos de estrutura financeira
+
+```http
+GET /v1/pricing/presets
+```
+
+Devolve estruturas prontas para começar um produto: capital de giro pré e pós-fixado, repasses BNDES (TLP, Taxa Fixa, LCD), programa com fundo garantidor, crédito rural, imobiliário, venda parcelada sem juros, venda com juros do lojista e bullet. Os números são ilustrativos.
+
+<CodeGroup>
+```bash Requisição
+curl https://gyra-core.gyramais.com.br/v1/pricing/presets \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+[
+  {
+    "key": "working-capital-fixed",
+    "name": "Capital de giro pré-fixado",
+    "description": "Parcelas fixas (Price) com taxa pré-fixada mais spread de risco da oferta, IOF financiado e tarifa de cadastro.",
+    "pricing": { "version": 1, "amortization": "PRICE", "periodicityMonths": 1 }
+  }
+]
+```
+</CodeGroup>
+
+Cada item traz `key`, `name`, `description` e a `pricing` completa (resumida acima).
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `502` | `"Não foi possível carregar os modelos de estrutura financeira."` | Falha interna |
+
+---
+
+## Consultar os índices de mercado
+
+```http
+GET /v1/pricing/market-indices
+```
+
+Devolve o valor atual de cada índice que a precificação usa, com data de referência e fonte. É o mesmo valor que a simulação aplica.
+
+<CodeGroup>
+```bash Requisição
+curl https://gyra-core.gyramais.com.br/v1/pricing/market-indices \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+{
+  "indices": [
+    {
+      "index": "CDI",
+      "label": "CDI",
+      "assumptionKey": "cdiBpsYear",
+      "available": true,
+      "bpsYear": 1490,
+      "referenceDate": "2026-09-26",
+      "source": "BCB-SGS",
+      "sourceCode": "4392",
+      "sourceLabel": "Banco Central",
+      "fetchedAt": "2026-09-29T11:00:04.000Z",
+      "stale": false,
+      "fallbackBpsYear": 1490
+    },
+    {
+      "index": "TJLP",
+      "label": "TJLP",
+      "assumptionKey": null,
+      "available": false,
+      "bpsYear": null,
+      "referenceDate": null,
+      "source": null,
+      "sourceCode": null,
+      "sourceLabel": null,
+      "fetchedAt": null,
+      "stale": false,
+      "fallbackBpsYear": null
+    }
+  ]
+}
+```
+</CodeGroup>
+
+Índices da lista: CDI, Selic, IPCA (12 meses), IGP-M (12 meses), TR e TJLP, do Banco Central; e a taxa real da TLP, a Taxa Fixa BNDES e o spread da LCD, do BNDES. A TJLP é só consulta e não entra no cálculo.
+
+<ResponseField name="available" type="boolean">`false` quando não há valor. A simulação usa então `fallbackBpsYear` e avisa.</ResponseField>
+<ResponseField name="bpsYear" type="integer | null">Valor em pontos-base ao ano. `1490` = 14,90% a.a.</ResponseField>
+<ResponseField name="assumptionKey" type="string | null">Chave em `assumptions` que este índice alimenta.</ResponseField>
+<ResponseField name="stale" type="boolean">`true` quando a atualização falhou e este é o último valor bom guardado.</ResponseField>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `502` | `"Não foi possível carregar os índices de mercado."` | Falha interna |
+
+---
+
+## Simular parcelas
+
+```http
+POST /v1/pricing/simulate
+```
+
+Calcula o cronograma de uma estrutura financeira para um valor e um prazo: parcelas, juros, IOF, total pago e CET. Use a `pricing` de um produto (de `GET /v1/products/{key}`) para mostrar ao cliente quanto ele vai pagar antes de criar a proposta.
+
+<ParamField body="pricing" type="object" required>Estrutura financeira. Formato em [Estrutura financeira](#estrutura-financeira).</ParamField>
+<ParamField body="amountCents" type="integer" required>Valor, em centavos. Mínimo `1`.</ParamField>
+<ParamField body="termMonths" type="integer" required>Prazo, em meses. De `1` a `600`.</ParamField>
+<ParamField body="graceMonths" type="integer">Carência, em meses. De `0` a `120`, limitada ao que a estrutura permite.</ParamField>
+<ParamField body="riskBpsYear" type="integer">Spread de risco, em pontos-base ao ano, a partir de `0`. Ausente: a simulação usa o teto do componente `RISK` e avisa.</ParamField>
+<ParamField body="entityType" type="string">`COMPANY` ou `PERSON`. Muda a alíquota diária do IOF.</ParamField>
+<ParamField body="assumptions" type="object">Valores de índice para esta simulação, com as chaves de `assumptions` (por exemplo, `{ "cdiBpsYear": 1400 }`). Vencem o valor de mercado.</ParamField>
+
+Ordem de escolha do valor de cada índice: o informado em `assumptions` desta chamada, o fixado no produto, o de mercado do dia, a premissa do produto e, por último, um padrão. Cada valor usado sai em `indexValuesUsed`, com origem e fonte.
+
+<CodeGroup>
+```bash Requisição
+curl -X POST https://gyra-core.gyramais.com.br/v1/pricing/simulate \
+  -H "Authorization: Bearer $GYRA_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pricing": {
+      "version": 1,
+      "amortization": "PRICE",
+      "periodicityMonths": 1,
+      "rate": [{ "kind": "FIXED", "bpsYear": 2400 }],
+      "grace": { "maxMonths": 0, "interest": "PAID", "everyMonths": 1 },
+      "fees": [],
+      "dayCount": "BUS252",
+      "limits": {
+        "amount": { "minCents": 100000, "maxCents": 5000000 },
+        "termMonths": { "min": 1, "max": 24 }
+      }
+    },
+    "amountCents": 1200000,
+    "termMonths": 3,
+    "entityType": "COMPANY"
+  }'
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+{
+  "installments": [
+    { "n": 1, "paymentCents": 414545, "interestCents": 21706, "amortizationCents": 392839, "correctionCents": 0, "feesCents": 0, "balanceCents": 807161, "isGrace": false },
+    { "n": 2, "paymentCents": 414545, "interestCents": 14600, "amortizationCents": 399945, "correctionCents": 0, "feesCents": 0, "balanceCents": 407216, "isGrace": false },
+    { "n": 3, "paymentCents": 414582, "interestCents": 7366, "amortizationCents": 407216, "correctionCents": 0, "feesCents": 0, "balanceCents": 0, "isGrace": false }
+  ],
+  "principalCents": 1200000,
+  "financedFeesCents": 0,
+  "totalPaidCents": 1243672,
+  "firstPaymentCents": 414545,
+  "maxPaymentCents": 414582,
+  "cetBpsYear": 2400,
+  "isEstimated": false,
+  "assumptionsUsed": {},
+  "indexValuesUsed": [],
+  "warnings": []
+}
+```
+</CodeGroup>
+
+<ResponseField name="installments" type="object[]">Uma linha por parcela: `n`, `paymentCents`, `interestCents`, `amortizationCents`, `correctionCents` (correção monetária do saldo, não é pagamento), `feesCents`, `balanceCents` e `isGrace`.</ResponseField>
+<ResponseField name="totalPaidCents" type="integer">Soma de tudo que o cliente paga.</ResponseField>
+<ResponseField name="cetBpsYear" type="integer">Custo efetivo total, em pontos-base ao ano.</ResponseField>
+<ResponseField name="isEstimated" type="boolean">`true` quando a taxa depende de índice: o cronograma é uma estimativa com o valor de hoje.</ResponseField>
+<ResponseField name="indexValuesUsed" type="object[]">Cada índice usado, com `key`, `label`, `bpsYear`, `origin` (`INPUT`, `PRODUCT_FIXED`, `MARKET`, `PRODUCT` ou `DEFAULT`), data de referência, fonte e uma descrição pronta, como `"CDI 14,90% a.a. em 23/09/2026, BCB-SGS 4392"`.</ResponseField>
+<ResponseField name="warnings" type="string[]">Avisos do cálculo, em português. Mostre ao usuário.</ResponseField>
+
+A estrutura inválida responde `400` com todas as falhas juntas.
+
+| Status | Mensagem (exemplos) | Quando |
+| --- | --- | --- |
+| `400` | `"Informe a estrutura financeira."` | `pricing` ausente |
+| `400` | `"O prazo deve ser de no máximo 600."` | `termMonths` acima de 600 |
+| `400` | `"Sistema de amortização inválido: use PRICE, SAC, BULLET, SINGLE ou EQUAL."` | `amortization` desconhecido |
+| `400` | `"O valor mínimo para este produto é R$ {valor}."` | Abaixo de `limits.amount.minCents` |
+| `400` | `"O valor máximo para este produto é R$ {valor}."` | Acima de `limits.amount.maxCents` |
+| `400` | `"O prazo para este produto precisa estar entre {mín} e {máx} meses."` | Fora de `limits.termMonths` |
+| `400` | `"Com pagamento a cada {p} meses, o prazo sem a carência ({n} meses) precisa ser múltiplo de {p}."` | Prazo incompatível com a periodicidade |
+| `400` | `"Este produto não aceita carência."` | Carência com `grace.maxMonths` igual a 0 |
+| `400` | `"A carência máxima para este produto é de {n} meses."` | Carência acima do máximo |
+| `400` | `"A carência precisa ser menor que o prazo."` | Carência maior ou igual ao prazo |
+| `502` | `"Não foi possível simular agora."` | Falha interna |

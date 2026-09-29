@@ -1,0 +1,147 @@
+---
+title: "Verificação de identidade"
+description: "Os três caminhos para provar quem é a pessoa: face match com documento, sem documento contra a base oficial do CPF, e o código enviado a um e-mail que o bureau já associa a ela."
+icon: "user-check"
+surface: plataforma
+domain: cadastro
+audience: operador
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** o item `IDENTITY` pede que a pessoa prove quem é. Há **três caminhos**, e eles não respondem a mesma pergunta: dois são biométricos (é essa pessoa?) e um é de posse (quem digitou tem acesso a esta caixa?). A sua organização escolhe quais liberar, e a plataforma nunca fecha a pessoa num beco: se um caminho não dá, o outro continua disponível.
+</Info>
+
+## Os três caminhos
+
+<CardGroup cols={3}>
+  <Card title="Com documento" icon="id-card">
+    A pessoa fotografa o documento e faz a selfie. O face match compara a selfie com o retrato **do documento**. É o caminho clássico.
+  </Card>
+  <Card title="Sem documento" icon="face-viewfinder">
+    Prova de vida primeiro, e a selfie é conferida contra o retrato que a **base oficial** liga ao CPF. Resolve a maioria das pessoas em segundos, sem upload nenhum.
+  </Card>
+  <Card title="Valida+ (código por e-mail)" icon="envelope-circle-check">
+    Um código é enviado a um e-mail que o **bureau associa àquele CPF/CNPJ**, e não a um endereço que alguém digitou.
+  </Card>
+</CardGroup>
+
+## Com documento
+
+O padrão. Captura do documento e face match contra o retrato dele, com prova de vida.
+
+## Sem documento
+
+O caminho brasileiro: a prova de vida vem primeiro e a selfie é confrontada com o retrato ligado ao CPF na base de identidade oficial. O documento vira o **plano B** em vez da porta de entrada.
+
+O desfecho da consulta à base decide o caminho:
+
+| Retorno da base | O que acontece |
+| --- | --- |
+| Correspondência total | Aprova |
+| Sem correspondência | Vai para **revisão humana**, e não para o documento |
+| Inconclusivo, ou sem registro utilizável | Cai no fluxo clássico, com documento |
+
+<Note>
+  Sem correspondência não manda a pessoa para o documento de propósito: o documento é o artefato que um impostor controla, e mandá-lo para lá é fazer o jogo dele.
+</Note>
+
+Ligue este caminho no item com `rules.documentless: true`. Ele exige o CPF da pessoa, que é o insumo da consulta à base.
+
+## Valida+: código por e-mail conhecido
+
+O face match responde "é essa pessoa"; o código por e-mail responde "quem digitou tem acesso a esta caixa". São perguntas diferentes, e a segunda é mais fraca. A força dele está na origem do endereço: **não é o que o operador digitou**, é o que um bureau associa àquele CPF ou CNPJ.
+
+Isso fecha um buraco real: num código enviado a um endereço escolhido pelo operador, um operador mal-intencionado (ou um CRM comprometido) põe o próprio e-mail e assina no lugar do cliente. Aqui ele não escolhe.
+
+### Como funciona
+
+<Steps>
+  <Step title="Candidatos resolvidos no envio">
+    Ao enviar a solicitação, a plataforma consulta o bureau e grava até **5 candidatos** de e-mail para aquele documento. A consulta acontece uma vez, no envio, e não a cada abertura da página.
+  </Step>
+  <Step title="A pessoa escolhe">
+    A página mostra os endereços **mascarados**. A pessoa escolhe o que é dela e pede o código.
+  </Step>
+  <Step title="Confere o código">
+    Código de 10 minutos, 5 tentativas, 60 segundos de espera entre reenvios e no máximo 5 desafios por dia para o mesmo destinatário.
+  </Step>
+</Steps>
+
+### Nenhum caminho termina em beco
+
+Sem candidato, com candidato errado, com código estourado ou com a pessoa dizendo "nenhum desses é meu", o face match continua disponível. É por isso que a organização consegue liberar o e-mail sem abrir mão da biometria.
+
+A trilha registra o fracasso também: uma contestação de "não fui eu" se responde melhor mostrando que houve uma tentativa certa e nenhuma errada, num IP, num horário.
+
+<Note>
+  O código que o [formulário público](/kyc/formulario-publico) envia antes de abrir a solicitação é outra coisa. Ele vai para o e-mail ou celular que a própria pessoa digitou e só prova que ela tem acesso àquele contato. Não é verificação de identidade e não aparece na lista de verificações.
+</Note>
+
+## Configurar
+
+| Chave | Onde | O que faz |
+| --- | --- | --- |
+| `identityEmailEnabled` | capacidade da organização | Libera o Valida+ |
+| `rules.identityMethods` | item do modelo | `['FACE_MATCH']` (padrão), ou `['EMAIL','FACE_MATCH']` |
+| `rules.documentless` | item do modelo | Caminho sem documento |
+| `rules.minFaceSimilarity` | item do modelo | Similaridade facial mínima aceita |
+| `rules.requireLiveness` | item do modelo | Exige prova de vida executada |
+| `rules.requireIdentity` | item `CONSENT` | O consentimento só é aceito depois da identidade confirmada |
+| `signaturePackage` | item `SIGNATURE` | `SIGNATURE_AND_IDENTITY` amarra assinatura e identidade |
+
+<Note>
+  Item sem `identityMethods` vale `['FACE_MATCH']`: modelo publicado antes do Valida+ continua exigindo biometria, e ninguém precisa reescrever coleção para manter o que já tinha.
+
+  A ordem da lista não significa preferência. Quem decide o que aparece primeiro é a tela, e ela abre no e-mail só quando há candidato.
+</Note>
+
+## O que a plataforma devolve
+
+O resultado da verificação é traduzido para uma avaliação em português. O payload cru do provedor **nunca** chega ao navegador, e o documento sai mascarado.
+
+| Campo | O que é |
+| --- | --- |
+| `verdict` | `APPROVED`, `MANUAL_REVIEW`, `REJECTED` ou `PENDING` |
+| `reasons` | Por quê, em português, sem jargão de fornecedor |
+| `faceSimilarity` / `minFaceSimilarity` / `faceSimilarityMet` | Similaridade obtida, a exigida e se atendeu |
+| `livenessScore` / `livenessStatus` / `requireLiveness` / `livenessMet` | Prova de vida |
+| `documentMasked` | CPF lido do documento, mascarado (`***.456.789-**`) |
+| `documentMatchesRecipient` | Bate com o documento do destinatário? `null` quando não deu para comparar |
+| `recipientDocumentMasked` | Documento do destinatário, mascarado, para o confronto |
+| `fraudSignals` | Sinais de antifraude, com nome e explicação |
+| `imageCount` | Quantas imagens a verificação produziu |
+| `evaluatedAt` | Quando a avaliação foi feita |
+
+### Sinais de antifraude
+
+| Sinal | O que quer dizer |
+| --- | --- |
+| `IP_VPN` | A verificação foi feita por uma rede que esconde a localização real |
+| `IP_TOR` | Veio de uma rede de anonimato |
+| `IP_PROXY` | A conexão passou por um intermediário que mascara a origem |
+| `IP_ANONYMOUS` | A origem foi deliberadamente ocultada |
+| `IP_DATACENTER` | Partiu de um servidor, não de um celular ou computador doméstico |
+| `IP_HOSTING` | Partiu de infraestrutura de hospedagem, incomum para pessoa física |
+| `IP_RELAY` | Usou serviço de retransmissão que oculta o endereço original |
+| `VIRTUAL_CAMERA` | A imagem não veio da câmera do aparelho: um programa alimentou o vídeo |
+| `IMAGE_INJECTION` | Uma imagem pronta foi inserida no lugar da captura ao vivo |
+| `SPOOFING_DETECTED` | Sinais de foto de foto, tela ou máscara em vez de pessoa presente |
+| `DUPLICATE_FACE` | O mesmo rosto já apareceu em outra verificação, com outros dados |
+| `DUPLICATE_DETECTED` | Esta verificação repete uma anterior |
+| `PORTRAIT_MANIPULATED` | A foto impressa no documento mostra sinais de edição |
+| `DOCUMENT_MANIPULATED` | O documento apresentado mostra sinais de edição |
+| `DOCUMENT_EXPIRED` | O documento está fora do prazo de validade |
+| `AGE_MISMATCH` | A idade aparente na selfie não bate com a data de nascimento do documento |
+
+Sinal que a plataforma ainda não traduziu aparece com o código cru ao lado, para a investigação.
+
+## Acompanhe todas as verificações
+
+A tela [Validação de identidade](/toolbox/validacao-de-identidade), na seção **Onboarding** do menu, reúne as verificações da organização inteira, com filtro por resultado, período, método e busca por nome ou CPF.
+
+Pela API, a mesma lista sai em `GET /v1/collections/identity-verifications`. Ver [Visão geral da API](/api-reference/kyc/visao-geral#listar-as-validações-de-identidade).
+
+## Imagens da verificação
+
+Selfie e documento ficam guardados e podem ser abertos pelo operador. São dado pessoal sensível: a abertura é uma **ação explícita**, e a trilha registra quem viu e quando (`IDENTITY_MEDIA_VIEWED`).

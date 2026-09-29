@@ -1,0 +1,29 @@
+---
+title: "Revisar Item"
+description: "Modo de resposta com revisão: a IA avaliou e a decisão é sua."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: post /v1/collections/{id}/items/{itemId}/review
+---
+
+### Quando usar
+
+Modo de resposta com revisão: a IA avaliou e a decisão é sua.
+
+### As três saídas
+
+| `decision` | O que faz | `comment` |
+| --- | --- | --- |
+| `APPROVED` | O item fecha | opcional |
+| `RESEND_REQUESTED` | O destinatário recebe o pedido outra vez | **obrigatório** |
+| `WAIVED` | O item sai do pedido | opcional |
+
+<Warning>
+  Em `RESEND_REQUESTED`, o `comment` é o texto que **o cliente lê**. Escreva o que precisa ser corrigido, não o código da verificação.
+</Warning>
+
+<Note>
+  Contexto e vocabulário em [Solicitações de coleta](/kyc/solicitacoes). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+</Note>

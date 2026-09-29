@@ -1,0 +1,19 @@
+---
+title: "Listar Solicitações"
+description: "Para responder quem está devendo documento?: filtre por `SENT` e `IN_PROGRESS` e olhe o prazo."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: get /v1/collections
+---
+
+### Quando usar
+
+Para responder "quem está devendo documento?": filtre por `SENT` e `IN_PROGRESS` e olhe o prazo.
+
+`itemsAwaitingOperator` diz quantos itens esperam uma decisão sua, que é a fila que trava a solicitação do lado de dentro.
+
+<Note>
+  Contexto e vocabulário em [Solicitações de coleta](/kyc/solicitacoes). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+</Note>

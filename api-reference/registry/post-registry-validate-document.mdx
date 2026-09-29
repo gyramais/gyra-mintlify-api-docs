@@ -1,0 +1,31 @@
+---
+title: "Validar Documento"
+description: "Você tem um arquivo e quer o parecer agora."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: post /v1/registry/validate-document
+---
+
+### Quando usar
+
+Você tem um arquivo e quer o parecer agora. Uma chamada, um arquivo, e o resultado volta na resposta.
+
+### A entrada é única
+
+Você **não diz** que documento está mandando. A plataforma identifica entre os [25 tipos](/kyc/tipos-de-documento) e o objeto `extraction` da resposta traz os campos **daquele tipo**. O mapa completo está em [Formatos de retorno](/api-reference/kyc/formatos-de-retorno).
+
+`expectedType` não força nada: diz o que você **pediu**, e a plataforma confronta com o que leu. É o campo que pega o arquivo legítimo enviado no lugar errado. Já `typeHint` **afirma** o tipo e pula a classificação.
+
+### Trate o 202 como caminho normal
+
+Documento longo ou digitalizado passa dos 55 segundos. Continue por [Status do documento](/api-reference/registry/get-registry-documents-docid-status), ou assine o webhook `registry.document.assessed`.
+
+### Leia `effectiveVerdict`
+
+`assessment.verdict` é o parecer da IA, que nunca é reescrito. Quando um operador discorda, a decisão dele entra em `feedbackVerdict` e **`effectiveVerdict` passa a ser ela**.
+
+<Note>
+  Contexto e vocabulário em [Análise documental](/kyc/analise-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+</Note>

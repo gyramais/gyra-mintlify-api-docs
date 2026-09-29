@@ -1,0 +1,19 @@
+---
+title: "Enviar Solicitação"
+description: "Primeiro envio de um rascunho, ou reenvio de um pedido que o cliente não respondeu."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: post /v1/collections/{id}/send
+---
+
+### Quando usar
+
+Primeiro envio de um rascunho, ou reenvio de um pedido que o cliente não respondeu.
+
+Sem corpo. O recado do operador é o que foi gravado na criação; o reenvio não aceita um texto novo.
+
+<Note>
+  Contexto e vocabulário em [Solicitações de coleta](/kyc/solicitacoes). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+</Note>

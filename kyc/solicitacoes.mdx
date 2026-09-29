@@ -1,0 +1,202 @@
+---
+title: "Solicitações de coleta"
+description: "O pedido enviado ao cliente final: modelo, itens, destinatários, canal, prazo, lembretes e o que acontece com cada resposta."
+icon: "paper-plane"
+surface: plataforma
+domain: cadastro
+audience: operador
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** uma solicitação nasce de um **modelo**, aponta para um **cadastro** e vai para um ou mais **destinatários**. Cada destinatário recebe um link próprio; o que ele entrega é analisado e arquivado no cadastro. A solicitação também pode nascer do [formulário público](/kyc/formulario-publico), quando a própria pessoa abre o link do modelo.
+</Info>
+
+## Anatomia
+
+```
+Modelo (o que pedir, sempre)
+  └── Solicitação (este pedido, para este cadastro)
+        ├── Destinatário  → link próprio, prazo, lembretes
+        └── Item          → DOCUMENT | FORM | CONSENT | SIGNATURE | IDENTITY | CUSTOM
+```
+
+## Modelos
+
+O modelo é a lista do que se pede, publicada em **versões**: salvar publica uma versão nova e a anterior nunca é reescrita. O `slug` é o endereço estável entre versões, então a integração aponta para o slug e nunca precisa mudar.
+
+Cada item do modelo declara:
+
+| Campo | O que é |
+| --- | --- |
+| `kind` | A espécie do item |
+| `documentType` ou `requirement` | O tipo pedido, ou o [requisito societário](/kyc/tipos-de-documento#requisito-societário-em-vez-de-tipo-fixo) que a natureza jurídica resolve |
+| `label` | O que o destinatário lê |
+| `instructions` | Instrução opcional |
+| `required` | Obrigatório ou não |
+| `perPerson` | Um item por destinatário pessoa física |
+| `rules` | Regras daquele pedido (abaixo) |
+
+Modelos podem ser **duplicados** numa cópia editável e removidos logicamente.
+
+### Ligar e desligar
+
+Cada modelo pode ser **desligado** na sua organização. Desligado, ele some da escolha de modelo (na nova solicitação e na etapa de solicitação da esteira), mas continua na lista de modelos para ser religado. Não é exclusão: o que já foi enviado com ele segue valendo.
+
+### Modelos GYRA+
+
+Além dos modelos da sua organização, há os **modelos GYRA+**, prontos para uso. Você pode usá-los como estão e desligá-los só para a sua organização, mas não editá-los: para mudar algo, duplique e edite a cópia.
+
+### Link público
+
+Um modelo pode ganhar um endereço aberto, que qualquer pessoa usa para começar a própria solicitação. Ver [Formulário público](/kyc/formulario-publico).
+
+### Regras do item
+
+| Regra | O que faz |
+| --- | --- |
+| `maxAgeDays` | Recência exigida deste pedido, em dias da emissão. Vence o prazo da régua |
+| `maxSizeBytes` | Teto de tamanho (padrão 50 MB) |
+| `acceptedMimeTypes` | Formatos aceitos (padrão PDF, JPG, PNG) |
+| `allowMultipleFiles` | Aceita mais de um arquivo no mesmo item (desligado por padrão) |
+| `maxFiles` | Teto de arquivos quando o anterior está ligado |
+| `reuseIfValidWithinDays` | Reaproveita documento já validado dentro da janela |
+| `minFaceSimilarity`, `requireLiveness` | Exigências da [verificação de identidade](/kyc/verificacao-de-identidade) |
+| `identityMethods` | Como a identidade pode ser cumprida: `FACE_MATCH`, `EMAIL` ou os dois |
+
+<Warning>
+  Esta é a lista **inteira** que a API aceita em `rules`. Chave fora dela é descartada em silêncio, sem erro: o modelo salva, a resposta é `200` e a regra simplesmente não existe do outro lado.
+
+  O termo do item de consentimento escolhe-se por `consentTemplateId`, no próprio item, e não dentro de `rules`.
+</Warning>
+
+<Tip>
+  `allowMultipleFiles` existe porque a resposta honesta a alguns pedidos é mais de um arquivo: contrato social com todas as alterações, extrato de três meses, documento fotografado frente e verso. Sem ele, quem está no celular manda a primeira página e espera ser reprovado.
+</Tip>
+
+### Comportamento do modelo
+
+| Chave | Padrão | O que faz |
+| --- | --- | --- |
+| `acceptPartial` | `false` | Fecha a solicitação mesmo com item pendente |
+| `requestResendOnReject` | `true` | Item reprovado vira novo pedido ao destinatário |
+| `notifyOnComplete` | `true` | Avisa quando tudo fecha |
+| `skipItemsAlreadyOnFile` | `true` | Não pede o que o cadastro já tem válido e vigente |
+| `blockSignatureUntilDependenciesMet` | `true` | Termo que cita resposta de formulário ou campo de documento só é assinável depois que aquele item concluir |
+
+## Ao concluir
+
+O modelo decide o que acontece quando a solicitação fecha. O padrão é não fazer nada.
+
+| Opção | O que acontece |
+| --- | --- |
+| **Nada** | A resposta fica registrada no cadastro. Ninguém é acionado |
+| **Gerar relatório** | A plataforma gera um relatório com a política escolhida, usando o documento do cadastro |
+| **Rodar esteira** | A plataforma roda a [esteira](/esteiras/visao-geral) escolhida com o documento do cadastro |
+
+- **Vale o combinado no envio.** A escolha viaja com a solicitação: editar o modelo depois não muda o que acontece com as solicitações já enviadas.
+- **Com proposta, o disparo é por proposta.** Quando a solicitação tem [propostas](/propostas/visao-geral) ligadas, a análise roda para cada uma delas, e não uma vez só para a solicitação.
+- **A solicitação aberta pela esteira não dispara.** Ela devolve o controle à execução que a abriu (ver [Origens](#quem-abre-uma-solicitação)).
+- **Sem documento, sem disparo.** A análise precisa do CPF ou CNPJ do cadastro.
+- **Falha no disparo não chega ao cliente.** Quem respondeu vê a solicitação concluída do mesmo jeito.
+
+O relatório ou a esteira rodam em nome de quem abriu a solicitação. Na solicitação do formulário público, que ninguém da sua equipe abriu, o responsável é quem publicou a versão do modelo; sem um usuário responsável, o disparo não acontece.
+
+## Criar uma solicitação
+
+O mínimo é: o **slug do modelo**, o **cadastro** (por `document` ou por `registryId`) e ao menos um **destinatário**.
+
+Você pode sobrescrever, por solicitação, o prazo (`dueInDays`, até 180 dias), o canal, o modo de resposta, e mandar um recado do operador. `forceItemKeys` pede um item mesmo quando o cadastro já o tem.
+
+Limites: 30 destinatários por solicitação, 50 partes por documento conjunto.
+
+### Quem abre uma solicitação
+
+Toda solicitação guarda a origem. Na tela da solicitação, ela aparece como um rótulo.
+
+| Origem | Quem abre | Rótulo na tela |
+| --- | --- | --- |
+| Manual | Um operador, na tela, ou a sua integração, pela API | (sem rótulo) |
+| Renovação | A renovação periódica do cadastro. Enquanto uma renovação está em curso, outra não é aberta | **Renovação automática** |
+| Esteira | A etapa de solicitação de uma [esteira](/esteiras/visao-geral). Ao fechar, a execução retoma de onde parou, e o **Ao concluir** do modelo não roda | **Aberta por uma esteira** |
+| Formulário público | A própria pessoa, pelo [link aberto do modelo](/kyc/formulario-publico). O cadastro nasce do documento informado | **Veio do link público** |
+
+Na solicitação do formulário público, o contato que a pessoa informa nunca substitui o que o cadastro já conhece. Quando diverge, a tela da solicitação mostra o aviso e nada muda no cadastro.
+
+## Canais
+
+| Canal | Quem avisa |
+| --- | --- |
+| `EMAIL` | A plataforma, por e-mail |
+| `WHATSAPP` | A plataforma, por WhatsApp |
+| `BOTH` | Os dois |
+| `NONE` | **Ninguém.** O link volta na resposta da criação e quem entrega é você |
+
+<Note>
+  `NONE` é para quem já fala com o cliente pelo app ou pelo canal próprio e não quer um segundo aviso saindo por fora. A solicitação vai para `SENT` do mesmo jeito (ela foi emitida), a trilha registra que ninguém foi avisado por escolha, e o lembrete também não sai.
+</Note>
+
+Com `NONE`, informar contato deixa de ser obrigatório. Nos demais canais, cada destinatário precisa de e-mail ou telefone.
+
+## Prazo e lembretes
+
+Prazo padrão de 7 dias, lembretes padrão no 2º e no 5º dia após o envio. Ambos configuráveis no modelo e por solicitação.
+
+Você pode **pré-visualizar** a mensagem exata que vai sair, sem enviá-la.
+
+## Modo de resposta
+
+| Modo | O que acontece com o item avaliado |
+| --- | --- |
+| `AUTOMATIC` | O parecer da IA resolve o item |
+| `REVIEW` | O item vai para `AWAITING_OPERATOR` e espera a decisão de uma pessoa |
+
+Em revisão, o operador tem três decisões: `APPROVED`, `RESEND_REQUESTED` (pede de novo, com motivo) ou `WAIVED` (dispensa).
+
+## Estados
+
+### Da solicitação
+
+`DRAFT` → `SENT` → `IN_PROGRESS` → `COMPLETED`, e os desfechos `EXPIRED` e `CANCELED`.
+
+### De cada item
+
+| Status | O que quer dizer |
+| --- | --- |
+| `PENDING` | Esperando o destinatário |
+| `ALREADY_ON_FILE` | O cadastro já tem, não foi pedido |
+| `SUBMITTED` | Recebido, ainda não processado |
+| `PROCESSING` | Pipeline rodando |
+| `VALIDATED` | Aprovado |
+| `REJECTED` | Reprovado, com motivo |
+| `MANUAL_REVIEW` | Precisa de olho humano |
+| `AWAITING_OPERATOR` | Avaliado pela IA, esperando decisão (modo `REVIEW`) |
+| `WAIVED` | Dispensado pelo operador |
+| `EXPIRED` | Venceu |
+
+### De cada destinatário
+
+`PENDING` → `DELIVERED` → `OPENED` → `IN_PROGRESS` → `COMPLETED`, mais `FAILED` (a mensagem não chegou) e `NO_ITEMS` (não sobrou item para essa pessoa).
+
+## Ações do operador
+
+| Ação | Efeito |
+| --- | --- |
+| Enviar / reenviar | Dispara o envio e devolve os links por destinatário |
+| Reemitir link | Gera link novo para um destinatário (até 3 reenvios) |
+| Revisar item | Aprova, pede reenvio ou dispensa |
+| Dispensar item | Tira o item da lista sem reprová-lo |
+| Cancelar | Encerra a solicitação |
+| Incluir parte | Acrescenta um signatário a um documento conjunto |
+| Ver imagens da identidade | Abre selfie e documento (a trilha registra quem viu e quando) |
+
+## Sugestões
+
+Duas ajudas que a plataforma dá ao montar o pedido:
+
+- **Contatos:** os e-mails e telefones que aquele CNPJ/CPF já usou em solicitações anteriores.
+- **Signatários:** quem assina, deduzido do documento societário vigente do cadastro (nome, documento e papel), com o regime de assinatura já lido.
+
+## Trilha
+
+Toda mudança de estado entra numa trilha append-only, com quem fez (operador, usuário de API, destinatário, formulário público ou sistema), quando e o id do evento. É dela que saem os [webhooks](/api-reference/kyc/eventos-de-webhook), o que garante que caso de uso novo não fique sem aviso. As ações próprias do formulário público (início, reaproveitamento de uma solicitação em andamento e divergência de contato) ficam só na trilha e não viram webhook.

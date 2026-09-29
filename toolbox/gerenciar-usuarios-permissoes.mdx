@@ -1,6 +1,6 @@
 ---
 title: "Usuários e Permissões"
-description: "Convidar, remover, atribuir papéis e configurar SSO (Google Workspace, Microsoft Azure AD)."
+description: "Adicionar, excluir, atribuir cargos, o que cada papel faz em cada módulo e SSO (Google Workspace, Microsoft Azure AD)."
 icon: "users-gear"
 surface: plataforma
 domain: usuarios
@@ -9,56 +9,101 @@ lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** a gestão de usuários no toolbox é feita em *Configurações, Usuários*. Cada usuário tem um **papel** (administrador, gestor de crédito, analista) que determina o que ele vê e faz. Organizações maiores podem plugar **SSO Google** ou **Microsoft Azure AD** para centralizar acesso no IdP corporativo.
+  **Resumo:** a gestão de usuários fica no **menu da organização**, em **Usuários e permissões** (a aba **Usuários** de Configurações). Cada usuário tem um **cargo** (administrador, gestor de crédito, coordenador, analista, financeiro) que determina o que ele vê e faz, dentro dos módulos que a organização contratou. Organizações maiores podem plugar **SSO Google** ou **Microsoft Azure AD** para centralizar acesso no IdP corporativo.
 </Info>
 
 ## Papéis disponíveis
 
-| Papel | Roda análise | Cria política | Edita política | Convida usuário | Relatórios visíveis |
+| Papel | Roda análise | Cria e edita política | Monta esteira | Gerencia usuários | Relatórios visíveis |
 | ----- | :---: | :---: | :---: | :---: | :---: |
-| **Administrador** | ✅ | ✅ | ✅ | ✅ | Todos da organização |
-| **Gestor de Crédito** | ✅ | ✅ | ✅ | ✅ | Todos da organização |
-| **Analista de Crédito** | ✅ | ❌ | ❌ | ✅ | Apenas os próprios |
+| **Administrador** | Sim | Sim | Sim | Sim | Todos da organização |
+| **Gestor de Crédito** | Sim | Sim | Sim | Sim | Todos da organização |
+| **Coordenador de Crédito** | Sim | Não | Não | Sim (analistas) | Todos da organização |
+| **Analista de Crédito** | Sim | Não | Não | Não | Apenas os próprios |
+| **Financeiro** | Não | Não | Não | Não | Nenhum |
+
+Cada papel só cria e edita usuários de papéis abaixo dele: o coordenador cuida de analistas, o gestor de crédito de coordenadores e analistas, e o administrador de todos.
+
+## O que cada papel faz em cada área
+
+A tabela vale dentro dos módulos que a organização contratou. Sem o módulo, a área não abre para ninguém (veja [Módulos e capacidades](/plataforma/modulos-e-capacidades)).
+
+| Área | Administrador | Gestor de Crédito | Coordenador e Analista |
+| --- | :---: | :---: | :---: |
+| **Análises de crédito**: rodar e acompanhar | Sim | Sim | Sim |
+| **Políticas**: criar e editar | Sim | Sim | Não |
+| **Esteiras**: montar e ativar | Sim | Sim | Não |
+| **Esteiras**: acompanhar execuções | Sim | Sim | Sim |
+| **Propostas**: criar, rodar análise, escolher a oferta | Sim | Sim | Sim |
+| **Produtos** e carteiras: configurar | Sim | Sim | Não |
+| **Modelos de contrato**: consultar | Sim | Sim | Sim |
+| **Modelos de contrato**: editar e publicar | Sim | Não | Não |
+| **Correspondentes** | Sim | Não | Não |
+| **Configurações** da organização: Fontes de dados, Exportação, Integrações, Marca, Envio, API & MCP | Sim | Não | Não |
+| **Usuários** | Sim | Sim | Só o coordenador, para analistas |
+
+### Onboarding
+
+Quem tem o módulo [Onboarding](/kyc/visao-geral) ganha estas ações, distribuídas assim:
+
+| Ação | Quem pode |
+| --- | --- |
+| Ver cadastro, enviar documento, reprocessar, decidir sobre o parecer | Todos os papéis que rodam análise |
+| Criar e enviar solicitação, revisar e dispensar item | Todos os papéis que rodam análise |
+| Ver a Validação de identidade | Todos os papéis que rodam análise |
+| Pausar a renovação de um cadastro | Todos os papéis que rodam análise |
+| Editar a régua de validação | Todos os papéis que rodam análise |
+| Configurar marca, domínio e canais de envio | Administrador, Owner e Superuser |
+| Gerar e revogar credenciais de API, cadastrar webhooks | Administrador, Owner e Superuser |
+| **Remover cadastro** | Administrador, Owner, Superuser e Gestor de Crédito |
+
+<Note>
+  **Editar a régua acompanha "rodar análise"**, e não a permissão de configurações: qualquer perfil que gere relatório publica uma versão nova da régua. Se isso não é o que a sua operação quer, o controle hoje é de processo, não de permissão.
+
+  **Remover cadastro tem permissão própria** (`can-remove-registry`), e não acompanha "rodar análise". Coordenador e analista não removem: coordenar não é o mesmo que responder pelo acervo.
+
+  Pausar a renovação continua aberta a qualquer perfil: são decisões de peso diferente, porque pausar se desfaz com um clique e mantém o dossiê, enquanto remover tira o cadastro das listagens.
+</Note>
+
+### Módulo não contratado
+
+Quando a organização não tem um módulo, o item aparece no menu com cadeado para quem o usaria pelo papel. O botão da apresentação muda conforme quem pede:
+
+- **Administrador** vê **Falar com o time Gyra+**: o pedido vai direto para o time GYRA+.
+- **Demais papéis** veem **Pedir ao administrador**: os administradores da organização recebem o pedido por e-mail, e o time GYRA+ também.
+
+### Assistente GYRA+
+
+O [Assistente GYRA+](/plataforma/assistente-gyra) age com o acesso de quem pergunta. Um analista que pede ao assistente para editar uma política recebe a mesma resposta que teria na tela: não é possível pelo papel dele.
+
+### Usuário de API
+
+Integrações servidor a servidor usam um **usuário de API** (`can-use-registry-api`), que não é um papel de pessoa: ele é criado junto com a credencial em *Configurações, API & MCP*. Ver [Chaves de API](/api-reference/api-keys).
 
 Cada usuário pertence a **uma** organização e tem **um** papel nela. Quem precisa atuar em mais de uma organização (consultorias, auditorias, operação terceirizada) usa **uma conta por organização**, cada uma com o seu próprio e-mail, já que o e-mail é único na plataforma.
 
-## Convidar um usuário
+## Adicionar um usuário
 
 <Steps>
-  <Step title="Abrir Configurações, Usuários">
-    Menu lateral, *Configurações*, aba *Usuários*.
+  <Step title="Abrir Usuários e permissões">
+    Clique no logo da organização, no topo do menu lateral, e em **Usuários e permissões**.
   </Step>
-  <Step title="Clicar em Convidar">
-    Botão *Convidar usuário* no topo da lista.
+  <Step title="Adicionar novo usuário">
+    Preencha **Nome completo**, **CPF**, **E-mail** e **Cargo**. A lista de cargos mostra só os papéis que você pode atribuir.
   </Step>
-  <Step title="Preencher os dados">
-    - **E-mail** (obrigatório).
-    - **Nome** (opcional, preenchido pelo próprio usuário no primeiro acesso).
-    - **Papel** (obrigatório).
-  </Step>
-  <Step title="Enviar">
-    Clicar em *Enviar convite*. O usuário recebe e-mail de `noreply@gyramais.com.br` com link de ativação (válido por 7 dias).
-  </Step>
-  <Step title="Usuário ativa e configura senha">
-    Ao abrir o link, ele é direcionado para definir senha ou vincular via SSO (se configurado na organização).
+  <Step title="Criar usuário">
+    Clique em **Criar usuário**. A pessoa recebe um e-mail para criar a senha.
   </Step>
 </Steps>
 
-## Remover ou alterar papel
+## Alterar cargo ou excluir
 
 Na lista de usuários:
 
-- **Alterar papel**: dropdown na linha do usuário. Mudança é imediata.
-- **Desativar**: usuário perde acesso mas histórico de análises dele permanece rastreável.
-- **Remover**: usuário não consegue mais logar nem aparece em novos convites, mas registros antigos continuam rastreáveis.
+- **Alterar cargo**: escolha o novo cargo na linha do usuário. A mudança é imediata.
+- **Excluir**: a exclusão pede um **código de verificação** enviado ao seu e-mail. Confirme com **Confirmar exclusão**. O histórico de análises da pessoa continua rastreável.
 
-<Tip>
-  Preferir *Desativar* a *Remover*. Desativar é reversível com um clique; remover exige convite novo.
-</Tip>
-
-## Reenviar convite
-
-Se o usuário perdeu o e-mail ou o link expirou (7 dias), na lista de usuários pendentes há a ação *Reenviar convite*. Gera novo link e notifica por e-mail.
+Você só altera ou exclui usuários de papéis abaixo do seu.
 
 ## SSO
 
@@ -71,7 +116,6 @@ Se você precisa **restringir o acesso apenas a SSO** (bloquear login por senha)
 - **Papéis são fixos**, não há papel customizado. Se o modelo não cabe, fale com o suporte para avaliar ajuste.
 - **Um e-mail pertence a uma única organização.** Não existe seleção de organização no login. Para atuar em mais de uma, é preciso uma conta (e um e-mail) por organização.
 - **SSO e senha coexistem por padrão.** Para forçar SSO-only, peça ao suporte.
-- **Convite expira em 7 dias.** Depois disso, precisa reenviar.
 
 ## Perguntas frequentes
 
@@ -83,13 +127,13 @@ Se você precisa **restringir o acesso apenas a SSO** (bloquear login por senha)
     Eleve o papel da nova pessoa para *Administrador*, confira que ela está ativa, e depois rebaixe ou remova o administrador anterior. Nunca remova o único administrador sem ter substituto.
   </Accordion>
   <Accordion title="Analista pode ver análises de outros analistas?">
-    Não. Analistas enxergam apenas as análises que eles próprios rodaram. Administradores e gestores de crédito veem todas as análises da organização.
+    Não. Analistas enxergam apenas as análises que eles próprios rodaram. Administradores, gestores e coordenadores de crédito veem todas as análises da organização.
   </Accordion>
   <Accordion title="SSO desativa o login por senha?">
     Por padrão não, os dois coexistem. Para forçar SSO-only, entre em contato com `atendimento@gyramais.com` que habilitamos essa configuração específica.
   </Accordion>
-  <Accordion title="Existe controle de sessão (logout forçado)?">
-    Sim. Administrador pode forçar logout de qualquer usuário em *Configurações, Usuários, ação Forçar logout*. Útil em caso de desligamento.
+  <Accordion title="Alguém saiu da empresa. O que faço?">
+    Exclua o usuário em **Usuários e permissões**. Ele perde o acesso, e as análises que rodou continuam rastreáveis.
   </Accordion>
 </AccordionGroup>
 
@@ -98,6 +142,9 @@ Se você precisa **restringir o acesso apenas a SSO** (bloquear login por senha)
 <CardGroup cols={2}>
   <Card title="Primeiro Acesso" icon="door-open" href="/toolbox/primeiro-acesso">
     Setup inicial da organização.
+  </Card>
+  <Card title="Módulos e capacidades" icon="cubes" href="/plataforma/modulos-e-capacidades">
+    O que a organização contratou.
   </Card>
   <Card title="Webhooks e API Keys" icon="key" href="/toolbox/webhooks-e-api-keys">
     Acesso programático.

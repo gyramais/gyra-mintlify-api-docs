@@ -51,7 +51,7 @@ O agente tenta chamar uma tool e recebe `401 Unauthorized`.
 
 ### Causas possíveis
 
-- **E-mail ou senha com typo** no `GYRA_CLIENT_ID` / `GYRA_CLIENT_SECRET`. Lembre que são o seu login da plataforma, não uma credencial emitida pelo suporte.
+- **E-mail ou senha com typo** no `GYRA_CLIENT_ID` / `GYRA_CLIENT_SECRET`. Lembre que são o seu login da plataforma, não a credencial de API que você gera em *Configurações, API & MCP*.
 - **Senha trocada na plataforma** e configuração do MCP desatualizada. É a causa mais comum: a sessão em aberto continua funcionando até expirar, e o 401 só aparece na próxima renovação, que pode ser horas depois da troca.
 - **Login de outra organização**. Se você tem acesso a mais de uma, confira qual está configurada.
 - **Usuário desativado** na plataforma.

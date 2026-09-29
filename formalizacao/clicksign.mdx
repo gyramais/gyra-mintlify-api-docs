@@ -1,0 +1,152 @@
+---
+title: "Clicksign"
+description: "Assine os contratos da esteira pela conta Clicksign da sua organização: conectar contas, envelope, autenticação, via assinada, reenviar e cancelar."
+icon: "signature"
+surface: conceito
+domain: formalizacao
+audience: operador
+lang: nao-tecnica
+---
+
+Com a Clicksign conectada, a esteira envia o contrato gerado direto para a sua conta Clicksign e acompanha cada assinatura sem ninguém copiar PDF de um lado para o outro.
+
+<Info>
+  **Resumo:** você conecta uma ou mais contas Clicksign em **Configurações > Integrações**. Na etapa **Contrato e assinatura**, escolha **Pela Clicksign**. A plataforma cria o envelope, cadastra cada parte com a autenticação do papel dela, ativa o envelope e baixa a via assinada quando todos terminam.
+</Info>
+
+<Note>
+  O conector Clicksign é liberado à parte, além do módulo de Formalização. A assinatura pela Clicksign é paga pela sua organização, direto na sua conta Clicksign. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Conecte a sua conta
+
+<Steps>
+  <Step title="Gere o token na Clicksign">
+    Na sua conta Clicksign, em **Configurações > API**, gere um token de acesso. A conta precisa ter a API de envelopes habilitada.
+  </Step>
+  <Step title="Cadastre a conta na plataforma">
+    Em **Configurações > Integrações**, no conector **Clicksign**, informe **Ambiente** (Sandbox ou Produção), **Nome da conta** e **Token de acesso**.
+  </Step>
+  <Step title="A plataforma testa e se inscreve">
+    Ao salvar, a plataforma testa o token na Clicksign e registra na sua conta o aviso de eventos de assinatura. A partir daí a conta aparece como **Recebendo avisos**.
+  </Step>
+</Steps>
+
+O token é guardado cifrado e nunca volta para a tela.
+
+### Várias contas
+
+- Você pode ter várias contas Clicksign, cada uma com um nome único.
+- A primeira vira a **padrão**. Troque em **Definir como padrão**.
+- Se a padrão for desabilitada, a habilitada mais recente assume.
+- A etapa **Contrato e assinatura** pode usar a padrão ou uma conta escolhida.
+- Cada envelope fica preso à conta com que nasceu.
+- Trocar o token ou o ambiente de uma conta com envelopes em andamento é recusado: "Não é possível trocar a conta da Clicksign: há N envelope(s) em andamento nesta credencial. ..."
+- Desabilitar a conta remove o aviso de eventos da sua conta Clicksign.
+
+## O que acontece no envio
+
+<Steps>
+  <Step title="Criar o envelope">
+    Em português, com fechamento automático quando todos assinam, prazo e lembrete configurados na etapa.
+  </Step>
+  <Step title="Anexar o contrato">
+    O PDF gerado pela etapa, até 11 MB.
+  </Step>
+  <Step title="Cadastrar cada parte">
+    Nome, e-mail, celular, CPF, data de nascimento, papel e a etapa de assinatura. Cada parte recebe os requisitos: concordar com o papel, provar a identidade pela autenticação do papel e, se configurado, rubricar todas as páginas.
+  </Step>
+  <Step title="Ativar e avisar">
+    O envelope é ativado e a Clicksign envia o convite: "Seu contrato está pronto para assinatura."
+  </Step>
+</Steps>
+
+O convite e os lembretes saem da própria Clicksign, pelo canal da autenticação de cada parte (e-mail, SMS ou WhatsApp).
+
+### Papéis e ordem
+
+| Papel na plataforma | Papel na Clicksign |
+| --- | --- |
+| Emitente | `issuer` |
+| Representante do emitente | `legal_representative` |
+| Avalista | `guarantor` |
+| Cônjuge do avalista | `guarantor_spouse` |
+| Interveniente | `intervening` |
+| Credor | `creditor` |
+| Testemunha | `witness` |
+
+As etapas de assinatura viram os grupos da Clicksign, que cuida da ordem. Até 20 grupos.
+
+### Autenticação
+
+| Nível do papel | Na Clicksign |
+| --- | --- |
+| **Essencial** | Código por e-mail, SMS ou WhatsApp |
+| **Reforçado** | O código, mais prova de vida |
+| **Qualificado** | Certificado ICP-Brasil |
+
+Detalhes dos níveis em [Partes e assinaturas](/formalizacao/partes-e-assinaturas#identidade-por-papel).
+
+### Configuração do envelope
+
+| Configuração | Padrão |
+| --- | --- |
+| Prazo | 30 dias (1 a 90) |
+| Lembrete | A cada 3 dias (1, 2, 3, 7, 14 ou desligado) |
+| Recusa bloqueia o envelope | Sim |
+| Rubrica em todas as páginas | Opcional |
+| Prazo vencido com assinatura parcial | O envelope é cancelado |
+
+## Acompanhe as assinaturas
+
+A Clicksign avisa a plataforma a cada evento, e o contrato na proposta se atualiza sozinho.
+
+| Evento na Clicksign | Efeito |
+| --- | --- |
+| Uma parte assinou | A parte aparece como **Assinou** |
+| Todos assinaram, envelope fechado | A via assinada é baixada e a etapa segue |
+| Uma parte recusou | O contrato fecha como recusado. Fim: "Uma parte recusou" |
+| Prazo venceu | O contrato fecha como vencido. Fim: "O prazo para assinar venceu" |
+| Envelope cancelado | O contrato fecha como cancelado. Fim: "Contrato cancelado" |
+
+Além dos avisos, a plataforma confere a cada 30 minutos os envelopes enviados que estão parados há mais de 12 horas, para não depender de um aviso que se perdeu.
+
+## A via assinada
+
+Quando o envelope fecha, a plataforma baixa o PDF assinado da Clicksign e guarda uma cópia na proposta. Na aba **Contrato**, **Via assinada** abre essa cópia, e **Original (sem assinaturas)** abre o PDF que foi enviado.
+
+## Reenvie o aviso ou cancele
+
+Na aba **Contrato** da proposta, com o contrato aberto na Clicksign:
+
+| Ação | O que faz |
+| --- | --- |
+| **Reenviar aviso** | Pede à Clicksign que avise de novo quem ainda não assinou |
+| **Cancelar** | Abre **Cancelar o contrato?**. Em **Cancelar contrato**, o envelope é cancelado na Clicksign e o contrato fecha com o motivo "O contrato foi cancelado pelo operador." |
+
+Depois do envio, as partes não mudam: "Este documento já foi enviado para a Clicksign: para mudar as partes, cancele o contrato e gere um novo."
+
+Com o contrato fechado sem valer (recusa, prazo ou cancelamento), **Gerar contrato novo** gera outro contrato, com o quadro de partes de agora, e um envelope novo. Veja [Contratos no toolbox](/toolbox/contratos).
+
+## Mensagens que você pode ver
+
+| Mensagem | O que fazer |
+| --- | --- |
+| Access Token da Clicksign inválido. | Gere outro token na Clicksign |
+| Conta Clicksign sem envelopes habilitados: peça ao suporte da Clicksign para habilitar a API de envelopes. | Fale com o suporte da Clicksign |
+| Credencial da Clicksign inválida ou sem permissão. | Revise o token e o ambiente |
+| A Clicksign limitou as requisições. Tente de novo em instantes. | Aguarde |
+| A credencial Clicksign escolhida na etapa não existe, está desabilitada ou não é desta organização. Revise a etapa ou reative a credencial em Configurações > Integrações. | Escolha outra conta na etapa ou reative a conta |
+| O PDF do contrato tem X MB e passa do limite de 11 MB para a Clicksign. Reduza o modelo (imagens, páginas) e gere o contrato de novo. | Comprima as imagens do modelo |
+| X não tem CPF: na Clicksign quem assina é uma pessoa. Inclua quem representa a empresa. | Inclua o representante da PJ no quadro |
+| Falta o celular de X (a autenticação é por SMS/WhatsApp). | Complete o celular no cadastro |
+| O quadro de partes tem pendências: resolva ou confirme o envio pela tela da solicitação. | Resolva as pendências do quadro |
+| X recusou a assinatura na Clicksign: motivos. | Gere um contrato novo ou reprove a formalização |
+| O prazo de assinatura na Clicksign venceu sem todas as assinaturas. | Gere um contrato novo ou reprove a formalização |
+| O documento foi cancelado na Clicksign. | Gere um contrato novo ou reprove a formalização |
+
+## Veja também
+
+- [Partes e assinaturas](/formalizacao/partes-e-assinaturas)
+- [Integrações no toolbox](/toolbox/integracoes)
+- [Contratos no toolbox](/toolbox/contratos)

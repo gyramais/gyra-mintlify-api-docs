@@ -3,7 +3,7 @@ title: "Interpretar Resultado do Relatório"
 description: "Status, score, breakdown por regra, precificação e motivos para aprovar, alertar ou negar."
 icon: "chart-line"
 surface: plataforma
-domain: operacao
+domain: relatorio
 audience: operador
 lang: nao-tecnica
 ---
@@ -26,7 +26,7 @@ A tela é dividida em cinco áreas:
 
 | Status | Significado | Ação sugerida |
 | ------ | ----------- | ------------- |
-| `APPROVED` | Todas as regras aprovaram ou os gatilhos de alerta não são bloqueantes. | Seguir com a operação no termo precificado. |
+| `APPROVED` | Todas as regras aprovaram ou os gatilhos de alerta não são bloqueantes. | Seguir com o crédito nas condições precificadas. |
 | `ALERT` | Nenhuma regra bloqueou, mas alguma levantou sinal de atenção. | Revisar manualmente antes de liberar; reforçar colateral. |
 | `DENIED` | Ao menos uma regra marcada como bloqueante disparou. | Recusar. Ver motivo no breakdown. |
 | `ERROR` | Falha técnica na coleta ou avaliação, política não rodou. | Reanalisar após checar fonte indisponível. |
@@ -66,7 +66,7 @@ Se o valor aprovado for menor que o solicitado, a tela mostra ambos lado a lado 
 
 ## Relatório completo
 
-Abaixo das áreas de decisão, o relatório completo com tudo que a GYRA+ coletou. Navegue pelas abas laterais:
+Abaixo das áreas de decisão, o relatório completo com tudo que a GYRA+ coletou. Navegue pelas abas do relatório. Entre as seções:
 
 - **Cadastral**, situação, CNAE, data de abertura, endereço. Ver [Cadastral](/sources/cadastral).
 - **Processos Judiciais**, ações como autor e réu, por tipo de vara. Ver [Processos Judiciais](/sources/processos-judiciais).
@@ -78,15 +78,17 @@ Abaixo das áreas de decisão, o relatório completo com tudo que a GYRA+ coleto
 
 ## Exportar o resultado
 
-No menu de **três pontos** ao lado do nome da empresa, no topo do relatório, você escolhe entre três opções:
+No botão **Exportar**, no topo do relatório, você escolhe o formato:
 
-- **PDF**, layout pronto para arquivo regulatório ou compartilhamento com o tomador.
-- **XLS**, planilha com os dados do relatório para ingestão em sistemas próprios, conciliação ou análise manual.
-- **PDF + XLS**, os dois formatos juntos.
+- **PDF**, documento pronto para leitura e impressão, para arquivo regulatório ou compartilhamento com o tomador.
+- **Excel**, planilha com uma aba por seção, para ingestão em sistemas próprios, conciliação ou análise manual.
+- **PDF + Excel**, os dois formatos, com as mesmas seções.
 
-Em qualquer opção, a GYRA+ gera um **link com validade de 7 dias**. Depois de expirar, volte ao mesmo menu de três pontos e regenere o link — o conteúdo do relatório segue disponível no toolbox indefinidamente; o que expira é só o download.
+Uma vez gerados, os arquivos ficam na gaveta **Arquivos** do relatório, em **Exportações**, e na coluna **Arquivos** da listagem de **Análises de crédito**, para abrir com um clique. O conteúdo do relatório segue disponível no toolbox; para um arquivo atualizado, exporte de novo.
 
-Uma vez gerados, os arquivos também aparecem como **ícones de PDF e XLS** no cabeçalho do relatório e na listagem de Análises, para abrir com um clique sem passar pelo menu novamente.
+## Relatório aberto por uma esteira
+
+Quando o relatório nasceu de uma etapa de [esteira](/esteiras/visao-geral), o topo mostra em que ponto ele está (**Etapa N de M**, com o nome da etapa), setas para os outros relatórios da mesma execução e o botão **Execução**, que volta para a página da execução. A decisão final do caso é da esteira, não só deste relatório: veja [Acompanhar execuções](/toolbox/acompanhar-execucoes).
 
 ## Casos comuns
 
@@ -114,8 +116,8 @@ Uma vez gerados, os arquivos também aparecem como **ícones de PDF e XLS** no c
   <Card title="Score e Decisão" icon="scale-balanced" href="/concepts/score-e-decisao">
     Como a decisão final é calculada.
   </Card>
-  <Card title="Operações (conceito)" icon="diagram-project" href="/concepts/operacoes">
-    Modelo de versionamento e níveis.
+  <Card title="Acompanhar execuções" icon="diagram-project" href="/toolbox/acompanhar-execucoes">
+    Relatórios que fazem parte de uma esteira.
   </Card>
   <Card title="Editar política" icon="pen-to-square" href="/toolbox/editar-politica">
     Calibrar thresholds a partir de casos reais.

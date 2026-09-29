@@ -12,6 +12,10 @@ lang: tecnica
   **Resumo:** esta página lista todas as tools do MCP Server da GYRA+, agrupadas por domínio (autenticação, relatórios, políticas, webhooks). Cada entrada descreve o que a tool faz, os parâmetros principais e um exemplo de prompt natural que costuma invocá-la.
 </Info>
 
+<Note>
+  Estas são as tools do **MCP da GYRA+**, que conecta um agente de IA seu à API com uma credencial de integração. O [Assistente GYRA+](/plataforma/assistente-gyra), dentro do Toolbox, é outra coisa: ele age com o login de quem pergunta e tem ações próprias (montar esteira, produto, formulário), que não fazem parte deste catálogo.
+</Note>
+
 ## Autenticação
 
 ### `authenticate`
@@ -100,11 +104,102 @@ Lista as políticas de crédito da organização.
 - **Parâmetros**: opcionais `documentType` (`"PF"` / `"PJ"`), `enabled`.
 - **Prompt típico**: *"quais políticas PJ estão ativas?"*.
 
+## Cadastro documental
+
+Ver [Cadastros e Solicitações](/kyc/visao-geral) para o conceito.
+
+### `validate_document`
+
+A porta de entrada do módulo: um arquivo, e o parecer volta. **A entrada é única**, você não diz que documento é: a plataforma reconhece entre os 25 tipos e o formato do retorno depende do tipo identificado.
+
+- **Parâmetros**: `file`, `expectedDocument` (CNPJ/CPF da jornada), `expectedName`, `expectedType` (para conferir se veio o documento certo), `typeHint` (afirma o tipo e pula a classificação), `waitSeconds`.
+- **Prompt típico**: *"lê esse contrato social e me diz se ele bate com o CNPJ 11.444.777/0001-61"*.
+
+### `get_document_status`
+
+Status e resultado de um documento pelo id. É o polling depois de um `202`.
+
+- **Parâmetros**: `docId`.
+- **Prompt típico**: *"o documento que subi já foi analisado?"*.
+
+### `get_document_result`
+
+Resultado completo: campos lidos, cada verificação com evidência, e o parecer.
+
+- **Parâmetros**: `id` (cadastro), `docId`.
+- **Prompt típico**: *"por que esse comprovante de residência foi reprovado?"*.
+
+### `create_registry`, `get_registry`, `get_registry_by_document`, `list_registries`
+
+O dossiê de um CNPJ/CPF. `create_registry` é idempotente por documento. `list_registries` filtra por situação (`PENDING`, `PROCESSING`, `UP_TO_DATE`, `ATTENTION`, `EXPIRED`, `RENEWING`).
+
+- **Prompt típico**: *"quais cadastros estão com pendência ou vencidos?"*.
+
+### `list_registry_documents`, `list_registry_persons`
+
+O que o dossiê já tem, e a árvore societária com a origem de cada pessoa.
+
+- **Prompt típico**: *"o que já temos do CNPJ 11.444.777/0001-61 e quem são os sócios?"*.
+
+### `presign_registry_document`, `confirm_registry_document`
+
+Envio assíncrono, para arquivo acima de 15 MB (o teto do `validate_document`). Peça a URL assinada, suba o arquivo, confirme.
+
+### `reprocess_document`
+
+Roda o pipeline de novo, inteiro ou só uma etapa. Corrige classificação errada com `forceType`. **Não cobra de novo.**
+
+- **Prompt típico**: *"esse arquivo foi classificado errado, reprocessa como alteração contratual"*.
+
+### `get_rule_set`, `get_rule_set_catalog`, `get_registry_accuracy`
+
+A régua vigente, o catálogo de verificações em linguagem de negócio, e os indicadores de acurácia por tipo e por campo.
+
+- **Prompt típico**: *"a taxa de análise manual do comprovante de residência justifica apertar a régua?"*.
+
+## Solicitações
+
+### `create_collection`
+
+Cria o pedido ao cliente final a partir de um modelo e manda o link.
+
+- **Parâmetros**: `template` (o **slug**, de `list_collection_templates`), `document` ou `registryId`, `recipients`, `dueInDays`, `channel` (`EMAIL`, `WHATSAPP`, `BOTH` ou `NONE`), `message`, `forceItemKeys`, `draft`.
+- **Prompt típico**: *"pede contrato social e comprovante de endereço para a Ana no WhatsApp, prazo de 10 dias"*.
+
+### `list_collection_templates`
+
+Os modelos disponíveis, com o slug que entra em `create_collection`. Chame antes de criar.
+
+### `list_collections`, `get_collection`
+
+Acompanhamento. `get_collection` traz item a item e o estado de entrega de cada destinatário.
+
+- **Prompt típico**: *"quem está devendo documento e qual o prazo?"*.
+
+### `send_collection`, `cancel_collection`
+
+Envia ou reenvia o pedido, e cancela quando a operação cai.
+
+- **Prompt típico**: *"reenvia a solicitação da Ana, ela não recebeu"*.
+
+### `review_collection_item`
+
+A decisão do operador sobre um item que espera revisão: `APPROVED`, `RESEND_REQUESTED` (comentário obrigatório, e é o texto que o cliente lê) ou `WAIVED`.
+
+- **Prompt típico**: *"reprova o comprovante e pede outro, explicando que está no nome de outra pessoa"*.
+
+### `suggest_collection_contacts`, `suggest_signatories`
+
+Contatos que aquele documento já usou, e quem assina pela empresa segundo o documento societário vigente, com o regime de assinatura.
+
+- **Prompt típico**: *"quem precisa assinar pela empresa e quantas assinaturas o contrato exige?"*.
+
 ## Webhooks
+
 
 ### `create_webhook`
 
-Cria um webhook para receber notificações de eventos. Um webhook por tipo — registre vários se precisa escutar mais de um.
+Cria um webhook para receber notificações de eventos. Um webhook por tipo, registre vários se precisa escutar mais de um.
 
 - **Parâmetros**: `type` (`REPORT`, `REPORT_FINISHED`, `REPORT_STATUS`, `REPORT_EXPORTED`, `CREDIT_POLICY`, `COMMITTEE_FINISHED`, `OPERATION`), `url`, `apiKey` (opcional, enviado como header `api-key` nas chamadas).
 - **Prompt típico**: *"configura webhook REPORT_FINISHED apontando para https://meu-backend/gyra"*.
@@ -122,6 +217,28 @@ Remove um webhook.
 
 - **Parâmetros**: `webhookId`.
 - **Prompt típico**: *"remove o webhook antigo que não está sendo usado"*.
+
+<Note>
+  As três tools acima são da família de **relatório e crédito**. O módulo de Cadastros e Solicitações tem envelope e assinatura próprios, e as três tools abaixo.
+</Note>
+
+### `list_webhook_events`
+
+O catálogo de eventos assináveis, agrupados por categoria. Leia daqui em vez de fixar a lista.
+
+- **Prompt típico**: *"quais eventos eu posso assinar?"*.
+
+### `list_webhook_endpoints`
+
+As assinaturas configuradas, com o estado da última entrega. Assinatura que acumula 20 falhas seguidas é desligada sozinha, e é aqui que isso aparece.
+
+- **Prompt típico**: *"por que paramos de receber webhook?"*.
+
+### `save_webhook_endpoint`
+
+Cria ou atualiza uma assinatura. **Lista de eventos vazia quer dizer todos.** O segredo é devolvido uma única vez, na criação.
+
+- **Prompt típico**: *"assina os eventos de parecer de documento e de solicitação concluída no meu endpoint"*.
 
 ## Exemplos encadeados
 

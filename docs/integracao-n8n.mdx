@@ -25,7 +25,7 @@ Seu Sistema → [Workflow 1] → GYRA+ API   (solicita análise)
 GYRA+ API   → [Workflow 2 ou 3] → Seu Sistema  (recebe decisão)
 ```
 
-O Workflow 1 é **síncrono**: seu sistema chama e recebe o `reportId` imediatamente. Os Workflows 2 e 3 são **assíncronos**: a GYRA+ envia a decisão via webhook quando o processamento terminar (geralmente 60–180 segundos para COMPLETO, até 5 min para COMPLETO+).
+O Workflow 1 é **síncrono**: seu sistema chama e recebe o `reportId` imediatamente. Os Workflows 2 e 3 são **assíncronos**: a GYRA+ envia a decisão via webhook quando o processamento terminar (geralmente 60 a 180 segundos para COMPLETO, até 5 min para COMPLETO+).
 
 ---
 
@@ -138,8 +138,8 @@ POST /webhook/gyra-solicitar-analise (seu n8n)
 
 | Campo | Descrição | Onde encontrar |
 |-------|-----------|----------------|
-| `clientId` | Client ID da GYRA+ | Solicite por e-mail em `atendimento@gyramais.com` |
-| `clientSecret` | Client Secret da GYRA+ | Solicite por e-mail em `atendimento@gyramais.com` |
+| `clientId` | Client ID da GYRA+ | Gere em *Configurações, API & MCP* no toolbox |
+| `clientSecret` | Client Secret da GYRA+ | Gere em *Configurações, API & MCP* no toolbox |
 | `policyId` | ID da sua política ativa | Toolbox → Políticas de Crédito → [sua política] → Copiar ID, ou `GET /credit-policy/policy` |
 | `reportType` | Tipo padrão de relatório (definido pela política) | A política já carrega o nível; este campo é informativo |
 | `apiBaseUrl` | URL base da API | `https://gyra-core.gyramais.com.br` (não altere) |
@@ -245,7 +245,7 @@ POST /webhook/gyra-decisao-sheets (GYRA+ → seu n8n)
 | Documento | CNPJ ou CPF |
 | Razão Social | Nome da empresa ou pessoa |
 | Tipo | CNPJ / CPF |
-| Score | Score 0–1000 |
+| Score | Score 0 a 1000 |
 | Decisão | APPROVED / ALERT / DENIED |
 | PEFIN (R$) | Total de pendências PEFIN |
 | Protestos | Quantidade de protestos em cartório |
@@ -258,8 +258,8 @@ POST /webhook/gyra-decisao-sheets (GYRA+ → seu n8n)
 
 | Campo | Descrição | Onde encontrar |
 |-------|-----------|----------------|
-| `clientId` | Client ID da GYRA+ | Solicite por e-mail em `atendimento@gyramais.com` |
-| `clientSecret` | Client Secret da GYRA+ | Solicite por e-mail em `atendimento@gyramais.com` |
+| `clientId` | Client ID da GYRA+ | Gere em *Configurações, API & MCP* no toolbox |
+| `clientSecret` | Client Secret da GYRA+ | Gere em *Configurações, API & MCP* no toolbox |
 | `emailDestino` | E-mail do analista de crédito |, |
 | `emailRemetente` | E-mail remetente configurado no SMTP |, |
 | `planilhaId` | ID da planilha Google Sheets | URL: `docs.google.com/spreadsheets/d/**ID**/edit` |
@@ -343,7 +343,7 @@ Você pode registrar **múltiplos webhooks** na GYRA+ e usar os Workflows 2 e 3 
 
 Precisa de ajuda para adaptar os templates ao seu sistema?
 
-- **Documentação da API:** [Referência de Endpoints](/reference/endpoints)
+- **Documentação da API:** [Referência da API](/api-reference/introduction)
 - **Guia de Webhooks:** [Configurar Webhook](/guides/configurar-webhook)
 - **Interpretar Decisões:** [Interpretar a Decisão](/guides/interpretar-decisao)
 - **Suporte:** atendimento@gyramais.com.br
