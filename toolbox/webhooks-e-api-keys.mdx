@@ -14,7 +14,7 @@ lang: nao-tecnica
 
 ## Onde fica
 
-Menu lateral, **Configurações**, aba **API & MCP**. A tela mostra, no topo, o endereço da API e o formato da autenticação, e em seguida três seções na ordem em que você precisa delas: **credenciais**, **webhooks** e **MCP**.
+Clique no logo da organização, no topo do menu lateral, e em **API e MCP**. Isso abre **Configurações**, aba **API & MCP**. A tela mostra, no topo, o endereço da API e o formato da autenticação, e em seguida três seções na ordem em que você precisa delas: **credenciais**, **webhooks** e **MCP**.
 
 <Warning>
   É área de administradores. As credenciais desta tela dão acesso aos dados da organização inteira; compartilhe com cuidado.
@@ -57,6 +57,10 @@ Quem tem a permissão **gerenciar configurações** (Administrador, Owner, Super
 ### Gerar token
 
 O `clientId` + `clientSecret` são trocados por um **token de acesso com validade de 24 horas**. Seu backend precisa renovar o token antes de expirar.
+
+<Note>
+  O token é um JWT e carrega a claim `aud` com o valor `toolbox`. Se o seu sistema lê as claims do token, espere esse valor. Fora isso, trate o token como opaco: use-o só no cabeçalho `Authorization`.
+</Note>
 
 ```bash
 curl -X POST https://gyra-core.gyramais.com.br/auth/authenticate \

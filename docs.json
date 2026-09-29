@@ -47,7 +47,6 @@
           "concepts/analise-de-credito",
           "concepts/politica-de-credito",
           "concepts/templates-de-politica",
-          "concepts/operacoes",
           "concepts/secoes",
           "concepts/pareceres-gyra-ia",
           "concepts/comite-de-credito",
@@ -70,6 +69,7 @@
           "kyc/regua-de-validacao",
           "kyc/solicitacoes",
           "kyc/formularios",
+          "kyc/formulario-publico",
           "kyc/termos-e-assinatura",
           "kyc/verificacao-de-identidade",
           "kyc/pagina-do-destinatario",
@@ -77,17 +77,64 @@
         ]
       },
       {
+        "group": "Propostas",
+        "pages": [
+          "propostas/visao-geral",
+          "propostas/produtos",
+          "propostas/precificacao",
+          "propostas/pre-aprovacao-e-oferta"
+        ]
+      },
+      {
+        "group": "Esteiras",
+        "pages": [
+          "esteiras/visao-geral",
+          "esteiras/etapas",
+          "esteiras/dados-de-entrada",
+          "esteiras/camadas-e-add-ons",
+          "esteiras/chamada-de-api",
+          "esteiras/decisao-alcada-e-comite",
+          "esteiras/execucoes"
+        ]
+      },
+      {
+        "group": "Formalização",
+        "pages": [
+          "formalizacao/visao-geral",
+          "formalizacao/modelos-de-contrato",
+          "formalizacao/variaveis-do-contrato",
+          "formalizacao/partes-e-assinaturas",
+          "formalizacao/clicksign",
+          "formalizacao/bndes"
+        ]
+      },
+      {
+        "group": "Plataforma",
+        "pages": [
+          "plataforma/modulos-e-capacidades",
+          "plataforma/assistente-gyra",
+          "plataforma/correspondentes"
+        ]
+      },
+      {
         "group": "Guia do Toolbox",
         "pages": [
           "toolbox/visao-geral",
           "toolbox/primeiro-acesso",
+          "toolbox/propostas",
+          "toolbox/produtos",
           "toolbox/rodar-operacao",
           "toolbox/interpretar-resultado-operacao",
+          "toolbox/montar-esteira",
+          "toolbox/acompanhar-execucoes",
+          "toolbox/contratos",
           "toolbox/cadastros",
+          "toolbox/solicitacoes",
+          "toolbox/validacao-de-identidade",
           "toolbox/criar-politica",
           "toolbox/editar-politica",
           "toolbox/usar-templates",
-          "toolbox/solicitacoes",
+          "toolbox/integracoes",
           "toolbox/gerenciar-usuarios-permissoes",
           "toolbox/webhooks-e-api-keys"
         ]
@@ -214,6 +261,17 @@
         ]
       },
       {
+        "group": "API: Propostas e Esteiras",
+        "pages": [
+          "api-reference/propostas/visao-geral",
+          "api-reference/propostas/propostas",
+          "api-reference/propostas/ofertas",
+          "api-reference/propostas/produtos-e-precificacao",
+          "api-reference/propostas/dados-de-entrada",
+          "api-reference/esteiras/fechamento-externo"
+        ]
+      },
+      {
         "group": "Dicionário de Dados",
         "pages": [
           "data/estrutura-relatorio",
@@ -253,6 +311,10 @@
     {
       "source": "/concepts/gyra-insights",
       "destination": "/concepts/pareceres-gyra-ia"
+    },
+    {
+      "source": "/concepts/operacoes",
+      "destination": "/esteiras/visao-geral"
     }
   ],
   "contextual": {

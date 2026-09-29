@@ -1,0 +1,182 @@
+---
+title: "Modelos de contrato"
+description: "O seu Word vira modelo: suba o .docx, revise as variáveis, escolha quem assina, defina a numeração e publique uma versão."
+icon: "file-word"
+surface: conceito
+domain: formalizacao
+audience: operador
+lang: nao-tecnica
+---
+
+O modelo de contrato é o Word que o seu jurídico já usa, com as lacunas trocadas por variáveis que a plataforma preenche a cada operação.
+
+<Info>
+  **Resumo:** você sobe um `.docx`, a plataforma lê as variáveis e mostra o que precisa de atenção. Publicado, o modelo passa a valer para os contratos gerados daí em diante. Um contrato gerado nunca muda: ele guarda a versão com que nasceu.
+</Info>
+
+<Note>
+  Modelos de contrato fazem parte do módulo de Formalização. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## O arquivo
+
+| Regra | Limite |
+| --- | --- |
+| Formato | Word `.docx`. PDF e `.doc` antigo não servem: abra no Word e salve como `.docx` |
+| Tamanho | Até 10 MB |
+| Onde as variáveis podem estar | Corpo, cabeçalho e rodapé |
+| O que a plataforma faz com o seu arquivo | Nada. Ele é lido, nunca reescrito. Mapeamentos e apelidos ficam guardados à parte |
+
+O Word também passa por uma verificação de estrutura: arquivos que ficam grandes demais depois de descompactados, ou com formatação complexa demais para processar, são recusados com a orientação de dividir o documento ou simplificar a formatação.
+
+Dentro do Word você escreve as variáveis entre chaves, como `{emitente.razaoSocial}`, repete trechos com `{#avalistas}...{/avalistas}` e liga ou desliga cláusulas com condições. A sintaxe completa está em [Variáveis do contrato](/formalizacao/variaveis-do-contrato).
+
+## Tipos de modelo
+
+| Tipo | Uso típico |
+| --- | --- |
+| **CCB** | Cédula de crédito bancário. É o tipo padrão |
+| **Contrato** | Contrato de crédito em outro formato |
+| **Aditivo** | Aditivo a um contrato existente |
+| **Termo** | Termo ligado à operação |
+| **Outro** | O que não cabe nos anteriores |
+
+## Versões: rascunho e publicado
+
+Cada modelo tem uma chave estável, derivada do nome, e uma sequência de versões.
+
+- **Subir o Word de novo** para o mesmo modelo cria uma versão nova em **Rascunho**. Só existe um rascunho por modelo: subir outro substitui o anterior.
+- **Publicar** troca a versão vigente. A anterior não é reescrita, e os contratos que já saíram continuam apontando para ela.
+- **Renomear** vale para todas as versões e não cria versão nova.
+- Tipo, papéis que assinam, mapeamentos e numeração só se editam no rascunho.
+- Os mapeamentos da versão anterior seguem para a nova, então você não refaz o trabalho a cada ajuste de texto.
+
+| Situação do modelo | O que significa |
+| --- | --- |
+| **Rascunho** | Ainda não vale para nenhum contrato |
+| **Publicado** | A versão vigente, usada pela esteira |
+| **Publicado, com rascunho** | Há uma versão vigente e uma próxima sendo preparada |
+
+## Revise as variáveis
+
+Ao subir o arquivo, a plataforma lista cada tag encontrada no Word com a sua situação:
+
+| Situação | O que significa | O que fazer |
+| --- | --- | --- |
+| **Reconhecida** | A tag é um caminho do catálogo | Nada |
+| **Apelido do legado** | A tag é um nome antigo que a plataforma já traduz | Nada |
+| **Mapeada** | Você ligou a tag a um caminho do catálogo | Nada |
+| **Em branco** | Você marcou para ficar vazia de propósito | Nada |
+| **Desconhecida** | A tag não existe no catálogo | Mapear para um caminho ou marcar **Deixar em branco** |
+| **Erro** | O Word tem um erro de sintaxe nessa tag | Corrigir no Word e enviar de novo |
+
+Uma condição desconhecida pode ser mapeada para uma expressão, como `oferta.indexador == "CDI"`.
+
+Modelos que já existiam antes na sua operação continuam funcionando: os nomes de variável antigos mais comuns são traduzidos automaticamente para o catálogo e aparecem como **Apelido do legado**.
+
+## Escolha quem assina
+
+Os papéis que assinam saem das partes que o modelo cita. Citar `emitente` chama o emitente e os seus representantes; citar `avalistas` chama os avalistas e os cônjuges deles; e assim por diante. Você pode ajustar a lista no rascunho.
+
+| Papel | Vem de |
+| --- | --- |
+| Emitente | `emitente` |
+| Representante do emitente | `emitente` |
+| Avalista | `avalistas` |
+| Cônjuge do avalista | `avalistas`, `conjuges`, `conjugesQueAssinam` |
+| Interveniente | `intervenientes` |
+| Credor | `credora` |
+| Testemunha | `testemunhas` |
+
+As pessoas de cada papel vêm do quadro de partes de cada proposta. Veja [Partes e assinaturas](/formalizacao/partes-e-assinaturas).
+
+## Numere o contrato
+
+O número é atribuído na geração real do contrato e entra em `ccb.numero`. Gerar de novo o contrato da mesma etapa mantém o número, sem buraco na sequência.
+
+| Tipo de numeração | Como funciona |
+| --- | --- |
+| **Sequencial** | Um contador da sua organização, no formato que você define. É o padrão |
+| **Sem numeração** | O número é um identificador interno do contrato |
+| **Gerado por sistema externo** | O número vem do seu sistema, por uma [Chamada de API](/esteiras/chamada-de-api) anterior à etapa Contrato (`api.<apelido>`) |
+
+### Formato do sequencial
+
+| Marcação | Vira |
+| --- | --- |
+| `{AAAA}` | Ano com quatro dígitos |
+| `{AA}` | Ano com dois dígitos |
+| `{MM}` | Mês com dois dígitos |
+| `{NNNNN}` | O sequencial, com zeros à esquerda até a quantidade de `N` (até 12). Número maior não é cortado |
+| `{caminho.variavel}` ou `{caminho.variavel:4}` | O valor de uma variável, com zeros à esquerda até o tamanho indicado (1 a 20). Só inteiro sem sinal |
+
+Regras do formato:
+
+- Exatamente um sequencial `{N...}` por formato.
+- Até 80 caracteres.
+- O padrão é `{AAAA}/{NNNNNN}`, que gera algo como `2026/000001`.
+- Datas no fuso de São Paulo.
+
+A sequência é contada por organização e pelo formato já montado, sem o bloco do sequencial. Na prática, um formato com `{AAAA}` recomeça a cada ano, e um formato com uma variável (como a condição operacional do BNDES) tem uma sequência por valor.
+
+```text
+{AAAA}/{NNNNNN}                          2026/000001
+{bndes.condicaoOperacional:4}{AAAA}G{NNNNN}01    30392026G0000101
+```
+
+Se a variável do formato não tiver valor, o contrato bloqueia sem consumir o sequencial.
+
+## Pré-visualize antes de publicar
+
+**Pré-visualizar PDF** gera o contrato com os dados de uma proposta real ou com dados de exemplo.
+
+- O que falta aparece destacado como `[FALTA: rótulo]`, sem bloquear a prévia.
+- Os destaques existem só na prévia: o PDF gerado de verdade sai limpo.
+- A prévia usa um número de exemplo e não consome o sequencial.
+
+## Publique
+
+A publicação é recusada enquanto houver:
+
+- erro de sintaxe no Word;
+- tag desconhecida sem mapeamento e sem **Deixar em branco**;
+- nenhum papel que assina.
+
+Publicada, a versão vale para os contratos gerados dali em diante. Os que já saíram continuam com a versão com que nasceram.
+
+## Mensagens que você pode ver
+
+| Mensagem | O que fazer |
+| --- | --- |
+| Envie o arquivo Word (.docx) do modelo. | Anexe o arquivo |
+| O arquivo passa de 10 MB. Reduza as imagens do documento e envie de novo. | Comprima as imagens do Word |
+| O modelo precisa ser um arquivo Word (.docx). PDF e .doc antigo não servem: abra no Word e salve como .docx. | Salve como `.docx` |
+| O arquivo Word está corrompido. Abra no Word, salve de novo como .docx e envie outra vez. | Salve de novo no Word |
+| Dê um nome ao modelo. | Preencha o nome |
+| Versão publicada não se edita. Envie o arquivo de novo para criar uma versão nova. | Suba o Word de novo |
+| O modelo tem erro no Word: ... | Corrija a tag indicada |
+| Mapeie ou marque como "deixar em branco" as variáveis desconhecidas antes de publicar: ... | Resolva as tags listadas |
+| O modelo não cita nenhuma parte (emitente, avalistas...). Escolha os papéis que assinam antes de publicar. | Escolha os papéis |
+| Não há modelo de contrato publicado com a chave "X". Publique o modelo em Contratos. | Publique o modelo que a etapa usa |
+| Outra versão deste modelo está sendo criada agora. Tente de novo em instantes. | Aguarde e repita |
+
+### Erros de sintaxe do Word
+
+| Mensagem | Causa comum |
+| --- | --- |
+| A tag "X" abre com `"{"` mas não fecha com `"}"`. | Chave esquecida |
+| A tag "X" fecha com `"}"` mas não abre com `"{"`. | Chave esquecida |
+| O bloco `"{#X}"` foi aberto e não foi fechado com `"{/X}"`. | Repetição ou condição sem fim |
+| Os blocos em volta de "X" abrem e fecham em ordem trocada. | Blocos cruzados |
+| A expressão "X" não é válida. Confira operadores, aspas e filtros. | Operador, aspas ou nome de filtro errado |
+| A tag "X" precisa ficar sozinha no parágrafo. | Texto ao lado de uma tag que exige parágrafo próprio |
+
+### No contrato gerado
+
+Um contrato gerado pode ter até 30 MB e um volume limitado de marcações. Um laço que repete páginas inteiras para cada parcela, por exemplo, pode estourar: "O contrato gerado ficou grande demais para converter em PDF. Revise os laços do modelo: ..."
+
+## Veja também
+
+- [Variáveis do contrato](/formalizacao/variaveis-do-contrato)
+- [Contratos no toolbox](/toolbox/contratos)
+- [Etapas da esteira](/esteiras/etapas)

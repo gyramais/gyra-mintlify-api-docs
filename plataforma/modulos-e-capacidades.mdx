@@ -1,0 +1,112 @@
+---
+title: "Módulos e capacidades"
+description: "O que cada módulo contratado libera no Toolbox e na API, o que aparece com cadeado e como pedir um módulo que a sua organização ainda não tem."
+icon: "cubes"
+surface: plataforma
+domain: plataforma
+audience: ambos
+lang: nao-tecnica
+---
+
+A GYRA+ é vendida em módulos: o que a sua organização contratou define quais telas aparecem no menu e quais rotas da API respondem.
+
+<Info>
+  **Resumo:** cada módulo é uma **capacidade da organização**, ligada pelo time GYRA+. O papel de cada pessoa decide o que ela faz **dentro** dos módulos contratados. Módulo não contratado aparece no menu com cadeado e abre uma apresentação, e a API recusa as rotas dele com `403`.
+</Info>
+
+## Duas camadas de acesso
+
+Toda tela e toda rota passam por duas perguntas, nesta ordem:
+
+1. **A organização contratou?** É a capacidade, ligada por organização. Vale para todo mundo da organização, inclusive para as credenciais de API.
+2. **A pessoa pode?** É o papel (Administrador, Gestor de Crédito, Coordenador, Analista, Financeiro). Detalhe em [Usuários e permissões](/toolbox/gerenciar-usuarios-permissoes).
+
+As duas precisam dizer sim. Um Administrador numa organização sem o módulo de Propostas não vê propostas; um Analista numa organização com o módulo vê propostas, mas não configura produtos.
+
+<Note>
+  Quem liga ou desliga uma capacidade é o time GYRA+. Não existe tela para o cliente fazer isso: para contratar, use o botão da apresentação do módulo (veja abaixo) ou fale com `atendimento@gyramais.com`.
+</Note>
+
+## O que cada módulo libera
+
+| Módulo | O que libera | Identificador |
+| --- | --- | --- |
+| **Onboarding** | Grupo **Onboarding** inteiro: **Clientes** (o cadastro documental), **Solicitações** e **Validação de identidade**. Ver [Onboarding](/kyc/visao-geral). | `has-kyc` |
+| **SCR** | Autorização de consulta ao SCR. Sem o Onboarding, **Solicitações** abre só para pedir o consentimento do SCR. Ver [SCR e Open Finance](/sources/scr-open-finance). | `has-scr` |
+| **Propostas** | **Propostas**, **Produtos**, carteiras, pré-aprovação e oferta. Ver [Propostas](/propostas/visao-geral). | `has-proposals` |
+| **Formalização** | **Modelos de contrato**, a etapa de contrato e assinatura da esteira e o fechamento externo. Independe de Propostas. Ver [Formalização](/formalizacao/visao-geral). | `has-formalization` |
+| **Clicksign** | Assinatura eletrônica pela conta Clicksign da sua organização. | `has-clicksign` |
+| **BNDES Online** | Etapa da esteira que envia o pedido ao BNDES Online. | `has-bndes` |
+| **Correspondentes** | Canal de correspondentes: credenciar parceiros que originam crédito para você. Ver [Correspondentes](/plataforma/correspondentes). | `has-caas` |
+| **Marca e envio próprios** | Logo, domínio próprio do link e do remetente, WhatsApp da sua empresa no convite. Sem o módulo, as mensagens saem com a marca GYRA+. | `can-brand-communication` |
+| **Código por e-mail** | Validação de identidade por código enviado a um e-mail que os bureaus associam à pessoa. Ver [Verificação de identidade](/kyc/verificacao-de-identidade). | `has-email-identity` |
+| **Instruções do Comitê** | Instruções próprias da sua instituição nos agentes do [Comitê de Crédito IA](/concepts/comite-de-credito#instru%C3%A7%C3%B5es-da-sua-institui%C3%A7%C3%A3o-nos-agentes). | (sem identificador no Toolbox) |
+
+A coluna **Identificador** é o nome da capacidade na sessão do Toolbox. Você só precisa dela se estiver depurando por que uma tela não aparece para alguém.
+
+### Esteiras e políticas não são módulo
+
+[Esteiras](/esteiras/visao-geral), [Políticas](/concepts/politica-de-credito) e [Análises de crédito](/concepts/analise-de-credito) dependem só do papel da pessoa. As partes pagas de uma esteira, como a etapa de contrato ou a do BNDES Online, dependem do módulo correspondente: a etapa só aparece no construtor quando a organização tem a capacidade.
+
+## Módulo não contratado aparece com cadeado
+
+Os módulos que se contratam à parte continuam no menu, no lugar de sempre, em cinza, com um cadeado e o selo **Upgrade**. Ao passar o mouse: *Não contratado: veja o que ele faz*.
+
+| Item do menu | Módulo que falta |
+| --- | --- |
+| **Propostas** | Propostas |
+| **Produtos** | Propostas |
+| **Clientes**, **Solicitações** e **Validação de identidade** | Onboarding |
+| **Modelos de contrato** | Formalização |
+
+O cadeado só aparece para quem usaria o módulo pelo papel. **Produtos**, por exemplo, só mostra o cadeado para quem monta política (Administrador e Gestor de Crédito). O que depende só de papel, e os ajustes de produto como Clicksign, BNDES Online, SCR e marca própria, não ganham cadeado: simplesmente não aparecem. **Correspondentes** também não tem cadeado.
+
+### A apresentação do módulo
+
+Clicar num item com cadeado abre a apresentação do módulo, no lugar da tela: o que ele resolve, quatro recursos principais e uma prévia ilustrativa com **dados de exemplo**. A apresentação não lê nenhum dado da sua organização.
+
+No fim, o botão para pedir o módulo muda conforme o seu papel:
+
+| Quem pede | Botão | O que acontece |
+| --- | --- | --- |
+| Quem gerencia as configurações da organização | **Falar com o time Gyra+** | O time GYRA+ recebe o pedido e fala com você por e-mail. |
+| Demais papéis | **Pedir ao administrador** | Quem administra a sua organização recebe o pedido por e-mail, e o time GYRA+ também. Quem pediu não recebe cópia. |
+
+Depois de enviado, o botão vira **Pedido enviado**. Pedir o mesmo módulo de novo em menos de 24 horas fica registrado, mas não dispara outro e-mail.
+
+## Na API: 403 com o nome do módulo
+
+Chamar a rota de um módulo que a organização não tem devolve `403`, e não `404`: a rota existe, a sua organização é que não tem o módulo. Trate como configuração de conta, não como erro transitório.
+
+| Módulo | Mensagem |
+| --- | --- |
+| Propostas | `"Sua organização não tem o módulo de Propostas habilitado."` |
+| Formalização | `"Sua organização não tem o módulo de Formalização habilitado."` |
+| Instruções do Comitê | `"A customização dos prompts do Comitê não está habilitada para esta organização."` |
+
+Sem o módulo de Propostas ficam bloqueadas todas as rotas de propostas, produtos, carteiras e simulação. As páginas públicas da oferta, que o cliente final abre pelo link, continuam funcionando com o token do link. Lista completa de mensagens em [Referência de erros](/reference/erros#m%C3%B3dulo-n%C3%A3o-contratado).
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Contratei um módulo e o item continua com cadeado.">
+    Recarregue a página ou saia e entre de novo no Toolbox, para a sessão reler as capacidades da organização. Se continuar, fale com `atendimento@gyramais.com`.
+  </Accordion>
+  <Accordion title="Tenho o módulo, mas o item não aparece para uma pessoa.">
+    Então é o papel dela. Produtos, por exemplo, exige o papel que monta política; Correspondentes exige o papel que gerencia configurações. Veja a tabela em [Usuários e permissões](/toolbox/gerenciar-usuarios-permissoes).
+  </Accordion>
+  <Accordion title="Formalização exige Propostas?">
+    Não. São módulos independentes. Clicksign e BNDES Online são contratados à parte e dependem da Formalização para fazer sentido na esteira.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Usuários e permissões" icon="users-gear" href="/toolbox/gerenciar-usuarios-permissoes">
+    O que cada papel faz dentro dos módulos.
+  </Card>
+  <Card title="Visão geral do Toolbox" icon="compass" href="/toolbox/visao-geral">
+    Onde cada módulo aparece no menu.
+  </Card>
+</CardGroup>

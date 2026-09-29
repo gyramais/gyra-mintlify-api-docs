@@ -1,0 +1,631 @@
+---
+title: "Propostas"
+description: "Crie, liste e leia propostas, mude a situação, inclua participantes, rode a análise e consulte a foto da aprovação."
+icon: "file-lines"
+surface: api
+domain: proposta
+audience: integrador
+lang: tecnica
+---
+
+Uma proposta é um pedido de crédito: quem pede, quanto, em qual produto e em que situação está. Estas rotas cobrem o pedido do começo ao fim.
+
+<Info>
+  **Resumo:** crie com `POST /v1/proposals`, rode a análise com `POST /v1/proposals/{id}/run` e acompanhe com `GET /v1/proposals/{id}`. Cada chamada de criação é um pedido novo. Autenticação, unidades e erros comuns estão na [visão geral](/api-reference/propostas/visao-geral).
+</Info>
+
+## Situações da proposta
+
+A situação é do pedido, não da análise. A esteira move a maior parte delas; você move só as que encerram ou reabrem.
+
+| `status` | Na tela | O que significa |
+| --- | --- | --- |
+| `DRAFT` | Rascunho | Criada, ainda sem análise |
+| `IN_ANALYSIS` | Em análise | Uma política ou esteira está rodando, ou o operador ainda vai decidir |
+| `WAITING_CUSTOMER` | Esperando o cliente | A oferta indicativa foi enviada e aguarda a escolha do cliente |
+| `WAITING_OPERATOR` | Esperando você | A esteira parou numa decisão humana (revisão, alçada, checkpoint) |
+| `OFFER_ISSUED` | Oferta emitida | Aprovada, com a oferta firme emitida |
+| `REJECTED` | Recusada | A análise recusou |
+| `CANCELED` | Cancelada | Encerrada por decisão sua. Não reabre |
+| `EXPIRED` | Vencida | A pré-aprovação venceu sem escolha |
+
+Veja o ciclo completo em [Propostas](/propostas/visao-geral).
+
+---
+
+## Criar uma proposta
+
+```http
+POST /v1/proposals
+```
+
+Registra um pedido novo. A proposta nasce em `DRAFT`, com `origin: "API"`. Com produto, ela congela o nome, a carteira, o valor fixo e a estrutura financeira do produto naquele momento: mudar o produto depois não altera a proposta.
+
+<ParamField body="document" type="string" required>
+  CPF ou CNPJ do cliente, com ou sem máscara. O dígito verificador é conferido.
+</ParamField>
+<ParamField body="entityType" type="string">
+  `COMPANY` ou `PERSON`. Opcional: é deduzido do documento (14 dígitos é empresa, 11 é pessoa). Se vier, tem que bater com o documento.
+</ParamField>
+<ParamField body="name" type="string">
+  Nome ou razão social. Até 200 caracteres.
+</ParamField>
+<ParamField body="productKey" type="string">
+  Chave do produto. O produto precisa existir e estar ligado.
+</ParamField>
+<ParamField body="kind" type="string">
+  `KYC`, `FINANCING` ou `INSTALLMENT_SALE`. Ausente: o tipo do produto, ou `KYC` sem produto.
+</ParamField>
+<ParamField body="requestedAmountCents" type="integer">
+  Valor pedido, em centavos. Mínimo `1`. Pedido fora da faixa do produto não é recusado: a proposta nasce com `amountAlert: "OUT_OF_RANGE"`.
+</ParamField>
+<ParamField body="requestedTermMonths" type="integer">
+  Prazo pedido, em meses. De `1` a `600`.
+</ParamField>
+<ParamField body="contact" type="object">
+  Contato do cliente, usado para enviar a oferta e a solicitação de documentos.
+  <Expandable title="campos">
+    <ParamField body="name" type="string">Até 160 caracteres.</ParamField>
+    <ParamField body="email" type="string">E-mail válido.</ParamField>
+    <ParamField body="phone" type="string">Celular, até 32 caracteres. É normalizado para o formato internacional (`+5511987654321`).</ParamField>
+  </Expandable>
+</ParamField>
+<ParamField body="answers" type="object">
+  Respostas livres que você quer guardar com o pedido. Não pode conter `contact`: o contato vai no campo próprio.
+</ParamField>
+<ParamField body="templateSlug" type="string">
+  Modelo de solicitação usado para pedir os documentos do produto. Só vale quando o produto pede documentos.
+</ParamField>
+
+**Produto que pede documentos.** Se o produto tem documentos configurados e a sua organização tem o módulo de Cadastros, a proposta já abre e envia uma solicitação ao cliente. Nesse caso `contact.email` ou `contact.phone` é obrigatório, e a resposta traz `collectionSent` (`true` quando o link saiu). Veja [Dados de entrada](/esteiras/dados-de-entrada).
+
+<CodeGroup>
+```bash Requisição
+curl -X POST https://gyra-core.gyramais.com.br/v1/proposals \
+  -H "Authorization: Bearer $GYRA_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "document": "11.222.333/0001-81",
+    "name": "Padaria Exemplo Ltda",
+    "productKey": "capital-giro",
+    "requestedAmountCents": 25000000,
+    "requestedTermMonths": 24,
+    "contact": {
+      "name": "Ana Souza",
+      "email": "ana@padariaexemplo.com.br",
+      "phone": "11987654321"
+    }
+  }'
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 201
+{
+  "id": "66f1e0a3c2b9d40012a1b001",
+  "createdAt": "2026-09-29T14:32:10.000Z",
+  "updatedAt": "2026-09-29T14:32:10.000Z",
+  "organizationId": "6612a7f30000000000000001",
+  "document": "11222333000181",
+  "entityType": "COMPANY",
+  "name": "Padaria Exemplo Ltda",
+  "registryId": null,
+  "kind": "FINANCING",
+  "status": "DRAFT",
+  "origin": "API",
+  "requestedAmountCents": 25000000,
+  "requestedTermMonths": 24,
+  "productKey": "capital-giro",
+  "productName": "Capital de giro",
+  "productAmountCents": null,
+  "portfolioId": null,
+  "portfolioName": null,
+  "pricingSnapshot": { "version": 1, "amortization": "PRICE", "periodicityMonths": 1 },
+  "amountAlert": null,
+  "answers": {
+    "contact": {
+      "name": "Ana Souza",
+      "email": "ana@padariaexemplo.com.br",
+      "phone": "+5511987654321"
+    }
+  },
+  "currentOfferId": null,
+  "collectionId": null,
+  "templateSlug": null,
+  "createdByUserId": "6612a7f30000000000000009",
+  "issuedAt": null
+}
+```
+</CodeGroup>
+
+<ResponseField name="id" type="string">Id da proposta. Use nas demais rotas.</ResponseField>
+<ResponseField name="document" type="string">Documento só com dígitos.</ResponseField>
+<ResponseField name="status" type="string">Sempre `DRAFT` na criação.</ResponseField>
+<ResponseField name="origin" type="string">`API` para credencial de integração; `OPERATOR` quando a chamada vem de um usuário da tela.</ResponseField>
+<ResponseField name="registryId" type="string | null">Cadastro da sua organização para este documento, quando existe.</ResponseField>
+<ResponseField name="productName" type="string | null">Nome do produto congelado na criação.</ResponseField>
+<ResponseField name="productAmountCents" type="integer | null">Valor do produto, só quando ele tem valor fixo. Nesse caso vale o valor do produto, e o pedido fica guardado em `requestedAmountCents`.</ResponseField>
+<ResponseField name="pricingSnapshot" type="object | null">Estrutura financeira do produto no dia. Formato em [Produtos e precificação](/api-reference/propostas/produtos-e-precificacao#estrutura-financeira).</ResponseField>
+<ResponseField name="amountAlert" type="string | null">`OUT_OF_RANGE` quando o valor pedido está fora da faixa do produto.</ResponseField>
+<ResponseField name="collectionId" type="string | null">Solicitação de documentos ligada à proposta.</ResponseField>
+<ResponseField name="collectionSent" type="boolean">Só aparece quando a proposta abriu uma solicitação. `false` significa que a solicitação existe mas o link não saiu.</ResponseField>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `"Informe o CPF ou CNPJ."` | `document` ausente |
+| `400` | `"Documento inválido. Confira os números digitados."` | Dígito verificador errado |
+| `400` | `"O tipo informado não corresponde ao documento (CPF é pessoa, CNPJ é empresa)."` | `entityType` não bate com o documento |
+| `400` | `"Este produto não está disponível. Escolha outro."` | Produto desligado |
+| `400` | `"A chave do produto informada não é válida."` | `productKey` fora do formato |
+| `404` | `"Produto não encontrado."` | `productKey` inexistente |
+| `400` | `"O contato vai no campo \"contact\", e não dentro de \"answers\"."` | `answers.contact` no corpo |
+| `400` | `"Este produto pede documentos: informe o e-mail ou o celular do cliente."` | Produto com documentos sem contato |
+| `502` | `"Não foi possível abrir a solicitação de documentos da proposta."` | A solicitação não foi criada |
+| `502` | `"Não foi possível criar a proposta."` | Falha interna ao gravar |
+
+<Warning>
+  Criar é **não idempotente**: dois `POST` iguais geram duas propostas. Depois de um timeout, confira com `GET /v1/proposals?search=<documento>` antes de repetir.
+</Warning>
+
+---
+
+## Listar propostas
+
+```http
+GET /v1/proposals
+```
+
+Lista as propostas da organização, com filtros, paginação e totais por carteira.
+
+<ParamField query="status" type="string">Uma situação: `DRAFT`, `IN_ANALYSIS`, `WAITING_CUSTOMER`, `WAITING_OPERATOR`, `OFFER_ISSUED`, `REJECTED`, `CANCELED` ou `EXPIRED`.</ParamField>
+<ParamField query="kind" type="string">`KYC`, `FINANCING` ou `INSTALLMENT_SALE`.</ParamField>
+<ParamField query="productKey" type="string">Chave do produto.</ParamField>
+<ParamField query="portfolioId" type="string">Id da carteira.</ParamField>
+<ParamField query="origin" type="string">`PUBLIC_FORM`, `OPERATOR`, `API` ou `BATCH`.</ParamField>
+<ParamField query="search" type="string">Nome ou dígitos do documento (a partir de 3 dígitos). Até 120 caracteres.</ParamField>
+<ParamField query="page" type="integer" default="1">Página, a partir de `1`.</ParamField>
+<ParamField query="pageSize" type="integer" default="20">Itens por página, de `1` a `100`.</ParamField>
+
+<CodeGroup>
+```bash Requisição
+curl "https://gyra-core.gyramais.com.br/v1/proposals?status=WAITING_CUSTOMER&pageSize=50" \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+{
+  "items": [
+    {
+      "id": "66f1e0a3c2b9d40012a1b001",
+      "document": "11222333000181",
+      "entityType": "COMPANY",
+      "name": "Padaria Exemplo Ltda",
+      "kind": "FINANCING",
+      "status": "WAITING_CUSTOMER",
+      "origin": "API",
+      "requestedAmountCents": 25000000,
+      "requestedTermMonths": 24,
+      "productKey": "capital-giro",
+      "productName": "Capital de giro",
+      "portfolioId": "66e0c1d2a3b4c50010d0a001",
+      "portfolioName": "Varejo",
+      "createdAt": "2026-09-29T14:32:10.000Z",
+      "currentOffer": {
+        "id": "66f1e2c4d8a1b50013f2a002",
+        "round": 1,
+        "kind": "INDICATIVE",
+        "status": "SENT",
+        "minCents": 10000000,
+        "maxCents": 25000000,
+        "terms": [12, 18, 24],
+        "graceOptions": [0, 3],
+        "riskBpsYear": 450,
+        "validUntil": "2026-10-14T14:40:00.000Z",
+        "chosenAmountCents": null,
+        "chosenTermMonths": null,
+        "chosenGraceMonths": null
+      },
+      "lastRun": {
+        "kind": "OPERATION",
+        "refId": "66f1e1b0c7d2e30012b3c101",
+        "targetId": "66e2b7f1a9c3d20011c4e210",
+        "createdAt": "2026-09-29T14:33:02.000Z"
+      }
+    }
+  ],
+  "total": 1,
+  "totalsByPortfolio": [
+    {
+      "portfolioId": "66e0c1d2a3b4c50010d0a001",
+      "name": "Varejo",
+      "count": 1,
+      "amountCents": 25000000
+    }
+  ]
+}
+```
+</CodeGroup>
+
+<ResponseField name="items" type="object[]">
+  Propostas da página, com os campos da proposta e dois resumos.
+  <Expandable title="resumos">
+    <ResponseField name="currentOffer" type="object | null">Oferta vigente: rodada, tipo, situação, faixa, prazos, carências, taxa de risco, validade e o que foi escolhido.</ResponseField>
+    <ResponseField name="lastRun" type="object | null">Última análise: `kind`, `refId` (relatório ou execução), `targetId` (política ou esteira) e `createdAt`.</ResponseField>
+  </Expandable>
+</ResponseField>
+<ResponseField name="total" type="integer">Propostas que casam com o filtro, em todas as páginas.</ResponseField>
+<ResponseField name="totalsByPortfolio" type="object[]">Quantidade e soma em centavos por carteira. Propostas sem carteira aparecem como "Sem carteira".</ResponseField>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `"A situação informada não é válida."` | `status` fora da lista |
+| `400` | `"O tamanho da página deve ser de no máximo 100."` | `pageSize` acima de 100 |
+| `502` | `"Não foi possível listar as propostas."` | Falha interna |
+
+---
+
+## Ler uma proposta
+
+```http
+GET /v1/proposals/{id}
+```
+
+Devolve a proposta com todas as ofertas, análises, participantes e fotos de aprovação. É a leitura para acompanhar o pedido.
+
+<ParamField path="id" type="string" required>Id da proposta.</ParamField>
+
+<CodeGroup>
+```bash Requisição
+curl https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001 \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+{
+  "id": "66f1e0a3c2b9d40012a1b001",
+  "document": "11222333000181",
+  "entityType": "COMPANY",
+  "name": "Padaria Exemplo Ltda",
+  "kind": "FINANCING",
+  "status": "WAITING_CUSTOMER",
+  "origin": "API",
+  "requestedAmountCents": 25000000,
+  "requestedTermMonths": 24,
+  "productKey": "capital-giro",
+  "currentOfferId": "66f1e2c4d8a1b50013f2a002",
+  "offers": [
+    {
+      "id": "66f1e2c4d8a1b50013f2a002",
+      "round": 1,
+      "kind": "INDICATIVE",
+      "status": "SENT",
+      "minCents": 10000000,
+      "maxCents": 25000000,
+      "terms": [12, 18, 24],
+      "graceOptions": [0, 3],
+      "riskBpsYear": 450,
+      "validUntil": "2026-10-14T14:40:00.000Z",
+      "operationResultId": "66f1e1b0c7d2e30012b3c101",
+      "chosenAmountCents": null,
+      "chosenTermMonths": null,
+      "chosenGraceMonths": null,
+      "chosenAt": null,
+      "chosenChannel": null
+    }
+  ],
+  "runs": [
+    {
+      "id": "66f1e1b1c7d2e30012b3c102",
+      "createdAt": "2026-09-29T14:33:02.000Z",
+      "kind": "OPERATION",
+      "refId": "66f1e1b0c7d2e30012b3c101",
+      "targetId": "66e2b7f1a9c3d20011c4e210",
+      "reason": "INITIAL"
+    }
+  ],
+  "parties": [],
+  "snapshots": [
+    {
+      "id": "66f1e2c5d8a1b50013f2a003",
+      "kind": "PRE_APPROVAL",
+      "decision": "OFFERED",
+      "decidedAt": "2026-09-29T14:40:00.000Z",
+      "proposalRunId": "66f1e1b1c7d2e30012b3c102"
+    }
+  ]
+}
+```
+</CodeGroup>
+
+<ResponseField name="offers" type="object[]">Uma oferta por rodada, em ordem. O link e o token da oferta nunca aparecem aqui: use a [rota do link](/api-reference/propostas/ofertas#copiar-o-link-da-oferta). Campos em [Ofertas](/api-reference/propostas/ofertas#a-oferta).</ResponseField>
+<ResponseField name="runs" type="object[]">
+  Cada análise disparada, da mais recente para a mais antiga. Rodar de novo cria um item novo, nunca sobrescreve.
+  <Expandable title="campos">
+    <ResponseField name="kind" type="string">`REPORT` (política) ou `OPERATION` (esteira).</ResponseField>
+    <ResponseField name="refId" type="string">Id do relatório ou da execução.</ResponseField>
+    <ResponseField name="targetId" type="string">Id da política ou da esteira.</ResponseField>
+    <ResponseField name="reason" type="string">`INITIAL`, `RERUN_PARTIES`, `RERUN_REGISTRY_FIX` ou `RERUN_MANUAL`.</ResponseField>
+  </Expandable>
+</ResponseField>
+<ResponseField name="parties" type="object[]">Participantes incluídos depois do pedido (ativos).</ResponseField>
+<ResponseField name="snapshots" type="object[]">Resumo das fotos de aprovação: `id`, `kind` (`PRE_APPROVAL` ou `FINAL_DECISION`), `decision` (`APPROVED`, `REJECTED` ou `OFFERED`), `decidedAt` e `proposalRunId`. O conteúdo sai na [rota da foto](#ler-a-foto-da-aprovação).</ResponseField>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `404` | `"Proposta não encontrada."` | Id inexistente nesta organização |
+| `502` | `"Não foi possível carregar a proposta."` | Falha interna |
+
+---
+
+## Mudar a situação
+
+```http
+PATCH /v1/proposals/{id}/status
+```
+
+Encerra ou reabre o pedido. O uso típico é cancelar (`CANCELED`) um pedido que o cliente desistiu.
+
+<ParamField path="id" type="string" required>Id da proposta.</ParamField>
+<ParamField body="status" type="string" required>Situação de destino.</ParamField>
+<ParamField body="reason" type="string">Motivo, guardado no histórico. Até 500 caracteres.</ParamField>
+
+Só estas mudanças são aceitas. Mandar a mesma situação em que a proposta já está não é erro e não muda nada.
+
+| De | Para |
+| --- | --- |
+| `DRAFT` | `IN_ANALYSIS`, `WAITING_CUSTOMER`, `WAITING_OPERATOR`, `OFFER_ISSUED`, `REJECTED`, `CANCELED` |
+| `IN_ANALYSIS` | `WAITING_CUSTOMER`, `WAITING_OPERATOR`, `OFFER_ISSUED`, `REJECTED`, `CANCELED` |
+| `WAITING_CUSTOMER` | `IN_ANALYSIS`, `WAITING_OPERATOR`, `OFFER_ISSUED`, `REJECTED`, `EXPIRED`, `CANCELED` |
+| `WAITING_OPERATOR` | `IN_ANALYSIS`, `WAITING_CUSTOMER`, `OFFER_ISSUED`, `REJECTED`, `CANCELED` |
+| `OFFER_ISSUED`, `REJECTED`, `EXPIRED` | `IN_ANALYSIS`, `CANCELED` |
+| `CANCELED` | nenhuma |
+
+**Encerrar tem efeitos.** Ao ir para `REJECTED`, `CANCELED` ou `EXPIRED`, a plataforma cancela a assinatura de contrato em andamento, vence os links de oferta ainda abertos e encerra as execuções de esteira abertas desta proposta.
+
+<CodeGroup>
+```bash Requisição
+curl -X PATCH https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001/status \
+  -H "Authorization: Bearer $GYRA_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "status": "CANCELED", "reason": "Cliente desistiu do pedido." }'
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+{
+  "id": "66f1e0a3c2b9d40012a1b001",
+  "document": "11222333000181",
+  "status": "CANCELED",
+  "updatedAt": "2026-09-30T09:12:44.000Z"
+}
+```
+</CodeGroup>
+
+A resposta é a proposta inteira com a situação nova (resumida acima).
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `"Situação inválida."` | `status` fora da lista |
+| `400` | `"O motivo aceita no máximo 500 caracteres."` | `reason` longo demais |
+| `404` | `"Proposta não encontrada."` | Id inexistente |
+| `409` | `"A proposta está em {situação atual} e não pode ir para {situação pedida}."` | Mudança fora da tabela acima |
+| `409` | `"A proposta mudou de situação enquanto esta ação era feita. Atualize e tente de novo."` | Outra mudança chegou ao mesmo tempo |
+| `503` | `"Não foi possível cancelar a assinatura do contrato em andamento, e por isso a proposta não foi {cancelada, recusada ou vencida}. Tente de novo."` | A assinatura não cancelou; a situação foi mantida |
+| `502` | `"Não foi possível alterar a situação da proposta."` | Falha interna |
+
+---
+
+## Incluir um participante
+
+```http
+POST /v1/proposals/{id}/parties
+```
+
+Inclui avalista, sócio ou interveniente que entrou depois do pedido. Para que a análise considere a pessoa nova, rode de novo com `reason: "RERUN_PARTIES"`.
+
+<ParamField path="id" type="string" required>Id da proposta.</ParamField>
+<ParamField body="document" type="string" required>CPF ou CNPJ do participante.</ParamField>
+<ParamField body="name" type="string" required>Nome. Até 200 caracteres.</ParamField>
+<ParamField body="role" type="string" required>`GUARANTOR` (avalista), `PARTNER` (sócio) ou `INTERVENING` (interveniente).</ParamField>
+
+<CodeGroup>
+```bash Requisição
+curl -X POST https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001/parties \
+  -H "Authorization: Bearer $GYRA_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "document": "529.982.247-25", "name": "Carlos Pereira", "role": "GUARANTOR" }'
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 201
+{
+  "id": "66f1e3a0b1c2d30014a4b001",
+  "createdAt": "2026-09-29T15:02:18.000Z",
+  "updatedAt": "2026-09-29T15:02:18.000Z",
+  "organizationId": "6612a7f30000000000000001",
+  "proposalId": "66f1e0a3c2b9d40012a1b001",
+  "document": "52998224725",
+  "name": "Carlos Pereira",
+  "role": "GUARANTOR",
+  "removed": false
+}
+```
+</CodeGroup>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `"Informe o CPF ou CNPJ do participante."` | `document` ausente |
+| `400` | `"Informe o nome do participante."` | `name` ausente |
+| `400` | `"Papel do participante inválido."` | `role` fora da lista |
+| `404` | `"Proposta não encontrada."` | Id inexistente |
+| `502` | `"Não foi possível incluir o participante."` | Falha interna |
+
+## Remover um participante
+
+```http
+DELETE /v1/proposals/{id}/parties/{partyId}
+```
+
+Tira o participante da proposta. A remoção é lógica: o registro some da leitura, mas fica no histórico.
+
+<ParamField path="id" type="string" required>Id da proposta.</ParamField>
+<ParamField path="partyId" type="string" required>Id do participante.</ParamField>
+
+<CodeGroup>
+```bash Requisição
+curl -X DELETE https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001/parties/66f1e3a0b1c2d30014a4b001 \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `404` | `"Participante não encontrado."` | Id inexistente ou já removido |
+| `502` | `"Não foi possível remover o participante."` | Falha interna |
+
+---
+
+## Rodar a análise
+
+```http
+POST /v1/proposals/{id}/run
+```
+
+Dispara a análise da proposta por uma política (gera um relatório) ou por uma esteira (gera uma execução) e liga o resultado à proposta. A proposta vai para `IN_ANALYSIS`. A análise é cobrada como um relatório ou uma execução comuns.
+
+<ParamField path="id" type="string" required>Id da proposta.</ParamField>
+<ParamField body="kind" type="string" required>`REPORT` para rodar uma política, `OPERATION` para rodar uma esteira.</ParamField>
+<ParamField body="targetId" type="string" required>Id da política (com `REPORT`) ou da esteira (com `OPERATION`).</ParamField>
+<ParamField body="reason" type="string">Por que está rodando: `INITIAL`, `RERUN_PARTIES` (entrou participante), `RERUN_REGISTRY_FIX` (cadastro corrigido) ou `RERUN_MANUAL`. Ausente: `INITIAL` na primeira análise, `RERUN_MANUAL` nas seguintes.</ParamField>
+
+A análise recebe os [dados de entrada](/api-reference/propostas/dados-de-entrada) da proposta. Um relatório disparado por aqui é sempre recalculado, mesmo que já exista um do mesmo documento no dia.
+
+<CodeGroup>
+```bash Requisição
+curl -X POST https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001/run \
+  -H "Authorization: Bearer $GYRA_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "kind": "OPERATION", "targetId": "66e2b7f1a9c3d20011c4e210" }'
+```
+</CodeGroup>
+
+<CodeGroup>
+```json OPERATION
+{
+  "run": {
+    "id": "66f1e1b1c7d2e30012b3c102",
+    "createdAt": "2026-09-29T14:33:02.000Z",
+    "proposalId": "66f1e0a3c2b9d40012a1b001",
+    "kind": "OPERATION",
+    "refId": "66f1e1b0c7d2e30012b3c101",
+    "targetId": "66e2b7f1a9c3d20011c4e210",
+    "reason": "INITIAL"
+  },
+  "kind": "OPERATION",
+  "refId": "66f1e1b0c7d2e30012b3c101",
+  "operationResultId": "66f1e1b0c7d2e30012b3c101"
+}
+```
+
+```json REPORT
+{
+  "run": {
+    "id": "66f1e1b1c7d2e30012b3c105",
+    "createdAt": "2026-09-29T14:33:02.000Z",
+    "proposalId": "66f1e0a3c2b9d40012a1b001",
+    "kind": "REPORT",
+    "refId": "66f1e1b0c7d2e30012b3c104",
+    "targetId": "66d9a0b1c2d3e40010a0f300",
+    "reason": "INITIAL"
+  },
+  "kind": "REPORT",
+  "refId": "66f1e1b0c7d2e30012b3c104",
+  "reportId": "66f1e1b0c7d2e30012b3c104"
+}
+```
+</CodeGroup>
+
+<ResponseField name="run" type="object | null">A análise registrada na proposta. Pode vir `null` quando a análise foi disparada mas o registro falhou: o relatório ou a execução existem mesmo assim. **Não rode de novo** por isso.</ResponseField>
+<ResponseField name="operationResultId" type="string">Com `OPERATION`: id da execução. É o mesmo que chega no webhook `OPERATION`. Veja [Execuções](/esteiras/execucoes).</ResponseField>
+<ResponseField name="reportId" type="string">Com `REPORT`: id do relatório. Acompanhe pelas rotas e webhooks de relatório.</ResponseField>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `"Informe se a análise é por política ou por esteira."` | `kind` fora da lista |
+| `400` | `"Informe a política ou a esteira a rodar."` | `targetId` ausente ou fora do formato |
+| `404` | `"Proposta não encontrada."` | Id inexistente |
+| `409` | `"Esta proposta está encerrada ({cancelada, reprovada ou vencida}) e não pode rodar nova análise."` | Proposta em `CANCELED`, `REJECTED` ou `EXPIRED` |
+| `409` | `"Esta proposta já tem uma execução desta esteira em andamento. Nada foi disparado: decida ou conclua a execução atual antes de rodar de novo."` | A mesma esteira ainda está rodando. Traz `operationResultId` |
+| `409` | Mensagem da esteira sobre a execução aberta; na falta dela, `"Esta proposta já tem uma execução em andamento. Conclua ou encerre essa execução antes de rodar outra."` | A proposta já tem uma execução aberta. Traz `operationResultId` quando disponível |
+| `503` | `"O relatório foi criado, mas o processamento ainda não começou. Ele já está ligado à proposta; não rode de novo."` | Traz `reportId` e `proposalRunId`. O relatório processa sozinho |
+| `502` | `"A esteira não devolveu a execução criada."` | Falha ao criar a execução |
+| `502` | `"O relatório não foi criado."` | Falha ao criar o relatório |
+
+<Tip>
+  Proposta em `REJECTED` ou `EXPIRED` não roda direto. Para reanalisar, mude a situação para `IN_ANALYSIS` e depois rode.
+</Tip>
+
+---
+
+## Ler a foto da aprovação
+
+```http
+GET /v1/proposals/{id}/snapshots/{snapshotId}
+```
+
+A foto é o registro imutável do que a análise viu quando decidiu: o cadastro, as pessoas e os documentos naquele momento. A rota devolve a foto e o que mudou no cadastro desde então. Serve para auditoria.
+
+<ParamField path="id" type="string" required>Id da proposta.</ParamField>
+<ParamField path="snapshotId" type="string" required>Id da foto, de `snapshots[]` na leitura da proposta.</ParamField>
+
+<CodeGroup>
+```bash Requisição
+curl https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001/snapshots/66f1e2c5d8a1b50013f2a003 \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+{
+  "snapshot": {
+    "id": "66f1e2c5d8a1b50013f2a003",
+    "createdAt": "2026-09-29T14:40:00.000Z",
+    "proposalId": "66f1e0a3c2b9d40012a1b001",
+    "proposalRunId": "66f1e1b1c7d2e30012b3c102",
+    "kind": "PRE_APPROVAL",
+    "decision": "OFFERED",
+    "decidedAt": "2026-09-29T14:40:00.000Z",
+    "schemaVersion": 1,
+    "content": { "registry": { "name": "Padaria Exemplo Ltda" }, "persons": [], "documents": [] },
+    "contentSha256": "9f2c4e7a1b3d5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8",
+    "supersedesId": null,
+    "reason": null
+  },
+  "diff": [
+    {
+      "area": "PERSONS",
+      "kind": "ADDED",
+      "label": "Carlos Pereira"
+    }
+  ]
+}
+```
+</CodeGroup>
+
+<ResponseField name="snapshot.kind" type="string">`PRE_APPROVAL` (oferta indicativa) ou `FINAL_DECISION` (decisão final).</ResponseField>
+<ResponseField name="snapshot.decision" type="string">`APPROVED`, `REJECTED` ou `OFFERED`.</ResponseField>
+<ResponseField name="snapshot.contentSha256" type="string">Hash do conteúdo da foto, para provar que não mudou.</ResponseField>
+<ResponseField name="diff" type="object[]">O que mudou desde a foto, calculado na hora. Cada item traz `area` (`REGISTRY`, `PERSONS` ou `DOCUMENTS`), `kind` (`ADDED`, `REMOVED` ou `CHANGED`), `label` e, quando se aplica, `before` e `after`. Lista vazia: nada mudou.</ResponseField>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `404` | `"Proposta não encontrada."` | Id da proposta inexistente |
+| `404` | `"Foto não encontrada."` | A foto não é desta proposta |
+| `502` | `"Não foi possível carregar a foto da aprovação."` | Falha interna |

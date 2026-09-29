@@ -9,7 +9,7 @@ lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** menu lateral, **Solicitações**. É onde você pede ao cliente final o que falta e acompanha a resposta. O pedido sai por um link (e-mail, WhatsApp, os dois, ou você mesmo entrega), e o que chega é analisado e arquivado no [cadastro](/toolbox/cadastros) da pessoa ou da empresa.
+  **Resumo:** menu lateral, seção **Onboarding**, **Solicitações**. É onde você pede ao cliente final o que falta e acompanha a resposta. O pedido sai por um link (e-mail, WhatsApp, os dois, ou você mesmo entrega), e o que chega é analisado e arquivado no [cadastro](/toolbox/cadastros) da pessoa ou da empresa.
 </Info>
 
 <Note>
@@ -23,14 +23,16 @@ lang: nao-tecnica
 | **Solicitações** | A listagem, com filtro por situação, cadastro e período |
 | **Nova solicitação** | Montar e disparar o pedido |
 | **Solicitação** | Acompanhar item a item e resolver o que precisa de decisão |
-| **Modelos** | O que se pede, publicado em versões |
+| **Modelos** | O que se pede, publicado em versões, nas abas **Meus** e **Templates GYRA+** |
 | **Termos** | O que se assina, publicado em versões |
+
+As verificações de identidade de todas as solicitações ficam numa tela própria, logo abaixo no menu: [Validação de identidade](/toolbox/validacao-de-identidade).
 
 ## Nova solicitação
 
 <Steps>
   <Step title="Escolher o modelo">
-    O modelo diz o que será pedido. A tela mostra os modelos vigentes com as métricas de uso de cada um.
+    O modelo diz o que será pedido. A tela mostra os modelos vigentes e ligados, com as métricas de uso de cada um. Modelo desligado não aparece aqui.
   </Step>
   <Step title="Escolher o cadastro">
     Digite o CNPJ ou o CPF. Se o cadastro não existir, ele é criado. Se existir, a tela mostra o que ele **já tem** e não vai pedir de novo, com a opção de **pedir mesmo assim** item a item.
@@ -57,6 +59,9 @@ A tela da solicitação mostra:
 - **Cada item**, com o estado, o parecer da análise e a evidência.
 - **Cada destinatário**, com o estado da entrega (enviado, entregue, aberto, em andamento, concluído, falhou) e o link dele, reemitível.
 - **A trilha**, com quem fez o quê e quando.
+- **A origem**, quando a solicitação não foi aberta à mão: **Renovação automática**, **Aberta por uma esteira** ou **Veio do link público**.
+
+Na solicitação que veio do link público, se o contato informado não é o que o cadastro já conhece, a tela mostra um aviso. Nada é alterado no cadastro: você decide o que fazer com a diferença.
 
 ### Estados do item
 
@@ -111,6 +116,39 @@ O modelo também define prazo, lembretes, canal, modo de resposta e o comportame
 
 Modelos podem ser **duplicados** numa cópia editável. Salvar publica uma versão nova; o endereço estável entre versões é o mesmo, então uma integração que aponta para o modelo passa a usar a versão nova sozinha.
 
+### Meus e Templates GYRA+
+
+A tela de modelos tem duas abas. **Meus** são os modelos da sua organização. **Templates GYRA+** são modelos prontos, marcados com o selo **Modelo GYRA+** na coluna **Origem**: você usa como estão e, para mudar algo, duplica.
+
+A última coluna tem o interruptor que liga e desliga o modelo na sua organização, inclusive nos modelos GYRA+. Desligado, o modelo some da escolha de modelo (na nova solicitação e na esteira), mas continua nesta tela para ser religado. O que já foi enviado com ele segue valendo.
+
+### Ao concluir
+
+No editor do modelo, a seção **Ao concluir** diz o que acontece quando a solicitação fecha:
+
+| Opção | O que acontece |
+| --- | --- |
+| **Nada** (padrão) | A resposta fica registrada no cadastro. Ninguém é acionado |
+| **Gerar relatório** | Escolha a **Política**. A GYRA+ gera o relatório com o documento do cadastro |
+| **Rodar esteira** | Escolha a **Esteira**. A GYRA+ roda a esteira com o documento do cadastro |
+
+Detalhes em [Ao concluir](/kyc/solicitacoes#ao-concluir).
+
+### Link público
+
+A seção **Link público** transforma o modelo num [formulário público](/kyc/formulario-publico): um endereço só, que qualquer pessoa abre para começar a própria solicitação.
+
+| Campo | O que faz |
+| --- | --- |
+| **Receber por link aberto** | Liga e desliga o link |
+| **Aceita** | **CPF e CNPJ**, **Só CNPJ** ou **Só CPF** |
+| **Confirmar o contato por** | **E-mail** ou **SMS**: por onde sai o código de 6 dígitos |
+| **Teto de solicitações por dia** | Ao atingir, o link se desliga sozinho e quem publicou o modelo recebe um aviso por e-mail |
+| **Horas até aceitar uma nova resposta do mesmo cadastro** | Por quanto tempo quem já concluiu não abre outra solicitação |
+| **Endereço** | Aparece depois de salvar, com o botão **Copiar endereço** |
+
+Com o módulo de Propostas, a seção também tem o **Objetivo** do link (**Cadastro (documentos)**, **Pedido de financiamento** ou **Pedido de venda a prazo**), os **Produtos oferecidos** e as opções **Pedir o valor** e **Pedir o prazo**. Ver [Formulário público](/kyc/formulario-publico#receba-pedidos-de-financiamento-ou-venda-a-prazo).
+
 Detalhes de montagem em [Formulários](/kyc/formularios) e [Solicitações de coleta](/kyc/solicitacoes).
 
 ## Termos
@@ -128,7 +166,7 @@ Detalhes em [Termos e assinatura](/kyc/termos-e-assinatura).
 
 ## A sua marca no que o cliente vê
 
-Em *Configurações, Marca* e *Configurações, Envio* você coloca logo e cores na página do destinatário, usa domínio próprio no link, remetente próprio no e-mail e o WhatsApp da sua empresa no convite.
+Nas configurações da organização, que ficam no menu da organização no topo da tela, você coloca logo e cores na página do destinatário, usa domínio próprio no link, remetente próprio no e-mail e o WhatsApp da sua empresa no convite.
 
 ## Próximos passos
 
@@ -141,6 +179,12 @@ Em *Configurações, Marca* e *Configurações, Envio* você coloca logo e cores
   </Card>
   <Card title="Página do destinatário" icon="link" href="/kyc/pagina-do-destinatario">
     O que o cliente final vê.
+  </Card>
+  <Card title="Formulário público" icon="globe" href="/kyc/formulario-publico">
+    O link aberto para o cliente começar sozinho.
+  </Card>
+  <Card title="Validação de identidade" icon="id-card" href="/toolbox/validacao-de-identidade">
+    Todas as verificações da organização.
   </Card>
   <Card title="API de solicitações" icon="plug" href="/api-reference/collection/post-collections">
     Fazer o mesmo pelo seu backend.

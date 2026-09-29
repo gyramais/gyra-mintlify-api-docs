@@ -9,7 +9,7 @@ lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** o Comitê de Crédito IA reproduz um comitê humano. Depois que a GYRA+ gera os **pareceres por seção** e a **política de crédito** conclui, **sete agentes especialistas** analisam o caso em paralelo (cada um no seu domínio) e um **Presidente** reconcilia tudo numa decisão única, com justificativa, condições, registro de divergência e nível de alçada. O comitê pode rodar **automaticamente** (configurado na política) ou ser **convocado manualmente** no relatório ou via API. Nos planos **Business** e **Enterprise**, sua instituição adiciona instruções próprias aos agentes, para o comitê deliberar com o apetite e a política interna da casa.
+  **Resumo:** o Comitê de Crédito IA reproduz um comitê humano. Depois que a GYRA+ gera os **pareceres por seção** e a **política de crédito** conclui, **sete agentes especialistas** analisam o caso em paralelo (cada um no seu domínio) e um **Presidente** reconcilia tudo numa decisão única, com justificativa, condições, registro de divergência e nível de alçada. O comitê pode rodar **automaticamente** (configurado na política) ou ser **convocado manualmente** no relatório ou via API. Com o recurso de instruções habilitado na organização, sua instituição adiciona instruções próprias aos agentes, para o comitê deliberar com o apetite e a política interna da casa.
 </Info>
 
 ## Onde o comitê entra
@@ -55,6 +55,10 @@ Sete especialistas rodam em paralelo, cada um enxergando apenas os pareceres do 
 <Tip>
   O agente **Cadastral** é o único com acesso a **busca na web**. Ele pesquisa a razão social ou o nome antes de opinar, para montar um retrato atualizado do que a empresa faz de fato, porte real e notoriedade recente. Os demais agentes trabalham exclusivamente com os dados do relatório.
 </Tip>
+
+### Indicadores do SCR contam como SCR
+
+Quando a política declara os [Indicadores do SCR](/sources/scr-open-finance#indicadores-do-scr) e o relatório não tem a seção completa do SCR, o comitê lê os indicadores como dado de SCR: não aponta falta de SCR, não coloca o SCR entre as lacunas antes de decidir e não recomenda pedir o consentimento do titular. Ele lê a faixa (por exemplo, *Sem dívida em aberto* ou *Acima de R$ 17.700 até R$ 25.800*) e não inventa o valor exato. A recomendação de pedir o consentimento do SCR só aparece quando o relatório não tem nem a seção do SCR nem os indicadores.
 
 ### O que cada agente devolve
 
@@ -252,7 +256,7 @@ sequenceDiagram
 ## Instruções da sua instituição nos agentes
 
 <Info>
-  Disponível nos planos **Business** e **Enterprise**. Fale com `atendimento@gyramais.com` para habilitar na sua organização.
+  Recurso habilitado por organização. Fale com `atendimento@gyramais.com` para habilitar. Sem ele, o bloco não aparece na política e a API recusa ler ou gravar as instruções com `403`: *A customização dos prompts do Comitê não está habilitada para esta organização.*
 </Info>
 
 Cada agente do comitê tem um **prompt-base GYRA+** (não editável) e um campo de **instruções adicionais** que a sua instituição escreve. Com o recurso habilitado, o bloco **Instruções adicionais dos agentes** aparece na edição da política de crédito, com um campo por agente, incluindo o Presidente.

@@ -1,0 +1,164 @@
+---
+title: "Execuções"
+description: "O que acontece quando uma esteira roda: estados, esperas, rodar de novo, proposta encerrada, fechamento externo e o webhook de fim de execução."
+icon: "play"
+surface: conceito
+domain: esteira
+audience: ambos
+lang: nao-tecnica
+---
+
+Uma execução é uma rodada da esteira para um CPF ou CNPJ, do primeiro relatório à última assinatura, com cada passo e cada decisão registrados.
+
+<Info>
+  **Resumo:** a execução roda a versão da esteira com que começou, para quando precisa de alguém (analista, aprovador, cliente ou parceiro) e termina com um selo: aprovada, reprovada, concluída ou erro. Ao terminar, sua organização recebe o webhook `OPERATION`.
+</Info>
+
+## Como uma execução começa
+
+| Origem | Como |
+| --- | --- |
+| Operador | No campo do topo do toolbox: digite o CPF ou CNPJ e escolha a esteira no grupo **Esteiras** |
+| Proposta | A proposta dispara a esteira. Na tela da proposta, **Rodar de novo** abre uma execução nova |
+| Integração | `POST /v1/proposals/{id}/run` com `kind: "OPERATION"` e o id da esteira em `targetId`. Veja a [API de Propostas](/api-reference/propostas/visao-geral) |
+
+Antes de abrir, a plataforma confere:
+
+| Situação | Mensagem |
+| --- | --- |
+| Esteira inativa | A esteira "X" está inativa. Ative a esteira para executá-la. |
+| Documento inválido | Informe um CPF (11 dígitos) ou um CNPJ (14 dígitos) válido. |
+| Tipo de documento errado | A esteira "X" analisa CNPJ, mas o documento informado é um CPF. |
+
+## Estados da execução
+
+| Na tela | Quando |
+| --- | --- |
+| **não iniciada** | A execução foi criada e ainda não começou |
+| **em execução** | Alguma etapa está rodando ou esperando alguém |
+| **aprovada** | Terminou com o crédito aprovado (inclui alerta aprovado) |
+| **reprovada** | Terminou com o crédito reprovado |
+| **concluída** | Terminou sem decisão de crédito, por exemplo numa esteira só de consulta |
+| **erro** | Uma falha técnica interrompeu a execução |
+
+Um selo final não é reescrito para melhor: uma execução reprovada ou com erro não vira "concluída" depois.
+
+A formalização tem desfecho próprio. Se o contrato não sai, a execução continua **aprovada**, e o contrato aparece como não concluído. Veja [Formalização](/formalizacao/visao-geral).
+
+### Estados de cada etapa
+
+| Na tela | Significado |
+| --- | --- |
+| **não iniciada** | A etapa ainda não chegou |
+| **em execução** | Rodando |
+| **aguardando você** | Esperando uma decisão |
+| **concluída** | Terminou |
+| **não rodou** | Pulada pela condição, pelo crédito não aprovado ou pela proposta encerrada, com o motivo |
+| **erro** | Falhou |
+
+A decisão de cada etapa aparece como **aprovada**, **alerta** ou **reprovada**.
+
+## Onde uma execução espera
+
+Uma execução em andamento pode estar parada esperando alguém. A tela diz quem:
+
+| Espera | Quem destrava |
+| --- | --- |
+| **aguardando decisão** | Um analista, num Checkpoint ou numa etapa que foi para o analista |
+| **aguardando decisão no relatório** | Um analista, aprovando ou reprovando o próprio relatório |
+| **aguardando revisão da oferta** | Um analista, na Revisão da oferta |
+| **aguardando comitê de crédito IA** | O Comitê IA, sozinho |
+| **aguardando aprovação da alçada** | Os aprovadores da faixa |
+| **aguardando cliente** | O cliente, respondendo uma solicitação ou escolhendo a oferta |
+| **aguardando fechamento externo** | O seu sistema, chamando `POST /operation/close` |
+
+A decisão manual é registrada com autor, horário e comentário. Se outra pessoa decidiu primeiro, a tela avisa: "Esta etapa já não está esperando decisão (pode ter sido decidida por outra pessoa). A execução foi atualizada."
+
+## Rodar de novo
+
+Rodar a mesma esteira para o mesmo documento não duplica trabalho à toa.
+
+**Sem proposta.** Se já existe uma execução do mesmo dia, da mesma versão da esteira e do mesmo documento, e ela não terminou em erro, a plataforma devolve essa execução em vez de abrir outra. Nada novo roda.
+
+**Com proposta.** Na tela da proposta, **Rodar de novo** abre uma execução nova ("Com o CNPJ/CPF da proposta. A execução anterior continua registrada."), com um motivo. Regras:
+
+- Se a proposta já tem uma execução em andamento, nada é disparado: "Esta proposta já tem uma execução em andamento na esteira "X". Conclua ou encerre essa execução antes de rodar outra."
+- O relatório do dia, se já estava decidido, é **reaberto**: o mesmo relatório volta a processar com os dados de entrada de hoje, a decisão anterior fica guardada no histórico, e não há cobrança de relatório novo. As camadas são reaplicadas.
+- Proposta encerrada não roda: "Esta proposta está encerrada (cancelada) e não pode rodar nova análise.", com a situação da proposta entre parênteses.
+
+## Proposta encerrada no meio do caminho
+
+Quando a proposta é cancelada, reprovada ou vence, as execuções dela que estão em andamento são encerradas:
+
+- As etapas ainda no ar aparecem como **não rodou**, com o motivo "a proposta foi encerrada".
+- Uma formalização em andamento fica como não concluída.
+- O selo da execução é o da decisão de crédito que já existia.
+
+## Fechamento externo
+
+Quando a esteira tem a etapa **Aguardar fechamento externo**, a execução para até o seu sistema avisar que a operação foi liberada. Isso é feito pela API pública, com o token da organização:
+
+```bash
+POST /operation/close
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "referenceId": "CCB-2026-000123",
+  "document": "43.591.367/0001-30",
+  "date": "2026-09-21",
+  "operationId": "6612a7f30000000000000101"
+}
+```
+
+| Campo | Regra |
+| --- | --- |
+| `referenceId` | Número do contrato, até 100 caracteres. `ccbNumber` e `externalId` são sinônimos. |
+| `document` | CPF ou CNPJ do tomador, com ou sem máscara |
+| `date` | Data do fechamento, `AAAA-MM-DD` |
+| `operationId` | Opcional. O id da execução, para escolher quando há mais de uma esperando |
+
+Repetir o mesmo fechamento devolve `200` com o mesmo resultado. Depois do fechamento, as etapas seguintes podem usar `fechamento.referencia`, `fechamento.data` e `fechamento.documento`. Resposta, erros e exemplos em [Fechamento externo](/api-reference/esteiras/fechamento-externo).
+
+## Webhook de fim de execução
+
+Quando a execução termina, a GYRA+ envia o webhook do tipo `OPERATION` (nome público `operation.updated`) para as URLs cadastradas para esse tipo:
+
+```json
+{
+  "organizationId": "6612a7f30000000000000001",
+  "webhookType": "OPERATION",
+  "data": {
+    "operationId": "6612a7f30000000000000100",
+    "operationResultId": "6612a7f30000000000000101",
+    "document": "43591367000130",
+    "status": "APPROVED"
+  }
+}
+```
+
+| Campo | O que é |
+| --- | --- |
+| `operationId` | Id da esteira |
+| `operationResultId` | Id da execução |
+| `document` | CPF ou CNPJ analisado |
+| `status` | Selo final: `APPROVED`, `REPROVED`, `COMPLETED` ou `ERROR` |
+
+O webhook sai **uma vez, no fim da execução**. Não há evento por etapa, por voto de alçada ou por espera. Se o webhook tiver chave cadastrada, ela vai no header `api-key`.
+
+<Note>
+  Quando a esteira tem Comitê de crédito IA, o fim da deliberação também gera o webhook `COMMITTEE_FINISHED`, se a sua organização o cadastrou.
+</Note>
+
+Como cadastrar: [Webhooks e API keys](/toolbox/webhooks-e-api-keys) e [Criar webhook](/api-reference/webhook/post-webhook).
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Acompanhar execuções" icon="list-check" href="/toolbox/acompanhar-execucoes">
+    A lista, a página da execução e a caixa de aprovações no toolbox.
+  </Card>
+  <Card title="Fechamento externo" icon="code" href="/api-reference/esteiras/fechamento-externo">
+    Referência completa de `POST /operation/close`.
+  </Card>
+</CardGroup>

@@ -1,0 +1,141 @@
+---
+title: "Dados de entrada"
+description: "Leia o que a proposta, os formulários, os documentos e as verificações informaram, no mesmo formato de chave que a política e a esteira usam."
+icon: "table-list"
+surface: api
+domain: proposta
+audience: integrador
+lang: tecnica
+---
+
+Dados de entrada são o que o cliente e o pedido informaram, organizados em chaves que a política e a esteira usam nas regras. Estas rotas mostram o catálogo de chaves e os valores de uma proposta.
+
+<Info>
+  **Resumo:** `GET /v1/input-data/catalog` lista as chaves possíveis; `GET /v1/proposals/{id}/input-data` devolve os valores da proposta agora. É o mesmo conjunto que a análise recebe ao rodar. Conceito em [Dados de entrada](/esteiras/dados-de-entrada).
+</Info>
+
+<Note>
+  Estas rotas exigem o módulo de Propostas, de Cadastros **ou** de Formalização. Sem nenhum deles, respondem `403` com `"Os dados de entrada exigem o módulo de Propostas, de Cadastros ou de Formalização, que não está habilitado para a sua organização."`. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Chaves
+
+Cada chave tem um prefixo que diz de onde o valor vem.
+
+| Prefixo | Origem (`source`) | Grupo | Exemplo |
+| --- | --- | --- | --- |
+| `proposta.` | `PROPOSAL` | Proposta | `proposta.valor_pedido`, `proposta.prazo_pedido`, `proposta.avalistas_qtd` |
+| `form.<modelo>.` | `FORM` | Formulário | `form.cadastro-pj.faturamento_mensal` |
+| `doc.<tipo>.` | `DOCUMENT` | Documentos | `doc.<tipo>.monthly_revenues_gross_revenue_soma` |
+| `kyc.` | `VERIFICATION` | Verificações | `kyc.identidade_aprovada`, `kyc.consentimento_<tipo>` |
+
+Chaves da proposta:
+
+| Chave | Tipo | Valor |
+| --- | --- | --- |
+| `proposta.valor_pedido` | `NUMBER` | Valor pedido **em reais** (não em centavos). Valor fixo do produto quando não há pedido |
+| `proposta.prazo_pedido` | `NUMBER` | Prazo pedido, em meses |
+| `proposta.produto` | `STRING` | Chave do produto |
+| `proposta.carteira` | `STRING` | Nome da carteira |
+| `proposta.tipo` | `STRING` | `KYC`, `FINANCING` ou `INSTALLMENT_SALE` |
+| `proposta.origem` | `STRING` | `PUBLIC_FORM`, `OPERATOR`, `API` ou `BATCH` |
+| `proposta.tipo_pessoa` | `STRING` | `PJ` ou `PF` |
+| `proposta.participantes_qtd` | `NUMBER` | Participantes incluídos |
+| `proposta.avalistas_qtd` | `NUMBER` | Participantes com papel de avalista |
+
+Nas chaves de documento, lista vira `<campo>_qtd` (quantidade de itens) e, quando numérica, `<campo>_soma`.
+
+---
+
+## Listar o catálogo de chaves
+
+```http
+GET /v1/input-data/catalog
+```
+
+Lista as chaves que a sua organização pode ter: as da proposta, as dos formulários dos seus modelos, as dos documentos que você já extrai e as das verificações. Use para montar regras e para saber o que esperar na leitura da proposta.
+
+<ParamField query="templateSlug" type="string">Limita as chaves de formulário a um modelo de solicitação. Letras, números, `-` e `_`, até 120 caracteres.</ParamField>
+<ParamField query="productKey" type="string">Inclui as chaves dos formulários pedidos por este produto.</ParamField>
+
+Ao consultar o catálogo, as chaves ficam disponíveis como variáveis `inputs.<chave>` no editor de regras da política.
+
+<CodeGroup>
+```bash Requisição
+curl "https://gyra-core.gyramais.com.br/v1/input-data/catalog?productKey=capital-giro" \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+[
+  { "key": "proposta.valor_pedido", "label": "Valor pedido", "type": "NUMBER", "source": "PROPOSAL", "group": "Proposta" },
+  { "key": "proposta.prazo_pedido", "label": "Prazo pedido (meses)", "type": "NUMBER", "source": "PROPOSAL", "group": "Proposta" },
+  { "key": "form.cadastro-pj.faturamento_mensal", "label": "Cadastro PJ: Faturamento mensal", "type": "NUMBER", "source": "FORM", "group": "Formulário" },
+  { "key": "kyc.identidade_aprovada", "label": "Identidade aprovada", "type": "BOOLEAN", "source": "VERIFICATION", "group": "Verificações" }
+]
+```
+</CodeGroup>
+
+<ResponseField name="key" type="string">Chave usada nas regras e na leitura da proposta.</ResponseField>
+<ResponseField name="label" type="string">Nome em português, para mostrar.</ResponseField>
+<ResponseField name="type" type="string">`NUMBER`, `STRING`, `BOOLEAN` ou `DATE`.</ResponseField>
+<ResponseField name="source" type="string">`PROPOSAL`, `FORM`, `DOCUMENT` ou `VERIFICATION`.</ResponseField>
+<ResponseField name="group" type="string">`Proposta`, `Formulário`, `Documentos` ou `Verificações`.</ResponseField>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `"O modelo informado não é válido."` | `templateSlug` fora do formato |
+| `400` | `"O produto informado não é válido."` | `productKey` fora do formato |
+| `502` | `"Não foi possível carregar os dados de entrada."` | Falha interna |
+
+---
+
+## Ler os dados de entrada de uma proposta
+
+```http
+GET /v1/proposals/{id}/input-data
+```
+
+Devolve os valores atuais da proposta, montados na hora a partir do pedido e das solicitações ligadas a ela. Quando mais de uma solicitação responde a mesma chave, vale a mais recente concluída.
+
+<ParamField path="id" type="string" required>Id da proposta.</ParamField>
+
+<CodeGroup>
+```bash Requisição
+curl https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001/input-data \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+{
+  "version": 1,
+  "asOf": "2026-09-29T15:10:22.000Z",
+  "sha256": "3b1f0c9e8d7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c",
+  "proposalId": "66f1e0a3c2b9d40012a1b001",
+  "collectionIds": ["66f1e0a4c2b9d40012a1b0c1"],
+  "fields": [
+    { "key": "proposta.valor_pedido", "label": "Valor pedido", "type": "NUMBER", "value": 250000, "source": "PROPOSAL", "sourceId": "66f1e0a3c2b9d40012a1b001" },
+    { "key": "proposta.tipo_pessoa", "label": "Tipo de pessoa", "type": "STRING", "value": "PJ", "source": "PROPOSAL", "sourceId": "66f1e0a3c2b9d40012a1b001" },
+    { "key": "proposta.avalistas_qtd", "label": "Quantidade de avalistas", "type": "NUMBER", "value": 1, "source": "PROPOSAL", "sourceId": "66f1e0a3c2b9d40012a1b001" },
+    { "key": "form.cadastro-pj.faturamento_mensal", "label": "Cadastro PJ: Faturamento mensal", "type": "NUMBER", "value": 185000, "source": "FORM", "sourceId": "66f1e0a4c2b9d40012a1b0c1" },
+    { "key": "kyc.identidade_aprovada", "label": "Identidade aprovada", "type": "BOOLEAN", "value": true, "source": "VERIFICATION", "sourceId": "66f1e0a4c2b9d40012a1b0c1" }
+  ]
+}
+```
+</CodeGroup>
+
+<ResponseField name="asOf" type="string">Quando o conjunto foi montado.</ResponseField>
+<ResponseField name="sha256" type="string">Hash do conjunto. Mudou o hash, mudou algum valor.</ResponseField>
+<ResponseField name="collectionIds" type="string[]">Solicitações que contribuíram.</ResponseField>
+<ResponseField name="fields" type="object[]">Um item por chave: `key`, `label`, `type`, `value` (número, texto, booleano ou `null`), `source` e `sourceId` (proposta, solicitação ou extração de onde veio).</ResponseField>
+
+Valor que não pôde ser lido sai `null`, sem erro.
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `404` | `"Proposta não encontrada."` | Id inexistente nesta organização |
+| `502` | `"Não foi possível carregar os dados de entrada da proposta."` | Falha interna |

@@ -47,9 +47,26 @@ A escolha é feita na etapa **Fontes de dados** da política, no cartão *Bureau
 
 ### Credencial própria no Serasa
 
-Para clientes que já têm contrato direto com o Serasa, o toolbox permite **configurar a sua própria credencial de produção** (BYOC) em *Configurações, Integrações*. Isso mantém o custo por consulta no contrato que você já negociou com o bureau, a GYRA+ apenas orquestra a chamada.
+Para clientes que já têm contrato direto com o Serasa, o toolbox permite **configurar a sua própria credencial de produção** (BYOC) em *Configurações, Fontes de dados*. Isso mantém o custo por consulta no contrato que você já negociou com o bureau, a GYRA+ apenas orquestra a chamada.
 
 Para habilitar, solicite as credenciais de produção ao time de suporte do Serasa e cole no toolbox. Para Boa Vista e ProScore, o consumo ocorre pelo contrato agregado da GYRA+.
+
+## Consultas adicionais (add-ons)
+
+Além do bureau escolhido para a política, você pode contratar **consultas adicionais** de bureau uma a uma, sem levar o pacote inteiro. Elas ficam na etapa **Fontes de dados** da política, em seções de empresa e de pessoa física que levam o nome do bureau (por exemplo, **Bureau Boavista Equifax: Consultas adicionais da empresa**).
+
+| Para | Exemplos de consulta |
+| --- | --- |
+| **Empresa** | Pendências financeiras, Protestos em cartório, Ações cíveis, Falência e recuperação judicial, Cheques sem fundo, Consultas ao CNPJ, Decisão e limite sugerido, Faturamento presumido, Score de risco, Cadastro Positivo, Score de crédito, Restrições financeiras, Limite de crédito sugerido |
+| **Pessoa física** | Identificação básica, Contatos e localização, Decisão sugerida, Score de risco, Pagamentos, Pontualidade, Faturas em atraso, Tendência de risco, Renda disponível, Renda presumida, Renda bruta presumida, Gasto estimado, Débitos ativos, Protestos em cartório, Ações cíveis, Consultas ao CPF, Score de crédito, Restrições financeiras |
+
+Cada consulta adicional entra no relatório como um bloco próprio, no card de add-ons, e conta como fonte declarada: uma condição de score, por exemplo, pode se apoiar no add-on *Score de crédito* em vez de um bureau completo. Ver [Cada condição precisa de uma fonte declarada](/concepts/politica-de-credito#cada-condi%C3%A7%C3%A3o-precisa-de-uma-fonte-declarada).
+
+No relatório, na API e no PDF, as consultas adicionais aparecem pelo nome da consulta, sem citar o bureau de origem. Quando não há dado, o card mostra *Sem informação no período* (o que não afirma ausência de restrição); quando a consulta falha, *Não foi possível consultar*.
+
+<Tip>
+  Os recortes do endividamento no sistema financeiro, como dívida em aberto e quantidade de credores, ficam em outra seção: [Indicadores do SCR](/sources/scr-open-finance#indicadores-do-scr).
+</Tip>
 
 ## De onde vem
 

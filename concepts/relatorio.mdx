@@ -9,7 +9,7 @@ lang: nao-tecnica
 ---
 
 <Note>
-**Esta página descreve o Relatório, a análise de crédito de um CPF ou CNPJ individual.** Para criar um relatório na plataforma, ver [Rodar uma Análise](/toolbox/rodar-operacao). Para criar via API, ver [Criar Relatório](/api-reference/report-v2/post-v2report). Não confundir com [Operação](/concepts/operacoes), que é o workflow que pode gerar vários relatórios encadeados.
+**Esta página descreve o Relatório, a análise de crédito de um CPF ou CNPJ individual.** Para criar um relatório na plataforma, ver [Rodar uma Análise](/toolbox/rodar-operacao). Para criar via API, ver [Criar Relatório](/api-reference/report-v2/post-v2report). Não confundir com [Esteira](/esteiras/visao-geral), o fluxo que pode encadear relatórios, documentos, alçada e contrato.
 </Note>
 
 ## Visão geral
@@ -79,7 +79,7 @@ Independentemente do modo da política, é sempre possível sobrescrever ou comp
 - **Pelo Toolbox:** abra o relatório, leia o parecer e os indicadores, e use os botões de aprovar/negar com justificativa.
 - **Pela API:** use [`POST /report/analyze`](/api-reference/report/post-reportanalyze) para registrar a primeira análise manual e [`POST /report/re-analyze`](/api-reference/report/post-reportre-analyze) para refazê-la se chegar nova informação.
 
-A análise manual altera o `status` do relatório e dispara o webhook `REPORT_STATUS`. O `policyStatus` original é preservado para auditoria — você consegue ver tanto o que a política decidiu quanto o que o analista decidiu.
+A análise manual altera o `status` do relatório e dispara o webhook `REPORT_STATUS`. O `policyStatus` original é preservado para auditoria: você consegue ver tanto o que a política decidiu quanto o que o analista decidiu.
 
 <Tip>
 Use modo automático para fluxos de alto volume (onboarding, checkout) onde a política expressa todo o apetite de risco. Use modo manual quando a decisão exige julgamento humano (mesa de crédito B2B, due diligence, casos sensíveis).

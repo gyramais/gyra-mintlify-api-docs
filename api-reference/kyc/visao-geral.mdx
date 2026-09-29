@@ -74,13 +74,111 @@ O corpo é sempre `{ code, message }`, com a mensagem em português.
 
 Todo id é um ObjectId de 24 caracteres hexadecimais. CNPJ e CPF são aceitos com ou sem máscara e devolvidos só com dígitos.
 
+## Modelos: filtrar e ligar ou desligar
+
+### Filtros da listagem
+
+[`GET /v1/collection-templates`](/api-reference/collection/get-collection-templates) aceita, além de `search`, `itemKind`, `skip` e `take`:
+
+| Parâmetro | Valores | Sem o parâmetro |
+| --- | --- | --- |
+| `scope` | `ORGANIZATION` (modelos da sua organização) ou `SYSTEM` (modelos GYRA+) | Os dois |
+| `enabled` | `true` devolve só os modelos ligados | Ligados e desligados |
+
+<Tip>
+  Para montar um seletor de modelo no seu sistema, use `enabled=true`: é o mesmo critério que o toolbox usa na nova solicitação.
+</Tip>
+
+Cada modelo da listagem traz `enabled`, `scope` e, quando o [formulário público](/kyc/formulario-publico) está configurado, `publicFormUrl` com o endereço pronto. `onCompleted` diz o que o modelo faz [ao concluir](/kyc/solicitacoes#ao-concluir).
+
+### Ligar ou desligar um modelo
+
+```
+POST /v1/collection-templates/{id}/enabled
+```
+
+```json
+{ "enabled": false }
+```
+
+Resposta:
+
+```json
+{ "enabled": false, "updated": 3 }
+```
+
+O `id` pode ser o de qualquer versão: a mudança vale para todas as versões do modelo, e `updated` diz quantas foram alteradas. Num modelo GYRA+, a mudança vale só para a sua organização e `updated` é `1`.
+
+Modelo desligado some da escolha de modelo (nova solicitação e etapa da esteira), mas continua na listagem. Não é exclusão: solicitação já enviada com ele segue valendo.
+
+## Listar as validações de identidade
+
+```
+GET /v1/collections/identity-verifications
+```
+
+Todas as verificações de identidade da organização, dos itens de identidade e das partes de documento conjunto, da mais recente para a mais antiga. É a mesma lista da tela [Validação de identidade](/toolbox/validacao-de-identidade).
+
+<Note>
+  Esta rota exige `kycEnabled`. Organização que tem apenas `scrEnabled` recebe `404`.
+</Note>
+
+| Parâmetro | O que filtra |
+| --- | --- |
+| `verdict` | `APPROVED`, `MANUAL_REVIEW`, `REJECTED` ou `PENDING`. Pode repetir para mais de um |
+| `method` | `FACE_MATCH` ou `EMAIL` |
+| `from`, `to` | Período, em ISO 8601, sobre a data da avaliação (ou do início, quando ainda não houve avaliação) |
+| `search` | Nome ou documento, até 120 caracteres, sem se importar com acento, caixa ou máscara |
+| `skip` | Quantos pular. Padrão `0` |
+| `take` | Quantos devolver. Padrão `20`, máximo `100` |
+
+```json
+{
+  "items": [
+    {
+      "id": "6612a7f30000000000000081",
+      "source": "ITEM",
+      "collectionId": "6612a7f30000000000000051",
+      "collectionTitle": "Abertura de conta PJ",
+      "personName": "Maria Souza",
+      "documentMasked": "***.456.789-**",
+      "method": "FACE_MATCH",
+      "flow": "DATABASE_VALIDATION",
+      "verdict": "APPROVED",
+      "status": "VALIDATED",
+      "faceSimilarity": 0.94,
+      "livenessScore": 0.98,
+      "livenessStatus": null,
+      "fraudSignalsCount": 0,
+      "startedAt": "2026-09-05T14:18:40.000Z",
+      "evaluatedAt": "2026-09-05T14:21:03.517Z"
+    }
+  ],
+  "total": 1,
+  "summary": { "total": 1, "approved": 1, "manualReview": 0, "rejected": 0, "pending": 0 }
+}
+```
+
+| Campo | O que é |
+| --- | --- |
+| `source` | `ITEM` (item de identidade) ou `SIGNATORY` (parte de documento conjunto) |
+| `method` | `FACE_MATCH` ou `EMAIL` |
+| `flow` | Refina o face match: `DATABASE_VALIDATION` (sem documento, contra a base oficial) ou `DOCUMENT` (com documento) |
+| `verdict` | A [avaliação](/kyc/verificacao-de-identidade#o-que-a-plataforma-devolve) da verificação |
+| `faceSimilarity`, `livenessScore`, `livenessStatus` | Os números da biometria, quando existem |
+| `fraudSignalsCount` | Quantos [sinais de antifraude](/kyc/verificacao-de-identidade#sinais-de-antifraude) a verificação levantou |
+| `summary` | Contagem por resultado. Respeita período, método e busca, mas **não** o filtro `verdict`, para você montar abas com os totais |
+
+- O documento sai sempre mascarado. Imagens e o retorno cru do provedor não saem nesta rota.
+- A contagem olha as 5.000 verificações mais recentes de cada origem. Acima disso, `total` e `summary` passam a se referir a essa janela.
+
 ## O que não está aqui
 
 A API pública cobre a **integração**: ler documento, montar dossiê, pedir ao cliente e receber aviso.
 
-Configuração fica no toolbox e não tem rota pública: a [régua de validação](/kyc/regua-de-validacao), os [modelos de coleta e de termo](/kyc/termos-e-assinatura), a [marca e os canais de envio](/kyc/pagina-do-destinatario) e os indicadores de acurácia. São telas com previa e versionamento, e um valor errado ali afeta todo documento que entrar depois.
+Configuração fica no toolbox: a [régua de validação](/kyc/regua-de-validacao), a montagem dos [modelos de coleta e de termo](/kyc/termos-e-assinatura) (pela API você lista e liga ou desliga, como acima), a [marca e os canais de envio](/kyc/pagina-do-destinatario) e os indicadores de acurácia. São telas com previa e versionamento, e um valor errado ali afeta todo documento que entrar depois.
 
-As rotas do [link do destinatário](/kyc/pagina-do-destinatario) também não entram: elas pertencem à página que o seu cliente abre, e o token do link é a credencial delas.
+As rotas do [link do destinatário](/kyc/pagina-do-destinatario) e do [formulário público](/kyc/formulario-publico) também não entram: elas pertencem às páginas que o seu cliente abre, sem credencial de integração.
 
 ## Próximos passos
 

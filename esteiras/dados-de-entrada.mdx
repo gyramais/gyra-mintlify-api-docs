@@ -1,0 +1,125 @@
+---
+title: "Dados de entrada"
+description: "Os dados da proposta, dos formulários, dos documentos e das verificações, prontos para usar nas fórmulas da esteira e nas regras da política."
+icon: "table-list"
+surface: conceito
+domain: esteira
+audience: ambos
+lang: nao-tecnica
+---
+
+Dados de entrada são o que o cliente informou e o que a plataforma conferiu sobre ele, num formato só, para você decidir com base neles sem copiar nada à mão.
+
+<Info>
+  **Resumo:** cada proposta tem um conjunto de dados de entrada, com chave, rótulo, tipo e origem. A esteira usa esses dados como variáveis nas fórmulas, a política usa como variáveis nas regras, e o relatório mostra tudo numa seção própria.
+</Info>
+
+<Note>
+  Os dados de entrada existem para organizações com o módulo de Propostas, de Cadastros ou de Formalização. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## De onde vêm
+
+Não existe tela para digitar dados de entrada. Eles se formam sozinhos a partir de quatro origens:
+
+| Grupo | Origem | Exemplo |
+| --- | --- | --- |
+| **Proposta** | Campos da [proposta](/propostas/visao-geral) | Valor e prazo pedidos, produto |
+| **Formulário** | Respostas de [formulários](/kyc/formularios) enviados numa solicitação | Renda mensal declarada |
+| **Documentos** | Campos extraídos dos documentos do cadastro | Data de validade de uma certidão |
+| **Verificações** | Resultado das verificações, como a de identidade | Identidade confirmada |
+
+Cada dado tem quatro atributos:
+
+| Atributo | O que é |
+| --- | --- |
+| Chave | O nome técnico, com pontos. Ex.: `form.cadastro_pj.renda_mensal` |
+| Rótulo | O nome legível, que aparece na tela |
+| Tipo | **Número**, **Texto**, **Sim/não** ou **Data** |
+| Origem | Proposta, Formulário, Documentos ou Verificações |
+
+O conjunto é versionado por um hash: quando algo muda, o hash muda, e a plataforma sabe que precisa atualizar.
+
+## Na esteira
+
+A execução recebe os dados de entrada da proposta quando começa. Quando uma etapa **Solicitação** fecha, a esteira recarrega o conjunto, porque o cliente pode ter respondido um formulário ou enviado um documento novo.
+
+### Como viram variáveis
+
+Cada dado vira variável de fórmula de dois jeitos: pela chave com pontos e pelo apelido com sublinhado.
+
+| Chave | Apelido |
+| --- | --- |
+| `form.cadastro_pj.renda_mensal` | `form_cadastro_pj_renda_mensal` |
+
+| Tipo | Valor na fórmula |
+| --- | --- |
+| Número | O número |
+| Texto | O texto (comparação sem distinguir maiúsculas e minúsculas) |
+| Sim/não | `1` para sim e `0` para não |
+| Data | Um número de data, como numa planilha. Compare com `DATE(2026,1,1)`. O texto `AAAA-MM-DD` fica em `<chave>_texto` |
+
+Onde já havia uma variável com o mesmo nome (como `valor_pedido`, `prazo_pedido`, `produto`, `tipo` e `origem`), vale a variável que já existia: os dados de entrada ficam por baixo e não sobrescrevem nada.
+
+### Onde usar
+
+No construtor, o botão **Variáveis (N)** mostra os dados de entrada disponíveis, com busca por nome. Ele aparece em três lugares:
+
+- Na condição **Executar quando** do tipo **Personalizada**.
+- Nas fórmulas da faixa da **Pré-aprovação**.
+- Nas fórmulas da oferta na **Decisão**.
+
+Os dados também podem ir no pedido de uma [Chamada de API](/esteiras/chamada-de-api) como `{{variavel}}`.
+
+### Dado sem valor
+
+Se o dado existe no catálogo mas veio vazio (ou fora do tipo), a fórmula que depende dele falha com "Variável X sem valor", em vez de assumir zero ou texto vazio. Numa condição **Executar quando**, a etapa é pulada com esse motivo. Isso evita uma decisão tomada em silêncio sobre um dado que não chegou.
+
+## Na política de crédito
+
+Os dados de entrada também viram variáveis nas regras da [política de crédito](/concepts/politica-de-credito). No editor de regras, cada um aparece como **Dado de entrada: Rótulo**.
+
+| Tipo do dado | Tipo na regra |
+| --- | --- |
+| Número | Número |
+| Sim/não | Sim/não |
+| Texto | Texto |
+| Data | Texto no formato `AAAA-MM-DD` |
+
+Regras para ter em mente:
+
+- **Dado ausente vira erro, não aprovação.** Sem valor, a regra é marcada como erro ("Indisponível") e o desfecho segue a configuração de erro da regra.
+- **Fórmula não mistura origens.** Uma regra de fórmula que combina dado de entrada com dado de outra fonte é recusada ao salvar: "Fórmulas com dados de entrada ainda não podem ser combinadas com variáveis de outras fontes. Separe em regras diferentes."
+- **Só na política de análise.** Numa camada de aprofundamento, a regra de dado de entrada termina em erro, porque o dado não é reenviado depois que o relatório nasce. Use a regra na política da Análise.
+- **A política só espera o dado quando precisa.** Se nenhuma regra usa dados de entrada, a análise não espera por eles.
+- Uma variável de dado de entrada nunca é apagada. Se a chave some do catálogo, a variável fica indisponível.
+
+## No relatório
+
+O relatório de uma execução com proposta ganha a seção **Dados de entrada**, na aba cadastral, com as colunas **Dado**, **Valor** e **Origem**. Os valores aparecem legíveis: **Sim**/**Não**, datas em dd/mm/aaaa, valores em R$ e o nome do produto. Sem nenhum dado, a seção mostra "Nenhum dado de entrada".
+
+A falta de dados de entrada nunca impede o relatório de sair: sem conjunto, a análise segue sem eles.
+
+## Na foto da aprovação
+
+Quando a esteira aprova uma proposta, a aba **Foto da aprovação** guarda os dados de entrada daquele momento. O cartão **Dados de entrada naquele momento** compara **Na foto** e **Hoje** e avisa quando algo mudou depois da aprovação. Mudança depois da aprovação não altera a proposta.
+
+## Pela API
+
+| Rota | Para quê |
+| --- | --- |
+| `GET /v1/input-data/catalog` | O catálogo de dados de entrada da sua organização, com chave, rótulo, tipo e origem |
+| `GET /v1/proposals/{id}/input-data` | O conjunto de dados de entrada de uma proposta |
+
+Veja a [API de Propostas](/api-reference/propostas/visao-geral).
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Etapas" icon="list-ol" href="/esteiras/etapas">
+    Onde cada tipo de etapa usa variáveis.
+  </Card>
+  <Card title="Política de crédito" icon="scale-balanced" href="/concepts/politica-de-credito">
+    Como escrever regras com dados de entrada.
+  </Card>
+</CardGroup>

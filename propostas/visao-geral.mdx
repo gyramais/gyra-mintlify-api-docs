@@ -1,0 +1,182 @@
+---
+title: "Propostas"
+description: "O pedido de crédito do cliente final, do momento em que entra até a oferta emitida: situações, origens e como a proposta se liga a produto, esteira e cadastro."
+icon: "inbox"
+surface: conceito
+domain: proposta
+audience: ambos
+lang: nao-tecnica
+---
+
+Uma proposta é o pedido do cliente final (quanto quer, em quanto tempo, para qual produto) e é o fio que liga tudo o que acontece depois: análise, oferta, escolha e contrato. Com ela, você responde a qualquer momento a pergunta "em que pé está o pedido deste cliente?".
+
+<Info>
+  **Resumo:** cada pedido vira uma proposta, com valor próprio. A proposta congela o produto do dia, roda uma análise (política ou esteira), recebe ofertas por rodada e termina em **Oferta emitida**, **Recusada**, **Cancelada** ou **Vencida**.
+</Info>
+
+<Note>
+  Propostas e Produtos formam um módulo contratado à parte. Sem ele, os itens aparecem no menu com cadeado. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Um pedido, uma proposta
+
+A proposta registra o **pedido**, não a análise. Dois pedidos do mesmo cliente no mesmo dia são duas propostas, cada uma com seu valor, seu prazo e sua história. A GYRA+ não junta pedidos parecidos: se o cliente pediu duas vezes, você vê as duas.
+
+A proposta também não exige cadastro prévio. Ela guarda o CPF ou CNPJ, o nome e o tipo (pessoa ou empresa, deduzido do documento). Se a sua organização já tem o [cadastro](/kyc/visao-geral) daquele documento, a proposta se liga a ele sozinha.
+
+Uma proposta de capital de giro, por exemplo, guarda:
+
+| O quê | Exemplo |
+| --- | --- |
+| Quem | Padaria Estrela Ltda., CNPJ 12.345.678/0001-95 |
+| Pedido | R$ 200.000,00 em 24 meses |
+| Produto | Capital de giro PME (congelado no dia) |
+| Carteira | Capital de giro (congelada no dia) |
+| Contato | E-mail e celular de quem pediu, para receber a pré-aprovação |
+| Análise | As execuções de política ou esteira, em ordem |
+| Ofertas | Uma por rodada: a pré-aprovação e a oferta firme |
+
+## O produto do dia fica congelado
+
+Quando a proposta nasce com um [produto](/propostas/produtos), ela copia o nome, a carteira, o valor de catálogo (se o produto tem valor fixo) e a [estrutura financeira](/propostas/precificacao) daquele dia. Mudar o produto depois não altera propostas antigas: a simulação e a oferta de cada pedido usam as regras que valiam quando ele entrou.
+
+O produto precisa estar ligado. Produto desligado some do formulário e não aceita pedido novo.
+
+Duas regras de valor:
+
+- **Produto de valor fixo:** o valor do catálogo manda. O que o cliente digitou fica guardado, mas a proposta nasce com o valor do produto.
+- **Produto com faixa de valor:** pedido fora da faixa **não é recusado**. A proposta nasce com um alerta de valor fora da faixa, e quem analisa decide.
+
+## Situações
+
+A situação diz em que pé está o pedido. Ela é movida pela análise (a esteira) e, em poucos casos, por você.
+
+| Situação | O que significa |
+| --- | --- |
+| **Rascunho** | A proposta existe, mas nenhuma análise rodou ainda |
+| **Em análise** | Uma política ou esteira está trabalhando no pedido |
+| **Esperando o cliente** | A pré-aprovação foi enviada e o cliente precisa escolher valor e prazo |
+| **Esperando você** | A esteira parou numa decisão humana: revisão, revisão da oferta, alçada ou decisão no relatório |
+| **Oferta emitida** | O pedido foi aprovado e a oferta final está registrada |
+| **Recusada** | O pedido foi recusado |
+| **Cancelada** | Alguém da sua equipe cancelou o pedido |
+| **Vencida** | A pré-aprovação venceu sem escolha do cliente |
+
+<Tip>
+  Comitê de crédito IA rodando e solicitação de documentos aberta **não** mudam a situação: a proposta segue **Em análise** enquanto a esteira trabalha. **Esperando você** aparece só quando alguém da sua equipe precisa agir.
+</Tip>
+
+### O caminho típico
+
+<Steps>
+  <Step title="Rascunho">
+    O pedido entra pelo formulário, pela tela ou pela API.
+  </Step>
+  <Step title="Em análise">
+    Você (ou o disparo automático do formulário) roda uma política ou uma [esteira](/esteiras/visao-geral).
+  </Step>
+  <Step title="Esperando o cliente">
+    A etapa de [pré-aprovação](/propostas/pre-aprovacao-e-oferta) envia uma faixa de valor, prazo e carência. O cliente escolhe na página da oferta e a proposta volta a **Em análise**.
+  </Step>
+  <Step title="Esperando você">
+    Se a esteira tem revisão, alçada ou outra parada humana, a proposta espera a decisão da sua equipe.
+  </Step>
+  <Step title="Oferta emitida ou Recusada">
+    A esteira termina. Aprovada, a GYRA+ registra a oferta firme com o cronograma congelado e a proposta segue para a [formalização](/formalizacao/visao-geral).
+  </Step>
+</Steps>
+
+### Reabrir e encerrar
+
+- **Oferta emitida**, **Recusada** e **Vencida** podem voltar a **Em análise** numa reanálise.
+- **Cancelada** é o único fim definitivo: proposta cancelada não roda análise nova.
+- Encerrar uma proposta (recusar, cancelar ou vencer) cancela antes a assinatura de contrato que estiver em andamento, vence as ofertas enviadas ao cliente e fecha as execuções de esteira abertas. Se a assinatura não puder ser cancelada, nada muda e a GYRA+ pede para você tentar de novo.
+
+### O que a sua equipe move à mão
+
+A esteira move quase todas as situações. Na tela, você pode:
+
+- **Cancelar proposta**, enquanto ela estiver aberta.
+- **Aprovar** ou **Recusar**, quando a última análise foi só por política (sem esteira) e a proposta está **Em análise**. **Aprovar** só libera com o relatório terminado e aprovado; aprovar leva a proposta a **Oferta emitida**.
+
+Duas pessoas agindo ao mesmo tempo não se atropelam: a segunda recebe o aviso de que a proposta mudou de situação e precisa atualizar a tela.
+
+## Por onde o pedido entra
+
+| Origem | Como aparece | Como nasce |
+| --- | --- | --- |
+| Formulário público | **link público** | O cliente preenche o [formulário com link aberto](/kyc/formulario-publico) de um modelo com objetivo de crédito |
+| Operador | **operador** | Alguém da sua equipe clica em **Nova proposta** no toolbox |
+| API | **API** | O seu sistema cria a proposta com um usuário de API |
+
+<Accordion title="Pedidos repetidos pelo formulário público">
+  A proposta nunca é deduplicada: cada envio do formulário cria um pedido novo. Quem evita pedir os mesmos documentos duas vezes é a **solicitação**:
+
+  - se o cliente já tem uma solicitação em andamento e confirma o mesmo contato, a proposta nova se liga a ela e o link é devolvido;
+  - se a solicitação já foi concluída dentro da janela do modelo (24 horas por padrão) e o contato é o mesmo, a proposta nova nasce e a análise dispara, sem pedir documentos de novo;
+  - se o contato é outro, o pedido é recusado, para ninguém sequestrar o pedido de outra pessoa.
+
+  O modelo também tem um teto diário de pedidos (50 por padrão), que protege você do custo de análises disparadas em massa. Detalhes em [Formulário público](/kyc/formulario-publico).
+</Accordion>
+
+## Como a proposta se liga ao resto
+
+```
+Proposta (o pedido)
+  ├── Produto e carteira      → congelados na criação
+  ├── Cadastro                → ligado pelo documento, quando existe
+  ├── Solicitação             → documentos pedidos ao cliente
+  ├── Execuções               → cada análise, com motivo
+  ├── Ofertas                 → uma por rodada: pré-aprovação e oferta firme
+  ├── Participantes           → avalista, sócio, interveniente
+  ├── Foto da aprovação       → o que valia no momento da decisão
+  └── Contrato                → gerado na formalização
+```
+
+### Solicitação de documentos
+
+Se o produto pede documentos e a sua organização tem o módulo de Onboarding, criar a proposta abre uma [solicitação](/kyc/solicitacoes) para o cliente, com os documentos do produto somados aos do modelo. Nesse caso, informe o e-mail ou o celular do cliente: é por ali que o link chega.
+
+### Execuções
+
+Cada análise é uma **execução** registrada na proposta, com o motivo: **Inicial**, **Entrou participante**, **Cadastro corrigido** ou **Rodada manual**. Rodar de novo é um evento novo, nunca uma sobrescrita: a execução anterior continua na história. Uma proposta tem no máximo uma execução da mesma esteira em andamento; para rodar de novo, decida ou conclua a atual.
+
+Dentro da esteira, os dados da proposta viram variáveis que as fórmulas usam, como `produto`, `carteira`, `valor_pedido` e `prazo_pedido`. Veja [Etapas da esteira](/esteiras/etapas).
+
+### Participantes
+
+Avalistas, sócios e intervenientes que entram depois do pedido são **participantes** da proposta. Incluir um participante não refaz a análise sozinho: rode de novo com o motivo **Entrou participante** para a análise considerá-lo.
+
+### Foto da aprovação
+
+Quando a esteira envia a pré-aprovação e quando ela decide, a GYRA+ tira uma **foto**: o cadastro, os sócios, os documentos e as validações que sustentaram a decisão, com a oferta aprovada e os índices usados. A foto nunca é editada. Ao abri-la, você vê o que mudou no cadastro desde então.
+
+## Acompanhar e avisar o cliente
+
+A GYRA+ avisa o cliente final em um momento: quando a pré-aprovação é enviada, por e-mail ou SMS. O resultado final você comunica pelo seu canal, e há duas formas de saber quando ele chega:
+
+- **Pela API:** consulte a proposta e veja a situação, as ofertas e as execuções.
+- **Pelo webhook da execução:** quando a execução da esteira termina, a GYRA+ avisa o seu sistema. Guarde o identificador da execução devolvido ao rodar a análise para ligar o aviso à proposta. Veja [Execuções](/esteiras/execucoes).
+
+Se a proposta abriu uma solicitação, os webhooks de solicitação (`collection.*`) contam o andamento dos documentos.
+
+## Pela API
+
+Tudo o que a tela faz com propostas, produtos e carteiras está disponível na API: criar e listar propostas, rodar a análise, incluir participantes, copiar e reenviar o link da oferta, registrar a escolha e simular parcelas. Na API, dinheiro vai em **centavos** (R$ 200.000,00 é `20000000`) e taxa em **pontos-base** ao ano (10.000 pontos-base = 100%, então 2,5% a.a. é `250`). Veja [API de Propostas](/api-reference/propostas/visao-geral).
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Produtos e carteiras" icon="box" href="/propostas/produtos">
+    O que o pedido pode ser: valor, prazo, documentos e carteira.
+  </Card>
+  <Card title="Precificação" icon="calculator" href="/propostas/precificacao">
+    Estrutura financeira, índices de mercado, taxa e cronograma.
+  </Card>
+  <Card title="Pré-aprovação e oferta" icon="hand-holding-dollar" href="/propostas/pre-aprovacao-e-oferta">
+    A faixa que o cliente escolhe e a oferta firme.
+  </Card>
+  <Card title="Propostas no toolbox" icon="table-list" href="/toolbox/propostas">
+    Lista, detalhe, abas e ações da tela.
+  </Card>
+</CardGroup>

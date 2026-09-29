@@ -17,11 +17,30 @@ lang: nao-tecnica
 | | Cadastros | Solicitações |
 | --- | --- | --- |
 | O que é | O dossiê de um CNPJ ou CPF | O pedido enviado a uma pessoa |
-| Quem alimenta | Operador, API ou uma solicitação | O destinatário, pelo link |
+| Quem alimenta | Operador, API ou uma solicitação | O destinatário, pelo link, ou a própria pessoa, pelo formulário público |
 | Vive | Para sempre, com versão e renovação | Tem prazo, lembrete e desfecho |
-| Onde fica | Menu **Cadastros** | Menu **Solicitações** |
+| Onde fica | Menu **Onboarding**, **Clientes** | Menu **Onboarding**, **Solicitações** |
 
 O cadastro é o substrato: todo documento entregue numa solicitação é arquivado no cadastro da pessoa ou da empresa. Uma solicitação sem cadastro não existe, e o cadastro sobrevive a todas as solicitações que passaram por ele.
+
+## No menu
+
+O módulo ocupa a seção **Onboarding** do menu lateral:
+
+| Item | O que tem |
+| --- | --- |
+| **Clientes** | Os [cadastros](/toolbox/cadastros): dossiê, documentos, régua e indicadores |
+| **Solicitações** | Os [pedidos ao cliente](/toolbox/solicitacoes), os modelos e os termos |
+| **Validação de identidade** | Todas as [verificações de identidade](/toolbox/validacao-de-identidade) da organização |
+
+## Duas portas de entrada
+
+Uma solicitação nasce de dois jeitos:
+
+- **Você pede.** Um operador, a sua integração, uma [esteira](/esteiras/visao-geral) ou a renovação automática abre a solicitação para um cadastro, e cada destinatário recebe o próprio link.
+- **O cliente chega.** Você publica o [formulário público](/kyc/formulario-publico) de um modelo, e a própria pessoa se identifica, confirma o contato e começa. O cadastro nasce do CPF ou CNPJ que ela informa.
+
+Nos dois casos, o que vem depois é igual: a mesma [página do destinatário](/kyc/pagina-do-destinatario), os mesmos itens e o mesmo desfecho.
 
 ## O que o módulo resolve
 
@@ -58,6 +77,8 @@ Existe ainda `CUSTOM`, para o pedido que não cabe em nenhuma das cinco e é res
 
 - O cadastro alimenta o **relatório**: balanço e DRE enviados como documento entram na [análise financeira](/concepts/analise-financeira), e o comitê enxerga a situação do cadastro.
 - O item de consentimento substitui o antigo fluxo de opt-in de SCR: o termo assinado é o que autoriza a consulta ao [SCR](/sources/scr-open-finance).
+- A solicitação concluída pode **gerar um relatório** ou **rodar uma esteira** sozinha, conforme o [Ao concluir](/kyc/solicitacoes#ao-concluir) do modelo.
+- Com o módulo de Propostas, o formulário público recebe **pedidos de financiamento ou de venda a prazo**: cada envio vira uma [proposta](/propostas/visao-geral), e os documentos que o [produto](/propostas/produtos) exige entram na solicitação.
 - Tudo é observável por [webhook](/api-reference/kyc/eventos-de-webhook) e por [API](/api-reference/kyc/visao-geral).
 
 ## Capacidades
@@ -66,10 +87,12 @@ O módulo é liberado por capacidade da organização. Quem não tem recebe `404
 
 | Capacidade | O que libera |
 | --- | --- |
-| `kycEnabled` | Cadastros, Solicitações, régua de validação e verificação de identidade |
+| `kycEnabled` | Cadastros, Solicitações, régua de validação, verificação de identidade e a tela Validação de identidade |
 | `scrEnabled` | Consegue usar Cadastros e Solicitações para resolver o cadastro do destinatário, sem editar a régua |
 | `communicationBrandingEnabled` | Logo, cores, domínio próprio do link e do remetente, WhatsApp da própria empresa |
 | `identityEmailEnabled` | O código por e-mail conhecido como segunda via da verificação de identidade |
+
+O pedido de proposta pelo formulário público depende também do módulo de Propostas. O quadro completo está em [Módulos e capacidades](/plataforma/modulos-e-capacidades).
 
 <Note>
   Quem tem apenas `scrEnabled` continua com a régua **rodando** nos documentos recebidos, com os padrões da plataforma. O que falta é a tela de edição da régua, não a validação.

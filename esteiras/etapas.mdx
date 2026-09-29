@@ -1,0 +1,252 @@
+---
+title: "Etapas"
+description: "Catálogo completo dos 13 tipos de etapa da esteira: o que cada um faz, o que você configura e o que acontece quando algo dá errado."
+icon: "list-ol"
+surface: conceito
+domain: esteira
+audience: ambos
+lang: nao-tecnica
+---
+
+Cada etapa faz uma coisa só, e a esteira é a soma delas na ordem que você escolhe. Esta página é a referência de todos os tipos.
+
+<Info>
+  **Resumo:** são 13 tipos de etapa. Os da análise produzem relatório e decisão, os da decisão definem a rota e a oferta, e os da formalização só rodam com o crédito aprovado. Toda etapa tem nome, condição **Executar quando** e a configuração do tipo.
+</Info>
+
+## Catálogo
+
+| Etapa (rótulo na tela) | Fase | O que faz |
+| --- | --- | --- |
+| **Análise** | Análise | Gera o relatório e o resultado da política |
+| **Aprofundar** | Análise | Consulta só o que ainda falta no relatório |
+| **Checkpoint** | Análise | Pausa para decisão do analista |
+| **Vínculos** | Análise | Analisa sócios, empresas e demais vínculos |
+| **Solicitação** | Análise ou formalização | Pede documento ou dado ao cliente e espera |
+| **Pré-aprovação** | Análise | Faixa indicativa para o cliente escolher |
+| **Decisão** | Decisão | Rotas, revisão e oferta da jornada |
+| **Revisão da oferta** | Decisão | Confirma ou ajusta a oferta antes da aprovação |
+| **Comitê de crédito IA** | Decisão | O Comitê IA analisa o caso antes dos aprovadores |
+| **Alçada de crédito** | Decisão | Aprovadores e quórum por faixa de valor |
+| **Integração** | Análise ou formalização | Chama o BNDES Online ou uma API sua |
+| **Contrato e assinatura** | Formalização | Gera o contrato e colhe as assinaturas |
+| **Aguardar fechamento externo** | Formalização | Espera o parceiro fechar a operação pela API |
+
+<Note>
+  Numa esteira nova, antes do primeiro Salvar, o construtor oferece só **Análise** e **Checkpoint**: a primeira etapa é que cria a esteira. **Contrato e assinatura** e **Aguardar fechamento externo** aparecem conforme os módulos da sua organização. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Regras que valem para todas
+
+- **Executar quando**: **Sempre**, **Se aprovado**, **Se aprovado ou alerta**, **Se alerta severo** ou **Personalizada** (fórmula). A primeira etapa roda sempre. A condição olha a última decisão registrada na execução.
+- **Etapa pulada não é reprovação.** Ela aparece como "não rodou", com o motivo.
+- **Nome repetido** ganha um complemento na tela, como "(2ª análise)" ou "(2ª vez)", para você distinguir.
+- **Tipo não se troca.** Para mudar o tipo, remova a etapa e adicione outra: "Não é possível trocar o tipo da etapa ... Remova a etapa e adicione outra."
+
+## Análise
+
+Aplica uma [política de crédito](/concepts/politica-de-credito) ao documento, gera o relatório e registra o resultado (aprovado, alerta ou reprovado), o score e a precificação da política.
+
+| Você configura | Detalhe |
+| --- | --- |
+| **Política** | Obrigatória. Na primeira etapa ela define se a esteira analisa CPF ou CNPJ. |
+
+- A primeira Análise da esteira precisa gerar relatório: "A primeira etapa precisa gerar um relatório. Escolha pelo menos o Simples na política desta etapa."
+- Uma segunda Análise, numa esteira com Decisão, não abre relatório novo: ela entra no relatório existente, como uma camada.
+- A precificação da política fica disponível para as etapas seguintes como `LIMITE_SUGERIDO`, `TAXA_SUGERIDA` e `PRAZO_SUGERIDO`.
+- Se o disparo da primeira Análise falhar, a execução termina em **erro** com o motivo.
+- Quando a política manda revisar, a decisão é tomada no próprio relatório: aprove ou reprove a análise lá e a esteira continua.
+
+## Aprofundar
+
+Acrescenta fontes ao relatório da Análise anterior, sem gerar relatório novo. É assim que você consulta dados caros só para quem passou do primeiro filtro.
+
+| Você configura | Detalhe |
+| --- | --- |
+| **Política** | Uma camada de aprofundamento (grupo **Sem relatório base**) ou uma política completa (grupo **Com relatório base**). |
+
+- Vem sempre depois de uma Análise.
+- Camada com regras decide. Camada sem regras só acrescenta dados e não apaga a decisão anterior.
+- Fontes que etapas anteriores já consultaram são reaproveitadas, sem custo novo.
+- Se a política da camada termina em erro, a execução é interrompida e o motivo cita as regras que falharam.
+
+Detalhes em [Camadas e add-ons](/esteiras/camadas-e-add-ons).
+
+## Checkpoint
+
+Pausa a esteira até um analista decidir. Útil para uma conferência humana num ponto específico.
+
+| Você configura | Detalhe |
+| --- | --- |
+| **Nome** | Opcional. |
+
+O analista decide na página da execução, com **Aprovar** ou **Reprovar**. Reprovar exige comentário: "Para reprovar, escreva o motivo no comentário." Se o analista acabou de decidir no relatório, o Checkpoint já nasce decidido.
+
+## Vínculos
+
+Descobre sócios, empresas ligadas, filiais, empresas no mesmo endereço e parentes, e analisa cada grupo com a política que você escolher. É o sucessor da antiga cascata de relatórios das Operações.
+
+| Você configura | Detalhe |
+| --- | --- |
+| **Grupos de vínculos** | Cada grupo tem nome e tipo de pessoa (**PF e PJ**, **Só PF**, **Só PJ**). |
+| Filtros | **Somente vínculos ativos (sem data de saída)**, **Vínculo há pelo menos (meses)**, **Máximo de consultas no grupo**. |
+| **Política PF** e **Política PJ** | A política aplicada a cada vínculo do grupo. |
+| **Peso na jornada** | **Só informa** (não pesa na decisão), **Pior resultado do grupo** ou **Regra do grupo**. |
+
+- Os vínculos saem do relatório da última Análise antes da etapa. Se essa Análise gera só o relatório Simples, a ativação recusa: use Essencial ou superior.
+- As fórmulas das etapas seguintes podem usar agregados de cada grupo.
+
+Os dados de vínculo vêm da seção [Vínculos societários](/sources/vinculos-societarios) do relatório.
+
+## Solicitação
+
+Abre uma [solicitação](/kyc/solicitacoes) do módulo de Cadastros e pausa a esteira até o cliente responder.
+
+| Você configura | Opções |
+| --- | --- |
+| **Modelo de solicitação** | Obrigatório: "Escolha o modelo de solicitação que esta etapa vai enviar." |
+| **Para quem** | **Titular do cadastro** (padrão), **Sócios informados**, **Representantes legais**, **Escolher na hora** |
+| **Prazo** | Em dias, de 1 a 180. Em branco, vale o prazo do modelo. |
+| **Se o prazo vencer** | **Avisar o analista** (padrão), **Seguir sem**, **Recusar** |
+
+- Quando a solicitação fecha, a esteira recarrega os [dados de entrada](/esteiras/dados-de-entrada) e continua.
+- Vencida ou cancelada: **Avisar o analista** para a esteira e espera; **Seguir sem** continua sem o dado; **Recusar** reprova.
+- **Escolher na hora** não é resolvido pela esteira sozinha: um analista precisa decidir quem recebe.
+- A solicitação aberta pela esteira não dispara outra esteira, mesmo que o modelo tenha isso configurado.
+- Antes da Decisão, sem modelo, a etapa é pulada com o motivo. Na formalização o modelo é obrigatório, porque é ali que o cliente assina.
+
+<Note>
+  A etapa exige o módulo de Cadastros (ou o de SCR). Sem ele: "A organização não tem o módulo de Cadastros habilitado para abrir solicitações."
+</Note>
+
+## Pré-aprovação
+
+Calcula uma faixa de oferta indicativa (valor mínimo e máximo, prazos, carências e spread de risco), registra na proposta e pode esperar o cliente escolher na página da oferta.
+
+| Você configura | Detalhe |
+| --- | --- |
+| **Valor mínimo (R$)** e **Valor máximo (R$)** | Fórmulas, por exemplo `valor_pedido * 0.5` e `valor_pedido`. |
+| **Prazos permitidos (meses)** | Pelo menos um. **Prazo máximo por fórmula** é opcional. |
+| **Carências permitidas (meses)** | Vazio = sem carência. |
+| **Spread de risco** | Opcional, em pontos-base ao ano: 250 = 2,5% a.a. Limitado ao máximo do produto. |
+| **Validade (dias)** | Padrão 15, máximo 365. |
+| **Enviar ao cliente** | Por **E-mail** e/ou **SMS**. |
+| **Esperar a escolha** | Pausa até o cliente escolher. |
+| **Ao vencer** | **Parar para o analista** (padrão), **Encerrar a proposta como vencida**, **Seguir sem a escolha** |
+
+- Vem antes da Decisão e pode aparecer mais de uma vez.
+- Sem proposta ligada à execução, é pulada: "Execução sem proposta ligada: não há pedido para receber a oferta."
+- Faixa impossível (fórmula sem valor, mínimo maior que o máximo, nenhum prazo cabe): a etapa não inventa oferta e para esperando um analista.
+- Depois da escolha, as etapas seguintes leem `valor_escolhido`, `prazo_escolhido` e `carencia_escolhida`.
+
+A experiência do cliente e as duas rodadas de oferta estão em [Pré-aprovação e oferta](/propostas/pre-aprovacao-e-oferta).
+
+## Decisão
+
+Consolida o resultado de todas as etapas anteriores, escolhe a rota de cada desfecho e monta a oferta. Uma esteira tem uma Decisão só.
+
+| Você configura | Opções |
+| --- | --- |
+| **Rota por resultado** | **Aprovado** e **Alerta**: **Aprovar automaticamente** ou **Enviar para revisão**. **Alerta severo**: **Recusar automaticamente** ou **Enviar para revisão**. |
+| **Quem revisa** | **Analista**, **Comitê IA sugere**, **Comitê IA decide** |
+| **Oferta** | **Sem oferta** ou **Gerar oferta**, com **Limite aprovado**, **Taxa mensal** e **Prazo (meses)** em valor fixo ou fórmula |
+| **Condição extra** | Opcional. Se não atender: aprovar sem oferta ou enviar para revisão. |
+
+Revisão da oferta, Comitê IA e Alçada são ligados dentro da Decisão. Detalhes em [Decisão, alçada e comitê](/esteiras/decisao-alcada-e-comite).
+
+## Revisão da oferta
+
+Um analista confirma ou ajusta a oferta calculada. Pode vir antes ou depois do Comitê IA, e mais de uma vez.
+
+- Ajustar limite, taxa ou prazo exige motivo: "Justifique os ajustes feitos na oferta".
+- O analista pode usar a sugestão do Comitê IA, **Confirmar oferta** ou **Recusar oferta**.
+
+## Comitê de crédito IA
+
+O [Comitê de crédito IA](/concepts/comite-de-credito) delibera sobre os relatórios e pareceres das etapas anteriores e sobre a oferta proposta.
+
+| Você configura | Opções |
+| --- | --- |
+| **Papel do Comitê IA** | **Comitê IA recomenda, Alçada decide** ou **Comitê IA decide** |
+| Objetivo e **Orientações por agente** | Opcionais. Somam às regras da organização. |
+
+- Aparece uma vez só, dentro da Decisão.
+- Exige Parecer ligado em pelo menos uma política ou camada anterior: "Ative o Parecer em ao menos uma política ou camada antes do Comitê IA."
+- Sem relatório anterior: erro "Nenhum relatório anterior disponível para o comitê."
+- Se o comitê não puder ser convocado, a revisão vai para o analista.
+
+## Alçada de crédito
+
+Envia a oferta aos aprovadores da faixa certa e espera o quórum.
+
+| Você configura | Opções |
+| --- | --- |
+| **Como escolher a alçada** | **Alçada fixa**, **Por valor**, **Regras avançadas** |
+| Faixas | **Nome da alçada**, **A partir de**, **Até, sem incluir**, **Quem pode aprovar**, **Quórum de aprovações** |
+
+Um voto de recusa é veto. Use **Testar encaminhamento** antes de ativar. Detalhes em [Decisão, alçada e comitê](/esteiras/decisao-alcada-e-comite).
+
+## Integração
+
+Chama um sistema de fora e usa a resposta. No construtor ela aparece como **Integração BNDES** ou **Chamada de API**, conforme o conector.
+
+| Conector (no seletor) | Onde pode ficar | O que faz |
+| --- | --- | --- |
+| **BNDES Online · Consulta de impedimentos** | Antes ou depois da Decisão | Consulta impedimentos do tomador, como filtro de elegibilidade |
+| **BNDES Online · Pedido de financiamento** | Só na formalização | Envia o pedido de financiamento |
+| **BNDES Online · Contratação** | Só na formalização, depois de um financiamento | Registra a contratação |
+| **Chamada de API** | Antes ou depois da Decisão | Chama uma API sua e transforma a resposta em variáveis |
+
+- **Quando o BNDES não aprovar**: **Mandar para o analista revisar** (padrão) ou **Reprovar a proposta**.
+- **Esperar resposta por até**: padrão 72 horas, máximo 720. Passou do prazo sem resposta final, a etapa vai para o analista: "A integração não terminou em N horas: reenvie ou decida."
+- Falha ou rejeição do sistema externo vai para o analista, que pode **Reenviar**.
+
+Os conectores do BNDES exigem o módulo BNDES Online. Detalhes em [BNDES](/formalizacao/bndes) e em [Chamada de API](/esteiras/chamada-de-api).
+
+## Contrato e assinatura
+
+Escolhe o modelo de contrato por regra, gera o PDF com os dados da proposta e da oferta firme e colhe as assinaturas, pela Assinatura Gyra ou pela Clicksign.
+
+| Você configura | Resumo |
+| --- | --- |
+| **Qual contrato gerar** | Regras **Se** / **Gerar o modelo**. A primeira regra verdadeira vence. Sem regra válida: **Mandar para o analista escolher** ou **Gerar um modelo padrão**. |
+| **Fluxo de assinatura** | Todos juntos ou em etapas, por papel. |
+| **Como cada papel confirma quem é** | Essencial, Reforçado ou Qualificado (este só na Clicksign). |
+| **Canal e prazo** | E-mail, SMS ou WhatsApp; prazo de 1 a 90 dias (padrão 30); lembretes. |
+
+- Só roda na formalização, depois da Decisão e da Alçada.
+- Dado faltando no contrato, parte sem contato ou quadro de partes bloqueado: a etapa para e o analista corrige.
+- Exige o módulo de Formalização: "A etapa Contrato e assinatura exige o módulo de Formalização, que não está habilitado para a sua organização."
+
+Detalhes em [Formalização](/formalizacao/visao-geral) e [Partes e assinaturas](/formalizacao/partes-e-assinaturas).
+
+## Aguardar fechamento externo
+
+Para a execução até o seu sistema (ou o do parceiro) avisar que a operação foi liberada, com o número do contrato, o documento do tomador e a data.
+
+| Você configura | Detalhe |
+| --- | --- |
+| **Prazo** | Opcional, de 1 a 180 dias. Vencido, a espera vai ao analista. Em branco, sem prazo. |
+
+- O fechamento chega por `POST /operation/close`, com o token de API da organização. Veja [Fechamento externo](/api-reference/esteiras/fechamento-externo).
+- Uma por esteira, depois de um Contrato e assinatura ou como última etapa.
+- Etapas seguintes podem usar `fechamento.referencia`, `fechamento.data` e `fechamento.documento`.
+- Exige o módulo de Formalização ou o conector do BNDES Online.
+
+## Etapas na formalização
+
+Solicitação, Integração, Contrato e assinatura e Aguardar fechamento externo, quando vêm depois da Decisão, formam a fase de formalização. Ela só roda com o crédito **aprovado** ou em **alerta** aprovado. Caso contrário, as etapas não rodam e registram o motivo:
+
+- "Formalização não roda: o crédito não foi aprovado."
+- "Formalização interrompida: uma etapa anterior da formalização não foi concluída."
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Montar uma esteira" icon="screwdriver-wrench" href="/toolbox/montar-esteira">
+    Como adicionar e configurar etapas no construtor.
+  </Card>
+  <Card title="Dados de entrada" icon="table-list" href="/esteiras/dados-de-entrada">
+    Os dados da proposta e do cliente como variáveis da esteira.
+  </Card>
+</CardGroup>

@@ -1,0 +1,127 @@
+---
+title: "Assistente GYRA+"
+description: "Peça em linguagem natural, dentro do Toolbox: o assistente consulta, monta política, esteira, produto e formulário, e só grava depois da sua confirmação."
+icon: "sparkles"
+surface: plataforma
+domain: plataforma
+audience: operador
+lang: nao-tecnica
+---
+
+O Assistente GYRA+ é um painel dentro do Toolbox em que você pede em português o que quer fazer, e ele consulta ou executa por você.
+
+<Info>
+  **Resumo:** o assistente responde dúvidas de uso, lê seus relatórios e consumo e monta política, esteira, produto, formulário e configurações. **Toda alteração passa por uma prévia** e só é gravada quando você confirma com um "sim" explícito. Ele age com o seu acesso: nunca faz o que o seu papel ou os módulos da organização não permitem.
+</Info>
+
+## Abrir o assistente
+
+Clique em **Pergunte à GYRA+** no cabeçalho, ou use o atalho **⌘J** (Mac) ou **Ctrl+J** (Windows e Linux). **Esc** fecha.
+
+Em telas a partir de 768 px de largura, o assistente abre como um painel à direita e você continua usando a tela ao lado. O Toolbox lembra, no seu navegador, se você deixou o painel aberto.
+
+Para começar, o painel sugere perguntas como *O que é uma política de crédito?*, *Como funciona o score do GYRA+?*, *Quantos relatórios usei esse mês?* e *Meu consumo dos últimos 7 dias*. Quando há novidade na plataforma, uma faixa **Novidade** aparece abaixo do cabeçalho do chat, com **Ver** e a opção de dispensar.
+
+<Note>
+  Se o botão **Pergunte à GYRA+** não aparece, o assistente está desligado para você ou para a sua organização. Fale com quem administra a conta.
+</Note>
+
+## O que dá para pedir
+
+O assistente enxerga as mesmas áreas que você enxerga. Cada grupo de pedidos respeita o papel da pessoa e o módulo contratado.
+
+| Área | Consultar | Alterar (sempre com confirmação) | Quem pode |
+| --- | --- | --- | --- |
+| **Ajuda e novidades** | Dúvidas de uso com citação da documentação, atalhos para a tela certa, novidades da plataforma | | Todos |
+| **Consumo e plano** | Uso da organização por período | | Todos |
+| **Relatórios** | Resumo de relatório, relatórios de um documento, situação, relatórios recentes | Rodar relatório, rodar esteira, aprofundar, convocar o comitê | Quem roda análise |
+| **Exportação do PDF** | Exportar relatório, modelos de exportação | Criar e editar modelos, definir o padrão, ligar e desligar | Consulta: quem roda análise. Alteração: quem gerencia modelos de exportação |
+| **Políticas de crédito** | Listar, abrir, conferir e comparar resultados de políticas | Criar, salvar e ativar política; instruções do comitê | Quem monta política. Instruções do comitê exigem o [recurso habilitado](/concepts/comite-de-credito#instru%C3%A7%C3%B5es-da-sua-institui%C3%A7%C3%A3o-nos-agentes) |
+| **Esteiras** | Listar e abrir esteiras e modelos de contrato | Montar e ajustar esteira, ativar; editar e publicar modelo de contrato | Quem monta esteira. Contratos exigem o módulo de [Formalização](/formalizacao/visao-geral) |
+| **Produtos e propostas** | Produtos, carteiras, propostas, simulação de preço | Criar e editar produto, ligar e desligar, criar carteira, criar e rodar proposta | Módulo de [Propostas](/propostas/visao-geral) |
+| **Formulários e solicitações** | Modelos de formulário e solicitações | Criar e editar modelo, ligar e desligar, criar solicitação | Módulo de [Onboarding](/kyc/visao-geral) ou SCR |
+| **E-mail e WhatsApp** | Situação do domínio e dos canais | Configurar e remover domínio de e-mail, configurar domínio do link, enviar modelo de mensagem do WhatsApp para aprovação | Quem gerencia configurações. Exige o módulo de marca e envio próprios |
+| **Balanços automáticos** | Diagnóstico de um balanço, problemas registrados | Reprocessar balanço, registrar um problema para o time GYRA+ | Quem roda análise |
+
+Você também pode **anexar a sua política atual** em Word ou Excel e pedir que o assistente monte a política na plataforma a partir dela.
+
+## Nada é gravado sem a sua confirmação
+
+Quando o pedido altera alguma coisa, o assistente não grava no mesmo passo. Ele:
+
+<Steps>
+  <Step title="Confere e monta a prévia">
+    Valida o pedido e mostra um card com o **de, para**: o estado atual e como vai ficar.
+  </Step>
+  <Step title="Espera o seu sim">
+    A alteração só roda quando a sua resposta seguinte é uma confirmação inteira, como *sim*, *ok*, *pode*, *confirmo* ou *manda*. Qualquer ressalva, como *sim, mas...* ou *vou falar com o gerente*, não conta como confirmação.
+  </Step>
+  <Step title="Executa com o seu acesso">
+    A gravação acontece com as suas credenciais, e o papel e o módulo são conferidos de novo nesse momento.
+  </Step>
+</Steps>
+
+<Warning>
+  A prévia **expira em 10 minutos**. Depois disso, peça de novo: o assistente monta uma prévia nova com o estado atual. Cada confirmação vale para **uma** alteração.
+</Warning>
+
+Quando o seu acesso não permite a alteração, o assistente responde: *Essa alteração não está disponível para o seu acesso (permissão, módulo contratado ou controle do assistente). Fale com o administrador da conta.*
+
+## Anexos
+
+| | |
+| --- | --- |
+| **Formatos** | `.docx`, `.xlsx`, `.csv`, `.pdf` e `.txt` |
+| **Tamanho** | Até 4 MB por arquivo |
+| **Quantidade** | Até 5 anexos por mensagem |
+| **Planilhas** | Até 3.000 linhas |
+
+PDF escaneado (imagem) não é lido. O assistente pede o arquivo em Word, Excel ou um PDF com texto selecionável.
+
+## O assistente escolhe o nível de raciocínio
+
+Você não escolhe modelo. Para cada mensagem, a plataforma decide sozinha quanto esforço a tarefa pede, e o painel mostra o nível enquanto trabalha:
+
+| Rótulo | Quando |
+| --- | --- |
+| **Resposta rápida** | Dúvida de uso, saudação, "onde fica tal coisa". |
+| **Trabalhando nisso** | Ler dados, rodar relatório, configurar produto, formulário, exportação ou domínio. |
+| **Analisando com mais profundidade** | Criar ou revisar política, montar esteira, analisar inadimplência, diagnosticar balanço. |
+
+Durante a resposta, o painel também mostra o passo em andamento, como *Consultando a documentação*, *Lendo o relatório*, *Montando a esteira* ou *Executando a ação*. Quando a resposta leva você a outra tela, o atalho abre dentro do Toolbox e o painel continua aberto.
+
+## Controles e limites
+
+O time GYRA+ pode ajustar o assistente por organização e por pessoa: ligar e desligar, permitir ou não alterações, limitar o nível de raciocínio, desligar áreas específicas e definir um teto mensal de uso. Esses controles não têm tela no Toolbox: para mudar, fale com `atendimento@gyramais.com`.
+
+Quando o teto mensal é atingido, o assistente avisa:
+
+- *A sua organização atingiu o limite mensal de uso do assistente GYRA+. Fale com o administrador da conta ou com o time GYRA+ para ampliar.*
+- *Você atingiu o seu limite mensal de uso do assistente GYRA+. Fale com o administrador da conta para ampliar.*
+
+Também há um limite de mensagens por minuto por pessoa, para proteger a plataforma de uso automatizado.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="O assistente pode aprovar um crédito sozinho?">
+    Não. Ele pode rodar uma análise, uma esteira ou convocar o comitê, sempre com a sua confirmação, e a decisão segue as regras da política, da esteira e da alçada. O assistente não assina decisão.
+  </Accordion>
+  <Accordion title="Qual a diferença para o MCP da GYRA+?">
+    O assistente vive dentro do Toolbox e age com o seu login. O [MCP da GYRA+](/mcp/o-que-e) conecta um agente de IA seu (Claude, n8n, RPA) à API, com uma credencial de integração, e tem o próprio catálogo de [ferramentas](/mcp/ferramentas-disponiveis).
+  </Accordion>
+  <Accordion title="Alguém da GYRA+ consegue alterar a minha conta pelo assistente?">
+    Não pelo assistente da sua organização. A equipe GYRA+, quando acessa a sua organização para suporte, não consegue gravar alterações pelas ações do assistente.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Módulos e capacidades" icon="cubes" href="/plataforma/modulos-e-capacidades">
+    Por que uma área aparece ou não para você.
+  </Card>
+  <Card title="Usuários e permissões" icon="users-gear" href="/toolbox/gerenciar-usuarios-permissoes">
+    O que cada papel pode pedir.
+  </Card>
+</CardGroup>

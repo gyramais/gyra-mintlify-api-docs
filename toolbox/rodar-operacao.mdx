@@ -1,15 +1,15 @@
 ---
 title: "Rodar uma Análise"
-description: "Como rodar uma análise de crédito no toolbox pelo input sempre visível, individualmente ou em lote de clientes."
+description: "Como rodar uma análise de crédito no toolbox pelo input sempre visível, individualmente ou em lote, por política ou esteira."
 icon: "play"
 surface: plataforma
-domain: operacao
+domain: relatorio
 audience: operador
 lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** toda análise começa pelo **input sempre visível** no topo do toolbox. Você digita o CPF ou CNPJ, o sistema identifica o tipo de documento, abre o dropdown com as políticas (e operações, se houver) disponíveis e, ao apertar Enter, dispara o processamento. Em segundos o relatório está na tela. Para múltiplos documentos, há o fluxo de **Lote de Clientes**.
+  **Resumo:** toda análise começa pelo **input sempre visível** no topo do toolbox. Você digita o CPF ou CNPJ, o sistema identifica o tipo de documento, abre o dropdown com as políticas e as [esteiras](/esteiras/visao-geral) ativas e, ao apertar Enter, dispara o processamento. Em segundos o relatório está na tela. Para vários documentos, use o **+** do input e crie um lote.
 </Info>
 
 ## O input sempre visível
@@ -21,12 +21,12 @@ No topo de todas as telas do toolbox fica o campo de análise. Ele é o ponto de
     CPF (11 dígitos) ou CNPJ (14 dígitos). O toolbox identifica o tipo automaticamente, valida o dígito verificador e filtra a lista de políticas compatíveis. Documento inválido é sinalizado antes de você poder prosseguir.
   </Step>
   <Step title="Escolher a política no dropdown">
-    Logo abaixo do input abre um dropdown com as políticas ativas para o tipo de documento digitado. Se você tem **política padrão** marcada (via o próprio dropdown, ação *tornar padrão* ao lado do nome), ela já vem pré-selecionada.
+    Logo abaixo do input abre um dropdown com as políticas e as esteiras ativas para o tipo de documento digitado, em dois grupos: **Esteiras** e **Políticas**. Se você marcou uma padrão (chave **Definir como padrão**, logo abaixo do dropdown), ela já vem pré-selecionada.
 
-    Se a sua organização configurou alguma **operação** (feature opcional de cadeia com relacionamentos, ver [Operações](/concepts/operacoes)), ela também aparece no dropdown, distinguida como operação.
+    Escolher uma esteira abre uma execução dela para o documento. Para acompanhar as etapas seguintes, veja [Acompanhar execuções](/toolbox/acompanhar-execucoes).
   </Step>
   <Step title="Apertar Enter">
-    Dispara o processamento e redireciona você direto para a tela do relatório. Não há outro clique.
+    Dispara o processamento e redireciona você direto para a tela do relatório. Não há outro clique. **Ctrl** ou **Cmd** + **Enter** abre o relatório em nova guia.
   </Step>
   <Step title="Acompanhar o processamento">
     A análise passa pelos estados:
@@ -38,43 +38,43 @@ No topo de todas as telas do toolbox fica o campo de análise. Ele é o ponto de
     Tempo típico: 5 a 30 segundos, conforme as fontes consultadas.
   </Step>
   <Step title="Ler o resultado">
-    Ao terminar, aparece status (`APPROVED`, `ALERT`, `DENIED`, `ERROR`), breakdown por regra e precificação, se houver. Guia em [Interpretar Resultado da Operação](/toolbox/interpretar-resultado-operacao).
+    Ao terminar, aparece status (`APPROVED`, `ALERT`, `DENIED`, `ERROR`), breakdown por regra e precificação, se houver. Guia em [Interpretar Resultado do Relatório](/toolbox/interpretar-resultado-operacao).
   </Step>
 </Steps>
 
 <Tip>
-  Se ao digitar o documento o dropdown vem vazio, é porque **nenhuma política compatível está habilitada** para aquele tipo. O gestor precisa ativar um template antes. Ver [Usar Templates](/toolbox/usar-templates).
+  Se ao digitar o documento o dropdown vem vazio, é porque **nenhuma política nem esteira compatível está ativa** para aquele tipo. O gestor precisa ativar um template antes. Ver [Usar Templates](/toolbox/usar-templates).
 </Tip>
 
 <Note>
-  Para CNPJ, você pode **anexar o PDF do balanço** no próprio input, junto com o documento, antes de disparar a análise. O relatório já nasce com a extração financeira em processamento. Também dá para enviar depois, pelo menu *Enviar balanço* do relatório. Detalhes em [Análise Financeira](/concepts/analise-financeira).
+  Para CNPJ, você pode **anexar o PDF do balanço** no próprio input (**Adicionar PDF de balanço (opcional)**), antes de disparar a análise. O relatório já nasce com a extração financeira em processamento. Também dá para enviar depois, pela gaveta **Arquivos** do relatório, em **Enviar balanço / DRE**. Detalhes em [Análise Financeira](/concepts/analise-financeira).
 </Note>
 
-## Lote de Clientes
+## Análise em lote
 
-Para analisar múltiplos documentos de uma vez, não precisa planilha nem upload de arquivo. Tudo acontece pelo mesmo input:
+Para analisar vários documentos de uma vez, não precisa planilha nem upload de arquivo. Tudo começa pelo mesmo input:
 
 <Steps>
   <Step title="Clicar no + do input">
-    No canto do input sempre visível há o botão **+**. Ele abre a tela de entrada em lote.
+    No canto do input sempre visível há o botão **+** (**Lote de relatórios**). Ele abre a janela **Novo lote de relatórios**.
   </Step>
   <Step title="Colar ou digitar os documentos">
-    Copie uma coluna de CNPJs/CPFs de uma planilha, lista, e-mail, e cole na caixa. Também aceita digitação direta. O toolbox faz a **checagem em tempo real**, marca documentos válidos e separa os inválidos para você revisar.
-  </Step>
-  <Step title="Avançar">
-    Clicar em *Próximo*.
+    Copie uma coluna de CNPJs/CPFs de uma planilha, lista ou e-mail e cole na caixa. Também aceita digitação direta. O toolbox faz a **checagem em tempo real**: conta os documentos válidos, remove repetidos e lista os inválidos, que serão ignorados. Todos os documentos do lote precisam ser do mesmo tipo (CPF ou CNPJ). O limite recomendado é de 5.000 documentos por lote.
   </Step>
   <Step title="Nomear o lote e escolher a política">
-    Dê um nome reconhecível ao lote (ex: *Revisão carteira Abril 2026*) e selecione qual política será usada para todos os documentos do lote. Só políticas compatíveis com o tipo predominante aparecem na lista.
+    Clique em **Próximo**. Dê um nome reconhecível ao lote (ex: *Revisão carteira Abril 2026*) e selecione a política que vale para todos os documentos. Só aparecem políticas compatíveis com o tipo dos documentos.
+  </Step>
+  <Step title="Escolher quando rodar">
+    Clique em **Próximo** de novo e escolha a frequência: **Uma vez** (entra no próximo ciclo de processamento, assim que criado), **Diário**, **Semanal** ou **Mensal**. Nos recorrentes, você escolhe os dias (no semanal e no mensal) e a janela de execução, e o lote roda até ser pausado.
   </Step>
   <Step title="Criar lote">
-    Clicar em *Criar lote*. O processamento é engatilhado em background, em paralelo, e o lote aparece na seção **Lotes de Clientes** do menu lateral.
+    Clique em **Criar lote**. O processamento roda em segundo plano, em paralelo, e o lote aparece em **Análises de crédito**, aba **Em lote**.
   </Step>
   <Step title="Acompanhar e baixar">
     Ao terminar, o lote entrega:
 
     - Um **arquivo XLS** com as principais informações agrupadas de cada documento (status, score, motivos, precificação).
-    - O XLS fica disponível para download na listagem de *Lotes de Clientes*.
+    - O XLS fica disponível para download na aba **Em lote**.
     - Cada **relatório individual** também é acessível na plataforma pelo link no próprio XLS ou pela listagem do lote.
   </Step>
 </Steps>
@@ -108,7 +108,7 @@ A reanálise existe para casos em que um relatório foi gerado com **dados incom
 **Como funciona:**
 
 - Ao gerar o relatório novamente para o mesmo documento (pelo input ou pela API), o relatório existente é **reprocessado** caso ainda **não esteja `APPROVED` ou `DENIED`**. Os dados que estavam com erro ou parciais podem então ser revistos.
-- Se o relatório já fechou com status final (`APPROVED` ou `DENIED`), ele **não é atualizado** — uma nova chamada gera um relatório distinto.
+- Se o relatório já fechou com status final (`APPROVED` ou `DENIED`), ele **não é atualizado**: uma nova chamada gera um relatório distinto.
 
 <Note>
 Não há um botão "Reanalisar" no toolbox. A reanálise acontece automaticamente ao se solicitar uma nova análise para o mesmo documento, dentro das condições acima.
@@ -117,7 +117,7 @@ Não há um botão "Reanalisar" no toolbox. A reanálise acontece automaticament
 ## Limitações e considerações
 
 - **Documento inválido** é bloqueado antes do envio.
-- **Dropdown vazio** significa que não há política ativa para o tipo, gestor precisa habilitar.
+- **Dropdown vazio** significa que não há política nem esteira ativa para o tipo, gestor precisa habilitar.
 - **Fontes indisponíveis** no momento da consulta podem gerar `ERROR`. O relatório mostra qual fonte falhou; basta reanalisar depois.
 - **Concorrência do lote** é paralelizada, mas lotes muito grandes podem ser enfileirados conforme o contrato.
 
@@ -125,13 +125,13 @@ Não há um botão "Reanalisar" no toolbox. A reanálise acontece automaticament
 
 <AccordionGroup>
   <Accordion title="Por que o dropdown aparece vazio quando digito o documento?">
-    Porque nenhuma política compatível com o tipo de documento (PF ou PJ) está habilitada para a sua organização. O administrador ou gestor precisa ativar pelo menos um template em *Política de Crédito, Templates*. Ver [Usar Templates](/toolbox/usar-templates).
+    Porque nenhuma política nem esteira compatível com o tipo de documento (PF ou PJ) está ativa para a sua organização. O administrador ou gestor precisa ativar pelo menos um template em **Motor de crédito**, **Políticas**, aba **Templates**. Ver [Usar Templates](/toolbox/usar-templates).
   </Accordion>
-  <Accordion title="Qual a diferença entre política e operação no dropdown?">
-    **Política** é um conjunto de regras que roda sobre um documento. **Operação** é uma feature opcional para configurar cadeias de políticas baseadas em relacionamentos (sócios, filiais, parentes). Nem toda organização usa operação; quem usa pode ver em [Operações](/concepts/operacoes).
+  <Accordion title="Qual a diferença entre política e esteira no dropdown?">
+    **Política** é um conjunto de regras que roda sobre um documento e devolve um relatório com a decisão. **Esteira** é um fluxo com etapas (camadas de análise, documentos do cliente, alçada, contrato) que usa políticas no caminho; ver [Esteiras](/esteiras/visao-geral).
   </Accordion>
   <Accordion title="Como defino uma política padrão?">
-    No dropdown que abre ao digitar o documento, ao lado de cada política aparece a ação *tornar padrão*. Uma política padrão por tipo de documento, por usuário.
+    Escolha a política (ou esteira) no dropdown que abre ao digitar o documento e ligue a chave **Definir como padrão**, logo abaixo. Vale uma padrão por tipo de documento (CPF e CNPJ).
   </Accordion>
   <Accordion title="Posso rodar o mesmo documento duas vezes?">
     Pode. Se o relatório anterior ainda não fechou com `APPROVED` ou `DENIED`, ele é **reprocessado** (reanálise). Se já fechou, uma nova chamada gera um relatório distinto.
@@ -150,8 +150,8 @@ Não há um botão "Reanalisar" no toolbox. A reanálise acontece automaticament
   <Card title="Interpretar resultado" icon="chart-line" href="/toolbox/interpretar-resultado-operacao">
     Status, breakdown por regra, precificação.
   </Card>
-  <Card title="Operações (feature opcional)" icon="diagram-project" href="/concepts/operacoes">
-    Cadeia de políticas por relacionamento.
+  <Card title="Acompanhar execuções" icon="diagram-project" href="/toolbox/acompanhar-execucoes">
+    Seguir uma esteira etapa por etapa.
   </Card>
   <Card title="Webhooks" icon="webhook" href="/concepts/webhooks-e-tempo-real">
     Receber o resultado em tempo real no seu backend.
