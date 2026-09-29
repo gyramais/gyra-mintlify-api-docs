@@ -88,6 +88,25 @@ Use `source` para auditoria: um FGTS com `HISTORY` reflete a última emissão co
 - **Emissor:** SEFAZ estaduais via integração centralizada.
 - **Documento:** CNPJ.
 - **O que mostra:** inscrições estaduais do CNPJ e situação cadastral em cada estado onde opera.
+- **Onde aparece:** na seção `CERTIFICATES`, como certidão (consta ou não consta), e no detalhamento por UF da seção `STATE_REGISTRATIONS` (*Inscrições Estaduais*), na aba Cadastro, só para CNPJ.
+
+##### Seção Inscrições Estaduais (`STATE_REGISTRATIONS`)
+
+A seção abre, UF por UF, o que o CCC devolveu. Uma inscrição conta como **ativa** quando está habilitada no CCC; o texto de situação (`statusText`) é informativo e não muda essa classificação. Todos os contadores são em **unidade de UF**: uma UF com mais de uma inscrição conta uma vez, e basta uma inscrição ativa para a UF contar como ativa.
+
+| Campo (em `stateRegistrations`) | O que traz |
+|---|---|
+| `summary.ufsWithRegistration` | UFs em que o CNPJ tem pelo menos uma inscrição |
+| `summary.ufsWithoutRegistration` | UFs, das 27, sem nenhuma inscrição |
+| `summary.ufsActive` | UFs com pelo menos uma inscrição ativa |
+| `summary.ufsInactive` | UFs com inscrição, mas nenhuma ativa |
+| `registrations[]` | Uma linha por inscrição: `uf`, `number`, `isActive`, `statusText`, `statusDate`, `formattedStatusDate`, `typeText` |
+| `panorama[]` | As 27 UFs, cada uma com `state` (`ACTIVE`, `INACTIVE` ou `NONE`) e `registrationCount` |
+| `headquartersUf` | UF da sede, ou `null` quando a fonte não a informou |
+| `consultedAt` / `formattedConsultedAt` | Data da coleta do CCC |
+| `hasAnyRegistration` | `false` quando a consulta respondeu e o CNPJ não tem inscrição em nenhuma UF |
+
+A seção não recebe parecer de IA. Em consultas guardadas antes desta seção existir, `headquartersUf` pode vir `null` até a próxima renovação mensal do dado.
 
 ### Regimes especiais
 
@@ -237,6 +256,25 @@ Certidões costumam bloquear por simples presença de débito ou situação irre
   "status": "DENIED"
 }
 ```
+
+### Regras de Inscrições Estaduais
+
+Além da regra da certidão CCC (consta ou não consta), o detalhamento por UF alimenta seis regras próprias, todas só para **CNPJ** e agrupadas como *Inscrições Estaduais* no catálogo da política. Elas contam do mesmo jeito que a seção `STATE_REGISTRATIONS`, em unidade de UF e com ativa = habilitada no CCC.
+
+| Regra | Tipo | Operadores |
+|---|---|---|
+| `STATE_REGISTRATION_HAS_ACTIVE`: possui inscrição estadual ativa | Sim ou não | `CONTAINS` |
+| `STATE_REGISTRATION_HQ_ACTIVE`: possui inscrição estadual ativa na UF da sede | Sim ou não | `CONTAINS` |
+| `STATE_REGISTRATION_UF_COUNT`: quantidade de UFs com inscrição estadual | Número | `EQUAL_TO`, `LESS_THAN`, `LESS_THAN_OR_EQUAL_TO`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL_TO` |
+| `STATE_REGISTRATION_ACTIVE_COUNT`: quantidade de UFs com inscrição ativa | Número | idem |
+| `STATE_REGISTRATION_INACTIVE_COUNT`: quantidade de UFs sem inscrição ativa | Número | idem |
+| `STATE_REGISTRATION_UF`: possui inscrição ativa nas UFs escolhidas | Lista das 27 UFs | `CONTAINS`, `NOT_CONTAINS` |
+
+`STATE_REGISTRATION_UF` casa quando **qualquer** uma das UFs escolhidas tem inscrição ativa.
+
+<Note>
+  Quando a fonte não informa a UF da sede, `STATE_REGISTRATION_HQ_ACTIVE` fica **não executada**, em vez de reprovar. Assim uma política do tipo "reprova quem não tem inscrição ativa na sede" não reprova por falta de dado.
+</Note>
 
 Padrões recomendados:
 

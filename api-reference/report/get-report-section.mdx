@@ -65,6 +65,7 @@ O `sectionType` é a chave estável da seção: não muda entre ambientes nem en
 | `SCORE` | Score de bureau | ✓ |
 | `PROCESSES` | Processos judiciais | ✓ |
 | `CERTIFICATES` | Certidões (federal, trabalhista, FGTS, estaduais) | ✓ |
+| `STATE_REGISTRATIONS` | Inscrições estaduais por UF (Sintegra/CCC) | - |
 | `LICENSES_AUTHORIZATIONS` | Licenças e autorizações | ✓ |
 | `PEP` | Pessoa politicamente exposta | ✓ |
 | `SANCTIONS` | Sanções e listas restritivas | ✓ |
@@ -85,6 +86,7 @@ O `sectionType` é a chave estável da seção: não muda entre ambientes nem en
 | `BAD_CHECK` | Cheques sem fundo | ✓ |
 | `PAST_DUE_DEBT` | Dívidas vencidas | ✓ |
 | `PAYMENT_INTELLIGENCE` | Inteligência de pagamentos (fluxo transacionado) | – |
+| `SERASA_OPTIONAL_FEATURES` | Blocos opcionais de informação do Serasa contratados na credencial | - |
 
 **Análise financeira** (dependem do envio do balanço)
 
@@ -120,7 +122,7 @@ O `sectionType` é a chave estável da seção: não muda entre ambientes nem en
 </Note>
 
 <Warning>
-  Nem todo relatório tem todas as seções. `CRIMINAL_RECORD` e `SOCIAL_ASSISTANCE_PROGRAMS` só existem em relatórios de **CPF**; as seções de análise financeira só existem em **CNPJ** e só depois do envio do balanço. Um `sectionType` que não existe naquele relatório retorna **404**, não vazio. Antes de consultar, confira o array `sections[]` em [`GET /v2/report/{id}`](/api-reference/report-v2/get-v2report).
+  Nem todo relatório tem todas as seções. `CRIMINAL_RECORD` e `SOCIAL_ASSISTANCE_PROGRAMS` só existem em relatórios de **CPF**; `STATE_REGISTRATIONS` só existe em relatórios de **CNPJ**; `SERASA_OPTIONAL_FEATURES` só existe quando a credencial Serasa da organização tem blocos opcionais contratados e a consulta os devolveu; as seções de análise financeira só existem em **CNPJ** e só depois do envio do balanço. Um `sectionType` que não existe naquele relatório retorna **404**, não vazio. Antes de consultar, confira o array `sections[]` em [`GET /v2/report/{id}`](/api-reference/report-v2/get-v2report).
 </Warning>
 
 <RequestExample>

@@ -12,6 +12,18 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ---
 
+## Setembro 2026
+
+### Inscrições Estaduais e blocos opcionais do Serasa
+
+**Novidades**
+- **Seção Inscrições Estaduais (`STATE_REGISTRATIONS`):** o CCC (Sintegra) já era consultado, mas o relatório só mostrava a certidão como consta ou não consta. A nova seção, na aba Cadastro e só para **CNPJ**, abre o resultado UF por UF: número e situação de cada inscrição, contadores de UFs com inscrição, ativas e não ativas, e um panorama das 27 UFs com a UF da sede. Uma inscrição é ativa quando está habilitada no CCC; o texto de situação é informativo. A certidão CCC na seção `CERTIFICATES` continua igual. Ver [Certidões](/sources/certidoes#se%C3%A7%C3%A3o-inscri%C3%A7%C3%B5es-estaduais-state-registrations).
+- **Seis regras de Inscrições Estaduais na política:** `STATE_REGISTRATION_HAS_ACTIVE`, `STATE_REGISTRATION_HQ_ACTIVE`, `STATE_REGISTRATION_UF_COUNT`, `STATE_REGISTRATION_ACTIVE_COUNT`, `STATE_REGISTRATION_INACTIVE_COUNT` e `STATE_REGISTRATION_UF` (lista das 27 UFs). Com a UF da sede indisponível, a regra da sede fica não executada em vez de reprovar. Ver [Regras de Inscrições Estaduais](/sources/certidoes#regras-de-inscri%C3%A7%C3%B5es-estaduais).
+- **Blocos opcionais do Serasa por tipo de relatório:** quem usa credencial própria do Serasa passa a escolher, na credencial e por tipo de relatório, quais blocos opcionais são pedidos em cada consulta. O retorno entra na nova seção `SERASA_OPTIONAL_FEATURES` (*SERASA - Blocos opcionais de informação*), no fim da aba de restritivos, e os campos desses blocos viram regras de política, listadas só para os blocos configurados na credencial. Ver [Bureau de Crédito](/sources/bureau-credito#blocos-opcionais-de-informa%C3%A7%C3%A3o).
+- **Catálogo de seções:** `STATE_REGISTRATIONS` e `SERASA_OPTIONAL_FEATURES` passam a constar em [Consultar Seção por Tipo](/api-reference/report/get-report-section#tipos-de-se%C3%A7%C3%A3o). Nenhuma das duas recebe parecer de IA.
+
+---
+
 ## Agosto 2026
 
 ### PDF compacto e fonte única de protestos
