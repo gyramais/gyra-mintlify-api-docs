@@ -78,6 +78,7 @@ A primeira etapa é uma lista de cartões que você liga ou desliga. Só o que e
 | **Núclea** | Indicadores baseados em transações reais (antiga CIP), selecionados individualmente. Só PJ. Fonte adicional. Ver [Inteligência de Pagamentos](/sources/inteligencia-pagamentos). |
 | **Balanço patrimonial** | Habilita as variáveis de balanço nas condições e fórmulas desta política. Ver [Análise Financeira](/concepts/analise-financeira). |
 | **Bases externas** | Dados próprios da sua organização, configurados em *Configurações de integrações*, disponíveis como variáveis. |
+| **Listas de bloqueio** | CPFs e CNPJs que a sua organização não aceita. Selecione quais listas esta política consulta. Ver [Listas de Bloqueio](/concepts/listas-de-bloqueio). |
 
 <Warning>
   Sem **Relatório base** definido, as demais etapas ficam bloqueadas: não há variáveis para escrever condição, faixa ou fórmula. É sempre o primeiro passo.
@@ -91,6 +92,10 @@ A primeira etapa é uma lista de cartões que você liga ou desliga. Só o que e
   Cenprot e Núclea são **fontes adicionais**, com custo por consulta além do relatório base. Ligue quando o dado for mudar a decisão, não por padrão. As demais fontes acompanham o nível do relatório contratado.
 </Tip>
 
+<Note>
+  **Listas de bloqueio não consultam fonte externa** e por isso não têm custo por consulta. Elas cruzam o seu próprio cadastro de documentos bloqueados com os dados que a análise já levantou, e o cruzamento alcança o avaliado e os relacionados dele (sócio, filial, mesmo endereço, parentesco). Pela API, as listas escolhidas vão no campo `blocklistsIds` da política.
+</Note>
+
 ---
 
 ## Status possíveis de uma decisão
@@ -102,7 +107,12 @@ A primeira etapa é uma lista de cartões que você liga ou desliga. Só o que e
 | `APPROVED` | 3 | Aprovado automaticamente |
 | `DENIED` | 4 | Negado automaticamente |
 | `ALERT` | 5 | Requer revisão manual |
+| `ERROR` | 6 | A regra não pôde ser avaliada porque o dado não chegou |
 | `NOT_APPLIED` | 8 | Regra não aplicável ao documento |
+
+<Note>
+  **`ERROR` não é aprovação.** Quando a fonte de uma regra falha, a regra registra `ERROR` em vez de deixar passar por omissão. Uma consulta que respondeu com **zero ocorrências** é dado válido e segue aprovando normalmente: o que gera `ERROR` é a ausência da resposta, não a ausência de ocorrência.
+</Note>
 
 Esse é o `policyStatus` retornado em todo relatório. Se ele deve ou não virar o `status` do relatório depende da configuração da política — veja [Status do relatório × Status da política](/concepts/relatorio#status-do-relat%C3%B3rio-status-da-pol%C3%ADtica).
 

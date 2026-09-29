@@ -51,6 +51,20 @@ Características gerais (valem para as duas fontes):
   A estrutura de campos do relatório é a mesma nas duas fontes. O que muda é a **abrangência geográfica** e o **custo**. Avalie o trade-off conforme o ticket e o apetite de risco do produto.
 </Note>
 
+## Quando a fonte não responde
+
+Cartório e bureau falham de forma independente, e a seção é entregue com o que respondeu. Isso abre um caso perigoso de ler errado: a seção mostra números vindos só do bureau, com a parte cartorial faltando, e nada na tabela avisa.
+
+A plataforma trata esse caso de três formas:
+
+- **No relatório:** a seção de Protestos indica qual fonte respondeu e sinaliza quando a fonte de cartório falhou, mesmo com o bureau presente. Pela API, isso está em `errors[].provider` da seção. Ver [Seção Protestos](/data/secao-protestos#quando-uma-das-fontes-falha).
+- **Na política:** as regras de protesto (`NOTARIES_COUNT`, `NOTARIES_AMOUNT`, `NOTARIES_LAST_DAYS` e demais `NOTARIES_*`) passam a registrar **`ERROR`** quando o dado não chegou, em vez de aprovar por omissão. Consulta bem-sucedida com **zero protestos** continua sendo dado válido e aprova normalmente.
+- **No parecer de IA:** sem nenhuma fonte respondida, o agente é instruído a **não afirmar ausência de protestos** e a tratar o risco como desconhecido. Ver [Pareceres GYRA+ IA](/concepts/pareceres-gyra-ia#o-que-o-agente-n%C3%A3o-confunde).
+
+<Warning>
+  A distinção que importa é **não consultamos** contra **consultamos e não há nada**. As duas situações produziam a mesma leitura de "sem protestos", e só a segunda é informação.
+</Warning>
+
 ## Frequência de atualização
 
 | Componente | Atualização |

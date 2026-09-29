@@ -1,0 +1,41 @@
+---
+title: Listar Listas de Bloqueio
+description: Devolve as listas de documentos bloqueados da organização.
+surface: api
+domain: politica
+audience: integrador
+lang: tecnica
+openapi: get /integration/blocklist
+---
+
+### Quando usar
+
+Para descobrir quais listas existem na organização e pegar os `id` que vão em `blocklistsIds` na política de crédito.
+
+### Parâmetros
+
+Nenhum. A organização vem do token.
+
+### Exemplo
+
+```bash
+curl https://gyra-core.gyramais.com.br/integration/blocklist \
+  -H 'Authorization: Bearer {token}'
+```
+
+### Resposta
+
+`200 OK` com as listas da organização:
+
+```json
+[
+  { "id": "6612a7f30000000000000700", "name": "Fraudes confirmadas 2026" },
+  { "id": "6612a7f30000000000000701", "name": "Descredenciados comercial" }
+]
+```
+
+Cada item traz ao menos `id` e `name`. Para ver os documentos de uma lista, use [Consultar Lista de Bloqueio](/api-reference/blocklist/get-integration-blocklist-id).
+
+### Permissões
+
+Exige `can-manage-settings`. Listas de outras organizações nunca aparecem aqui.

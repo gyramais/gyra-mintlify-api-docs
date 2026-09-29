@@ -48,8 +48,8 @@ Qualquer formato é aceito, com limite de **16 MB por arquivo**.
 
 | Ação | Endpoint |
 | ---- | -------- |
-| Anexar | `POST /report/{id}/attachments`, multipart com os campos `file` e `tag` |
-| Listar | `GET /report/{id}/attachments` |
+| Anexar | [`POST /report/{id}/attachments`](/api-reference/report/post-report-attachments), multipart com os campos `file` e `tag` |
+| Listar | [`GET /report/{id}/attachments`](/api-reference/report/get-report-attachments) |
 
 Ambos exigem Bearer JWT e respeitam a organização do token: um relatório de outra organização retorna `404`.
 
@@ -81,7 +81,7 @@ curl -L 'https://gyra-core.gyramais.com.br/report/{reportId}/files/archive' \
   -o dossie.zip
 ```
 
-O zip é montado em streaming: a resposta começa a sair antes de o pacote inteiro estar pronto, então relatórios com muitos arquivos não estouram timeout.
+O zip é montado em streaming: a resposta começa a sair antes de o pacote inteiro estar pronto, então relatórios com muitos arquivos não estouram timeout. Contrato completo em [Baixar Dossiê do Relatório](/api-reference/report/get-report-files-archive).
 
 <Warning>
   A lista de arquivos é montada **pelo servidor**, a partir do que está registrado no relatório. Não existe parâmetro para o cliente informar URLs a incluir. É uma decisão de segurança: um endpoint que baixasse URLs arbitrárias enviadas pelo chamador seria um vetor de SSRF.

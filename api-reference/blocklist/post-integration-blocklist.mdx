@@ -1,0 +1,63 @@
+---
+title: Criar Lista de Bloqueio
+description: Cria uma lista de documentos bloqueados e as regras de política correspondentes.
+surface: api
+domain: politica
+audience: integrador
+lang: tecnica
+openapi: post /integration/blocklist
+---
+
+### Quando usar
+
+Para registrar na organização um conjunto de CPFs e CNPJs que não devem passar: fraudes confirmadas, clientes descredenciados, contrapartes vetadas pelo compliance. O conceito está em [Listas de Bloqueio](/concepts/listas-de-bloqueio).
+
+Criar a lista **também cria as regras de política** que consultam ela, uma por categoria de vínculo (documento analisado, sócio, segundo nível, terceiro nível, filial, mesmo endereço, parentesco). Elas passam a aparecer no editor de política com o nome da lista.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `name` | `body` | `string` | `sim` | Nome da lista. Vira também o título das regras geradas, então escolha algo legível na política. |
+| `documents` | `body` | `string[]` | `não` | CPFs e CNPJs a bloquear. Pode criar a lista vazia e preencher depois. |
+
+<Note>
+  A organização e o autor vêm **do token**, nunca do corpo. Não existe campo `organizationId` aqui: uma lista pertence sempre à organização de quem a criou.
+</Note>
+
+### Exemplo
+
+```bash
+curl -X POST https://gyra-core.gyramais.com.br/integration/blocklist \
+  -H 'Authorization: Bearer {token}' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "Fraudes confirmadas 2026",
+    "documents": ["12345678000199", "98765432100"]
+  }'
+```
+
+### Resposta
+
+`200 OK` com a lista criada:
+
+```json
+{
+  "id": "6612a7f30000000000000700",
+  "name": "Fraudes confirmadas 2026"
+}
+```
+
+Guarde o `id`: é ele que vai em `blocklistsIds` ao configurar a política.
+
+### Limites
+
+| Regra | Valor |
+|---|---|
+| Documentos por requisição | Até 5.000 |
+| Tamanho do corpo | 2 MB nesta rota, acima do padrão das demais |
+| Permissão | `can-manage-settings` |
+
+<Tip>
+  A colagem em lote é o caso normal de uso: o time de risco cola a planilha inteira de uma vez. Para volumes maiores que 5.000, quebre em mais de uma chamada usando [Editar Lista de Bloqueio](/api-reference/blocklist/put-integration-blocklist).
+</Tip>

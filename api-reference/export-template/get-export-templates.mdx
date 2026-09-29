@@ -1,0 +1,80 @@
+---
+title: Listar Modelos de Exportação
+description: Devolve os modelos de exportação da organização e o id a enviar em templateId.
+surface: api
+domain: relatorio
+audience: integrador
+lang: tecnica
+openapi: get /export-templates
+---
+
+### Quando usar
+
+Antes de exportar um relatório, para descobrir qual `templateId` enviar em [Exportar Relatório](/api-reference/report/get-reportexport) ou [Exportar Relatório (síncrono)](/api-reference/report/get-reportexport-sync).
+
+Um modelo de exportação define **quais seções entram no arquivo, em que ordem e com que nível de detalhamento**, separadamente para PDF e para Excel. O conceito está em [Modelos de Exportação](/concepts/modelos-de-exportacao).
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `format` | `query` | `string` | `não` | `PDF` ou `EXCEL`. Traz só os modelos que atendem esse formato. |
+| `profile` | `query` | `string` | `não` | `PF`, `PJ` ou `BOTH`. Traz só os modelos daquele perfil de avaliado. |
+
+Sem filtros, devolve todos os modelos da organização.
+
+### Exemplo
+
+```bash
+curl 'https://gyra-core.gyramais.com.br/export-templates?format=PDF&profile=PJ' \
+  -H 'Authorization: Bearer {token}'
+```
+
+### Resposta
+
+`200 OK` com os modelos da organização:
+
+```json
+[
+  {
+    "id": "6612a7f30000000000000900",
+    "name": "Comitê mensal - PJ",
+    "profile": "PJ",
+    "formats": ["PDF", "EXCEL"],
+    "status": "ACTIVE",
+    "isDefault": true,
+    "pdfDetail": "COMPLETE",
+    "selections": [
+      {
+        "format": "PDF",
+        "sections": ["BASIC_INFORMATION", "CREDIT_POLICY", "PROCESSES", "SCR"]
+      },
+      {
+        "format": "EXCEL",
+        "sections": ["BASIC_INFORMATION", "SCR"]
+      }
+    ]
+  }
+]
+```
+
+| Campo | Descrição |
+|---|---|
+| `profile` | Perfil de avaliado a que o modelo se aplica: `PF`, `PJ` ou `BOTH`. |
+| `formats` | Formatos que o modelo atende: `PDF`, `EXCEL` ou os dois. |
+| `status` | `ACTIVE` ou `INACTIVE`. Modelo inativo continua existindo mas não é aplicado. |
+| `isDefault` | Se é o padrão da organização para aquele perfil. No máximo um por perfil. |
+| `pdfDetail` | Nível de detalhamento do PDF: `COMPLETE` (detalhado) ou `COMPACT` (resumido). Modelos criados antes deste campo são devolvidos como `COMPLETE`. Não se aplica ao Excel, que é sempre completo. |
+| `selections` | A seleção ordenada de seções, uma entrada por formato. A ordem da lista é a ordem no arquivo. |
+
+<Note>
+  Para exportar **sem** um modelo salvo, os dois modelos nativos Gyra+ ficam disponíveis pelo parâmetro `systemTemplate` (`COMPLETE` ou `COMPACT`) direto na exportação. Ver [Modelos de Exportação](/concepts/modelos-de-exportacao#completo-ou-compacto).
+</Note>
+
+### Permissões
+
+Leitura livre: qualquer usuário autenticado enxerga os modelos da própria organização.
+
+<Note>
+  **Criar, editar, ativar, desativar, definir como padrão e excluir** exigem a permissão `can-manage-export-templates` e são feitos pelo Toolbox, em **Configurações**. A API pública expõe a leitura porque é o que o integrador precisa para escolher um `templateId`.
+</Note>

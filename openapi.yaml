@@ -240,6 +240,52 @@ paths:
           schema:
             type: string
           description: ID do relatorio a exportar.
+        - name: exportFormat
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - pdf
+              - excel
+              - both
+            default: pdf
+          description: Formato do arquivo gerado. Ausente equivale a pdf.
+        - name: templateId
+          required: false
+          in: query
+          schema:
+            type: string
+          description: |
+              Modelo de exportacao a aplicar (id de GET /export-templates). Define quais
+              secoes entram no arquivo e em que ordem. Ausente usa o modelo padrao da
+              organizacao para o perfil do relatorio e, na falta dele, o padrao do sistema.
+        - name: systemTemplate
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - COMPLETE
+              - COMPACT
+          description: |
+              Aplica um dos dois modelos nativos Gyra+ em vez de um modelo salvo: COMPLETE
+              entrega o PDF detalhado e COMPACT a versao resumida de cada secao. Por ser
+              escolha explicita, ignora o modelo padrao da organizacao (omitir o parametro
+              nao ignora). Enviado junto com templateId, o templateId vence. Nao se aplica
+              ao Excel, que e sempre completo.
+        - name: sectionOrder
+          required: false
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: |
+              Lista ordenada de secoes, para montar a selecao na propria chamada em vez de
+              usar um modelo salvo. Quando enviada, tem precedencia sobre templateId na
+              escolha e na ordem das secoes. Nao altera o nivel de detalhamento, que
+              continua vindo do modelo resolvido.
       responses:
         200:
           description: 'Objeto { status: "processing", reportId } — o PDF chega via webhook.'
@@ -255,6 +301,16 @@ paths:
           
           Use quando precisar processar varios relatorios em lote ou quando a latencia nao
           for critica. Para receber o PDF na hora, use export_report_sync.
+          
+          O conteudo do arquivo segue o modelo de exportacao resolvido nesta ordem:
+          sectionOrder informado na chamada, depois templateId, depois systemTemplate,
+          depois o modelo padrao da organizacao, depois o padrao do sistema. A resolucao do
+          modelo e best-effort: se o servico de modelos nao responder, a exportacao
+          continua com o padrao do sistema em vez de falhar.
+
+          O nivel de detalhamento do PDF (completo ou compacto) vem sempre do modelo
+          resolvido, inclusive quando sectionOrder e informado. O parametro type e usado
+          apenas quando nenhum modelo resolve um detalhamento.
   /report/export-sync/{id}:
     get:
       operationId: ReportController_exportSync
@@ -265,6 +321,52 @@ paths:
           schema:
             type: string
           description: ID do relatorio a exportar.
+        - name: exportFormat
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - pdf
+              - excel
+              - both
+            default: pdf
+          description: Formato do arquivo gerado. Ausente equivale a pdf.
+        - name: templateId
+          required: false
+          in: query
+          schema:
+            type: string
+          description: |
+              Modelo de exportacao a aplicar (id de GET /export-templates). Define quais
+              secoes entram no arquivo e em que ordem. Ausente usa o modelo padrao da
+              organizacao para o perfil do relatorio e, na falta dele, o padrao do sistema.
+        - name: systemTemplate
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - COMPLETE
+              - COMPACT
+          description: |
+              Aplica um dos dois modelos nativos Gyra+ em vez de um modelo salvo: COMPLETE
+              entrega o PDF detalhado e COMPACT a versao resumida de cada secao. Por ser
+              escolha explicita, ignora o modelo padrao da organizacao (omitir o parametro
+              nao ignora). Enviado junto com templateId, o templateId vence. Nao se aplica
+              ao Excel, que e sempre completo.
+        - name: sectionOrder
+          required: false
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: |
+              Lista ordenada de secoes, para montar a selecao na propria chamada em vez de
+              usar um modelo salvo. Quando enviada, tem precedencia sobre templateId na
+              escolha e na ordem das secoes. Nao altera o nivel de detalhamento, que
+              continua vindo do modelo resolvido.
       responses:
         200:
           description: 'Objeto com a URL de download do PDF gerado (assinada, com expiracao).'
@@ -277,8 +379,17 @@ paths:
           Exporta um relatorio em PDF e retorna a URL de download na resposta.
           
           O endpoint BLOQUEIA ate a geracao concluir — pode levar ate 6 minutos para
-          relatorios completos. Use com timeout adequado do lado do cliente. Sempre
-          gera PDF do relatorio completo (todas as secoes).
+          relatorios completos. Use com timeout adequado do lado do cliente.
+          
+          As secoes que entram no arquivo seguem o modelo de exportacao resolvido nesta
+          ordem: sectionOrder informado na chamada, depois templateId, depois
+          systemTemplate, depois o modelo padrao da organizacao, depois o padrao do
+          sistema. Sem nenhum modelo salvo, o padrao do sistema entrega o relatorio
+          completo.
+
+          O nivel de detalhamento do PDF (completo ou compacto) vem sempre do modelo
+          resolvido, inclusive quando sectionOrder e informado. O parametro type e usado
+          apenas quando nenhum modelo resolve um detalhamento.
           
           Pre-requisito: o relatorio precisa estar finalizado (status APPROVED, DENIED
           ou ALERT). Relatorios em PENDING nao podem ser exportados.
@@ -375,6 +486,285 @@ paths:
 
           Envie apenas as paginas do balanco e da DRE: quanto mais enxuto o PDF,
           mais rapido e barato o processamento.
+  /report/{id}/balance-sheet/process:
+    post:
+      operationId: ReportController_processBalanceSheet
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio (CNPJ) cujos demonstrativos encontrados serao processados.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                selection:
+                  type: array
+                  maxItems: 40
+                  items:
+                    type: string
+                  description: |
+                      externalId dos documentos escolhidos, como devolvidos por
+                      GET /report/{id}/balance-sheet/documents (ex: `cdb::283500`).
+                      Omita o corpo (ou o campo) para processar todos os exercicios
+                      processaveis. Maximo de 40 itens por chamada.
+      responses:
+        200:
+          description: Processamento despachado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dispatched:
+                    type: boolean
+                    example: true
+        404:
+          description: |
+              Relatorio nao encontrado, de outra organizacao, ou nenhum demonstrativo
+              encontrado para o CNPJ (o relatorio nao tem discovery disponivel).
+        409:
+          description: Os demonstrativos deste relatorio ja estao em processamento.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Processar balancos encontrados
+      description: |
+          Dispara o processamento dos demonstrativos que a GYRA+ encontrou sozinha na
+          base propria para o CNPJ do relatorio. Disponivel apenas nos relatorios
+          Completo e Completo+ de CNPJ, que sao os que rodam a busca automatica.
+
+          A chamada e ASSINCRONA: responde 200 assim que o processamento e despachado,
+          sem os dados estruturados. O resultado sai depois em
+          GET /report/{id}/section/BALANCE_SHEET (idem DRE e indicadores).
+
+          A chamada e idempotente enquanto o processamento estiver em andamento:
+          um novo disparo responde 409 em vez de reprocessar.
+  /report/{id}/balance-sheet/documents:
+    get:
+      operationId: ReportController_listBalanceSheetDocuments
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio (CNPJ).
+      responses:
+        200:
+          description: Documentos de balanco encontrados para o CNPJ.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  document:
+                    type: string
+                    description: CNPJ consultado, somente digitos.
+                  totalDocuments:
+                    type: integer
+                  documents:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        externalId:
+                          type: string
+                          nullable: true
+                          description: Id estavel do documento no catalogo. E a chave usada em `selection`.
+                        source:
+                          type: string
+                          description: Fonte de onde o documento veio.
+                        companyName:
+                          type: string
+                          nullable: true
+                        title:
+                          type: string
+                          nullable: true
+                        statementSigla:
+                          type: string
+                          nullable: true
+                          description: Peca do exercicio (BP, DRE, ...).
+                        processable:
+                          type: boolean
+                          description: |
+                              Indica se a extracao consegue tirar numero deste documento.
+                              Documentos com false aparecem para consulta manual, mas nao
+                              entram no processamento.
+                        publicationDate:
+                          type: string
+                          nullable: true
+                          description: Data de publicacao (YYYY-MM-DD).
+                        period:
+                          type: object
+                          properties:
+                            exercicio:
+                              type: integer
+                              nullable: true
+                            start:
+                              type: string
+                              nullable: true
+                            end:
+                              type: string
+                              nullable: true
+                        file:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              nullable: true
+                              enum: [pdf, html, text, xbrl]
+                            downloadUrl:
+                              type: string
+                              nullable: true
+                              description: URL assinada, valida por cerca de 1 hora. Null em documentos de texto.
+                            sizeBytes:
+                              type: integer
+                              nullable: true
+        404:
+          description: Relatorio nao encontrado ou de outra organizacao.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Listar balancos encontrados
+      description: |
+          Lista os documentos de balanco que a GYRA+ encontrou na base propria para o
+          CNPJ do relatorio, com link de download assinado.
+
+          Serve a dois usos: escolher quais exercicios processar (o campo `externalId`
+          alimenta o `selection` de POST /report/{id}/balance-sheet/process) e ler o
+          documento original quando a extracao automatica nao produziu numeros.
+  /report/{id}/attachments:
+    post:
+      operationId: ReportController_uploadAttachment
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio que vai receber o anexo.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Arquivo do anexo. Qualquer formato, ate 16MB.
+                tag:
+                  type: string
+                  description: Tipo de documento de credito do anexo.
+                  enum:
+                    - IDENTITY_DOCUMENT
+                    - PROOF_OF_RESIDENCE
+                    - REVENUE_PROOF
+                    - INCOME_TAX
+                    - ARTICLES_OF_INCORPORATION
+                    - CLEARANCE_CERTIFICATE
+                    - BANK_STATEMENT
+                    - COLLATERAL
+                    - OTHER
+              required:
+                - file
+                - tag
+      responses:
+        201:
+          description: Anexo salvo no relatorio.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportAttachment'
+        400:
+          description: Arquivo ausente no campo `file` ou `tag` fora da lista aceita.
+        404:
+          description: Relatorio nao encontrado ou de outra organizacao.
+        413:
+          description: O anexo excede o tamanho maximo de 16MB.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Anexar documento ao relatorio
+      description: |
+          Sobe um documento de credito e o guarda no relatorio com uma tag de tipo.
+          Aceita qualquer formato de arquivo, ate 16MB por anexo.
+
+          Anexo e armazenamento, nao analise: o arquivo fica disponivel no relatorio e
+          no dossie, mas nao e lido nem extraido. Para enviar balanco e DRE para
+          extracao, use POST /report/{id}/financial-tab.
+    get:
+      operationId: ReportController_listAttachments
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio.
+      responses:
+        200:
+          description: Anexos do relatorio.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  attachments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReportAttachment'
+        404:
+          description: Relatorio nao encontrado ou de outra organizacao.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Listar anexos do relatorio
+      description: |
+          Lista os anexos ativos do relatorio. Anexos removidos nao aparecem.
+  /report/{id}/files/archive:
+    get:
+      operationId: ReportController_downloadFilesArchive
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio.
+      responses:
+        200:
+          description: Arquivo ZIP com todos os arquivos do relatorio, entregue em streaming.
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        404:
+          description: Relatorio nao encontrado ou de outra organizacao.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Baixar dossie do relatorio
+      description: |
+          Baixa todos os arquivos do relatorio num unico ZIP: exportacoes, planilha do
+          balanco, documentos de origem dos balancos encontrados, anexos e certidoes
+          validas.
+
+          A lista e montada pelo servidor a partir do relatorio. Nao existe parametro
+          para escolher arquivos nem para informar URL.
   /report/{id}/committee:
     post:
       operationId: ReportController_conveneCommittee
@@ -573,6 +963,220 @@ paths:
 
           Nao reprocessa nem recoleta dados das fontes — apenas substitui a decisao
           humana (approved + commentary) anteriormente registrada.
+  /report/{id}/section/{sectionId}/retry:
+    post:
+      operationId: ReportController_retryReportSection
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio.
+        - name: sectionId
+          required: true
+          in: path
+          schema:
+            type: string
+          description: 'ID da secao (o campo id da secao, nao o tipo dela).'
+      responses:
+        200:
+          description: 'Objeto { status: "ok", types } com os tipos de integracao re-disparados.'
+        400:
+          description: Nenhuma integracao com erro nesta secao.
+        404:
+          description: Relatorio ou secao nao encontrada na sua organizacao.
+        409:
+          description: Esta secao ja esta sendo reprocessada.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Reprocessar as integracoes com erro de uma secao
+      description: |
+          Re-dispara apenas as integracoes que registraram erro naquela secao, sem refazer
+          o relatorio inteiro nem cobrar de novo as fontes que ja deram certo.
+          
+          O que acontece: a plataforma limpa o erro dessas integracoes na secao e no
+          progresso do relatorio, reabre a finalizacao e reenvia as consultas. Quando a
+          rodada fecha, o webhook REPORT_FINISHED e disparado de novo.
+          
+          E uma tentativa unica: se a integracao falhar outra vez, ela nao e retentada
+          automaticamente, e o erro volta a aparecer na secao.
+          
+          Idempotencia: um segundo pedido para a mesma secao enquanto o reprocessamento
+          esta em curso responde 409. A secao volta a aceitar novo pedido quando o
+          reprocessamento fecha ou, se ele travar, depois de 10 minutos sem atividade.
+  /export-templates:
+    get:
+      operationId: ExportTemplateController_list
+      parameters:
+        - name: format
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - PDF
+              - EXCEL
+          description: Filtra os modelos que atendem esse formato.
+        - name: profile
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - PF
+              - PJ
+              - BOTH
+          description: Filtra os modelos pelo perfil de avaliado.
+      responses:
+        200:
+          description: Lista de modelos de exportacao da organizacao.
+      tags:
+        - export-templates
+      security:
+        - authorization: []
+      summary: Listar modelos de exportacao
+      description: |
+          Lista os modelos de exportacao da organizacao, com o id que deve ser enviado em
+          templateId nos endpoints de exportacao.
+
+          Cada modelo traz pdfDetail (COMPLETE ou COMPACT), o nivel de detalhamento do PDF
+          gravado no modelo. Modelos criados antes desse campo sao devolvidos como
+          COMPLETE. O Excel e sempre completo.
+          
+          Leitura livre para qualquer usuario autenticado. Criar, editar, ativar, desativar,
+          definir padrao e excluir exigem a permissao can-manage-export-templates e sao
+          feitos pelo Toolbox, em Configuracoes.
+  /integration/blocklist:
+    post:
+      operationId: BlocklistController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBlocklistDto'
+      responses:
+        200:
+          description: 'Lista criada, com id e name.'
+      tags:
+        - blocklist
+      security:
+        - authorization: []
+      summary: Criar lista de documentos bloqueados
+      description: |
+          Cria uma lista de documentos bloqueados na organizacao e, junto com ela, as
+          regras de politica correspondentes (documento analisado e cada categoria de
+          relacionado).
+          
+          A organizacao e o autor vem sempre do token: o corpo nao carrega organizationId.
+          
+          A colagem em lote aceita ate 5000 documentos por requisicao (o limite de corpo
+          desta rota e 2 MB, acima do padrao das demais).
+    get:
+      operationId: BlocklistController_findAll
+      parameters: []
+      responses:
+        200:
+          description: Listas de documentos bloqueados da organizacao.
+      tags:
+        - blocklist
+      security:
+        - authorization: []
+      summary: Listar listas de documentos bloqueados
+      description: Lista as listas de documentos bloqueados da organizacao do token.
+  /integration/blocklist/{id}:
+    get:
+      operationId: BlocklistController_findOne
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID da lista.
+      responses:
+        200:
+          description: A lista, com os documentos.
+        404:
+          description: Lista inexistente ou de outra organizacao.
+      tags:
+        - blocklist
+      security:
+        - authorization: []
+      summary: Consultar uma lista de documentos bloqueados
+      description: Devolve a lista e os documentos dela. Uma lista de outra organizacao nao e acessivel.
+    put:
+      operationId: BlocklistController_update
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID da lista.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditBlocklistDto'
+      responses:
+        200:
+          description: Lista atualizada.
+      tags:
+        - blocklist
+      security:
+        - authorization: []
+      summary: Editar lista de documentos bloqueados
+      description: |
+          Altera o nome e os documentos da lista. Renomear a lista propaga o novo nome para
+          as regras de politica que nasceram dela, entao a politica continua legivel.
+    delete:
+      operationId: BlocklistController_delete
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID da lista.
+      responses:
+        200:
+          description: Lista excluida.
+      tags:
+        - blocklist
+      security:
+        - authorization: []
+      summary: Excluir lista de documentos bloqueados
+      description: |
+          Exclui a lista, remove as regras de politica que nasceram dela e tira o id das
+          politicas que a usavam. Consulte antes o impacto para saber quais politicas serao
+          afetadas.
+  /integration/blocklist/{id}/impact:
+    get:
+      operationId: BlocklistController_getImpact
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID da lista.
+      responses:
+        200:
+          description: 'Politicas que usam a lista, com policyId e policyName.'
+      tags:
+        - blocklist
+      security:
+        - authorization: []
+      summary: Consultar o impacto de excluir uma lista
+      description: |
+          Lista as politicas de credito que usam essa lista de documentos bloqueados. Serve
+          para mostrar o que quebra antes de confirmar a exclusao.
   /credit-policy/policy:
     get:
       operationId: PolicyController_find
@@ -669,6 +1273,62 @@ components:
       description: Enter JWT token
       in: header
   schemas:
+    ReportAttachment:
+      type: object
+      description: Documento de credito anexado a um relatorio.
+      properties:
+        id:
+          type: string
+        fileName:
+          type: string
+        tag:
+          type: string
+          enum:
+            - IDENTITY_DOCUMENT
+            - PROOF_OF_RESIDENCE
+            - REVENUE_PROOF
+            - INCOME_TAX
+            - ARTICLES_OF_INCORPORATION
+            - CLEARANCE_CERTIFICATE
+            - BANK_STATEMENT
+            - COLLATERAL
+            - OTHER
+        url:
+          type: string
+          description: URL do arquivo armazenado.
+        sizeBytes:
+          type: integer
+          nullable: true
+        uploadedByUserId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    CreateBlocklistDto:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nome da lista, usado tambem como titulo das regras de politica geradas.
+        documents:
+          type: array
+          items:
+            type: string
+          description: 'CPFs e CNPJs a bloquear. Ate 5000 por requisicao.'
+      required:
+        - name
+    EditBlocklistDto:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Novo nome da lista. Propagado para as regras de politica geradas por ela.
+        documents:
+          type: array
+          items:
+            type: string
+          description: Nova lista de documentos.
     CreateWebhookDto:
       type: object
       properties:

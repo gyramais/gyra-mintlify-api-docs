@@ -89,6 +89,24 @@ O conteúdo de `data` depende do tipo. Exemplo para `REPORT_FINISHED`:
 
 Estrutura de `data` para os demais tipos e exemplos completos em [Webhooks e API Keys](/toolbox/webhooks-e-api-keys#estrutura-do-payload).
 
+### `errors.sections` reflete a rodada atual
+
+O campo `errors.sections` lista as seções que fecharam com erro **naquela execução**. Quando um relatório é reprocessado, os erros da rodada anterior são apagados antes de a nova rodada começar: uma execução que fecha 100% com sucesso chega no seu endpoint com `errors.sections` vazio.
+
+<Note>
+  Antes de agosto de 2026 esse campo carregava o erro da rodada anterior mesmo depois de um reprocessamento bem-sucedido, e não dava para distinguir sucesso de falha pelo payload. Se o seu integrador tem alguma gambiarra para contornar isso, ela pode ser removida.
+
+  Uma exceção permanece: erros da **análise financeira** de balanço não são limpos pelo reprocessamento, porque o balanço vem de um documento enviado por você e nenhuma consulta o regenera. Quem torna aquele erro obsoleto é o novo envio do documento.
+</Note>
+
+### O relatório pode finalizar mais de uma vez
+
+O [reprocessamento de uma seção com erro](/api-reference/report/post-report-section-retry) **reabre** a finalização do relatório. Quando a nova rodada fecha, `REPORT_FINISHED` é disparado de novo, com o resultado atualizado.
+
+<Warning>
+  Trate `REPORT_FINISHED` como **idempotente pelo `reportId`**: o mesmo relatório pode gerar mais de um disparo ao longo do tempo. Sobrescreva o estado que você guardou em vez de assumir que o primeiro disparo é o definitivo.
+</Warning>
+
 ---
 
 ## Configurando um webhook
@@ -138,4 +156,22 @@ Estrutura de `data` para os demais tipos e exemplos completos em [Webhooks e API
 
 ## Retry
 
-A GYRA+ tenta entregar cada evento até **3 vezes** com backoff exponencial (1s, ~2s, ~5s). Se o seu endpoint retornar `429` com `Retry-After`, a GYRA+ respeita esse tempo. Após as tentativas, o evento é descartado — mantenha fallback com polling em `GET /v2/report/:id` para eventuais perdas e planeje idempotência no seu lado.
+Quando a entrega falha, a GYRA+ repete o envio **até 3 vezes** depois da primeira tentativa (4 envios no total), com backoff exponencial de 1s, ~2s e ~5s. Se o seu endpoint retornar `429` com `Retry-After`, a GYRA+ respeita esse tempo antes de tentar de novo. Esgotadas as tentativas, o evento é descartado.
+
+### O que é retentado e o que não é
+
+Nem toda falha vale uma nova tentativa. Reenviar um evento para um endpoint que respondeu `404` só repete o mesmo erro, então a GYRA+ para na primeira resposta.
+
+| Resposta do seu endpoint | Comportamento |
+| --- | --- |
+| `2xx` | Entrega concluída, sem retry. |
+| `408`, `425`, `429` | **Retentado.** São falhas transitórias: timeout, envio antecipado e limite de taxa. |
+| Demais `4xx` (`400`, `401`, `403`, `404`, `422`, ...) | **Não retentado.** A resposta é determinística: o evento é descartado no primeiro erro. |
+| `5xx` | **Retentado.** Indisponibilidade do seu lado costuma passar. |
+| Sem resposta (timeout de conexão, DNS, conexão recusada) | **Retentado.** |
+
+<Warning>
+  Se o seu endpoint responde `4xx` para um payload que ele não sabe tratar, você recebe **um único envio** e o evento se perde. Responda `200` primeiro e valide o conteúdo depois, de forma assíncrona. Devolver erro de validação para a GYRA+ não faz o evento voltar.
+</Warning>
+
+Mantenha fallback com polling em `GET /v2/report/:id` para eventuais perdas e planeje idempotência no seu lado.

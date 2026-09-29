@@ -1,0 +1,38 @@
+---
+title: Excluir Lista de Bloqueio
+description: Exclui a lista, suas regras de política e o vínculo com as políticas que a usavam.
+surface: api
+domain: politica
+audience: integrador
+lang: tecnica
+openapi: delete /integration/blocklist/{id}
+---
+
+### Quando usar
+
+Quando a lista não faz mais sentido. A exclusão não é só do registro: ela também **remove as regras de política** que nasceram da lista e tira o id dela das políticas que a referenciavam.
+
+<Warning>
+  Consulte antes [o impacto da exclusão](/api-reference/blocklist/get-integration-blocklist-impact). Uma política que usava a lista passa a rodar sem aquela verificação, silenciosamente, a partir do próximo relatório.
+</Warning>
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID da lista. |
+
+### Exemplo
+
+```bash
+curl -X DELETE https://gyra-core.gyramais.com.br/integration/blocklist/{id} \
+  -H 'Authorization: Bearer {token}'
+```
+
+### Resposta
+
+`200 OK`. A limpeza das regras e das políticas acontece logo em seguida, de forma assíncrona.
+
+### Permissões
+
+Exige `can-manage-settings`.

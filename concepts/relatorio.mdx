@@ -52,6 +52,23 @@ O processamento é **assíncrono**. Após o `POST /report`, você recebe o resul
   Quando a política usa o [Comitê de Crédito IA](/concepts/comite-de-credito), há uma etapa a mais **depois** da decisão automática: os pareceres por seção e o resultado da política vão a comitê, que devolve uma decisão fundamentada. O comitê pode rodar sozinho ou ser convocado sob demanda, pelo botão *Convocar Comitê* no relatório ou por [`POST /report/{id}/committee`](/api-reference/report/post-reportcommittee). A conclusão é avisada pelo webhook `COMMITTEE_FINISHED`.
 </Note>
 
+### Quando uma seção falha
+
+Uma consulta pode falhar sozinha: a fonte cai, responde incompleto ou estoura o tempo. O relatório fecha assim mesmo, com aquela seção sinalizando o erro, em vez de ficar preso esperando.
+
+Duas formas de refazer só o que falhou:
+
+| Caminho | O que refaz | Custo |
+| --- | --- | --- |
+| **Tentar novamente** na seção, ou [`POST /report/{id}/section/{sectionId}/retry`](/api-reference/report/post-report-section-retry) | Só as integrações com erro daquela seção | Só as fontes re-consultadas |
+| [Reanalisar](/api-reference/report/post-reportre-analyze) | A análise inteira | Todas as fontes de novo |
+
+O reprocessamento por seção reabre a finalização do relatório: quando a nova rodada fecha, o webhook `REPORT_FINISHED` é disparado outra vez. É uma **tentativa única**, sem retry automático: se falhar de novo, o erro volta a aparecer.
+
+<Tip>
+  Ao reprocessar, os erros da rodada anterior são apagados antes de a nova começar. Uma rodada que fecha bem chega no seu integrador sem resíduo da falha anterior.
+</Tip>
+
 ---
 
 ## Status do relatório × Status da política

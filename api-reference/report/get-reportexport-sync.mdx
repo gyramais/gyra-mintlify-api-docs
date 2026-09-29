@@ -43,13 +43,19 @@ Bearer JWT no header `Authorization`.
 |---|---|---|---|---|
 | `id` | `path` | `string` | `sim` | ID do relatório a exportar. |
 | `format` | `query` | `string` | `não` | Formato do arquivo: `pdf`, `excel` ou `both`. Padrão: `pdf`. |
-| `type` | `query` | `string` | **`sim`** | Use `REPORT`. Omitir o parâmetro retorna `400`. |
+| `type` | `query` | `string` | **`sim`** | `REPORT` ou `REPORT_MINIFIED`. Omitir o parâmetro retorna `400`. Serve de fallback: quando um modelo de exportação resolve o detalhamento, é o modelo que decide se o PDF sai completo ou compacto. |
+| `templateId` | `query` | `string` | `não` | Modelo de exportação a aplicar (id de [`GET /export-templates`](/api-reference/export-template/get-export-templates)). |
+| `systemTemplate` | `query` | `string` | `não` | `COMPLETE` ou `COMPACT`. Aplica um dos dois modelos nativos Gyra+ e ignora o padrão da organização. Quando enviado junto com `templateId`, o `templateId` vence. |
 | `exportFormat` | `query` | `string` | `não` | `pdf`, `excel` ou `both`. |
 | `sectionOrder` | `query` | `string[]` | `não` | Ordem das seções no arquivo gerado. |
 | `sectionOrder` | `query` | `string[]` | `não` | Lista ordenada de seções a serem incluídas no PDF. Cada seção é informada repetindo o parâmetro (ex.: `sectionOrder=LOCATION&sectionOrder=SUMMARY&sectionOrder=PEFIN`). Define **quais** seções aparecem e **em que ordem**. Se omitido, o relatório é exportado no layout **default** do sistema. Para a lista completa de seções suportadas, consulte o serviço `gyra-core`. |
 
 <Note>
 O parâmetro `sectionOrder` é **opcional**. Quando não enviado, o relatório é exportado no formato padrão do sistema. Quando enviado, o PDF contém apenas as seções listadas, exatamente na ordem informada.
+</Note>
+
+<Note>
+**Detalhamento do PDF.** O nível de detalhamento vem sempre do modelo resolvido, mesmo quando você envia `sectionOrder`. A ordem explícita continua decidindo quais seções entram e em que ordem, e só isso. Para pedir o PDF resumido sem ter um modelo salvo, use `systemTemplate=COMPACT`. Ver [Modelos de Exportação](/concepts/modelos-de-exportacao#completo-ou-compacto).
 </Note>
 
 <RequestExample>

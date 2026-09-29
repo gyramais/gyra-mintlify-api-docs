@@ -1,0 +1,86 @@
+---
+title: Listar Balanços Encontrados
+description: Lista os documentos de balanço que a GYRA+ encontrou na base própria para o CNPJ do relatório, com link de download.
+surface: api
+domain: relatorio
+audience: integrador
+lang: tecnica
+openapi: get /report/{id}/balance-sheet/documents
+---
+
+### Quando usar
+
+Este endpoint serve a dois momentos distintos:
+
+<CardGroup cols={2}>
+  <Card title="Escolher o que processar" icon="list-check">
+    Antes de chamar [Processar Balanços Encontrados](/api-reference/report/post-report-balance-sheet-process), liste o que existe e monte o `selection` com os `externalId` dos exercícios que interessam.
+  </Card>
+  <Card title="Ler o documento original" icon="file-magnifying-glass">
+    Quando a extração automática não produz números, o documento continua aqui, com URL de download, para análise manual.
+  </Card>
+</CardGroup>
+
+### Pré-requisitos
+
+1. Um relatório de **CNPJ** já criado, cujo `id` vai na URL.
+2. Token JWT válido (`POST /auth/authenticate`).
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID do relatório. Precisa ser um relatório da sua organização. |
+
+### Resposta
+
+```json
+{
+  "document": "43591367000130",
+  "totalDocuments": 2,
+  "documents": [
+    {
+      "externalId": "cdb::283500",
+      "source": "cdb",
+      "companyName": "EMPRESA EXEMPLO S.A.",
+      "title": "Demonstrações Financeiras 2024",
+      "statementSigla": "BP",
+      "processable": true,
+      "publicationDate": "2025-04-18",
+      "period": { "exercicio": 2024, "start": "2024-01-01", "end": "2024-12-31" },
+      "file": {
+        "type": "pdf",
+        "downloadUrl": "https://...",
+        "sizeBytes": 184320
+      }
+    }
+  ]
+}
+```
+
+### Campos
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `externalId` | `string \| null` | Identificador estável do documento no catálogo. É a chave que vai em `selection` no processamento. |
+| `source` | `string` | Fonte de onde o documento veio. |
+| `statementSigla` | `string \| null` | Peça do exercício: `BP` (Balanço Patrimonial), `DRE` e afins. |
+| `processable` | `boolean` | Se a extração consegue tirar números deste documento. Documentos com `false` ficam disponíveis para leitura, mas não entram no processamento. |
+| `publicationDate` | `string \| null` | Data de publicação, `YYYY-MM-DD`. |
+| `period.exercicio` | `number \| null` | Exercício de referência. Pode vir `null` mesmo com `start` e `end` preenchidos. |
+| `period.start` / `period.end` | `string \| null` | Início e fim do período, `YYYY-MM-DD`. **É o par que rotula o período com segurança**, já que `exercicio` nem sempre vem. |
+| `file.type` | `string \| null` | `pdf`, `html`, `text` ou `xbrl`. |
+| `file.downloadUrl` | `string \| null` | URL assinada, válida por cerca de **1 hora**. Vem `null` em documentos de texto. |
+| `file.sizeBytes` | `number \| null` | Tamanho do arquivo. |
+
+<Warning>
+  `downloadUrl` expira em cerca de uma hora. Não guarde essa URL na sua base: guarde o `externalId` e liste de novo quando precisar baixar.
+</Warning>
+
+### Erros
+
+| Código | Quando |
+|---|---|
+| `404` | Relatório não encontrado ou de outra organização. |
+
+Uma lista vazia (`totalDocuments: 0`) é resposta `200` normal e significa que a GYRA+ não encontrou demonstrações para o CNPJ.

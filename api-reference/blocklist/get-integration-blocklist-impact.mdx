@@ -1,0 +1,43 @@
+---
+title: Impacto de Excluir uma Lista
+description: Lista as políticas de crédito que usam uma lista de bloqueio.
+surface: api
+domain: politica
+audience: integrador
+lang: tecnica
+openapi: get /integration/blocklist/{id}/impact
+---
+
+### Quando usar
+
+Antes de [excluir uma lista](/api-reference/blocklist/delete-integration-blocklist), para saber o que deixa de ser verificado. É o mesmo dado que o Toolbox mostra no diálogo de confirmação.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID da lista. |
+
+### Exemplo
+
+```bash
+curl https://gyra-core.gyramais.com.br/integration/blocklist/{id}/impact \
+  -H 'Authorization: Bearer {token}'
+```
+
+### Resposta
+
+`200 OK` com as políticas afetadas:
+
+```json
+[
+  { "policyId": "6612a7f30000000000000300", "policyName": "Crédito PJ até 100k" },
+  { "policyId": "6612a7f30000000000000301", "policyName": "Antecipação de recebíveis" }
+]
+```
+
+Lista vazia significa que nenhuma política usa essa lista, e a exclusão não muda nenhuma decisão.
+
+### Permissões
+
+Exige `can-manage-settings`.

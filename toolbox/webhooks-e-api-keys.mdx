@@ -217,7 +217,13 @@ O payload é enxuto de propósito: decisão e síntese. Os votos individuais dos
 
 ### Retry
 
-A GYRA+ faz até **3 tentativas** de entrega com backoff exponencial (1s, ~2s, ~5s). Se o seu endpoint retornar `429` com header `Retry-After`, a GYRA+ respeita o tempo antes de tentar de novo. Depois disso, o envio é descartado — planeje idempotência e fallback com polling em `GET /v2/report/:id` para eventuais perdas.
+Quando a entrega falha, a GYRA+ repete o envio **até 3 vezes** depois da primeira tentativa (4 envios no total), com backoff exponencial de 1s, ~2s e ~5s. Se o seu endpoint retornar `429` com header `Retry-After`, a GYRA+ respeita o tempo antes de tentar de novo. Depois disso, o envio é descartado, planeje idempotência e fallback com polling em `GET /v2/report/:id` para eventuais perdas.
+
+O retry só acontece em falha que pode passar: `5xx`, ausência de resposta (timeout, DNS, conexão recusada) e os três `4xx` transitórios (`408`, `425`, `429`). Qualquer outro `4xx`, como `400`, `403` ou `404`, encerra a entrega no primeiro envio, porque repetir devolveria o mesmo erro. Detalhamento em [Webhooks e Tempo Real](/concepts/webhooks-e-tempo-real#retry).
+
+<Warning>
+  URL de webhook desatualizada é a causa mais comum de `404`. Como `404` não é retentado, o evento se perde no primeiro envio: mantenha a URL cadastrada aqui em dia sempre que trocar o endpoint no seu lado.
+</Warning>
 
 ### Boas práticas
 

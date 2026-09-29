@@ -42,8 +42,23 @@ Duas implicações imediatas:
 - **Emissor:** Caixa Econômica Federal (gestora do FGTS).
 - **Documento:** CNPJ.
 - **O que mostra:** se a empresa está em dia com os depósitos do FGTS dos colaboradores.
-- **Status possíveis:** `REGULAR`, `IRREGULAR`.
-- **Campos principais:** `baseStatus`, `status`, `certificateNumber`, `validity`, endereço, `rawResultFile`.
+- **Situação (`situation`):** `valid` (regular), `invalid` (irregular ou falha na emissão), `positive-negative-effects` (positiva com efeitos de negativa).
+- **Campos principais:** `situation`, `description`, `code` (número do certificado), `emissionDate` e `validityDate` (dd/mm/aaaa), `document` e `formattedDocument`, `url` (comprovante) e `source`.
+- **Enum interno:** `GYRA_FGTS`.
+
+<Note>
+  **FGTS unificado.** A emissão do FGTS passou a ser entregue por um tipo único, `GYRA_FGTS`, que escolhe a melhor fonte disponível no momento da consulta e devolve sempre o mesmo formato normalizado. Os tipos antigos (`BDC_CERTIFICATE_FGTS`, `DIRECT_DATA_FGTS`, `DIRECT_DATA_FGTS_PROOF`) continuam sendo lidos em relatórios já existentes, mas não são mais usados em novas análises. Se a sua integração dependia do nome do tipo, passe a tratar `GYRA_FGTS`.
+</Note>
+
+O campo `source` indica a **procedência do resultado**:
+
+| Valor | Significado |
+| ----- | ----------- |
+| `LIVE` | Certidão emitida ao vivo na fonte no momento da análise. |
+| `HISTORY` | Resultado reaproveitado do histórico recente, por contingência (fonte indisponível ou lenta no momento da consulta). |
+| `-` | Procedência não informada (relatórios antigos, anteriores ao campo, ou falha na emissão). |
+
+Use `source` para auditoria: um FGTS com `HISTORY` reflete a última emissão conhecida, não o estado do exato instante da análise.
 
 ### Trabalhistas
 
@@ -73,6 +88,25 @@ Duas implicações imediatas:
 - **Emissor:** SEFAZ estaduais via integração centralizada.
 - **Documento:** CNPJ.
 - **O que mostra:** inscrições estaduais do CNPJ e situação cadastral em cada estado onde opera.
+- **Onde aparece:** na seção `CERTIFICATES`, como certidão (consta ou não consta), e no detalhamento por UF da seção `STATE_REGISTRATIONS` (*Inscrições Estaduais*), na aba Cadastro, só para CNPJ.
+
+##### Seção Inscrições Estaduais (`STATE_REGISTRATIONS`)
+
+A seção abre, UF por UF, o que o CCC devolveu. Uma inscrição conta como **ativa** quando está habilitada no CCC; o texto de situação (`statusText`) é informativo e não muda essa classificação. Todos os contadores são em **unidade de UF**: uma UF com mais de uma inscrição conta uma vez, e basta uma inscrição ativa para a UF contar como ativa.
+
+| Campo (em `stateRegistrations`) | O que traz |
+|---|---|
+| `summary.ufsWithRegistration` | UFs em que o CNPJ tem pelo menos uma inscrição |
+| `summary.ufsWithoutRegistration` | UFs, das 27, sem nenhuma inscrição |
+| `summary.ufsActive` | UFs com pelo menos uma inscrição ativa |
+| `summary.ufsInactive` | UFs com inscrição, mas nenhuma ativa |
+| `registrations[]` | Uma linha por inscrição: `uf`, `number`, `isActive`, `statusText`, `statusDate`, `formattedStatusDate`, `typeText` |
+| `panorama[]` | As 27 UFs, cada uma com `state` (`ACTIVE`, `INACTIVE` ou `NONE`) e `registrationCount` |
+| `headquartersUf` | UF da sede, ou `null` quando a fonte não a informou |
+| `consultedAt` / `formattedConsultedAt` | Data da coleta do CCC |
+| `hasAnyRegistration` | `false` quando a consulta respondeu e o CNPJ não tem inscrição em nenhuma UF |
+
+A seção não recebe parecer de IA. Em consultas guardadas antes desta seção existir, `headquartersUf` pode vir `null` até a próxima renovação mensal do dado.
 
 ### Regimes especiais
 
@@ -200,11 +234,19 @@ Certidões costumam bloquear por simples presença de débito ou situação irre
 ```json
 {
   "rule": "CERTIFICATES_FGTS",
-  "operator": "NOT_EQUALS",
-  "value": "REGULAR",
+  "operator": "CONTAINS",
+  "params": { "Value": "false" },
   "status": "ALERT"
 }
 ```
+
+<Note>
+  A regra do FGTS avalia **regularidade como booleano**, derivado do `situation` do formato normalizado: regular é `situation: "valid"`. Por isso ela usa `CONTAINS` com o parâmetro `Value`, e não uma comparação com o texto da situação.
+
+  - `Value: "true"` casa quando a certidão está regular; `Value: "false"` casa quando não está.
+  - Certidão irregular resulta em **negativa** quando a regra esperava regular.
+  - `positive-negative-effects` (positiva com efeitos de negativa) resulta em **alerta**, independente do parâmetro.
+</Note>
 
 ```json
 {
@@ -214,6 +256,25 @@ Certidões costumam bloquear por simples presença de débito ou situação irre
   "status": "DENIED"
 }
 ```
+
+### Regras de Inscrições Estaduais
+
+Além da regra da certidão CCC (consta ou não consta), o detalhamento por UF alimenta seis regras próprias, todas só para **CNPJ** e agrupadas como *Inscrições Estaduais* no catálogo da política. Elas contam do mesmo jeito que a seção `STATE_REGISTRATIONS`, em unidade de UF e com ativa = habilitada no CCC.
+
+| Regra | Tipo | Operadores |
+|---|---|---|
+| `STATE_REGISTRATION_HAS_ACTIVE`: possui inscrição estadual ativa | Sim ou não | `CONTAINS` |
+| `STATE_REGISTRATION_HQ_ACTIVE`: possui inscrição estadual ativa na UF da sede | Sim ou não | `CONTAINS` |
+| `STATE_REGISTRATION_UF_COUNT`: quantidade de UFs com inscrição estadual | Número | `EQUAL_TO`, `LESS_THAN`, `LESS_THAN_OR_EQUAL_TO`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL_TO` |
+| `STATE_REGISTRATION_ACTIVE_COUNT`: quantidade de UFs com inscrição ativa | Número | idem |
+| `STATE_REGISTRATION_INACTIVE_COUNT`: quantidade de UFs sem inscrição ativa | Número | idem |
+| `STATE_REGISTRATION_UF`: possui inscrição ativa nas UFs escolhidas | Lista das 27 UFs | `CONTAINS`, `NOT_CONTAINS` |
+
+`STATE_REGISTRATION_UF` casa quando **qualquer** uma das UFs escolhidas tem inscrição ativa.
+
+<Note>
+  Quando a fonte não informa a UF da sede, `STATE_REGISTRATION_HQ_ACTIVE` fica **não executada**, em vez de reprovar. Assim uma política do tipo "reprova quem não tem inscrição ativa na sede" não reprova por falta de dado.
+</Note>
 
 Padrões recomendados:
 

@@ -42,3 +42,52 @@ Os dados ficam em `sectionDetails[].values.{provedor}`. Estrutura confirmada par
   O conjunto de campos **depende do provedor** que respondeu. Políticas que usam outra fonte de protestos devolvem outra chave em `values`, com campos próprios. Ver [Estrutura do Relatório](/data/estrutura-relatorio#onde-ficam-os-dados-sectiondetails-values).
 </Warning>
 
+## Mais de uma fonte na mesma seção
+
+Quando a política liga a fonte de cartório e o bureau já traz protestos, a seção pode chegar com **mais de uma chave** em `values`, cada uma com o seu próprio `protestsQuantity` e `protestsTotalValue`. Elas não se somam: são leituras concorrentes do mesmo documento, com abrangências diferentes.
+
+Para escolher uma só, use a mesma ordem de prioridade que a plataforma aplica no relatório e no parecer de IA, parando na primeira chave presente:
+
+<Steps>
+  <Step title="Cartório">
+    A fonte cartorial, de cobertura nacional, quando a política a contratou.
+  </Step>
+  <Step title="Bureau da análise">
+    Serasa e suas revendas, depois ProScore, depois Boa Vista.
+  </Step>
+</Steps>
+
+<Warning>
+  **Não some as fontes.** Somar cartório com bureau duplica os protestos que aparecem nos dois, e o total fica maior que a dívida real do documento.
+</Warning>
+
+## Quando uma das fontes falha
+
+A seção continua sendo entregue se pelo menos uma fonte responder. Isso significa que uma seção com números do bureau pode estar **sem** a parte cartorial, e o único lugar onde isso aparece é o array `errors` da seção.
+
+Cada erro de integração traz, além de `code` e `message`:
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `integrationType` | string | A integração que falhou, no mesmo vocabulário de `integrationTypes`. |
+| `provider` | string | Rótulo da fonte, seguro para exibição (ex.: `CENPROT`, `SERASA`). É o que você mostra ao usuário final. |
+
+```json
+{
+  "errors": [
+    {
+      "code": 500,
+      "message": "Falha ao consultar a fonte de protestos",
+      "integrationType": "IEPTB_PROTESTO",
+      "provider": "CENPROT"
+    }
+  ]
+}
+```
+
+<Note>
+  Os dois campos são **aditivos**: `context.integration` continua sendo gravado como antes, e erros registrados antes desta mudança não têm `integrationType` nem `provider`. Trate os dois como opcionais na leitura.
+</Note>
+
+Uma seção de protestos **vazia com erro registrado** é caso de dado indisponível, não de documento limpo. Um documento sem protestos vem com `protestsQuantity: 0` e sem erro.
+

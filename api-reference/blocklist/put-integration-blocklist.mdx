@@ -1,0 +1,51 @@
+---
+title: Editar Lista de Bloqueio
+description: Altera o nome e os documentos de uma lista de bloqueio.
+surface: api
+domain: politica
+audience: integrador
+lang: tecnica
+openapi: put /integration/blocklist/{id}
+---
+
+### Quando usar
+
+Para acrescentar ou remover documentos da lista, ou para renomeá-la.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | `sim` | ID da lista. |
+| `name` | `body` | `string` | `não` | Novo nome. |
+| `documents` | `body` | `string[]` | `não` | Nova lista de documentos. |
+
+<Warning>
+  `documents` **substitui** o conteúdo, não acrescenta. Para adicionar itens, envie a lista completa já com os novos.
+</Warning>
+
+### Exemplo
+
+```bash
+curl -X PUT https://gyra-core.gyramais.com.br/integration/blocklist/{id} \
+  -H 'Authorization: Bearer {token}' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "Fraudes confirmadas 2026 (revisada)",
+    "documents": ["12345678000199", "98765432100", "11122233000144"]
+  }'
+```
+
+### Resposta
+
+`200 OK` com a lista atualizada.
+
+### Efeito na política
+
+Renomear a lista propaga o novo nome para as **regras de política** que nasceram dela, então a política continua legível para quem a abrir depois. Não é preciso recriar nada.
+
+Alterar os documentos vale a partir do **próximo relatório**: a lista é consultada fresca a cada análise, sem cache. Relatórios já concluídos não são reavaliados.
+
+### Permissões
+
+Exige `can-manage-settings`.

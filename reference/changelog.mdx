@@ -12,6 +12,76 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ---
 
+## Setembro 2026
+
+### Inscrições Estaduais e blocos opcionais do Serasa
+
+**Novidades**
+- **Seção Inscrições Estaduais (`STATE_REGISTRATIONS`):** o CCC (Sintegra) já era consultado, mas o relatório só mostrava a certidão como consta ou não consta. A nova seção, na aba Cadastro e só para **CNPJ**, abre o resultado UF por UF: número e situação de cada inscrição, contadores de UFs com inscrição, ativas e não ativas, e um panorama das 27 UFs com a UF da sede. Uma inscrição é ativa quando está habilitada no CCC; o texto de situação é informativo. A certidão CCC na seção `CERTIFICATES` continua igual. Ver [Certidões](/sources/certidoes#se%C3%A7%C3%A3o-inscri%C3%A7%C3%B5es-estaduais-state-registrations).
+- **Seis regras de Inscrições Estaduais na política:** `STATE_REGISTRATION_HAS_ACTIVE`, `STATE_REGISTRATION_HQ_ACTIVE`, `STATE_REGISTRATION_UF_COUNT`, `STATE_REGISTRATION_ACTIVE_COUNT`, `STATE_REGISTRATION_INACTIVE_COUNT` e `STATE_REGISTRATION_UF` (lista das 27 UFs). Com a UF da sede indisponível, a regra da sede fica não executada em vez de reprovar. Ver [Regras de Inscrições Estaduais](/sources/certidoes#regras-de-inscri%C3%A7%C3%B5es-estaduais).
+- **Blocos opcionais do Serasa por tipo de relatório:** quem usa credencial própria do Serasa passa a escolher, na credencial e por tipo de relatório, quais blocos opcionais são pedidos em cada consulta. O retorno entra na nova seção `SERASA_OPTIONAL_FEATURES` (*SERASA - Blocos opcionais de informação*), no fim da aba de restritivos, e os campos desses blocos viram regras de política, listadas só para os blocos configurados na credencial. Ver [Bureau de Crédito](/sources/bureau-credito#blocos-opcionais-de-informa%C3%A7%C3%A3o).
+- **Catálogo de seções:** `STATE_REGISTRATIONS` e `SERASA_OPTIONAL_FEATURES` passam a constar em [Consultar Seção por Tipo](/api-reference/report/get-report-section#tipos-de-se%C3%A7%C3%A3o). Nenhuma das duas recebe parecer de IA.
+
+---
+
+## Agosto 2026
+
+### PDF compacto e fonte única de protestos
+
+**Novidades**
+- **Nível de detalhamento do PDF no modelo de exportação:** cada modelo passa a guardar se o PDF sai **Completo** (como sempre foi) ou **Compacto** (números consolidados e o essencial de cada seção, sem as listas longas). O campo `pdfDetail` (`COMPLETE` ou `COMPACT`) é devolvido em [Listar Modelos de Exportação](/api-reference/export-template/get-export-templates); modelos criados antes dele são lidos como `COMPLETE`, então nenhum modelo existente muda de comportamento. O Excel continua sempre completo, e um modelo exclusivamente Excel ignora o detalhamento. Ver [Modelos de Exportação](/concepts/modelos-de-exportacao#completo-ou-compacto).
+- **Modelos nativos Gyra+ na exportação:** novo parâmetro `systemTemplate` (`COMPLETE` ou `COMPACT`) em [Exportar Relatório](/api-reference/report/get-reportexport) e [Exportar Relatório síncrono](/api-reference/report/get-reportexport-sync), para pedir um dos dois modelos do sistema sem ter modelo salvo. Por ser escolha explícita, ele ignora o modelo padrão da organização, o que omitir o parâmetro não faz. Enviado junto com `templateId`, o `templateId` vence.
+- **Indicação da fonte que falhou na seção:** os erros de integração da seção passam a trazer `integrationType` e `provider` em campos próprios, além do que já existia em `context`. Isso permite responder "a fonte de cartório caiu?" mesmo quando outra fonte da mesma seção respondeu, caso em que a seção era entregue com os números do bureau e nenhum indicador. Campos aditivos: erros gravados antes desta mudança não os têm. Ver [Seção Protestos](/data/secao-protestos#quando-uma-das-fontes-falha).
+
+**Melhorias**
+- **Protestos com fonte de cartório única:** a fonte cartorial de cobertura nacional passou a ser servida por um provedor único, por instabilidade do anterior em produção. O formato da seção, o rótulo exibido (`CENPROT`), o flag da política e a cobrança não mudam, e relatórios antigos continuam sendo lidos normalmente. Relatórios que já estavam em processamento na virada seguem finalizando sem intervenção.
+- **Uma fonte de protesto por parecer:** o agente de IA da seção `PROTESTS` passa a receber apenas a fonte vencedora da cadeia de prioridade (cartório antes de bureau), e não a mistura de todas as fontes que responderam. Antes elas chegavam juntas e sem rótulo, cada uma com o seu próprio total, o que abria espaço para o parecer somar protestos contados duas vezes. Ver [Seção Protestos](/data/secao-protestos#mais-de-uma-fonte-na-mesma-se%C3%A7%C3%A3o).
+
+**Correções**
+- **Parecer afirmando ausência de protesto sem ter consultado:** com cartório e bureau fora do ar ao mesmo tempo, a seção `PROTESTS` chegava vazia ao agente e o parecer saía como "não foram identificados protestos, sem impacto na dimensão", com risco baixo, sobre um documento que ninguém conseguiu consultar. Agora a indisponibilidade é sinalizada ao agente, que reporta o risco como desconhecido em vez de baixo. Consulta bem-sucedida com zero protestos continua gerando o parecer normal de nada consta. Ver [Pareceres GYRA+ IA](/concepts/pareceres-gyra-ia#o-que-o-agente-n%C3%A3o-confunde).
+- **Regras de protesto aprovando com dado ausente:** as regras `NOTARIES_*` devolviam aprovação quando o payload chegava sem `summary`, sem data de ocorrência ou sem valor, afirmando "poucos protestos" sobre um documento cujo dado não chegou. Agora a regra registra `ERROR`, que é o que aparece no item da política. Zero protestos segue sendo dado válido e aprova. Ver [Política de Crédito](/concepts/politica-de-credito#status-poss%C3%ADveis-de-uma-decis%C3%A3o).
+- **Detalhamento do PDF ignorado com `sectionOrder`:** enviar uma ordem explícita de seções pulava a resolução do modelo, então o mesmo pedido saía completo ou compacto dependendo de um parâmetro que não fala de detalhamento. O detalhamento passa a vir sempre do modelo resolvido, nos dois endpoints de exportação; a ordem explícita continua vencendo a ordem do modelo.
+- **Escolha de detalhamento apagada em atualização parcial:** um `PUT` de modelo sem o campo `pdfDetail`, vindo de cliente de API que não o conhece, redefinia o modelo para completo e apagava a escolha do usuário. Ausência no update passa a significar "não estou mexendo nisso" e mantém o valor gravado. No create, ausência continua significando `COMPLETE`.
+
+### Listas de bloqueio, modelos de exportação e reprocessamento por seção
+
+**Novidades**
+- **Listas de bloqueio:** cadastre em *Configurações* os CPFs e CNPJs que a sua organização não aceita (colagem em lote de até 5.000 documentos por vez) e ligue a lista na política, em *Fonte de dados*. Cada lista gera **sete regras**: o documento analisado (`BLOCKLIST_DOCUMENTO`) e seis categorias de relacionado (`BLOCKLIST_SOCIO`, `BLOCKLIST_2_NIVEL`, `BLOCKLIST_3_NIVEL`, `BLOCKLIST_FILIAL`, `BLOCKLIST_MESMO_ENDERECO`, `BLOCKLIST_PARENTESCO`), configuráveis como qualquer outra regra. A lista é consultada fresca a cada análise, sem cache, e quando a fonte falha a regra registra **erro** em vez de aprovar por omissão. Pela API, as listas escolhidas vão em `blocklistsIds` na política. Ver [Listas de Bloqueio](/concepts/listas-de-bloqueio).
+- **Modelos de exportação de relatório:** defina quais seções entram no **PDF** e no **Excel** e em que ordem, com seleção independente por formato, perfil (`PF`, `PJ` ou `BOTH`) e um modelo padrão por perfil na organização. A exportação passa a aceitar `templateId`, e o modelo aplicado segue a precedência seleção da chamada, modelo escolhido, padrão da organização, padrão do sistema. A resolução é best-effort: indisponibilidade do serviço de modelos não bloqueia a geração, que cai no padrão do sistema. Ver [Modelos de Exportação](/concepts/modelos-de-exportacao).
+- **Reprocessar uma seção com erro:** novo [`POST /report/{id}/section/{sectionId}/retry`](/api-reference/report/post-report-section-retry) re-dispara apenas as integrações que falharam naquela seção, sem refazer o relatório inteiro nem re-consultar as fontes que já responderam. É tentativa única, sem retry automático, e um segundo pedido durante o reprocessamento responde `409`. No Toolbox, o mesmo recurso aparece como *tentar novamente* no indicador de sincronização da seção.
+- **Parâmetros de exportação na referência:** `exportFormat` (`pdf`, `excel`, `both`), `templateId` e `sectionOrder` passam a constar em [Exportar Relatório](/api-reference/report/get-reportexport) e [Exportar Relatório síncrono](/api-reference/report/get-reportexport-sync). A referência dizia que a exportação síncrona sempre gerava o relatório completo, o que deixou de ser verdade com os modelos.
+
+**Correções**
+- **Erro de rodada anterior sobrevivendo ao reprocessamento:** ao reprocessar um relatório, os erros das seções e o `errors.sections` do payload `REPORT_FINISHED` não eram limpos. Uma rodada que fechava 100% com sucesso continuava entregando o erro da rodada anterior, e o integrador não conseguia distinguir sucesso de falha. Agora o estado de erro é zerado antes de a nova rodada começar. Erros da análise financeira de balanço seguem preservados de propósito: eles vêm de um documento enviado por você, que nenhuma consulta regenera. Ver [Webhooks e Tempo Real](/concepts/webhooks-e-tempo-real#errorssections-reflete-a-rodada-atual).
+- **Seção de Localização presa quando o bureau falha:** falha na fonte do endereço deixava a seção sem estado terminal, girando indefinidamente no relatório. Agora a seção fecha sinalizando o erro, o que também a torna elegível ao reprocessamento por seção.
+- **Protestos do Serasa sem bloco cadastral:** protestos vindos do Serasa em um payload sem o bloco de cadastro quebravam a tradução da seção **Protestos**, e o relatório ficava sem a seção. O nome do devedor, quando ausente, aparece como `-`, e o restante do protesto é entregue normalmente.
+
+### Entrega de webhook e referência dos endpoints de arquivos e balanços
+
+**Melhorias**
+- **Webhook não insiste em erro que não passa:** a entrega deixa de retentar respostas `4xx` do seu endpoint, com exceção de `408`, `425` e `429`, que continuam sendo retentadas por serem transitórias. Um endpoint que responde `404` (URL removida ou trocada no seu lado) recebia 4 envios idênticos e agora recebe um. Respostas `5xx` e falhas sem resposta (timeout, DNS, conexão recusada) seguem com o retry completo, até 3 tentativas depois da primeira, com backoff de 1s, ~2s e ~5s. Ver [Webhooks e Tempo Real](/concepts/webhooks-e-tempo-real#retry).
+
+**Novidades**
+- **Referência da API dos balanços encontrados:** os dois passos do fluxo de demonstrações que a GYRA+ acha sozinha ganharam página própria. [`GET /report/{id}/balance-sheet/documents`](/api-reference/report/get-report-balance-sheet-documents) lista o que foi encontrado, com período, fonte e link de download assinado; [`POST /report/{id}/balance-sheet/process`](/api-reference/report/post-report-balance-sheet-process) dispara o processamento e aceita `selection` para escolher quais exercícios entram, em vez de processar todos.
+- **Referência da API de anexos e dossiê:** [`POST /report/{id}/attachments`](/api-reference/report/post-report-attachments) (com a lista completa de tags aceitas e o limite de 16 MB), [`GET /report/{id}/attachments`](/api-reference/report/get-report-attachments) e [`GET /report/{id}/files/archive`](/api-reference/report/get-report-files-archive) agora estão na referência da API, com contratos de request e response.
+
+### Precisão dos pareceres de Processos, Vínculos e Localização
+
+**Melhorias**
+- **Papel processual no parecer de Processos:** o agente jurídico passa a receber o **papel** do avaliado em cada processo, derivado do papel detalhado da parte, e não apenas o polo. Processo em que o avaliado é **credor**, **terceiro interessado** ou **não parte** (advogado, juiz, perito, administrador judicial) deixa de ser lido como passivo. O parecer também distingue **recuperação judicial, extrajudicial e falência** de homônimos que não são insolvência (REFIS, recuperação fiscal, recuperação de crédito), e separa quem é devedor de quem é credor na insolvência. Ver [Pareceres GYRA+ IA](/concepts/pareceres-gyra-ia#o-que-o-agente-n%C3%A3o-confunde).
+- **Processos dos sócios não viram passivo da empresa:** os processos vindos de `ownersLawsuits` chegam ao parecer identificados como processos do sócio, com a ressalva de que naquele feed a fonte não informa o documento das partes e o polo do sócio não é determinável. Não entram na contagem de insolvência da empresa analisada. Ver [Seção Processos](/data/secao-processos#processos-dos-s%C3%B3cios).
+- **Natureza e vigência do vínculo no parecer de Vínculos:** cada relacionamento passa a chegar classificado (sócio, participação, administrador, empregador, parente, social) e com a vigência (encerrado, sem fim informado, sem data). O efeito prático é que a restrição de uma empresa **empregadora** aparece como contexto ocupacional, e não como exposição patrimonial da pessoa avaliada. Vínculo de gestão continua entrando na exposição.
+- **Fachada de PF com régua residencial:** em relatório de CPF a análise de fachada passa a avaliar o **imóvel residencial declarado**, com régua própria, em vez de aplicar critérios de ponto comercial (CNAE, letreiro, capital social) a uma residência. Antes o resultado era descartado e a fachada aparecia como indisponível na maioria dos relatórios de PF.
+- **Endereço não confirmado deixa de sumir do cálculo:** imagem inconclusiva (obra em andamento, foto obstruída ou antiga) e panorama distante passam a pontuar como **falta de confirmação**, distinta de **imóvel ausente ou degradado** (terreno baldio, imóvel demolido, ruína), que pontua baixo. O raio de busca do panorama do endereço subiu de 30 para 50 metros, o que recupera casos legítimos de avenida larga, rodovia e lote recuado. Quando não existe nenhuma imagem do endereço, a fachada continua indisponível, sem nota.
+
+**Correções**
+- **Objetivo da política chegando aos pareceres:** o objetivo configurado em *Decisão e alçada* passa a compor de fato o contexto enviado aos agentes de seção, ao parecer cadastral, à síntese de Localização e ao Comitê. Antes ele era derivado apenas dos campos de texto livre da política, quase sempre vazios, e a calibração por objetivo não disparava: um comitê de política de contratação podia falar em desembolso.
+- **Quebra por polo do `summary` de Processos:** processos cuja polaridade a fonte não classificou eram contados apenas no total (`ALL-ALL`) e sumiam da quebra por polo, que vinha subcontada. Agora caem em `OUTROS` e a quebra fecha com o total. Ver [Seção Processos](/data/secao-processos#summary).
+- **Vínculo empregatício classificado como participação societária:** em relatório de PF, qualquer empresa ligada à pessoa era marcada como participação societária, então o empregador aparecia como sociedade e a dívida da empresa como ponto de atenção da pessoa avaliada.
+- **Empresa listada como parte por filial:** o casamento da parte com o documento analisado passa a aceitar a **raiz do CNPJ**, então processo que lista a filial enquanto o relatório rodou na matriz (ou o inverso) é reconhecido como processo da mesma pessoa jurídica. O casamento exato continua tendo preferência, e CPF segue exigindo os 11 dígitos.
+
+---
+
 ## Julho 2026
 
 ### Pareceres GYRA+ IA, Comitê de Crédito e Arquivos do Relatório
@@ -28,6 +98,18 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 - **Deliberação completa para auditoria:** novo `GET /committee/deliberations/{reportId}` traz o voto individual de cada agente, a síntese do Presidente, as versões de prompt usadas e a telemetria da deliberação. Ver [Consultar Deliberação](/api-reference/committee/get-committeedeliberations).
 - **Novo tipo de webhook `COMMITTEE_FINISHED`:** dispara quando o comitê conclui (ou falha) a deliberação, tanto na convocação automática quanto na manual, com decisão e síntese no payload. Ver [Criar Webhook](/api-reference/webhook/post-webhook).
 - **Instruções da instituição nos agentes (Business e Enterprise):** organizações com o recurso habilitado escrevem orientações próprias por agente na edição da política (apetite de risco, critérios do setor, política interna), com validação anti-injeção e limite de 4.000 caracteres por agente. Ver [Editar Política](/toolbox/editar-politica#instru%C3%A7%C3%B5es-adicionais-dos-agentes).
+
+### Modos de leitura do SCR e FGTS unificado
+
+**Novidades**
+- **Modos de leitura da janela SCR:** cada regra SCR da política passa a escolher quais data-bases enxerga: **maior valor** entre todas as data-bases da janela (padrão, comportamento histórico), **data-base mais recente**, ou **data-base específica** pela posição (1 = mais recente). A posição precisa caber na janela `month-scr` da política, com limite de 24. Regras já existentes continuam no modo padrão e não mudam de resultado. Ver [Modos de leitura da janela de data-bases](/sources/scr-open-finance#modos-de-leitura-da-janela-de-data-bases).
+- **Precificação com SCR por data-base:** as variáveis numéricas de SCR (risco total, limite até 360 dias, total em atraso, valor a vencer e total de perdas) passam a ser ofertadas nas fórmulas de precificação nas três leituras, incluindo a variante "(data-base N)", criada sob demanda ao escolher a posição. Ver [Precificação](/concepts/precificacao#variaveis-de-scr-por-data-base).
+- **Descrição da regra indica o recorte:** regras SCR em modo não padrão aparecem no relatório com o complemento "na data-base mais recente" ou "na Nª data-base mais recente".
+
+**Melhorias**
+- **FGTS unificado:** a certidão de regularidade do FGTS passa a ser emitida por um tipo único, `GYRA_FGTS`, que escolhe a melhor fonte disponível e devolve sempre o mesmo formato normalizado (`situation`, `description`, `code`, `emissionDate`, `validityDate`, `url`). Os tipos antigos (`BDC_CERTIFICATE_FGTS`, `DIRECT_DATA_FGTS`, `DIRECT_DATA_FGTS_PROOF`) seguem sendo lidos em relatórios já existentes.
+- **Rastreabilidade do FGTS:** novo campo `source` na seção de FGTS, com `LIVE` (emissão ao vivo na fonte) ou `HISTORY` (resultado reaproveitado do histórico por contingência). Campo aditivo e retrocompatível. Ver [Certidões](/sources/certidoes).
+- Datas de emissão e validade do FGTS agora saem sempre formatadas em `dd/mm/aaaa`, com `-` quando indisponíveis.
 
 ---
 

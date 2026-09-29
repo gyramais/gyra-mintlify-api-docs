@@ -51,6 +51,14 @@ Para clientes que já têm contrato direto com o Serasa, o toolbox permite **con
 
 Para habilitar, solicite as credenciais de produção ao time de suporte do Serasa e cole no toolbox. Para Boa Vista e ProScore, o consumo ocorre pelo contrato agregado da GYRA+.
 
+#### Blocos opcionais de informação
+
+Com a credencial própria, você escolhe na própria credencial, **por tipo de relatório**, quais **blocos opcionais** do Serasa são pedidos em cada consulta (por exemplo QSA completo, score de sócio, histórico de pagamento, capacidade de pagamento, comprometimento de renda, renda estimada, participações societárias). Os blocos são cobrados pelo seu contrato com o Serasa.
+
+O que o Serasa devolver desses blocos entra no relatório em uma seção própria, `SERASA_OPTIONAL_FEATURES` (*SERASA - Blocos opcionais de informação*), no fim da aba de restritivos. A seção guarda o retorno dos blocos como veio do bureau, sem tradução, e só existe quando a consulta de fato devolveu dado de bloco opcional: credencial sem blocos configurados, ou consulta sem retorno de bloco, não cria a seção.
+
+Os campos numéricos e de classificação desses blocos também viram **regras de política**. Elas aparecem no catálogo de regras da política só para os blocos que a sua credencial tem configurados, e quando o bloco não veio na consulta a regra fica **não executada**, em vez de aprovar ou reprovar por ausência de dado. Ver [Política de Crédito](/concepts/politica-de-credito).
+
 ## De onde vem
 
 - **Tipo de fonte:** bureau comercial de crédito (privado).
