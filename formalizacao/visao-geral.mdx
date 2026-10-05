@@ -1,6 +1,6 @@
 ---
 title: "Formalização"
-description: "Da oferta firme ao contrato assinado: a fase da esteira que gera o contrato, colhe as assinaturas e conversa com o BNDES e com o seu sistema."
+description: "Da oferta firme ao contrato assinado: a fase da esteira que gera o contrato, colhe as assinaturas e fecha a operação com o seu sistema."
 icon: "file-contract"
 surface: conceito
 domain: formalizacao
@@ -11,11 +11,11 @@ lang: nao-tecnica
 A formalização transforma um crédito aprovado em contrato assinado, sem Word editado à mão, sem PDF anexado em e-mail e sem planilha de quem já assinou.
 
 <Info>
-  **Resumo:** é a última fase da [esteira](/esteiras/visao-geral). Com o crédito aprovado, a esteira pode abrir uma Solicitação, chamar o BNDES ou o seu sistema, gerar o contrato a partir do seu modelo em Word e colher as assinaturas pela Assinatura Gyra ou pela Clicksign.
+  **Resumo:** é a última fase da [esteira](/esteiras/visao-geral). Com o crédito aprovado, a esteira pode abrir uma Solicitação, chamar o seu sistema, gerar o contrato a partir do seu modelo em Word e colher as assinaturas pela Assinatura Gyra ou pela Clicksign.
 </Info>
 
 <Note>
-  Formalização é um módulo contratado à parte, independente de Propostas. Clicksign e BNDES Online são conectores liberados separadamente. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+  Formalização é um módulo contratado à parte, independente de Propostas. A Clicksign é um conector liberado separadamente. Operações com recursos do BNDES usam outro módulo, o [BNDES Online](/bndes-online/visao-geral). Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
 </Note>
 
 ## Onde a formalização entra na esteira
@@ -25,7 +25,7 @@ Uma esteira tem três fases: análise, decisão e formalização. Revisão, Comi
 | Etapa | O que faz | Só existe na formalização? |
 | --- | --- | --- |
 | **Solicitação** | Pede ao cliente documentos, formulário ou dados que faltam para o contrato | Não |
-| **Integração** | Envia o pedido ao BNDES Online ou chama uma API sua ([Chamada de API](/esteiras/chamada-de-api)) | Os conectores do BNDES, sim |
+| **Integração** | Chama uma API sua ([Chamada de API](/esteiras/chamada-de-api)) para trazer dados ou o número do contrato | Não |
 | **Contrato e assinatura** | Escolhe o modelo, gera o contrato e colhe as assinaturas | Sim |
 | **Aguardar fechamento externo** | Espera o seu sistema dizer que a operação foi liberada | Sim |
 
@@ -39,7 +39,7 @@ O catálogo completo de etapas, com a configuração de cada uma, está em [Etap
     Valor, prazo, carência, taxas, CET, IOF, tarifas, parcela e vencimentos vêm da oferta que o cliente escolheu. Veja [Pré-aprovação e oferta](/propostas/pre-aprovacao-e-oferta).
   </Step>
   <Step title="As integrações rodam">
-    O BNDES recebe o pedido de financiamento e devolve o número do contrato. Uma Chamada de API pode trazer dados ou o número do contrato do seu sistema.
+    Uma Chamada de API pode trazer dados ou o número do contrato do seu sistema.
   </Step>
   <Step title="O contrato é gerado">
     A etapa escolhe o [modelo de contrato](/formalizacao/modelos-de-contrato), preenche as [variáveis](/formalizacao/variaveis-do-contrato), numera e gera o PDF.
@@ -126,7 +126,7 @@ A plataforma tem dois jeitos de colher assinatura, e eles resolvem problemas dif
 | --- | --- | --- |
 | O que é | Termo avulso: consentimento, autorização, declaração | Contrato de crédito: CCB, contrato, aditivo |
 | Modelo | Markdown no editor ou PDF com campos posicionados | O seu Word (.docx), com variáveis, repetições e condições |
-| Dados | Variáveis do termo | Catálogo de crédito: CCB, oferta, cronograma, avalistas, cônjuges, credora, BNDES |
+| Dados | Variáveis do termo | Catálogo de crédito: CCB, oferta, cronograma, avalistas, cônjuges, credora |
 | Quem dispara | Você, numa Solicitação | A esteira, na etapa Contrato e assinatura |
 | Quem assina | Signatário, testemunha, interveniente | Papéis de crédito decididos pela política de partes |
 | Ordem | Uma pessoa (individual) ou várias no mesmo documento (conjunta) | Em paralelo ou em etapas, por papel |
@@ -135,6 +135,12 @@ A plataforma tem dois jeitos de colher assinatura, e eles resolvem problemas dif
 | Numeração | Não tem | Sem numeração, sequencial ou vinda do seu sistema |
 
 Por baixo, os dois usam o mesmo trilho: o contrato gerado vira um item de assinatura conjunta numa Solicitação aberta pela esteira.
+
+## Operações com recursos do BNDES
+
+<Card title="BNDES Online é um módulo à parte" icon="building-columns" href="/bndes-online/visao-geral">
+  Para linhas de repasse, o módulo BNDES Online consulta impedimentos, envia o pedido de financiamento e registra a contratação no BNDES, como etapas da própria esteira. Ele é contratado separadamente e não depende da Formalização. Quando os dois estão ligados, o retorno do BNDES (número do contrato, homologação, condição operacional) entra no contrato pelas variáveis `bndes.*`.
+</Card>
 
 ## Continue
 
@@ -150,9 +156,6 @@ Por baixo, os dois usam o mesmo trilho: o contrato gerado vira um item de assina
   </Card>
   <Card title="Clicksign" icon="signature" href="/formalizacao/clicksign">
     Assine pela sua conta Clicksign.
-  </Card>
-  <Card title="BNDES" icon="building-columns" href="/formalizacao/bndes">
-    Impedimentos, financiamento e contratação no BNDES Online.
   </Card>
   <Card title="Contratos no toolbox" icon="window" href="/toolbox/contratos">
     Modelos de contrato e a aba Contrato da proposta.

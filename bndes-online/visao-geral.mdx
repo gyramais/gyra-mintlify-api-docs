@@ -1,32 +1,44 @@
 ---
-title: "BNDES"
-description: "Consulta de impedimentos, pedido de financiamento e contratação no BNDES Online, direto da esteira, com envio validado e acompanhamento automático."
+title: "BNDES Online"
+description: "Módulo para linhas com recursos do BNDES: consulta de impedimentos, pedido de financiamento e contratação no BNDES Online, direto da esteira."
 icon: "building-columns"
 surface: conceito
-domain: formalizacao
+domain: bndes
 audience: operador
 lang: nao-tecnica
 ---
 
-Para operações de repasse, a esteira conversa com o BNDES Online por você: envia o pedido, acompanha a resposta e traz o número do contrato para dentro da CCB.
+O BNDES Online é o módulo para quem opera linhas com recursos do BNDES (repasse). A esteira conversa com o BNDES por você: consulta impedimentos, envia o pedido de financiamento, acompanha a resposta e registra a contratação, sem ninguém digitar a operação de novo no portal do banco.
 
 <Info>
-  **Resumo:** três conectores, cada um uma etapa **Integração** na fase de formalização. O pedido é validado contra o leiaute oficial do BNDES antes de sair, e a plataforma acompanha a resposta sozinha por até 72 horas.
+  **Resumo:** três conectores que entram na esteira como etapas **Integração**, usando a credencial da sua própria instituição no BNDES. O pedido é validado contra o leiaute oficial antes de sair, e a plataforma acompanha a resposta sozinha por até 72 horas.
 </Info>
 
 <Note>
-  O conector BNDES Online é liberado à parte, além do módulo de Formalização. Ele usa a credencial da sua própria instituição no BNDES. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+  BNDES Online é um módulo próprio, contratado à parte. Ele não faz parte da [Formalização](/formalizacao/visao-geral) e não depende dela: você pode usar só o BNDES, só a Formalização ou os dois juntos. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
 </Note>
+
+## Para quem é
+
+Para instituições credenciadas como agente financeiro do BNDES que concedem crédito com recursos do banco: o pedido passa pela análise do BNDES antes de virar contrato. Quem não opera repasse não precisa deste módulo.
 
 ## Os três conectores
 
-| Conector na etapa | O que faz | Resultado |
+| Conector na etapa | Onde roda na esteira | O que faz |
 | --- | --- | --- |
-| **BNDES Online · Consulta de impedimentos** | Pergunta ao BNDES se a beneficiária tem impedimento | "NÃO IMPEDIDO" aprova; "IMPEDIDO" reprova |
-| **BNDES Online · Pedido de financiamento** | Envia a proposta de financiamento | Aprovada, devolve o número do contrato no BNDES e a data de homologação |
-| **BNDES Online · Contratação** | Envia a contratação | Exige um pedido de financiamento antes, na mesma esteira |
+| **BNDES Online · Consulta de impedimentos** | Antes ou depois do resultado de crédito | Pergunta ao BNDES se a beneficiária tem impedimento. "NÃO IMPEDIDO" aprova; "IMPEDIDO" reprova. Antes do resultado, funciona como filtro de elegibilidade |
+| **BNDES Online · Pedido de financiamento** | Só depois do resultado, com o crédito aprovado | Envia a proposta de financiamento. Aprovada, devolve o número do contrato no BNDES e a data de homologação |
+| **BNDES Online · Contratação** | Só depois do resultado, depois de um pedido de financiamento | Registra a contratação. O financiamento é que devolve o número do contrato |
 
-Os conectores do BNDES só rodam na fase de formalização. Veja [Etapas](/esteiras/etapas).
+Em cada etapa você escolhe o que acontece **Quando o BNDES não aprovar**: mandar para o analista revisar (padrão) ou reprovar a proposta. Veja [Etapas](/esteiras/etapas).
+
+## Como se combina com os outros módulos
+
+| Com | O que acontece |
+| --- | --- |
+| **Formalização** | O retorno do financiamento preenche as variáveis `bndes.*` do contrato, e a condição operacional pode compor o número do contrato. Veja [Formalização](/formalizacao/visao-geral) |
+| **Sem Formalização** | A esteira consulta, financia e contrata no BNDES, e o desfecho fecha pela etapa **Aguardar fechamento externo**, que também fica liberada para quem tem só o BNDES Online |
+| **Propostas** | Produtos de repasse usam as taxas publicadas pelo BNDES (TLP, Taxa Fixa BNDES e spread da LCD) no preço. Veja [Precificação do produto](/propostas/precificacao) |
 
 ## Conecte a sua credencial
 
@@ -69,7 +81,7 @@ Em produção, o BNDES só recebe pedidos em dias úteis, das 8h às 20h (horár
 
 ## O retorno entra no contrato
 
-O pedido de financiamento aprovado preenche as variáveis `bndes.*` do [contrato](/formalizacao/variaveis-do-contrato#bndes):
+Com o módulo de Formalização, o pedido de financiamento aprovado preenche as variáveis `bndes.*` do [contrato](/formalizacao/variaveis-do-contrato#bndes):
 
 | Variável | O que é |
 | --- | --- |
@@ -107,5 +119,6 @@ As taxas do BNDES usadas no preço da proposta estão em [Precificação](/propo
 ## Veja também
 
 - [Formalização](/formalizacao/visao-geral)
+- [Módulos e capacidades](/plataforma/modulos-e-capacidades)
 - [Integrações no toolbox](/toolbox/integracoes)
 - [Etapas](/esteiras/etapas)
