@@ -11,7 +11,7 @@ lang: nao-tecnica
 Em **Configurações > Integrações** ficam as contas e conexões que a GYRA+ usa para falar com o mundo de fora: a Clicksign, o BNDES Online, o seu CRM e as APIs do seu sistema.
 
 <Info>
-  **Resumo:** a tela tem três áreas. **Conectores** são as integrações nativas de formalização (Clicksign e BNDES Online), cada uma com uma ou mais contas e uma padrão. **CRM** traz o HubSpot, que transforma negócios do funil em propostas. **Conexões de API** são os endereços do seu sistema que a etapa [Chamada de API](/esteiras/chamada-de-api) chama. Chaves e tokens ficam cifrados e nunca voltam para a tela.
+  **Resumo:** a tela tem três áreas. **Conectores** são as integrações nativas com a Clicksign (assinatura) e com o BNDES Online (repasse), cada uma com uma ou mais contas e uma padrão. **CRM** traz o HubSpot, que transforma negócios do funil em propostas. **Conexões de API** são os endereços do seu sistema que a etapa [Chamada de API](/esteiras/chamada-de-api) chama. Chaves e tokens ficam cifrados e nunca voltam para a tela.
 </Info>
 
 ## Quem vê o quê
@@ -69,7 +69,7 @@ Ao salvar, a plataforma testa a conta e cadastra sozinha o aviso de assinatura n
 | **CNPJ do agente financeiro** | O CNPJ da sua instituição no BNDES, com 14 dígitos |
 | **Como autenticar** | **Chave de API (recomendado)**, com **Consumer key** e **Consumer secret**; ou **Certificado e-CNPJ**, com **Arquivo do certificado A1 (.pfx)** e **Senha do certificado** |
 
-Em produção, o BNDES só recebe pedidos em dias úteis, das 8h às 20h. Fora disso, a esteira agenda o envio para a próxima janela. Veja [BNDES](/formalizacao/bndes).
+Em produção, o BNDES só recebe pedidos em dias úteis, das 8h às 20h. Fora disso, a esteira agenda o envio para a próxima janela. Veja [BNDES](/bndes-online/visao-geral).
 
 ### Quando a conta some da etapa
 
@@ -143,7 +143,7 @@ O que a etapa faz com a resposta (saídas, `api.<apelido>`, tempo limite, erros)
 ## Veja também
 
 - [Clicksign](/formalizacao/clicksign)
-- [BNDES](/formalizacao/bndes)
+- [BNDES](/bndes-online/visao-geral)
 - [HubSpot](/propostas/hubspot)
 - [Chamada de API](/esteiras/chamada-de-api)
 - [Webhooks e API keys](/toolbox/webhooks-e-api-keys)

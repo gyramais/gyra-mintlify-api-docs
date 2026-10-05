@@ -106,8 +106,13 @@
           "formalizacao/modelos-de-contrato",
           "formalizacao/variaveis-do-contrato",
           "formalizacao/partes-e-assinaturas",
-          "formalizacao/clicksign",
-          "formalizacao/bndes"
+          "formalizacao/clicksign"
+        ]
+      },
+      {
+        "group": "BNDES Online",
+        "pages": [
+          "bndes-online/visao-geral"
         ]
       },
       {
@@ -331,6 +336,10 @@
     {
       "source": "/api-reference/kyc/:slug*",
       "destination": "/api-reference/onboarding/:slug*"
+    },
+    {
+      "source": "/formalizacao/bndes",
+      "destination": "/bndes-online/visao-geral"
     }
   ],
   "contextual": {

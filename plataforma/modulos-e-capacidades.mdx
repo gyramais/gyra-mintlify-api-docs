@@ -36,7 +36,7 @@ As duas precisam dizer sim. Um Administrador numa organização sem o módulo de
 | **Propostas** | **Propostas**, **Produtos**, carteiras, pré-aprovação e oferta, e a integração com o HubSpot em **Integrações**. Ver [Propostas](/propostas/visao-geral). | `has-proposals` |
 | **Formalização** | **Modelos de contrato**, a etapa de contrato e assinatura da esteira e o fechamento externo. Independe de Propostas. Ver [Formalização](/formalizacao/visao-geral). | `has-formalization` |
 | **Clicksign** | Assinatura eletrônica pela conta Clicksign da sua organização. | `has-clicksign` |
-| **BNDES Online** | Etapa da esteira que envia o pedido ao BNDES Online. | `has-bndes` |
+| **BNDES Online** | Módulo para linhas com recursos do BNDES (repasse): os conectores de consulta de impedimentos, pedido de financiamento e contratação no BNDES Online, e a etapa **Aguardar fechamento externo**. Não depende da Formalização. Ver [BNDES Online](/bndes-online/visao-geral). | `has-bndes` |
 | **Correspondentes** | Específico para clientes CaaS. Item **Correspondentes** no grupo **Operação**: entrada do canal, credenciamento de parceiros, atendentes e o portal do parceiro, por onde eles originam crédito para você. Ver [Correspondentes](/plataforma/correspondentes). | `has-caas` |
 | **Marca e envio próprios** | Logo, domínio próprio do link e do remetente, WhatsApp da sua empresa no convite. Sem o módulo, as mensagens saem com a marca GYRA+. | `can-brand-communication` |
 | **Código por e-mail** | Validação de identidade por código enviado a um e-mail que os bureaus associam à pessoa. Ver [Verificação de identidade](/onboarding/verificacao-de-identidade). | `has-email-identity` |
@@ -106,7 +106,7 @@ As rotas de Onboarding e SCR, Correspondentes, Clicksign, marca e envio próprio
     Então é o papel dela. Produtos, por exemplo, exige o papel que monta política; Correspondentes exige o papel que gerencia configurações. Veja a tabela em [Usuários e permissões](/toolbox/gerenciar-usuarios-permissoes).
   </Accordion>
   <Accordion title="Formalização exige Propostas?">
-    Não. São módulos independentes. Clicksign e BNDES Online são contratados à parte e dependem da Formalização para fazer sentido na esteira.
+    Não. São módulos independentes. A Clicksign é contratada à parte e serve à assinatura do contrato, então faz sentido junto com a Formalização. O BNDES Online também é contratado à parte, mas funciona sozinho: uma esteira de repasse pode consultar, financiar e contratar no BNDES e fechar pelo **Aguardar fechamento externo**, com ou sem Formalização.
   </Accordion>
 </AccordionGroup>
 
