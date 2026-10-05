@@ -374,30 +374,6 @@
       "metaSortKey": 21
     },
     {
-      "_id": "req_22_post",
-      "_type": "request",
-      "parentId": "fld_pareceres_de_ia",
-      "name": "Gerar insight com IA para secao do relatorio",
-      "method": "POST",
-      "url": "{{ baseUrl }}/insight",
-      "description": "Gera uma analise automatica com IA para uma secao especifica de um relatorio.\n\nA IA analisa os dados da secao e produz um resumo interpretativo com\npontos de atencao e recomendacoes. O insight e salvo como comentario\nna secao do relatorio.\n\nRequisitos:\n- A secao deve estar finalizada (processamento completo)\n- A organizacao deve ter plano que suporte IA (nao disponivel em planos Trial ou Basic)\n\nUse get_report para obter os IDs das secoes disponiveis.",
-      "headers": [
-        {
-          "name": "Authorization",
-          "value": "Bearer {{ accessToken }}"
-        },
-        {
-          "name": "Content-Type",
-          "value": "application/json"
-        }
-      ],
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"reportId\": \"6612a7f3a19b467000000000\"\n}"
-      },
-      "metaSortKey": 22
-    },
-    {
       "_id": "fld_cadastro_documental",
       "_type": "request_group",
       "parentId": "wrk_gyra",

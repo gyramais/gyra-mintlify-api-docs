@@ -501,38 +501,7 @@
     },
     {
       "name": "Pareceres de IA",
-      "item": [
-        {
-          "name": "Gerar insight com IA para secao do relatorio",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reportId\": \"6612a7f3a19b467000000000\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/insight",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "insight"
-              ]
-            },
-            "description": "Gera uma analise automatica com IA para uma secao especifica de um relatorio.\n\nA IA analisa os dados da secao e produz um resumo interpretativo com\npontos de atencao e recomendacoes. O insight e salvo como comentario\nna secao do relatorio.\n\nRequisitos:\n- A secao deve estar finalizada (processamento completo)\n- A organizacao deve ter plano que suporte IA (nao disponivel em planos Trial ou Basic)\n\nUse get_report para obter os IDs das secoes disponiveis."
-          }
-        }
-      ]
+      "item": []
     },
     {
       "name": "Cadastro documental",
