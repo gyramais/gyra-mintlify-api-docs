@@ -8,197 +8,22 @@ servers:
   - url: 'https://gyra-core.gyramais.com.br'
     description: Producao
 paths:
-  /report/{id}/financial-tab:
-    post:
-      operationId: ReportController_financialSection
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-          description: ID do relatorio (CNPJ) que vai receber as demonstracoes.
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                files:
-                  type: array
-                  items:
-                    type: string
-                    format: binary
-                  description: |
-                      PDFs do balanco patrimonial e/ou da DRE. Repita o campo `files`
-                      para enviar mais de um arquivo. Ate 10 arquivos por chamada,
-                      50MB cada, somente PDF.
-              required:
-                - files
-      responses:
-        200:
-          description: Relatorio atualizado, com as secoes financeiras marcadas como em processamento.
-        400:
-          description: Nenhum arquivo enviado, arquivo que nao e um PDF valido ou mais de 10 arquivos.
-        404:
-          description: Relatorio nao encontrado ou de outra organizacao.
-        413:
-          description: Arquivo maior que 50MB.
-      tags:
-        - report
-      security:
-        - authorization: []
-      summary: Enviar balanco e DRE
-      description: |
-          Envia um ou mais PDFs de balanco patrimonial e DRE para um relatorio de CNPJ
-          ja existente. A extracao transforma as demonstracoes em dados estruturados
-          (balanco, DRE e indicadores) e as disponibiliza como secoes do relatorio.
-
-          A chamada e ASSINCRONA: responde 200 assim que os arquivos sao aceitos e
-          enfileirados, sem os dados estruturados. O resultado sai depois em
-          GET /report/{id}/section/BALANCE_SHEET (idem DRE e FINANCIAL_INDICATORS).
-
-          Envie apenas as paginas do balanco e da DRE: quanto mais enxuto o PDF,
-          mais rapido e barato o processamento.
-  /report/{id}/committee:
-    post:
-      operationId: ReportController_conveneCommittee
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-          description: ID do relatorio que vai a comite.
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                force:
-                  type: boolean
-                  description: 'Ignora o cache da deliberacao e reprocessa do zero. Padrao false.'
-                  default: false
-      responses:
-        200:
-          description: 'Deliberacao aceita e iniciada: { status: "RUNNING", trigger: "MANUAL" | "RERUN" }.'
-        400:
-          description: 'Relatorio ainda nao esta pronto para o comite (pareceres ou politica pendentes, ou parecer nao habilitado na politica).'
-        404:
-          description: Relatorio nao encontrado ou de outra organizacao.
-        409:
-          description: Ja existe uma deliberacao em andamento para este relatorio.
-      tags:
-        - report
-      security:
-        - authorization: []
-      summary: Convocar o Comite de Credito IA
-      description: |
-          Dispara manualmente a deliberacao do Comite de Credito IA sobre um relatorio.
-
-          Use quando a politica esta em "Nao convocar automaticamente" e o comite deve rodar
-          sob demanda, ou para reconvocar um relatorio que ja deliberou (DONE), falhou
-          (ERROR) ou foi pulado (SKIPPED).
-
-          Pre-requisitos (senao retorna 400):
-          - a politica do relatorio habilita o pipeline de parecer;
-          - os pareceres por secao ja finalizaram;
-          - a politica de credito ja concluiu (quando o relatorio tem politica).
-
-          A chamada e assincrona: o 200 confirma que a deliberacao iniciou, nao que terminou.
-          Convocacao manual sempre entra como sugestao e nao altera o status do relatorio,
-          mesmo numa politica em "Convocar comite e decisao automatica".
-          Para saber o resultado, registre o webhook COMMITTEE_FINISHED ou consulte
-          GET /report/{id}/insights.
-  /report/{id}/insights:
-    get:
-      operationId: ReportController_getReportInsights
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-          description: ID do relatorio.
-        - name: section
-          required: false
-          in: query
-          schema:
-            type: string
-          description: 'Filtra o parecer de UMA secao (ex: PROCESSES, SCR, PEFIN). Sem o parametro, retorna todos os pareceres concluidos. Tipo de secao invalido responde 400; secao sem parecer responde insights vazio.'
-      responses:
-        200:
-          description: 'Envelope com reportId, document, committee { status, decision, result, at } e insights[] (parecer por secao).'
-        400:
-          description: Valor de section fora da lista de tipos de secao.
-        404:
-          description: Relatorio nao encontrado ou de outra organizacao.
-      tags:
-        - report
-      security:
-        - authorization: []
-      summary: Consultar pareceres do relatorio
-      description: |
-          Leitura enxuta do relatorio: apenas os pareceres de IA por secao (texto, score,
-          nivel de risco e destaques) e o resumo da deliberacao do comite. Nao traz os
-          payloads pesados de integracao.
-
-          Pensado para consumo barato por agentes de IA e para telas de resumo executivo.
-          Tambem serve para verificar se os pareceres ja terminaram antes de convocar o
-          comite com POST /report/{id}/committee.
-
-          Só entram no array insights[] as secoes com parecer concluido. Relatorio ainda em
-          processamento devolve insights vazio ou parcial e committee.status null.
-  /committee/deliberations/{reportId}:
-    get:
-      operationId: CommitteeController_getDeliberation
-      parameters:
-        - name: reportId
-          required: true
-          in: path
-          schema:
-            type: string
-          description: ID do relatorio que foi a comite.
-      responses:
-        200:
-          description: 'Deliberacao completa: agentOpinions[], synthesis, finalRecommendation, versoes de prompt e telemetria.'
-        404:
-          description: Nenhuma deliberacao encontrada para este relatorio.
-      tags:
-        - committee
-      security:
-        - authorization: []
-      summary: Consultar deliberacao do Comite de Credito IA
-      description: |
-          Retorna a deliberacao completa e auditavel do Comite de Credito IA para um
-          relatorio: o voto individual de cada um dos sete agentes (score, parecer,
-          redFlags, positiveFactors, recommendation), a sintese do Presidente (decisao,
-          justificativa, condicoes, registro de divergencia, alcada), a versao de prompt
-          usada por agente e a telemetria (modelos, tokens, custo, duracao).
-
-          Retorna sempre a deliberacao mais recente. Reconvocacoes (trigger RERUN) geram
-          uma nova deliberacao, e e ela que passa a ser devolvida.
-
-          Para o fluxo do dia a dia, GET /report/{id}/insights e mais leve.
   /auth/authenticate:
     post:
       operationId: AuthController_generateAccessToken
       parameters:
         - name: gyra-client-secret
           in: header
-          required: true
           description: 'Client Secret da credencial. Gerado no Toolbox em Configuracoes > API & MCP e mostrado uma unica vez.'
           schema:
             type: string
+          required: true
         - name: gyra-client-id
           in: header
-          required: true
           description: 'Client ID da credencial. Gerado no Toolbox em Configuracoes > API & MCP.'
           schema:
             type: string
+          required: true
       responses:
         '200':
           description: 'Sessao criada: accessToken (JWT) e expiresAt (24 horas apos a emissao).'
@@ -386,11 +211,11 @@ paths:
       description: |
           Registra uma URL que recebe um POST a cada evento do tipo escolhido. Cada webhook
           escuta um tipo; para varios tipos, cadastre varios webhooks.
-
+          
           Antes de salvar, a GYRA+ faz um POST de teste na URL com o corpo
           {"message": "Teste de webhook cadastrado com sucesso!"}. Se a URL nao responder 2xx,
           o cadastro e recusado com 400 "URL de webhook inválida.".
-
+          
           Tipos:
           - REPORT: cada secao do relatorio atualizada (varios disparos por relatorio)
           - REPORT_FINISHED: todas as fontes do relatorio terminaram
@@ -400,11 +225,11 @@ paths:
           - COMMITTEE_FINISHED: o Comite de Credito IA concluiu ou falhou
           - OPERATION: execucao de esteira concluiu com status final
           - OPTIN: fluxo de opt-in
-
+          
           Envelope de todo evento: { organizationId, webhookType, data }. Se apiKey for
           informada, vai no header api-key. Entrega com falha de rede, 5xx, 408, 425 ou 429
           e tentada de novo ate 3 vezes.
-
+          
           REPORT, REPORT_FINISHED e COMMITTEE_FINISHED so saem para relatorios criados
           depois do cadastro do webhook.
       x-codeSamples:
@@ -598,7 +423,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 404
-                message: 'An operation failed because it depends on one or more records that were required but not found. Record to delete does not exist.'
+                message: An operation failed because it depends on one or more records that were required but not found. Record to delete does not exist.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -769,14 +594,14 @@ paths:
                   value: PENDING
                 createdAt: '2026-07-31T13:42:37.059Z'
         '400':
-          description: 'CPF ou CNPJ invalido no corpo.'
+          description: CPF ou CNPJ invalido no corpo.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'Você precisa inserir um CNPJ ou CPF válido.'
+                message: Você precisa inserir um CNPJ ou CPF válido.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -893,7 +718,7 @@ paths:
               - PENDING
               - APPROVED
               - REJECTED
-          description: Status do relatorio, em maiusculas.
+          description: 'Status do relatorio, em maiusculas.'
         - name: document
           in: query
           required: false
@@ -905,7 +730,7 @@ paths:
           required: false
           schema:
             type: string
-          description: 'ID do usuario criador. O valor api-user traz so os relatorios criados pela API.'
+          description: ID do usuario criador. O valor api-user traz so os relatorios criados pela API.
         - name: createdAtBetween
           in: query
           required: false
@@ -984,7 +809,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'Você precisa inserir um status de relatório válido.'
+                message: Você precisa inserir um status de relatório válido.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -1062,7 +887,7 @@ paths:
               - PENDING
               - APPROVED
               - REJECTED
-          description: Status do relatorio, em maiusculas.
+          description: 'Status do relatorio, em maiusculas.'
         - name: document
           in: query
           required: false
@@ -1074,7 +899,7 @@ paths:
           required: false
           schema:
             type: string
-          description: 'ID do usuario criador. O valor api-user traz so os relatorios criados pela API.'
+          description: ID do usuario criador. O valor api-user traz so os relatorios criados pela API.
         - name: createdAtBetween
           in: query
           required: false
@@ -1119,7 +944,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'Você precisa inserir um status de relatório válido.'
+                message: Você precisa inserir um status de relatório válido.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -1406,7 +1231,7 @@ paths:
                         type: string
                       type:
                         type: string
-                        description: PDFMAKE para PDF, EXCEL para Excel.
+                        description: 'PDFMAKE para PDF, EXCEL para Excel.'
                       generatedAt:
                         type: string
                         format: date-time
@@ -1587,11 +1412,11 @@ paths:
       summary: Consultar relatorio por ID
       description: |
           Retorna o relatorio com secoes, decisao e metadados.
-
+          
           status.value e PENDING ate uma decisao, e APPROVED ou REJECTED depois. O
           resultado da politica fica em policyStatus; a decisao manual, em analystName e
           commentary.
-
+          
           Com credencial de API, a resposta tem a mesma forma de GET /v2/report/{id} e os
           parametros details e tabType sao ignorados. Para integracoes novas, use
           GET /v2/report/{id}.
@@ -1700,12 +1525,12 @@ paths:
       summary: Consultar secao especifica do relatorio
       description: |
           Retorna uma secao de um relatorio pelo tipo (sectionType, em maiusculas).
-
+          
           Exemplos de tipo: BASIC_INFORMATION, LOCATION, RELATIONS, SCORE, PROCESSES,
           PROTESTS, PEFIN, REFIN, SCR, SCR_SUMMARY, PEP, SANCTIONS, BALANCE_SHEET, DRE,
           FINANCIAL_INDICATORS, FINANCIAL_INSIGHTS, CREDIT_POLICY, PRICING. Lista completa
           em /api-reference/report/get-report-section.
-
+          
           404 "Tipo de seção não encontrado" para tipo invalido, 404 "Seção não encontrada"
           quando o relatorio nao tem a secao, 404 "Relatório não encontrado" para relatorio
           inexistente ou de outra organizacao.
@@ -1731,6 +1556,136 @@ paths:
               
               resposta = requests.get(
                   "https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/section/PROTESTS",
+                  headers={"Authorization": f"Bearer {token}"},
+              )
+              
+              dados = resposta.json()
+  /report/{id}/insights:
+    get:
+      operationId: ReportController_getReportInsights
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio.
+        - name: section
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 'Filtra o parecer de UMA secao (ex: PROCESSES, SCR, PEFIN). Sem o parametro, retorna todos os pareceres concluidos. Tipo de secao invalido responde 400; secao sem parecer responde insights vazio.'
+      responses:
+        '200':
+          description: 'Envelope com reportId, document, committee { status, decision, result, at } e insights[] (parecer por secao).'
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                description: Pareceres por secao e o resumo da decisao do comite. A leitura completa esta em /concepts/pareceres-gyra-ia.
+              example:
+                reportId: 6612a7f3a19b467000000000
+                document: '43591367000130'
+                committee:
+                  status: DONE
+                  decision: REJECTED
+                  result:
+                    decision: REJECTED
+                    synthesis:
+                      decision: REJECTED
+                      resumo: 'Comitê confirma negativa da política: CNPJ suspenso e passivos relevantes inviabilizam a concessão.'
+                      proximaAcao: Arquivar o processo e não retomar sem regularização cadastral comprovada.
+                      confidence: 0.97
+                      conditions: []
+                      alcadaLevel: null
+                  at: '2026-07-31T13:46:02.511Z'
+                insights:
+                  - section: PROTESTS
+                    score: 40
+                    riskLevel: HIGH
+                    parecer: 'A empresa tem dois protestos recentes em São Paulo, somando R$ 5.850,33...'
+                    highlights:
+                      - severity: warning
+                        label: Protestos nos últimos 90 dias
+                    at: '2026-07-31T13:44:10.204Z'
+        '400':
+          description: Valor de section fora da lista de tipos de secao.
+        '401':
+          description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 401
+                message: Token de acesso inválido.
+        '403':
+          description: O usuario autenticado nao tem a permissao exigida pela rota.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 403
+                message: Você não tem permissão para acessar este recurso.
+        '404':
+          description: Relatorio nao encontrado ou de outra organizacao.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 404
+                message: Relatório não encontrado.
+        '500':
+          description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 500
+                message: Internal server error
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Consultar pareceres do relatorio
+      description: |
+          Leitura enxuta do relatorio: apenas os pareceres de IA por secao (texto, score,
+          nivel de risco e destaques) e o resumo da deliberacao do comite. Nao traz os
+          payloads pesados de integracao.
+          
+          Pensado para consumo barato por agentes de IA e para telas de resumo executivo.
+          Tambem serve para verificar se os pareceres ja terminaram antes de convocar o
+          comite com POST /report/{id}/committee.
+          
+          Só entram no array insights[] as secoes com parecer concluido. Relatorio ainda em
+          processamento devolve insights vazio ou parcial e committee.status null.
+      x-codeSamples:
+        - lang: cURL
+          label: cURL
+          source: |
+              curl --request GET 'https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/insights' \
+                --header 'Authorization: Bearer <token>'
+        - lang: JavaScript
+          label: Node
+          source: |
+              const resposta = await fetch("https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/insights", {
+                method: "GET",
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              
+              const dados = await resposta.json();
+        - lang: Python
+          label: Python
+          source: |
+              import requests
+              
+              resposta = requests.get(
+                  "https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/insights",
                   headers={"Authorization": f"Bearer {token}"},
               )
               
@@ -1794,16 +1749,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'O relatório já foi analisado.'
-        '404':
-          description: Relatorio inexistente.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 404
-                message: O relatório não foi encontrado.
+                message: O relatório já foi analisado.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -1822,6 +1768,15 @@ paths:
               example:
                 code: 403
                 message: Você não tem permissão para acessar este recurso.
+        '404':
+          description: Relatorio inexistente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 404
+                message: O relatório não foi encontrado.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -1935,7 +1890,7 @@ paths:
                 analyzedAt: '2026-08-01T10:12:40.110Z'
                 previousAnalyzedAt: '2026-07-31T18:20:02.004Z'
         '400':
-          description: 'Corpo sem id ou approved.'
+          description: Corpo sem id ou approved.
           content:
             application/json:
               schema:
@@ -2147,7 +2102,7 @@ paths:
                   organizationId: 6612a7f3fa9e086b00000000
                   createdAt: '2026-05-12T14:03:51.896Z'
         '400':
-          description: 'usage fora de REPORT ou PIPELINE.'
+          description: usage fora de REPORT ou PIPELINE.
           content:
             application/json:
               schema:
@@ -2198,7 +2153,7 @@ paths:
           
           O policyId retornado e necessario para criar relatorios (create_report). Para
           a API, use uma politica com enabled true e usage REPORT.
-
+          
           Filtros opcionais (valores como string):
           - enabled: true para ver apenas politicas habilitadas
           - usage: REPORT ou PIPELINE
@@ -2397,7 +2352,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'Você precisa inserir um CNPJ ou CPF válido.'
+                message: Você precisa inserir um CNPJ ou CPF válido.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -2435,10 +2390,10 @@ paths:
           integracoes. Corpo: document (obrigatorio, digito verificador validado),
           policyId (obrigatorio, politica habilitada e de usage REPORT) e months (opcional).
           O campo type e ignorado: o tipo vem da politica.
-
+          
           Mesmo documento, politica, versao da politica e dia: devolve o relatorio que ja
           existe (decidido, sem reprocessar; PENDING, com a coleta disparada de novo).
-
+          
           Erros: 400 politica ausente, nao habilitada ou de esteira; 422 documento de tipo
           diferente do da politica; 503 com reportId quando o relatorio foi criado mas a
           analise nao foi enfileirada.
@@ -2544,15 +2499,6 @@ paths:
                 committeeStatus: null
                 committeeDecision: null
                 committeeResult: null
-        '404':
-          description: Relatorio inexistente ou de outra organizacao.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 404
-                message: Relatório não encontrado
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -2571,6 +2517,15 @@ paths:
               example:
                 code: 403
                 message: Você não tem permissão para acessar este recurso.
+        '404':
+          description: Relatorio inexistente ou de outra organizacao.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 404
+                message: Relatório não encontrado
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -2675,7 +2630,7 @@ paths:
                     documentId: null
                 signingAuthority: null
         '400':
-          description: 'Corpo invalido. A mensagem concatena todas as falhas por virgula.'
+          description: Corpo invalido. A mensagem concatena todas as falhas por virgula.
           content:
             application/json:
               schema:
@@ -2701,15 +2656,6 @@ paths:
               example:
                 code: 403
                 message: Você não tem permissão para acessar este recurso.
-        '500':
-          description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 500
-                message: Internal server error
         '404':
           description: 'O modulo Onboarding nao esta liberado para a organizacao: para ela, a rota nao existe.'
           content:
@@ -2719,8 +2665,17 @@ paths:
               example:
                 code: 404
                 message: Recurso não encontrado.
+        '500':
+          description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 500
+                message: Internal server error
         '502':
-          description: 'O servico de cadastro nao respondeu. Tente de novo.'
+          description: O servico de cadastro nao respondeu. Tente de novo.
           content:
             application/json:
               schema:
@@ -2734,11 +2689,11 @@ paths:
         - authorization: []
       description: |
           Cria o dossie documental de um CNPJ ou CPF na organizacao autenticada.
-
+          
           IDEMPOTENTE POR DOCUMENTO: chamar de novo com o mesmo CNPJ devolve o cadastro que ja existe,
           em vez de duplicar. E seguro chamar no inicio de qualquer jornada. Cadastro removido antes
           volta a ficar ativo, com o historico que ja tinha.
-
+          
           A resposta traz o mesmo corpo do detalhe do cadastro, inclusive `completenessSlots` e
           `signingAuthority`.
       x-codeSamples:
@@ -2864,15 +2819,6 @@ paths:
               example:
                 code: 400
                 message: 'each value in kycStatus must be one of the following values: PENDING, PROCESSING, UP_TO_DATE, ATTENTION, EXPIRED, RENEWING'
-        '404':
-          description: 'O modulo Onboarding nao esta liberado para a organizacao: para ela, a rota nao existe.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 404
-                message: Recurso não encontrado.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -2891,6 +2837,15 @@ paths:
               example:
                 code: 403
                 message: Você não tem permissão para acessar este recurso.
+        '404':
+          description: 'O modulo Onboarding nao esta liberado para a organizacao: para ela, a rota nao existe.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 404
+                message: Recurso não encontrado.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -2907,13 +2862,13 @@ paths:
       description: |
           Lista os cadastros, com busca e filtro por situacao, do atualizado mais recentemente para o
           mais antigo. Cadastro removido nao aparece.
-
+          
           Situacoes: PENDING (sem documento validado), PROCESSING (documento em analise),
           UP_TO_DATE (tudo validado), ATTENTION (divergencia, vencimento proximo ou ressalva),
           EXPIRED (renovacao vencida), RENEWING (renovacao em curso).
-
+          
           Valor de kycStatus fora dessa lista e recusado com 400.
-
+          
           `completenessSlots` e `signingAuthority` so vem no detalhe do cadastro.
       x-codeSamples:
         - lang: cURL
@@ -3216,25 +3171,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'O arquivo do documento é obrigatório (campo "file").'
-        '404':
-          description: 'O modulo Onboarding nao esta liberado para a organizacao: para ela, a rota nao existe.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 404
-                message: Recurso não encontrado.
-        '502':
-          description: 'O armazenamento ou o servico de cadastro nao respondeu. Tente de novo.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 502
-                message: Não foi possível iniciar a validação do documento.
+                message: O arquivo do documento é obrigatório (campo "file").
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -3253,6 +3190,15 @@ paths:
               example:
                 code: 403
                 message: Você não tem permissão para acessar este recurso.
+        '404':
+          description: 'O modulo Onboarding nao esta liberado para a organizacao: para ela, a rota nao existe.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 404
+                message: Recurso não encontrado.
         '413':
           description: 'Arquivo acima de 15MB. Para arquivos maiores, use o envio por URL assinada (presign + confirmacao).'
           content:
@@ -3271,6 +3217,15 @@ paths:
               example:
                 code: 500
                 message: Internal server error
+        '502':
+          description: O armazenamento ou o servico de cadastro nao respondeu. Tente de novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível iniciar a validação do documento.
       tags:
         - registry
       security:
@@ -3486,7 +3441,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'O identificador informado em "docId" não é válido.'
+                message: O identificador informado em "docId" não é válido.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -3514,15 +3469,6 @@ paths:
               example:
                 code: 404
                 message: Documento não encontrado.
-        '502':
-          description: 'O servico de cadastro nao respondeu. Tente de novo.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 502
-                message: Não foi possível consultar o status do documento.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -3532,6 +3478,15 @@ paths:
               example:
                 code: 500
                 message: Internal server error
+        '502':
+          description: O servico de cadastro nao respondeu. Tente de novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível consultar o status do documento.
       tags:
         - registry
       security:
@@ -3617,15 +3572,6 @@ paths:
                     filled: false
                     documentId: null
                 signingAuthority: null
-        '502':
-          description: 'O servico de cadastro nao respondeu. Tente de novo.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 502
-                message: Não foi possível consultar o cadastro.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -3662,6 +3608,15 @@ paths:
               example:
                 code: 500
                 message: Internal server error
+        '502':
+          description: O servico de cadastro nao respondeu. Tente de novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível consultar o cadastro.
       tags:
         - registry
       security:
@@ -3783,16 +3738,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'O identificador informado em "id" não é válido.'
-        '502':
-          description: 'O servico de cadastro nao respondeu. Tente de novo.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 502
-                message: Não foi possível consultar o cadastro.
+                message: O identificador informado em "id" não é válido.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -3829,6 +3775,15 @@ paths:
               example:
                 code: 500
                 message: Internal server error
+        '502':
+          description: O servico de cadastro nao respondeu. Tente de novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível consultar o cadastro.
       tags:
         - registry
       security:
@@ -3931,15 +3886,6 @@ paths:
               example:
                 code: 404
                 message: Recurso não encontrado.
-        '502':
-          description: 'O armazenamento nao respondeu. Tente de novo.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 502
-                message: Não foi possível preparar o upload do documento.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -3949,6 +3895,15 @@ paths:
               example:
                 code: 500
                 message: Internal server error
+        '502':
+          description: O armazenamento nao respondeu. Tente de novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível preparar o upload do documento.
       tags:
         - registry
       security:
@@ -4042,7 +3997,7 @@ paths:
                 documentId: 6612a7f30000000000000031
                 status: RECEIVED
         '400':
-          description: 'Corpo invalido (key e fileName sao obrigatorios). A mensagem concatena todas as falhas por virgula.'
+          description: Corpo invalido (key e fileName sao obrigatorios). A mensagem concatena todas as falhas por virgula.
           content:
             application/json:
               schema:
@@ -4050,24 +4005,6 @@ paths:
               example:
                 code: 400
                 message: 'key should not be empty,key must be a string'
-        '409':
-          description: 'O mesmo arquivo (mesmo conteudo) ja esta neste cadastro.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 409
-                message: Este arquivo já existe neste cadastro.
-        '502':
-          description: 'O armazenamento ou o servico de cadastro nao respondeu. Tente de novo.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 502
-                message: Não foi possível registrar o documento.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -4095,6 +4032,15 @@ paths:
               example:
                 code: 404
                 message: Cadastro não encontrado.
+        '409':
+          description: O mesmo arquivo (mesmo conteudo) ja esta neste cadastro.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 409
+                message: Este arquivo já existe neste cadastro.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -4104,6 +4050,15 @@ paths:
               example:
                 code: 500
                 message: Internal server error
+        '502':
+          description: O armazenamento ou o servico de cadastro nao respondeu. Tente de novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível registrar o documento.
       tags:
         - registry
       security:
@@ -4200,7 +4155,7 @@ paths:
           in: query
           schema:
             type: boolean
-          description: 'true traz tambem as versoes aprovadas que ja foram substituidas por uma mais nova do mesmo tipo.'
+          description: true traz tambem as versoes aprovadas que ja foram substituidas por uma mais nova do mesmo tipo.
       responses:
         '200':
           description: 'Documentos com tipo, versao, status, veredito e data, dentro de `documents`.'
@@ -4248,7 +4203,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'O identificador informado em "id" não é válido.'
+                message: O identificador informado em "id" não é válido.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -4293,11 +4248,11 @@ paths:
           Lista os documentos do dossie, agrupados por tipo e do mais novo para o mais antigo. Cada
           documento traz `verdict`, o veredito que vale hoje (a decisao do operador, quando houver,
           vence o parecer automatico).
-
+          
           Por padrao some so a versao APROVADA que ja foi substituida por uma vigente do mesmo tipo
           (e da mesma pessoa). Documento reprovado, inconclusivo, em analise ou em processamento
           aparece sempre. Com includeHistory, traz todas as versoes.
-
+          
           Nada e sobrescrito: uma alteracao contratual nova nao apaga a antiga, vira a versao vigente.
       x-codeSamples:
         - lang: cURL
@@ -4506,7 +4461,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'O identificador informado em "docId" não é válido.'
+                message: O identificador informado em "docId" não é válido.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -4534,15 +4489,6 @@ paths:
               example:
                 code: 404
                 message: Documento não encontrado.
-        '502':
-          description: 'O servico de cadastro nao respondeu. Tente de novo.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 502
-                message: Não foi possível consultar o resultado do documento.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -4552,6 +4498,15 @@ paths:
               example:
                 code: 500
                 message: Internal server error
+        '502':
+          description: O servico de cadastro nao respondeu. Tente de novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível consultar o resultado do documento.
       tags:
         - registry
       security:
@@ -4649,24 +4604,6 @@ paths:
               example:
                 code: 400
                 message: 'each value in stages must be one of the following values: CLASSIFY, EXTRACT, VALIDATE'
-        '409':
-          description: 'Um operador ja decidiu este documento. Mande overrideFeedback true para substituir a decisao pelo parecer novo.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 409
-                message: Este documento já foi decidido por um operador. Reprocessar vai substituir essa decisão pelo novo parecer.
-        '429':
-          description: 'O documento ja chegou ao limite de 5 tentativas.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 429
-                message: Limite de reprocessamentos atingido.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -4694,15 +4631,24 @@ paths:
               example:
                 code: 404
                 message: Documento não encontrado.
-        '502':
-          description: 'O servico de cadastro nao respondeu. Tente de novo.'
+        '409':
+          description: Um operador ja decidiu este documento. Mande overrideFeedback true para substituir a decisao pelo parecer novo.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
-                code: 502
-                message: Não foi possível reprocessar o documento.
+                code: 409
+                message: Este documento já foi decidido por um operador. Reprocessar vai substituir essa decisão pelo novo parecer.
+        '429':
+          description: O documento ja chegou ao limite de 5 tentativas.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 429
+                message: Limite de reprocessamentos atingido.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -4712,6 +4658,15 @@ paths:
               example:
                 code: 500
                 message: Internal server error
+        '502':
+          description: O servico de cadastro nao respondeu. Tente de novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível reprocessar o documento.
       tags:
         - registry
       security:
@@ -4828,7 +4783,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'O identificador informado em "id" não é válido.'
+                message: O identificador informado em "id" não é válido.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -4874,11 +4829,11 @@ paths:
           origem de cada um: QSA_OFICIAL (quadro societario da fonte oficial), DOCUMENT_EXTRACTION (lido
           de contrato, estatuto, ata ou certidao), MANUAL (criado por um operador) ou FORM (declarado
           pelo cliente num formulario de solicitacao).
-
+          
           `editedFields` lista os campos que um operador corrigiu; a atualizacao do quadro oficial nao
           passa por cima deles. `contact` e o primeiro contato guardado da pessoa (o preferido, senao o
           mais recente), ou null.
-
+          
           E a base para pedir documento de socio: cada pessoa pode ganhar cadastro proprio.
       x-codeSamples:
         - lang: cURL
@@ -5142,7 +5097,7 @@ paths:
       description: |
           Cria (sem id) ou atualiza (com id) uma assinatura de webhook. A mesma assinatura pode escutar
           eventos do Onboarding e eventos de relatorio e credito.
-
+          
           Quando os eventos de relatorio e credito nao puderem ser gravados (o endereco precisa responder
           a um POST de teste no momento do cadastro), a resposta continua 200 e traz `warning` com o motivo.
           
@@ -5233,15 +5188,6 @@ paths:
               example:
                 code: 404
                 message: Assinatura de webhook não encontrada.
-        '502':
-          description: 'O servico de webhooks nao respondeu. Tente de novo.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 502
-                message: Não foi possível salvar a assinatura.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -5251,6 +5197,15 @@ paths:
               example:
                 code: 500
                 message: Internal server error
+        '502':
+          description: O servico de webhooks nao respondeu. Tente de novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível salvar a assinatura.
       tags:
         - collections
       security:
@@ -5413,7 +5368,7 @@ paths:
                     name: Ana Souza
                     document: '52998224725'
                     email: ana@exemplo.com.br
-                    phone: +5551999998888
+                    phone: 5551999998888
                     role: Sócia administradora · 60%
                     registryPersonId: 6612a7f30000000000000021
                     status: DELIVERED
@@ -5439,7 +5394,7 @@ paths:
                     link: 'https://toolbox.gyramais.com.br/envio/2f8cQ1r7aWxK9pLmN3bV5tYzE6uH0sJdR4gXoC8ifAe'
                     publicUrl: 'https://toolbox.gyramais.com.br/envio/2f8cQ1r7aWxK9pLmN3bV5tYzE6uH0sJdR4gXoC8ifAe'
         '400':
-          description: 'Corpo invalido. A mensagem concatena todas as falhas por virgula.'
+          description: Corpo invalido. A mensagem concatena todas as falhas por virgula.
           content:
             application/json:
               schema:
@@ -5447,15 +5402,6 @@ paths:
               example:
                 code: 400
                 message: Informe o documento ou o identificador do cadastro.
-        '502':
-          description: 'O servico de solicitacoes nao respondeu. Tente de novo.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 502
-                message: Não foi possível criar a solicitação.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -5492,6 +5438,15 @@ paths:
               example:
                 code: 500
                 message: Internal server error
+        '502':
+          description: O servico de solicitacoes nao respondeu. Tente de novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível criar a solicitação.
       tags:
         - collections
       security:
@@ -5842,7 +5797,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'O identificador informado em "id" não é válido.'
+                message: O identificador informado em "id" não é válido.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -5969,15 +5924,6 @@ paths:
               example:
                 code: 400
                 message: Nenhum destinatário pendente para enviar.
-        '409':
-          description: 'A solicitacao ja foi concluida, cancelada ou expirou.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 409
-                message: Esta solicitação não está mais aberta para envio.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -6005,15 +5951,15 @@ paths:
               example:
                 code: 404
                 message: Solicitação não encontrada.
-        '502':
-          description: 'O servico de solicitacoes nao respondeu. Tente de novo.'
+        '409':
+          description: 'A solicitacao ja foi concluida, cancelada ou expirou.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
-                code: 502
-                message: Não foi possível enviar a solicitação.
+                code: 409
+                message: Esta solicitação não está mais aberta para envio.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -6023,6 +5969,15 @@ paths:
               example:
                 code: 500
                 message: Internal server error
+        '502':
+          description: O servico de solicitacoes nao respondeu. Tente de novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível enviar a solicitação.
       tags:
         - collections
       security:
@@ -6030,10 +5985,10 @@ paths:
       description: |
           Dispara o envio para os destinatarios que ainda nao concluiram e devolve o detalhe da
           solicitacao com os links por destinatario.
-
+          
           Serve tanto para o primeiro envio de um rascunho quanto para reenviar um pedido que o cliente
           nao respondeu. Sem corpo: o recado do operador e o que foi gravado na criacao.
-
+          
           Com channel NONE ninguem e avisado (`notified` false) e os links voltam so nesta resposta.
       x-codeSamples:
         - lang: cURL
@@ -6108,15 +6063,6 @@ paths:
               example:
                 code: 400
                 message: reason must be shorter than or equal to 500 characters
-        '409':
-          description: 'A solicitacao ja esta concluida, cancelada ou expirada.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 409
-                message: Esta solicitação já está encerrada.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -6144,15 +6090,15 @@ paths:
               example:
                 code: 404
                 message: Solicitação não encontrada.
-        '502':
-          description: 'O servico de solicitacoes nao respondeu, ou a Clicksign recusou o cancelamento do contrato (nesse caso a mensagem diz o motivo).'
+        '409':
+          description: 'A solicitacao ja esta concluida, cancelada ou expirada.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
-                code: 502
-                message: Não foi possível cancelar a solicitação.
+                code: 409
+                message: Esta solicitação já está encerrada.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -6162,6 +6108,15 @@ paths:
               example:
                 code: 500
                 message: Internal server error
+        '502':
+          description: 'O servico de solicitacoes nao respondeu, ou a Clicksign recusou o cancelamento do contrato (nesse caso a mensagem diz o motivo).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível cancelar a solicitação.
       tags:
         - collections
       security:
@@ -6284,15 +6239,6 @@ paths:
               example:
                 code: 400
                 message: Informe o motivo do pedido de reenvio.
-        '409':
-          description: 'O item nao esta aguardando decisao, ou ja chegou ao limite de reenvios.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 409
-                message: Este item não está aguardando decisão.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -6320,15 +6266,15 @@ paths:
               example:
                 code: 404
                 message: Item não encontrado nesta solicitação.
-        '502':
-          description: 'O servico de solicitacoes nao respondeu. Tente de novo.'
+        '409':
+          description: 'O item nao esta aguardando decisao, ou ja chegou ao limite de reenvios.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
-                code: 502
-                message: Não foi possível registrar a decisão.
+                code: 409
+                message: Este item não está aguardando decisão.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -6338,6 +6284,15 @@ paths:
               example:
                 code: 500
                 message: Internal server error
+        '502':
+          description: O servico de solicitacoes nao respondeu. Tente de novo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível registrar a decisão.
       tags:
         - collections
       security:
@@ -6397,10 +6352,10 @@ paths:
           required: false
           in: query
           schema:
-            type: string
             enum:
               - ORGANIZATION
               - SYSTEM
+            type: string
           description: 'ORGANIZATION (modelos da sua organizacao) ou SYSTEM (modelos GYRA+). Sem o parametro, os dois.'
         - name: enabled
           required: false
@@ -6488,15 +6443,6 @@ paths:
               example:
                 code: 400
                 message: 'scope must be one of the following values: ORGANIZATION, SYSTEM'
-        '404':
-          description: 'O modulo Onboarding nao esta liberado para a organizacao: para ela, a rota nao existe.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 404
-                message: Recurso não encontrado.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -6515,6 +6461,15 @@ paths:
               example:
                 code: 403
                 message: Você não tem permissão para acessar este recurso.
+        '404':
+          description: 'O modulo Onboarding nao esta liberado para a organizacao: para ela, a rota nao existe.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 404
+                message: Recurso não encontrado.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -6532,7 +6487,7 @@ paths:
           Os modelos vigentes que a organizacao enxerga (os dela e os modelos GYRA+), com metricas de
           uso, dos mais usados para os menos usados. Cada um diz o que sera pedido. Pagina padrao de
           50, maximo 100.
-
+          
           Para montar um seletor, use enabled=true: modelo desligado continua na listagem sem o filtro.
           
           O `slug` daqui e o que entra em create_collection. Chame esta tool primeiro: criar solicitacao
@@ -6563,6 +6518,142 @@ paths:
               )
               
               dados = resposta.json()
+  /report/{id}/financial-tab:
+    post:
+      operationId: ReportController_financialSection
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio (CNPJ) que vai receber as demonstracoes.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: |
+                      PDFs do balanco patrimonial e/ou da DRE. Repita o campo `files`
+                      para enviar mais de um arquivo. Ate 10 arquivos por chamada,
+                      50MB cada, somente PDF.
+              required:
+                - files
+      responses:
+        '200':
+          description: 'Relatorio atualizado, com as secoes financeiras marcadas como em processamento.'
+        '400':
+          description: 'Nenhum arquivo enviado, arquivo que nao e um PDF valido ou mais de 10 arquivos.'
+        '404':
+          description: Relatorio nao encontrado ou de outra organizacao.
+        '413':
+          description: Arquivo maior que 50MB.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Enviar balanco e DRE
+      description: |
+          Envia um ou mais PDFs de balanco patrimonial e DRE para um relatorio de CNPJ
+          ja existente. A extracao transforma as demonstracoes em dados estruturados
+          (balanco, DRE e indicadores) e as disponibiliza como secoes do relatorio.
+          
+          A chamada e ASSINCRONA: responde 200 assim que os arquivos sao aceitos e
+          enfileirados, sem os dados estruturados. O resultado sai depois em
+          GET /report/{id}/section/BALANCE_SHEET (idem DRE e FINANCIAL_INDICATORS).
+          
+          Envie apenas as paginas do balanco e da DRE: quanto mais enxuto o PDF,
+          mais rapido e barato o processamento.
+  /report/{id}/committee:
+    post:
+      operationId: ReportController_conveneCommittee
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio que vai a comite.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                force:
+                  type: boolean
+                  description: Ignora o cache da deliberacao e reprocessa do zero. Padrao false.
+                  default: false
+      responses:
+        '200':
+          description: 'Deliberacao aceita e iniciada: { status: "RUNNING", trigger: "MANUAL" | "RERUN" }.'
+        '400':
+          description: 'Relatorio ainda nao esta pronto para o comite (pareceres ou politica pendentes, ou parecer nao habilitado na politica).'
+        '404':
+          description: Relatorio nao encontrado ou de outra organizacao.
+        '409':
+          description: Ja existe uma deliberacao em andamento para este relatorio.
+      tags:
+        - report
+      security:
+        - authorization: []
+      summary: Convocar o Comite de Credito IA
+      description: |
+          Dispara manualmente a deliberacao do Comite de Credito IA sobre um relatorio.
+          
+          Use quando a politica esta em "Nao convocar automaticamente" e o comite deve rodar
+          sob demanda, ou para reconvocar um relatorio que ja deliberou (DONE), falhou
+          (ERROR) ou foi pulado (SKIPPED).
+          
+          Pre-requisitos (senao retorna 400):
+          - a politica do relatorio habilita o pipeline de parecer;
+          - os pareceres por secao ja finalizaram;
+          - a politica de credito ja concluiu (quando o relatorio tem politica).
+          
+          A chamada e assincrona: o 200 confirma que a deliberacao iniciou, nao que terminou.
+          Convocacao manual sempre entra como sugestao e nao altera o status do relatorio,
+          mesmo numa politica em "Convocar comite e decisao automatica".
+          Para saber o resultado, registre o webhook COMMITTEE_FINISHED ou consulte
+          GET /report/{id}/insights.
+  /committee/deliberations/{reportId}:
+    get:
+      operationId: CommitteeController_getDeliberation
+      parameters:
+        - name: reportId
+          required: true
+          in: path
+          schema:
+            type: string
+          description: ID do relatorio que foi a comite.
+      responses:
+        '200':
+          description: 'Deliberacao completa: agentOpinions[], synthesis, finalRecommendation, versoes de prompt e telemetria.'
+        '404':
+          description: Nenhuma deliberacao encontrada para este relatorio.
+      tags:
+        - committee
+      security:
+        - authorization: []
+      summary: Consultar deliberacao do Comite de Credito IA
+      description: |
+          Retorna a deliberacao completa e auditavel do Comite de Credito IA para um
+          relatorio: o voto individual de cada um dos sete agentes (score, parecer,
+          redFlags, positiveFactors, recommendation), a sintese do Presidente (decisao,
+          justificativa, condicoes, registro de divergencia, alcada), a versao de prompt
+          usada por agente e a telemetria (modelos, tokens, custo, duracao).
+          
+          Retorna sempre a deliberacao mais recente. Reconvocacoes (trigger RERUN) geram
+          uma nova deliberacao, e e ela que passa a ser devolvida.
+          
+          Para o fluxo do dia a dia, GET /report/{id}/insights e mais leve.
 components:
   securitySchemes:
     authorization:
@@ -6797,11 +6888,7 @@ components:
         reportId:
           type: string
           nullable: true
-          description: 'Reservado para o relatorio mais recente do mesmo documento. Hoje vem null.'
-        basicDataSyncedAt:
-          type: string
-          nullable: true
-          format: date-time
+          description: Reservado para o relatorio mais recente do mesmo documento. Hoje vem null.
         crossDocument:
           type: object
           nullable: true
@@ -6822,14 +6909,18 @@ components:
               type: array
               items:
                 type: string
+            triggeredByDocumentId:
+              type: string
+              nullable: true
             ruleSetVersion:
               type: string
             evaluatedAt:
               type: string
               format: date-time
-            triggeredByDocumentId:
-              type: string
-              nullable: true
+        basicDataSyncedAt:
+          type: string
+          nullable: true
+          format: date-time
         createdAt:
           type: string
           format: date-time
@@ -7448,11 +7539,7 @@ components:
             - DOCUMENT_EXTRACTION
             - MANUAL
             - FORM
-          description: 'De onde a pessoa veio. FORM = declarada pelo cliente num formulario de solicitacao.'
-        linkedRegistryId:
-          type: string
-          nullable: true
-          description: 'Cadastro proprio da pessoa, quando ja existe.'
+          description: De onde a pessoa veio. FORM = declarada pelo cliente num formulario de solicitacao.
         sourceDocumentId:
           type: string
           nullable: true
@@ -7466,7 +7553,7 @@ components:
               - role
               - sharePercent
               - document
-          description: 'Campos que um operador corrigiu. A atualizacao do quadro oficial e a extracao nao passam por cima deles.'
+          description: Campos que um operador corrigiu. A atualizacao do quadro oficial e a extracao nao passam por cima deles.
         contact:
           type: object
           nullable: true
@@ -7491,6 +7578,10 @@ components:
             lastUsedAt:
               type: string
               format: date-time
+        linkedRegistryId:
+          type: string
+          nullable: true
+          description: 'Cadastro proprio da pessoa, quando ja existe.'
     RegistryPresignResponse:
       type: object
       properties:
@@ -8074,9 +8165,9 @@ components:
           description: Itens esperando decisao humana (AWAITING_OPERATOR ou MANUAL_REVIEW).
         progress:
           type: object
-          description: 'Contagem de itens (total, resolved, validated, awaitingOperator, rejected, pending) e de destinatarios (recipientsTotal, recipientsExpected, recipientsCompleted, recipientsWithoutItems).'
           additionalProperties:
             type: integer
+          description: 'Contagem de itens (total, resolved, validated, awaitingOperator, rejected, pending) e de destinatarios (recipientsTotal, recipientsExpected, recipientsCompleted, recipientsWithoutItems).'
         createdAt:
           type: string
           format: date-time
@@ -8311,12 +8402,6 @@ components:
         signedDocumentId:
           type: string
           nullable: true
-        signedDocumentAvailable:
-          type: boolean
-          description: 'true quando ha via assinada para baixar em GET /v1/collections/{id}/items/{itemId}/signed-document.'
-        identityEmailCandidateCount:
-          type: integer
-          description: 'Quantos e-mails foram oferecidos para a verificacao por e-mail (nunca quais).'
         signatureMode:
           type: string
           enum:
@@ -8390,6 +8475,12 @@ components:
           type: string
           nullable: true
           format: date-time
+        signedDocumentAvailable:
+          type: boolean
+          description: 'true quando ha via assinada para baixar em GET /v1/collections/{id}/items/{itemId}/signed-document.'
+        identityEmailCandidateCount:
+          type: integer
+          description: Quantos e-mails foram oferecidos para a verificacao por e-mail (nunca quais).
     CollectionRecipient:
       type: object
       properties:
@@ -8531,11 +8622,6 @@ components:
                 type: string
                 nullable: true
                 format: date-time
-              progress:
-                type: object
-                description: 'Contagem de itens por situacao: total, resolved, validated, awaitingOperator, rejected, pending.'
-                additionalProperties:
-                  type: integer
               hasScrConsent:
                 type: boolean
                 description: A solicitacao tem autorizacao de SCR concedida.
@@ -8548,6 +8634,11 @@ components:
                 nullable: true
                 format: date-time
                 description: 'Prazo de assinatura na Clicksign, quando a solicitacao tem item assinado por ela.'
+              progress:
+                type: object
+                additionalProperties:
+                  type: integer
+                description: 'Contagem de itens por situacao: total, resolved, validated, awaitingOperator, rejected, pending.'
               createdAt:
                 type: string
                 format: date-time
@@ -8568,9 +8659,6 @@ components:
               type: string
               nullable: true
               description: 'O link, quando ha um destinatario so. Com varios, vem null e a resposta e `links`.'
-            notified:
-              type: boolean
-              description: 'false quando o canal e NONE: ninguem foi avisado e quem entrega o link e voce.'
             links:
               type: array
               items:
@@ -8588,7 +8676,10 @@ components:
                   publicUrl:
                     type: string
                     description: O mesmo endereco de `link`.
-              description: 'Um link por destinatario enviado. Nao vem quando a solicitacao e criada como rascunho (draft true ou send false).'
+              description: Um link por destinatario enviado. Nao vem quando a solicitacao e criada como rascunho (draft true ou send false).
+            notified:
+              type: boolean
+              description: 'false quando o canal e NONE: ninguem foi avisado e quem entrega o link e voce.'
       description: 'A solicitacao criada. Quando ela e enviada na criacao, traz tambem os links: com channel NONE e por aqui que voce recebe o link para entregar. Os links so existem nesta resposta e na de envio.'
     CollectionTemplateListResponse:
       type: object
@@ -8682,7 +8773,7 @@ components:
                 description: 'Endereco do formulario publico, quando o modelo tem um.'
               metrics:
                 type: object
-                description: 'Uso do modelo na sua organizacao.'
+                description: Uso do modelo na sua organizacao.
                 properties:
                   collections:
                     type: integer
@@ -8691,11 +8782,11 @@ components:
                     type: integer
                   completionRate:
                     type: number
-                    description: 'De 0 a 1.'
+                    description: De 0 a 1.
                   averageCompletionHours:
                     type: number
                     nullable: true
-                    description: 'Horas medias entre envio e conclusao. null sem solicitacao concluida.'
+                    description: Horas medias entre envio e conclusao. null sem solicitacao concluida.
               createdAt:
                 type: string
                 format: date-time
@@ -8813,9 +8904,6 @@ components:
               secretHint:
                 type: string
                 description: Os ultimos caracteres do segredo. O segredo inteiro so aparece na criacao e na rotacao.
-              hasApiKey:
-                type: boolean
-                description: 'So em destino com eventos de relatorio e credito: se ha api-key configurada.'
               consecutiveFailures:
                 type: integer
                 description: 'Em 20, a assinatura e desligada sozinha.'
@@ -8829,6 +8917,9 @@ components:
                 type: string
                 nullable: true
                 format: date-time
+              hasApiKey:
+                type: boolean
+                description: 'So em destino com eventos de relatorio e credito: se ha api-key configurada.'
               createdAt:
                 type: string
                 format: date-time
@@ -8858,7 +8949,7 @@ components:
           description: 'O segredo em claro, no formato whsec_ seguido de 64 caracteres hexadecimais. SO VEM AQUI, na criacao e na rotacao. Guarde no seu cofre.'
         warning:
           type: string
-          description: 'Presente so quando os eventos de relatorio e credito nao foram salvos; diz o motivo.'
+          description: Presente so quando os eventos de relatorio e credito nao foram salvos; diz o motivo.
         createdAt:
           type: string
           format: date-time
@@ -8912,21 +9003,19 @@ components:
           description: Politica habilitada e de usage REPORT.
         document:
           type: string
-          description: 'CPF ou CNPJ sem mascara. Digito verificador validado; CNPJ alfanumerico aceito.'
-        months:
-          type: integer
-          description: 'Meses de historico do SCR. Padrao: o da politica, depois o da organizacao, depois 12.'
+          description: CPF ou CNPJ sem mascara. Digito verificador validado; CNPJ alfanumerico aceito.
         type:
           type: string
           deprecated: true
           description: Ignorado. O tipo vem da politica.
+        months:
+          type: integer
+          description: 'Meses de historico do SCR. Padrao: o da politica, depois o da organizacao, depois 12.'
       required:
         - policyId
         - document
     CreateRegistryDto:
       type: object
-      required:
-        - document
       properties:
         document:
           type: string
@@ -8934,12 +9023,10 @@ components:
         name:
           type: string
           description: 'Razao social ou nome. Opcional: os dados basicos oficiais sao buscados na criacao.'
+      required:
+        - document
     PresignRegistryDocumentDto:
       type: object
-      required:
-        - fileName
-        - size
-        - mimeType
       properties:
         fileName:
           type: string
@@ -8956,24 +9043,13 @@ components:
             - image/jpeg
             - image/png
           description: O PUT tem de mandar este mesmo Content-Type.
+      required:
+        - fileName
+        - size
+        - mimeType
     ConfirmRegistryDocumentDto:
       type: object
-      required:
-        - key
-        - fileName
       properties:
-        key:
-          type: string
-          description: A key devolvida pelo presign, exatamente como veio.
-        fileName:
-          type: string
-          description: Nome do arquivo que fica no dossie.
-        personDocument:
-          type: string
-          description: 'CPF ou CNPJ de uma pessoa do quadro deste cadastro, para anexar o documento a ela. Precisa estar na arvore societaria.'
-        callbackUrl:
-          type: string
-          description: 'URL chamada quando o documento terminar de processar.'
         typeHint:
           type: string
           enum:
@@ -9036,6 +9112,21 @@ components:
             - DEMONSTRACOES_FINANCEIRAS
             - EXTRATO_BANCARIO
           description: 'Tipo documental que a solicitação PEDIU. Não força nada e não pula etapa alguma: a classificação roda normalmente e o tipo lido é confrontado com este valor na verificação EXPECTED_TYPE_MATCH. Tipo lido igual ao pedido, a verificação passa; diferente, reprova o documento (ou vira ressalva quando a leitura do tipo está com pouca confiança). É o campo que pega o arquivo legítimo enviado no campo errado (uma declaração de IR subida como comprovante de residência), que sem ele seria classificado, validado e aprovado como o tipo que de fato é. Omitir significa envio livre no dossiê: sem pedido, a verificação sai SKIP. Combinado com typeHint no mesmo envio, o typeHint vence e a verificação sai SKIP (não há classificação a confrontar).'
+        key:
+          type: string
+          description: 'A key devolvida pelo presign, exatamente como veio.'
+        fileName:
+          type: string
+          description: Nome do arquivo que fica no dossie.
+        personDocument:
+          type: string
+          description: 'CPF ou CNPJ de uma pessoa do quadro deste cadastro, para anexar o documento a ela. Precisa estar na arvore societaria.'
+        callbackUrl:
+          type: string
+          description: URL chamada quando o documento terminar de processar.
+      required:
+        - key
+        - fileName
     ReprocessRegistryDocumentDto:
       type: object
       properties:
@@ -9099,8 +9190,8 @@ components:
           description: 'URL publica, http ou https, com dominio.'
         label:
           type: string
-          maxLength: 80
           description: 'Como a assinatura aparece na tela. Na atualizacao, omitir mantem o atual; string vazia limpa.'
+          maxLength: 80
         events:
           description: 'Vazio ou ausente quer dizer TODOS os eventos, inclusive os de relatorio e credito. Sem repeticao.'
           type: array
@@ -9108,7 +9199,7 @@ components:
             type: string
         enabled:
           type: boolean
-          description: 'Religar zera o contador de falhas seguidas.'
+          description: Religar zera o contador de falhas seguidas.
         apiKey:
           type: string
           description: 'Valor enviado no cabecalho api-key, so nos eventos de relatorio e credito (esses nao usam a assinatura HMAC).'
