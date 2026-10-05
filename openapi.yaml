@@ -5025,7 +5025,7 @@ paths:
                   - collection.message.failed
                 enabled: true
                 secretHint: …a91f4c
-                secret: whsec_4f1c9e2b7a6d3058c1e2f4a9b8d7c6e5f0a1b2c3d4e5f60718293a4b5ca91f4c
+                secret: whsec_exemplo_nao_e_um_segredo
                 createdAt: '2026-09-05T18:40:00.000Z'
                 organizationId: 6612a7f30000000000000009
                 consecutiveFailures: 0
