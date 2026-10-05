@@ -8,12 +8,6 @@ lang: tecnica
 openapi: get /committee/deliberations/{reportId}
 ---
 
-<Warning>
-  **Este endpoint não está respondendo em produção.** Verificado com um relatório cujo comitê concluiu (`committeeStatus: "DONE"`): a chamada retorna `404`. O proxy para o serviço de IA não resolve a rota.
-
-  Enquanto isso não é corrigido, **use [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights)**: o campo `committee.result` traz a deliberação completa, com `synthesis`, os `agentOpinions` dos sete agentes, `deliberationId`, `confidence`, `costUsd`, `durationMs` e `models`. É a mesma informação descrita abaixo.
-</Warning>
-
 ### Quando usar
 
 Use este endpoint quando precisa da **deliberação completa e auditável**: o voto individual de cada um dos sete agentes, os alertas que cada um levantou, o registro de divergência, a versão de prompt usada e a telemetria (modelos, tokens, custo e duração).
@@ -26,7 +20,7 @@ Use este endpoint quando precisa da **deliberação completa e auditável**: o v
 
 ### Autenticação
 
-Bearer JWT no header `Authorization`. A busca é restrita à organização do token.
+Bearer JWT no header `Authorization`. A busca é restrita à organização do token: um relatório de outra organização responde `404`.
 
 ### Parâmetros
 
@@ -54,6 +48,9 @@ Bearer JWT no header `Authorization`. A busca é restrita à organização do to
 | `webSearchRequests` | Buscas na web feitas pelo agente Cadastral. |
 | `durationMs` | Duração total da deliberação. |
 | `modelVersions` | Modelos usados por etapa. |
+| `committeeObjective` | Objetivo informado para a deliberação, ou `null`. |
+| `railPromptInstructions` | Orientações por agente informadas na convocação, ou `null`. |
+| `eventId` | Identificador do evento que originou a deliberação. |
 | `error` | Preenchido quando `status` é `ERROR`. |
 
 <RequestExample>
@@ -166,6 +163,9 @@ print(response.json())
   "webSearchRequests": 3,
   "durationMs": 38210,
   "modelVersions": { "specialists": "claude-sonnet-4-6", "synthesizer": "claude-sonnet-4-6" },
+  "committeeObjective": null,
+  "railPromptInstructions": null,
+  "eventId": "8f0d6a52-3c1e-4b8e-9a51-2f7c1d9e0b44",
   "error": null,
   "createdAt": "2026-07-30T14:30:33.812Z",
   "updatedAt": "2026-07-30T14:31:12.004Z"

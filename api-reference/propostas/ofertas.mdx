@@ -45,6 +45,10 @@ A proposta tem uma oferta por **rodada**. A primeira costuma ser a pré-aprovaç
 
 Para achar a oferta vigente, use `currentOfferId` da proposta ou a última de `offers[]`.
 
+<Note>
+  Na proposta que veio do [canal de correspondentes](/plataforma/correspondentes), a etapa de pré-aprovação pode mandar a oferta para o **Atendente do canal (correspondente)** em vez do cliente. A oferta fica `SENT` e escolhível do mesmo jeito, mas nenhum aviso sai para o contato da proposta: quem escolhe valor e prazo é o atendente.
+</Note>
+
 ---
 
 ## Copiar o link da oferta
@@ -92,6 +96,7 @@ curl https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001/off
   - `"Esta oferta não tem link para o cliente."`
   - `"Esta oferta já venceu."`
   - `"O link desta oferta foi emitido antes de poder ser copiado. Reenvie o e-mail para gerar um link novo."`
+  - `"Não foi possível recompor o link. Reenvie o e-mail para gerar um link novo."`
 </ResponseField>
 
 <Warning>
@@ -140,6 +145,7 @@ curl -X POST https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1
 
 | Status | Mensagem | Quando |
 | --- | --- | --- |
+| `404` | `"Proposta não encontrada."` | Id da proposta inexistente |
 | `404` | `"Oferta não encontrada."` | A oferta não é desta proposta |
 | `409` | `"Esta proposta está encerrada: a oferta não pode ser enviada."` | Proposta encerrada |
 | `409` | `"Esta oferta não pode mais ser enviada."` | Oferta já escolhida, vencida ou substituída |
@@ -213,12 +219,17 @@ Depois da escolha, a proposta volta a `IN_ANALYSIS` e a esteira continua. O cron
 
 | Status | Mensagem | Quando |
 | --- | --- | --- |
+| `400` | `"Informe o valor desejado."` | `amountCents` ausente, não inteiro ou menor que `1` |
+| `400` | `"Escolha o prazo."` | `termMonths` ausente, não inteiro ou menor que `1` |
+| `400` | `"O prazo deve ser de no máximo 600."` | `termMonths` acima de 600 |
+| `400` | `"A carência deve ser de no máximo 120."` | `graceMonths` acima de 120 |
 | `400` | `"Informe o motivo de registrar a escolha pelo cliente."` | `reason` ausente |
 | `400` | `"O motivo passa de 500 caracteres."` | `reason` longo demais |
 | `400` | `"O valor escolhido está abaixo do mínimo desta oferta."` | `amountCents` menor que `minCents` |
 | `400` | `"O valor escolhido está acima do máximo desta oferta."` | `amountCents` maior que `maxCents` |
 | `400` | `"Escolha um dos prazos desta oferta."` | `termMonths` fora de `terms` |
 | `400` | `"Escolha uma das carências desta oferta."` | `graceMonths` fora de `graceOptions` |
+| `404` | `"Proposta não encontrada."` | Id da proposta inexistente |
 | `404` | `"Oferta não encontrada."` | A oferta não é desta proposta |
 | `409` | `"Esta oferta já foi escolhida."` | A escolha já foi feita, pelo cliente ou por você |
 | `409` | `"Esta oferta não está mais valendo: não aceita escolha."` | Oferta vencida ou substituída |

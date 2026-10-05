@@ -25,19 +25,21 @@ https://gyra-core.gyramais.com.br/
 
 ## Tipos de Relatórios
 
-Conheça os diferentes tipos de relatórios disponíveis e escolha o mais adequado para sua operação:
+O tipo de relatório (**SIMPLES**, **ESSENCIAL**, **COMPLETO** ou **COMPLETO+**) vem da política escolhida na criação do relatório: você não o informa na chamada. O que cada tipo traz está em [Tipos de relatórios](/docs/tipos-relatorios).
 
-- **COMPLETO+**: relatório mais completo da GYRA+, com certidões públicas, processos desde 1980, protestos e tudo que é possível integrar.  
-- **COMPLETO**: inclui dados profundos, mas sem certidões e com processos desde 2014.
-- **ESSENCIAL**: visão enxuta sem certidões e protestos, mas com relacionamentos e dados principais.
-- **SIMPLES**: apenas os dados cadastrais básicos e localização, ideal para qualificação rápida de leads ou limpeza de base.
+## Primeiros passos
 
-<Card
-  title="Comparativo dos Relatórios"
-  icon="file-text"
-  href="https://go.n8n.gyramais.com.br/webhook/comparativorelatorios"
-  arrow={true}
-  cta="Ver comparação completa"
->
-  Acesse a tabela completa com todos os campos disponíveis em cada tipo de relatório.
-</Card>
+<CardGroup cols={2}>
+  <Card title="Chaves de API" icon="key" href="/api-reference/api-keys">
+    Gere o client id e o client secret no Toolbox.
+  </Card>
+  <Card title="Gerar Token" icon="lock" href="/api-reference/auth/post-authauthenticate">
+    Troque as credenciais por um token de 24 horas.
+  </Card>
+  <Card title="Criar Relatório" icon="file-plus" href="/api-reference/report-v2/post-v2report">
+    Dispare a análise de um CPF ou CNPJ.
+  </Card>
+  <Card title="Criar Webhook" icon="webhook" href="/api-reference/webhook/post-webhook">
+    Receba o resultado sem polling.
+  </Card>
+</CardGroup>

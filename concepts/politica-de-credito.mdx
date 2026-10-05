@@ -21,7 +21,24 @@ Ela responde a três perguntas:
 2. **Quais critérios aplicar?** → Define as regras de avaliação (score mínimo, limite de dívida, etc.)
 3. **Qual a decisão?** → Define quando aprovar, alertar ou negar
 
-Toda chamada ao `POST /report` exige um `policyId`. Esse ID determina completamente o comportamento da análise.
+Toda chamada ao `POST /report` exige um `policyId`. Esse ID determina completamente o comportamento da análise. A política precisa ser de uso **Relatório**: uma política de uso **Esteira** é recusada com `400` e a mensagem "Esta política é de esteira: rode a esteira que a usa."
+
+---
+
+## Onde a política é usada
+
+Toda política declara onde roda, em **Onde a política é usada**. A escolha é obrigatória ao criar a política e pode ser trocada no topo de **Fontes de dados**. A lista de políticas mostra a coluna **Uso** e filtra por ela, e o topo do editor mostra o selo **Uso: Relatório** ou **Uso: Esteira**.
+
+| Uso | Onde roda | O que o editor oferece |
+| --- | --- | --- |
+| **Relatório** | Sozinha: pelo campo de CPF/CNPJ, pelos disparos (como o **Ao concluir** de uma solicitação), pela API e também numa etapa de esteira | Só o que as fontes do relatório trazem. Exige relatório base. |
+| **Esteira** | Só como etapa de uma [esteira](/esteiras/visao-geral) | Todas as variáveis e regras do tipo de documento, inclusive os dados de formulário. A esteira confere, ao receber a política numa etapa, se as fontes chegam. |
+
+- A camada de aprofundamento (relatório base **Nenhum**) é sempre de uso Esteira. A opção **Nenhum** só aparece no uso Esteira.
+- Trocar de **Esteira** para **Relatório** exige relatório base, e é recusado se a política usa algo que depende de fonte fora do relatório base e das fontes declaradas, ou de dado de formulário.
+- A troca de uso muda o catálogo do editor depois de salvar: "As variáveis e regras oferecidas no editor mudam para o novo uso depois de salvar."
+- Depois de salvar uma política de uso Esteira, o editor diz em quais esteiras ela está e o que a conferência de cada uma acusou.
+- Uma política usada por esteira **ativa** não pode ser desativada nem excluída: "Não é possível desativar esta política: ela está na esteira ativa "X". Troque a política nessas esteiras ou desative-as antes."
 
 ---
 
@@ -35,7 +52,7 @@ flowchart LR
   B --> C["3 · Condições<br/>as regras"]
   C --> D["4 · Classificação de risco<br/>faixas de score"]
   D --> E["5 · Precificação<br/>limite, taxa e prazo"]
-  E --> F["6 · Decisão e alçada<br/>quem assina"]
+  E --> F["6 · Decisão e inteligência<br/>quem decide"]
 ```
 
 <Steps>
@@ -54,13 +71,13 @@ flowchart LR
   <Step title="Precificação" icon="tag">
     Opcional. Fórmulas que sugerem **limite, taxa e prazo** a partir das variáveis do relatório. Ver [Precificação](/concepts/precificacao).
   </Step>
-  <Step title="Decisão e alçada" icon="user-check">
-    O objetivo da política, se o resultado é aplicado automaticamente ao relatório e quem pode alterar análises. É também onde vive a configuração do [Comitê de Crédito IA](/concepts/comite-de-credito), quando a política tem pipeline de parecer.
+  <Step title="Decisão e inteligência" icon="user-check">
+    O objetivo da política, quem pode sobrepor a decisão, o Parecer IA, a rota de cada resultado e quem revisa, inclusive o [Comitê de Crédito IA](/concepts/comite-de-credito).
   </Step>
 </Steps>
 
 <Note>
-  Duas etapas são obrigatórias: **Fontes de dados**, pelo Relatório base, e **Decisão e alçada**, pelo Objetivo, que o editor exige para salvar. Minhas variáveis, Classificação de risco e Precificação existem para quem precisa delas.
+  Duas etapas são obrigatórias: **Fontes de dados**, pelo Relatório base, e **Decisão e inteligência**, pelo Objetivo, que o editor exige para salvar. Minhas variáveis, Classificação de risco e Precificação existem para quem precisa delas.
 </Note>
 
 ---
@@ -95,7 +112,7 @@ A primeira etapa é uma lista de cartões que você liga ou desliga. Só o que e
 
 ### Cada condição precisa de uma fonte declarada
 
-Uma regra só pode avaliar um dado que alguma fonte da política traz. Se você escreve uma condição de score e a política não declara nenhum bureau nem um add-on de score, o editor avisa e não salva: *A camada não pode ser salva enquanto essa regra estiver sem fonte.* O seletor de regra também diz o que falta, por exemplo *Escolha um bureau nas Fontes de dados.* ou *Declare o add-on "Quantidade de credores" nas Fontes de dados.*
+Numa política de uso **Relatório**, uma regra só pode avaliar um dado que alguma fonte da política traz. (Numa política de uso **Esteira**, quem confere é a esteira, ao receber a política numa etapa.) Se você escreve uma condição de score e a política não declara nenhum bureau nem um add-on de score, o editor avisa e não salva: *A camada não pode ser salva enquanto essa regra estiver sem fonte.* O seletor de regra também diz o que falta, por exemplo *Escolha um bureau nas Fontes de dados.* ou *Declare o add-on "Quantidade de credores" nas Fontes de dados.*
 
 Pela API, salvar uma política nessa situação devolve `422` com a condição e a fonte que falta:
 
@@ -107,8 +124,10 @@ A análise consulta exatamente as fontes declaradas. Uma regra de score não lig
 
 ### Dados de entrada nas regras
 
-Além das fontes, uma regra pode usar os **dados de entrada** do caso: o que chegou pela proposta, pelo formulário, pelos documentos ou pelas verificações. Eles aparecem no seletor de fórmula como variáveis `inputs.<chave>`, com o rótulo *Dado de entrada: ...*, agrupadas em **Proposta**, **Formulário**, **Documentos** e **Verificações**.
+Numa política de uso **Esteira**, além das fontes, uma regra pode usar os **dados de entrada** do caso: o que chegou pela proposta, pelo formulário, pelos documentos ou pelas verificações. Eles aparecem no seletor de fórmula como variáveis `inputs.<chave>`, com o rótulo *Dado de entrada: ...*, agrupadas em **Proposta**, **Formulário**, **Documentos** e **Verificações**.
 
+- O campo de formulário também entra nas Condições como regra própria, sem fórmula.
+- A política de uso Relatório não oferece dados de entrada: fora da esteira, eles não chegam.
 - A política só espera os dados de entrada quando alguma regra os usa.
 - Dado de entrada ausente deixa a regra em erro (*Indisponível*), em vez de aprovar ou negar por acidente.
 - Uma fórmula não mistura dado de entrada com outra fonte: o editor recusa ao salvar.
@@ -133,32 +152,38 @@ Esse é o `policyStatus` retornado em todo relatório. Se ele deve ou não virar
 
 ---
 
-## Decisão automática vs. análise manual
+## Rota por resultado
 
-Cada política tem a opção **"Usar resultado da política no relatório"**:
+Em **Decisão e inteligência**, o bloco **Rota por resultado** diz o que acontece com cada resultado da política num relatório avulso. Em esteiras, vale a etapa [Decisão](/esteiras/decisao-alcada-e-comite).
 
-- **Ligada:** o resultado da política (`policyStatus`) é aplicado automaticamente ao `status` do relatório. Ideal para fluxos de alto volume (onboarding, checkout, crédito massificado).
-- **Desligada:** a política calcula o `policyStatus` como referência, mas o `status` do relatório fica `PENDING` até um analista decidir pela UI do Toolbox ou via [`POST /report/analyze`](/api-reference/report/post-reportanalyze). Ideal para mesa de crédito, due diligence e casos que exigem julgamento humano.
+| Resultado | Opções |
+| --- | --- |
+| **Aprovado** | **Aprovar automaticamente** ou **Enviar para revisão** |
+| **Alerta** | **Aprovar automaticamente** ou **Enviar para revisão** |
+| **Alerta severo** | **Recusar automaticamente** ou **Enviar para revisão** |
 
-Mesmo com a opção ligada, a análise manual continua possível e sobrescreve o `status` do relatório, preservando o `policyStatus` original para auditoria.
+- **Automático:** o resultado da política (`policyStatus`) vira o `status` do relatório. Ideal para fluxos de alto volume (onboarding, checkout, crédito massificado).
+- **Revisão:** a política calcula o `policyStatus` como referência, e o `status` do relatório fica `PENDING` até alguém decidir pela tela ou via [`POST /report/analyze`](/api-reference/report/post-reportanalyze). Ideal para mesa de crédito e casos que exigem julgamento humano.
+
+A análise manual continua possível em qualquer caso e sobrescreve o `status` do relatório, preservando o `policyStatus` original para auditoria. O cartão **Como esta política decide** desenha, no topo da seção, o caminho que um relatório da política percorre hoje.
 
 ---
 
 ## Comitê de Crédito IA na política
 
-Além do motor de regras, cada política define se o relatório vai a [Comitê de Crédito IA](/concepts/comite-de-credito), a deliberação de sete agentes especialistas e um Presidente sobre os pareceres do relatório. A configuração fica no bloco **Comitê de Crédito IA** da edição da política:
+Além do motor de regras, cada política define quem revisa os resultados que vão para revisão, inclusive o [Comitê de Crédito IA](/concepts/comite-de-credito), a deliberação de sete agentes especialistas e um Presidente sobre os pareceres do relatório. A escolha fica em **Quem revisa**, no bloco **Rota por resultado**:
 
 | Opção | Comportamento |
 | ----- | ------------- |
-| **Não convocar automaticamente** | O comitê só roda quando alguém convoca: pelo botão **Convocar Comitê** no relatório, ou por [`POST /report/{id}/committee`](/api-reference/report/post-reportcommittee). É o modo sob demanda. |
-| **Convocar comitê e sugerir decisão** | O comitê roda sozinho e sugere a decisão. Aprovar ou negar continua com o analista, pela tela ou por [`POST /report/analyze`](/api-reference/report/post-reportanalyze). |
-| **Convocar comitê e decisão automática** | O comitê roda sozinho e aplica a decisão no status do relatório, sem passar por um humano. |
+| **Analista** | Um analista decide. O comitê ainda pode ser convocado sob demanda: pelo botão **Convocar Comitê** no relatório, ou por [`POST /report/{id}/committee`](/api-reference/report/post-reportcommittee). |
+| **Comitê IA recomenda, analista decide** | O comitê roda sozinho e sugere a decisão. Aprovar ou negar continua com o analista, pela tela ou por [`POST /report/analyze`](/api-reference/report/post-reportanalyze). |
+| **Comitê IA decide** | O comitê roda sozinho e aplica a decisão no status do relatório, sem passar por um humano. |
 
-O comitê só é convocado depois que os pareceres por seção e o resultado da política concluem, e depende de a política ter o pipeline de parecer habilitado.
+### Parecer IA
 
-<Note>
-  Com **"Usar resultado da política no relatório"** ligado, o comitê só é convocado quando a política **aprova**. Política rejeitada não vai a comitê (o relatório fica com o comitê em `SKIPPED`, e ainda assim pode ser levado a comitê manualmente).
-</Note>
+O comitê delibera sobre os Pareceres IA, e por isso só fica disponível quando a política tem **Parecer IA** ativo. Quem liga e desliga o Parecer IA é a GYRA+: no bloco **Parecer IA**, a política mostra só o status (**Ativo nesta política** ou **Desligado**) e o motivo, por exemplo "Incluído no relatório Completo. Habilitado pela GYRA+." ou "Parecer IA não habilitado nesta política. Fale com a GYRA+ para habilitar." É um recurso adicional, cobrado por relatório.
+
+Se a política estava configurada para o comitê e o Parecer IA foi desligado, a tela avisa que o comitê não vai rodar, sem apagar a configuração.
 
 Com o recurso de instruções do comitê habilitado na organização, a mesma tela permite escrever **instruções adicionais por agente**, com o apetite de risco e os critérios internos da sua instituição. Detalhes em [Comitê de Crédito IA](/concepts/comite-de-credito#instru%C3%A7%C3%B5es-da-sua-institui%C3%A7%C3%A3o-nos-agentes).
 
@@ -213,8 +238,8 @@ Cada relatório registra a versão da política que rodou, e a versão só sobe 
 
 | Mudança | Versão |
 | --- | --- |
-| Regras e condições, faixas de risco, fórmulas de preço, fontes de dados, add-ons | Sobe 0,01 |
-| Nome, ligar ou desligar, parecer, permissões | Não muda |
+| Regras e condições, faixas de risco, fórmulas de preço, fontes de dados, add-ons, rota por resultado, quem revisa, onde a política é usada | Sobe 0,01 |
+| Nome, ligar ou desligar, objetivo, parecer, permissões | Não muda |
 | Editar ou excluir uma variável sua (`#nome`) | Sobe a versão de **todas** as políticas ativas que a usam, de uma vez |
 
 Assim, rodar a análise de novo no mesmo dia depois de mudar a regra gera um resultado com a versão nova, e nunca mistura regras diferentes sob o mesmo número.

@@ -1,6 +1,6 @@
 ---
-title: "Integrar Cadastros e Solicitações"
-description: "Do zero ao webhook chegando: credencial, primeiro documento validado, dossiê montado e o cliente entregando o que falta pelo link."
+title: "Integrar o Onboarding"
+description: "Do zero ao webhook chegando, no Onboarding: credencial, primeiro documento validado, dossiê montado, o cliente entregando o que falta pelo link e o aviso no seu sistema."
 icon: "route"
 surface: api
 domain: cadastro
@@ -8,8 +8,10 @@ audience: integrador
 lang: tecnica
 ---
 
+Este guia leva o seu backend da credencial até o webhook do Onboarding chegando no seu endpoint, sem passar pela tela.
+
 <Info>
-  **Resumo:** este guia vai da credencial até o webhook chegando no seu endpoint. São quatro etapas, e cada uma funciona sozinha: dá para parar na 2 e já ter valor.
+  **Resumo:** são cinco etapas, e cada uma funciona sozinha: dá para parar na 2 e já ter valor.
 </Info>
 
 ## O que você vai ter no fim
@@ -19,7 +21,8 @@ lang: tecnica
 | 1. Credencial | Chamadas autenticadas |
 | 2. Primeiro documento | Você manda um arquivo e recebe o parecer |
 | 3. Dossiê | O que já foi entregue fica arquivado por CNPJ/CPF |
-| 4. Pedido ao cliente | O cliente entrega pelo link e o seu sistema é avisado |
+| 4. Pedido ao cliente | O cliente entrega pelo link |
+| 5. Aviso | O seu sistema fica sabendo sem ficar perguntando |
 
 ## Etapa 1: credencial
 
@@ -41,7 +44,7 @@ lang: tecnica
 </Steps>
 
 <Warning>
-  Se a resposta for `404` em qualquer rota deste guia, quase sempre é **capacidade**, não caminho errado: o módulo precisa estar liberado para a sua organização. Ver [capacidades](/api-reference/kyc/visao-geral#capacidades-da-organização).
+  Se a resposta for `404` em qualquer rota deste guia, quase sempre é **capacidade**, não caminho errado: o módulo precisa estar liberado para a sua organização. Ver [capacidades](/api-reference/onboarding/visao-geral#capacidades-da-organização).
 </Warning>
 
 ## Etapa 2: o primeiro documento
@@ -100,7 +103,7 @@ with open("contrato-social.pdf", "rb") as arquivo:
 
 ### Três coisas para acertar de primeira
 
-**Você não diz que documento é.** A plataforma reconhece entre [25 tipos](/kyc/tipos-de-documento). O `expectedType` não força nada: ele diz o que você **pediu**, e a plataforma confronta com o que leu. É o campo que pega o arquivo legítimo enviado no lugar errado.
+**Você não diz que documento é.** A plataforma reconhece entre [25 tipos](/onboarding/tipos-de-documento). O `expectedType` não força nada: ele diz o que você **pediu**, e a plataforma confronta com o que leu. É o campo que pega o arquivo legítimo enviado no lugar errado.
 
 **Leia `assessment.effectiveVerdict`, não `assessment.verdict`.** O primeiro é o veredito que vale hoje; o segundo é o parecer da IA, que nunca é reescrito quando um operador discorda.
 
@@ -120,7 +123,7 @@ with open("contrato-social.pdf", "rb") as arquivo:
 }
 ```
 
-O objeto `extraction` traz os campos **daquele tipo**. O mapa completo dos 24 formatos está em [Formatos de retorno por documento](/api-reference/kyc/formatos-de-retorno).
+O objeto `extraction` traz os campos **daquele tipo**. O mapa completo, tipo a tipo, está em [Formatos de retorno por documento](/api-reference/onboarding/formatos-de-retorno).
 
 ## Etapa 3: o dossiê
 
@@ -137,6 +140,15 @@ Dois campos respondem quase tudo:
 | --- | --- |
 | `kycStatus` | `UP_TO_DATE` libera; `ATTENTION` e `EXPIRED` pedem ação |
 | `completenessSlots` | Qual exigência está coberta e por qual documento |
+
+Depois que o cliente responde um formulário, o cadastro também guarda o que ele declarou e os contatos de cada pessoa:
+
+| Rota | O que devolve |
+| --- | --- |
+| `GET /v1/registry/{id}/declared-data` | Os campos respondidos, agrupados por formulário, cada um com a chave da variável da esteira (`form.<modelo>.<campo>`), e os sócios declarados |
+| `GET /v1/registry/contacts/{document}` | Os contatos da pessoa na ordem do envio automático: o fixado primeiro, depois o mais recente |
+
+Contrato completo em [Pessoas e contatos](/api-reference/onboarding/pessoas-e-contatos).
 
 Para arquivos acima de 15 MB, use o caminho assíncrono: `presign` devolve a URL assinada, você sobe o arquivo direto nela, e `confirm` dispara a análise. Ver [Documentos do cadastro](/api-reference/registry/get-registry-id-documents-docid-result).
 
@@ -256,13 +268,13 @@ function conferir(req, segredo) {
 ## Próximos passos
 
 <CardGroup cols={2}>
-  <Card title="Formatos de retorno" icon="table-list" href="/api-reference/kyc/formatos-de-retorno">
+  <Card title="Formatos de retorno" icon="table-list" href="/api-reference/onboarding/formatos-de-retorno">
     Os campos de cada um dos 25 tipos documentais.
   </Card>
-  <Card title="Eventos de webhook" icon="bolt-lightning" href="/api-reference/kyc/eventos-de-webhook">
+  <Card title="Eventos de webhook" icon="bolt-lightning" href="/api-reference/onboarding/eventos-de-webhook">
     Os 29 eventos, com payload.
   </Card>
-  <Card title="Régua de validação" icon="ruler" href="/kyc/regua-de-validacao">
+  <Card title="Régua de validação" icon="ruler" href="/onboarding/regua-de-validacao">
     O que reprova, o que ressalva e o que você configura.
   </Card>
   <Card title="MCP da GYRA+" icon="plug" href="/mcp/o-que-e">

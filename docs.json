@@ -60,20 +60,20 @@
         ]
       },
       {
-        "group": "Cadastros e Solicitações",
+        "group": "Onboarding",
         "pages": [
-          "kyc/visao-geral",
-          "kyc/cadastro-documental",
-          "kyc/tipos-de-documento",
-          "kyc/analise-documental",
-          "kyc/regua-de-validacao",
-          "kyc/solicitacoes",
-          "kyc/formularios",
-          "kyc/formulario-publico",
-          "kyc/termos-e-assinatura",
-          "kyc/verificacao-de-identidade",
-          "kyc/pagina-do-destinatario",
-          "kyc/cobranca"
+          "onboarding/visao-geral",
+          "onboarding/cadastro-documental",
+          "onboarding/tipos-de-documento",
+          "onboarding/analise-documental",
+          "onboarding/regua-de-validacao",
+          "onboarding/solicitacoes",
+          "onboarding/formularios",
+          "onboarding/formulario-publico",
+          "onboarding/termos-e-assinatura",
+          "onboarding/verificacao-de-identidade",
+          "onboarding/pagina-do-destinatario",
+          "onboarding/cobranca"
         ]
       },
       {
@@ -82,7 +82,9 @@
           "propostas/visao-geral",
           "propostas/produtos",
           "propostas/precificacao",
-          "propostas/pre-aprovacao-e-oferta"
+          "propostas/pre-aprovacao-e-oferta",
+          "propostas/gerencial",
+          "propostas/hubspot"
         ]
       },
       {
@@ -120,6 +122,7 @@
         "group": "Guia do Toolbox",
         "pages": [
           "toolbox/visao-geral",
+          "toolbox/inicio",
           "toolbox/primeiro-acesso",
           "toolbox/propostas",
           "toolbox/produtos",
@@ -194,9 +197,11 @@
           "api-reference/report-v2/post-v2report",
           "api-reference/report-v2/get-v2report",
           "api-reference/report/post-report-financial-tab",
+          "api-reference/report/post-report-financial-tab-presign",
           "api-reference/report/get-reportlist",
           "api-reference/report/get-reportsection",
           "api-reference/report/get-report-section",
+          "api-reference/report/post-report-section-retry",
           "api-reference/report/get-reportinsights",
           "api-reference/report/post-reportcommittee",
           "api-reference/committee/get-committeedeliberations",
@@ -211,9 +216,9 @@
         ]
       },
       {
-        "group": "API: Cadastros e Solicitações",
+        "group": "API: Onboarding",
         "pages": [
-          "api-reference/kyc/visao-geral",
+          "api-reference/onboarding/visao-geral",
           {
             "group": "Documento",
             "pages": [
@@ -233,7 +238,8 @@
               "api-reference/registry/get-registry-id",
               "api-reference/registry/get-registry-by-document-document",
               "api-reference/registry/get-registry-id-documents",
-              "api-reference/registry/get-registry-id-persons"
+              "api-reference/registry/get-registry-id-persons",
+              "api-reference/onboarding/pessoas-e-contatos"
             ]
           },
           {
@@ -245,7 +251,8 @@
               "api-reference/collection/get-collections-id",
               "api-reference/collection/post-collections-id-send",
               "api-reference/collection/post-collections-id-cancel",
-              "api-reference/collection/post-collections-id-items-itemid-review"
+              "api-reference/collection/post-collections-id-items-itemid-review",
+              "api-reference/onboarding/via-assinada"
             ]
           },
           {
@@ -256,8 +263,8 @@
               "api-reference/collection/post-webhook-endpoints"
             ]
           },
-          "api-reference/kyc/formatos-de-retorno",
-          "api-reference/kyc/eventos-de-webhook"
+          "api-reference/onboarding/formatos-de-retorno",
+          "api-reference/onboarding/eventos-de-webhook"
         ]
       },
       {
@@ -267,6 +274,7 @@
           "api-reference/propostas/propostas",
           "api-reference/propostas/ofertas",
           "api-reference/propostas/produtos-e-precificacao",
+          "api-reference/propostas/gerencial",
           "api-reference/propostas/dados-de-entrada",
           "api-reference/esteiras/fechamento-externo"
         ]
@@ -315,6 +323,14 @@
     {
       "source": "/concepts/operacoes",
       "destination": "/esteiras/visao-geral"
+    },
+    {
+      "source": "/kyc/:slug*",
+      "destination": "/onboarding/:slug*"
+    },
+    {
+      "source": "/api-reference/kyc/:slug*",
+      "destination": "/api-reference/onboarding/:slug*"
     }
   ],
   "contextual": {

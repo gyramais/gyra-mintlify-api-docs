@@ -23,10 +23,10 @@ Para rodar e acompanhar esteiras você precisa da permissão `can-generate-repor
     No campo do topo do toolbox, **Digite o CPF ou CNPJ**.
   </Step>
   <Step title="Escolha a esteira">
-    No seletor **Selecione uma política ou esteira**, as esteiras ativas aparecem no grupo **Esteiras**, separadas das **Políticas**.
+    No seletor **Selecione uma política ou esteira**, as esteiras ativas aparecem no grupo **Esteiras**, separadas das **Políticas**. Só aparecem as compatíveis com o documento, e no grupo **Políticas** só as de uso Relatório: uma política de uso Esteira roda dentro da esteira.
   </Step>
   <Step title="Dispare">
-    A execução começa. Se algo impedir, a tela mostra o motivo, por exemplo "A esteira "X" está inativa. Ative a esteira para executá-la.", ou "Não foi possível rodar a esteira."
+    A execução começa. Se algo impedir, a tela mostra o motivo, por exemplo "A esteira "X" está inativa. Ative a esteira para executá-la.", ou "Não foi possível rodar a esteira." Quando a primeira etapa não gera relatório, a tela avisa: "Esteira iniciada. A primeira etapa não gera relatório: acompanhe pela execução."
   </Step>
 </Steps>
 
@@ -72,6 +72,12 @@ O topo mostra o nome do cliente (ou o documento), a esteira e um selo com a situ
 
 **Decisão do analista** (Checkpoint ou etapa que foi para o analista): escreva o **Comentário (obrigatório para reprovar)** e clique em **Aprovar** ou **Reprovar**. **Abrir relatório** leva ao relatório da etapa. Ao aprovar: "Etapa aprovada. A esteira segue." Ao reprovar: "Etapa reprovada. A esteira parou." (ou "A esteira segue pela etapa que roda mesmo assim.", se a próxima etapa roda em caso de reprovação).
 
+**Escolha do produto** (Enquadramento de produto parado no analista): a tela diz por que parou. Escolha o **Produto da proposta** e clique em **Confirmar produto**, ou reprove. Reprovar aqui recusa a proposta.
+
+**Revisão da pré-aprovação**: em **Faixa da oferta**, confirme a faixa calculada ou ajuste valor, prazos, carências e spread antes de enviar ao cliente, e clique em **Enviar oferta**. Fora dos limites do produto, a tela pede justificativa no comentário. Reprovar aqui recusa a proposta.
+
+Quando a etapa tem analistas designados, só eles decidem; os demais veem **Aguardando as pessoas designadas**.
+
 **Decisão no relatório**: quando a política manda revisar, a decisão é tomada no próprio relatório. A tela avisa: "A decisão desta etapa é tomada no relatório: aprove ou reprove a análise lá para a esteira continuar."
 
 **Revisão da oferta**: ajuste limite, taxa e prazo se precisar. Mudar um valor exige motivo. Com Comitê antes, use **Usar sugestão** para partir da **Sugestão do Comitê IA**. Termine com **Confirmar oferta** ou **Recusar oferta**.
@@ -101,9 +107,9 @@ Em **Análises da execução**, cada relatório que a esteira gerou (do tomador 
 
 ### Aba Jornada
 
-**Fluxo da execução** mostra a esteira com o estado de cada etapa (**concluída**, **em execução**, **aguardando você**, **não rodou**, **erro**) e "Etapa atual: X." O bloco **Operação** traz **Início**, **Duração**, **Última atualização**, **Falhas técnicas**, **Consultas evitadas** (fontes reaproveitadas), **Versão da esteira** e **Identificador**.
+**Fluxo da execução** desenha a esteira da versão em que a execução rodou, com o Enquadramento de produto quando ele rodou, e o estado de cada etapa (**concluída**, **em execução**, **aguardando você**, **não rodou**, **erro**) e "Etapa atual: X." O bloco **Operação** traz **Início**, **Duração**, **Última atualização**, **Falhas técnicas**, **Consultas evitadas** (fontes reaproveitadas), **Versão da esteira** e **Identificador**.
 
-Etapa que não rodou mostra o motivo, por exemplo "a condição do conector não foi atendida", "a decisão anterior foi reprovada" ou "a proposta foi encerrada".
+Etapa que não rodou mostra o motivo, por exemplo "a condição do conector não foi atendida", "a decisão anterior foi reprovada" ou "a proposta foi encerrada". Etapa em erro por uma condição **Executar quando** que não calculou mostra o motivo e pede para corrigir a condição na esteira e rodar de novo.
 
 ### Aba Auditoria
 
@@ -126,7 +132,7 @@ O e-mail de aprovação pendente leva direto para cá pelo botão **Abrir execu�
     Sem proposta, se já existe uma execução do mesmo dia, da mesma versão da esteira e do mesmo documento, e ela não terminou em erro, a plataforma devolve essa execução em vez de abrir outra. Para rodar de novo uma proposta, use **Rodar de novo** na tela da proposta.
   </Accordion>
   <Accordion title="A execução diz erro. O que faço?">
-    Veja o motivo na aba **Jornada**. Para falhas de fonte ou de sistema externo, rode a esteira de novo. Se persistir, fale com o suporte.
+    Veja o motivo na aba **Jornada**. Se a condição **Executar quando** de uma etapa não pôde ser calculada, corrija a fórmula na esteira, salve e rode de novo. Para falhas de fonte ou de sistema externo, rode a esteira de novo. Se persistir, fale com o suporte.
   </Accordion>
   <Accordion title="O contrato não saiu, mas a execução está aprovada">
     A formalização tem desfecho próprio e não muda a decisão de crédito. Veja [Formalização](/formalizacao/visao-geral).

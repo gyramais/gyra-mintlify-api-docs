@@ -35,7 +35,7 @@ Bearer JWT no header `Authorization`. A organização do token é a única que e
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
 | `id` | `path` | `string` | `sim` | ID do relatório que vai a comitê. |
-| `force` | `body` | `boolean` | `não` | Padrão `false`. Ignora o cache da deliberação e força os agentes a reprocessarem do zero. Use ao reconvocar depois de corrigir dados do relatório. |
+| `force` | `body` | `boolean` | não | Padrão `false`. Ignora o cache da deliberação e força os agentes a reprocessarem do zero. Use ao reconvocar depois de corrigir dados do relatório. |
 
 ### Pré-requisitos
 
@@ -58,7 +58,7 @@ A convocação é recusada com `400` se o relatório ainda não está pronto par
 </Warning>
 
 <Tip>
-  **Se todo relatório dessa política deve ir a comitê, não use este endpoint.** Configure a política como **Convocar comitê e sugerir decisão** e a plataforma convoca sozinha, na hora certa, sem você precisar acertar o momento nem tratar retry. A deliberação chega pelo webhook [`COMMITTEE_FINISHED`](/api-reference/webhook/post-webhook) com `trigger: "AUTO_SUGGEST"`, e a decisão final continua sendo do analista, igual à convocação manual.
+  **Se todo relatório dessa política deve ir a comitê, não use este endpoint.** Configure a política como **Convocar comitê e sugerir decisão** e a plataforma convoca sozinha, na hora certa, sem você precisar acertar o momento nem tratar retry. A deliberação chega pelo webhook [`COMMITTEE_FINISHED`](/api-reference/webhook/post-webhook) (em `committee.result.trigger` de [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights) ela aparece como `AUTO_SUGGEST`), e a decisão final continua sendo do analista, igual à convocação manual.
 
   Este endpoint existe para o caso oposto: quando o comitê é **exceção**, disparada por uma pessoa no seu sistema (um botão na tela do analista, uma aprovação de alçada) ou por uma regra sua que seleciona quais casos valem a deliberação. É aí que o padrão abaixo importa.
 </Tip>
@@ -183,6 +183,7 @@ print(response.json())
 | `400` | `"A política de crédito ainda não concluiu. Aguarde o resultado da política para convocar o comitê."` | O resultado da política ainda não chegou. | **Sim**, com backoff |
 | `400` | `"O comitê de crédito não está habilitado para a política deste relatório."` | A política do relatório não habilita o pipeline de parecer. | Não, é definitivo |
 | `400` | `"Nenhum parecer por seção disponível para deliberação do comitê."` | Nenhuma seção produziu parecer; não há insumo. | Não, é definitivo |
+| `400` | `"O identificador informado em \"id\" não é válido."` | O `id` da URL não é um ObjectId. | Não |
 | `404` | `"Relatório não encontrado"` | ID inexistente ou de outra organização. | Não |
 | `409` | `"O comitê já está em deliberação para este relatório."` | Já existe uma deliberação `RUNNING`. | Não. A deliberação já começou, aguarde o `COMMITTEE_FINISHED` |
 

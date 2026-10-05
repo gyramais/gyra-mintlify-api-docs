@@ -68,8 +68,8 @@ Chaves, senhas, certificados e tokens ficam cifrados e nunca voltam para a tela.
 
 ### Proteções sempre ligadas
 
-- Só `https`. Endereços internos e privados são bloqueados.
-- Redirecionamentos não são seguidos: responda direto, sem `3xx`.
+- A URL base da conexão começa com `https://`: "A URL base precisa ser https://. Chamada sem criptografia não sai da Gyra."
+- Redirecionamentos são seguidos. Se o redirecionamento leva a outro endereço (protocolo, host ou porta diferentes), a GYRA+ não repassa a autenticação nem os headers da conexão.
 - A resposta pode ter até 2 MB.
 - Segredos mascarados nos registros.
 
@@ -159,7 +159,7 @@ A ordem de avaliação:
 | Resposta `2xx` | Campos extraídos e regras aplicadas |
 | `4xx` (exceto `408` e `429`) | Sem nova tentativa. Vai ao analista com a resposta resumida. |
 | `5xx`, `408`, `429`, tempo esgotado ou falha de rede | Nova tentativa automática, até 3 vezes, com intervalos crescentes (a partir de 1, 5 e 15 minutos). Esgotadas, vai ao analista. |
-| Redirecionamento, resposta acima de 2 MB, endereço bloqueado | Falha, vai ao analista |
+| Resposta acima de 2 MB, redirecionamentos demais ou `3xx` sem destino | Falha, vai ao analista |
 
 - **Limite de tempo** de cada chamada: de 1 a 30 segundos, padrão 15. A tela oferece 5, 10, 15 ou 30 segundos.
 - **Se a API falhar**: quanto tempo a etapa espera uma resposta final antes de ir ao analista. A tela oferece 1, 4, 24 ou 72 horas (padrão 72, máximo 720).
@@ -174,8 +174,8 @@ Para ativar a esteira, a etapa precisa de conexão, método e caminho.
 ## Checklist para o seu endpoint
 
 <Steps>
-  <Step title="Exponha em HTTPS público">
-    Sem redirecionamento e com certificado válido.
+  <Step title="Exponha em HTTPS">
+    Com certificado válido. Se precisar redirecionar, mantenha o mesmo endereço: para outro host, a autenticação não segue.
   </Step>
   <Step title="Escolha a autenticação">
     Crie a credencial e passe para quem cadastra a conexão na GYRA+.

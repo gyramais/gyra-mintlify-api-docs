@@ -1,6 +1,6 @@
 ---
 title: "Integrações no toolbox"
-description: "Conectar as contas Clicksign e BNDES Online da sua instituição e cadastrar as conexões de API que a esteira usa para chamar o seu sistema."
+description: "Conectar as contas Clicksign e BNDES Online da sua instituição, ligar o HubSpot ao módulo de Propostas e cadastrar as conexões de API que a esteira usa para chamar o seu sistema."
 icon: "plug"
 surface: plataforma
 domain: integracao
@@ -8,10 +8,10 @@ audience: operador
 lang: nao-tecnica
 ---
 
-Em **Configurações > Integrações** ficam as contas e conexões que a esteira usa para falar com o mundo de fora: a Clicksign, o BNDES Online e as APIs do seu sistema.
+Em **Configurações > Integrações** ficam as contas e conexões que a GYRA+ usa para falar com o mundo de fora: a Clicksign, o BNDES Online, o seu CRM e as APIs do seu sistema.
 
 <Info>
-  **Resumo:** a tela tem duas áreas. **Conectores** são as integrações nativas (Clicksign e BNDES Online), cada uma com uma ou mais contas e uma padrão. **Conexões de API** são os endereços do seu sistema que a etapa [Chamada de API](/esteiras/chamada-de-api) chama. Chaves e tokens ficam cifrados e nunca voltam para a tela.
+  **Resumo:** a tela tem três áreas. **Conectores** são as integrações nativas de formalização (Clicksign e BNDES Online), cada uma com uma ou mais contas e uma padrão. **CRM** traz o HubSpot, que transforma negócios do funil em propostas. **Conexões de API** são os endereços do seu sistema que a etapa [Chamada de API](/esteiras/chamada-de-api) chama. Chaves e tokens ficam cifrados e nunca voltam para a tela.
 </Info>
 
 ## Quem vê o quê
@@ -20,6 +20,7 @@ Em **Configurações > Integrações** ficam as contas e conexões que a esteira
 | --- | --- |
 | Conector **Clicksign** | Organizações com o conector Clicksign liberado |
 | Conector **BNDES Online** | Organizações com o conector BNDES Online liberado |
+| **CRM** (HubSpot) | Quem tem a permissão de gerenciar configurações, em organizações com o módulo de Propostas |
 | **Conexões de API** | Quem tem a permissão de gerenciar configurações. Não depende de módulo contratado |
 
 Sem nenhum conector liberado, a área mostra "Nenhum conector contratado". Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
@@ -77,6 +78,21 @@ A esteira confere, ao ser ativada, se a conta escolhida em cada etapa ainda exis
 - "A conta X escolhida na etapa ... não existe mais ou não é desta organização. ..."
 - "... está desabilitada. Reative-a em Configurações > Integrações ou escolha outra conta."
 
+## CRM
+
+A área **CRM** traz o cartão do HubSpot: o negócio que entra num estágio do funil vira proposta, e a decisão volta para o negócio. O cartão mostra a situação da integração (por exemplo, **Ativa · sincronizou há 12 min** ou **Pausada · o HubSpot recusou o token**) e o botão **Conectar** ou **Gerenciar**.
+
+A página do HubSpot tem quatro partes:
+
+| Cartão | O que você configura |
+| --- | --- |
+| **Conta** | O token do app privado do HubSpot, testado antes de salvar |
+| **Regras** | Funil, estágio gatilho, **Relatório** ou **Esteira** (um destino para CNPJ e outro para CPF) e o produto |
+| **Campos da proposta** | De que campo do negócio ou da empresa associada vem o CPF ou CNPJ, o contato, o valor, o prazo e o produto |
+| **Sincronização** | A frequência, o horário comercial e se a decisão move o negócio de estágio |
+
+O passo a passo, os campos que voltam para o negócio e as mensagens de erro estão em [HubSpot](/propostas/hubspot).
+
 ## Conexões de API
 
 Uma conexão de API guarda o endereço e a autenticação de um sistema seu. A etapa **Chamada de API** escolhe a conexão e define só o caminho, o método, o corpo e as saídas. Não existe conexão padrão: a etapa sempre escolhe.
@@ -113,8 +129,8 @@ Por segurança, os segredos guardados não aparecem de novo. Para trocar, digite
 ### Proteções sempre ligadas
 
 - Só `https://`. Chamada sem criptografia não sai da plataforma.
-- Nada de endereço interno de rede.
-- Redirecionamentos não são seguidos.
+- Redirecionamentos são seguidos. Para outro endereço (protocolo, host ou porta diferentes), a autenticação e os headers da conexão não vão junto.
+- A resposta pode ter até 2 MB.
 - A URL base não leva query nem `#`: parâmetros vão na etapa da esteira.
 - Usuário e senha não vão na URL: use o tipo de autenticação.
 
@@ -128,5 +144,6 @@ O que a etapa faz com a resposta (saídas, `api.<apelido>`, tempo limite, erros)
 
 - [Clicksign](/formalizacao/clicksign)
 - [BNDES](/formalizacao/bndes)
+- [HubSpot](/propostas/hubspot)
 - [Chamada de API](/esteiras/chamada-de-api)
 - [Webhooks e API keys](/toolbox/webhooks-e-api-keys)

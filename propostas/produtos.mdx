@@ -27,11 +27,11 @@ Um produto é uma linha de crédito da sua organização descrita uma vez só: p
 | **Tipo** | **Financiamento** ou **Venda a prazo** |
 | **Finalidade** | O objetivo de crédito, vindo do catálogo de objetivos da [política de crédito](/concepts/politica-de-credito) |
 | **Carteira** | Onde o produto é agrupado (obrigatória quando as carteiras estão ligadas) |
-| **Atende** | Pessoa jurídica, pessoa física ou os dois |
+| **Atende** | Pessoa jurídica, pessoa física ou os dois. Vale para toda proposta com o produto |
 | **Valor do produto** | Fixo, faixa ou livre, e se o cliente vê a faixa |
 | **Estrutura financeira** | Amortização, periodicidade, taxa, carência, encargos, base de dias e limites de prazo. Veja [Precificação](/propostas/precificacao) |
 | **Documentos** | O que o cliente precisa enviar, somado ao que o modelo do formulário já pede |
-| **Ao concluir** | A política ou a esteira que roda quando os documentos chegam |
+| **Ao concluir** | A política ou a esteira que roda quando os documentos chegam, uma por tipo de documento |
 
 ### A chave não muda
 
@@ -39,7 +39,7 @@ A chave é o que formulários e fórmulas de esteira citam (por exemplo, `produt
 
 ### Para quem o produto é
 
-**Atende** limita o público: o formulário público só oferece o produto a quem se identifica com o tipo de documento certo (CNPJ para pessoa jurídica, CPF para pessoa física). Com **Os dois**, qualquer documento serve.
+**Atende** limita o público: **PJ**, **PF** ou **Os dois**. O formulário público só oferece o produto a quem se identifica com o tipo de documento certo (CNPJ para pessoa jurídica, CPF para pessoa física), e toda proposta com esse produto respeita a mesma regra, venha da tela, da API, do formulário, do HubSpot ou do [enquadramento pela esteira](/propostas/visao-geral#produto-enquadrado-pela-esteira): "Este produto não atende pessoa física (CPF). Escolha outro produto." Com **Os dois**, qualquer documento serve.
 
 ### Como o valor é definido
 
@@ -57,7 +57,7 @@ Os limites de prazo (mínimo e máximo, em meses) ficam na estrutura financeira.
 
 Os documentos do produto são **acrescentados** aos do modelo do formulário. Assim, um único formulário pode oferecer capital de giro e financiamento de veículo, e cada um pede só o que precisa. Pedir documentos exige o módulo de Onboarding; sem ele, os documentos do produto são ignorados.
 
-Em **Ao concluir**, o produto pode sobrepor o que o modelo dispara quando os documentos chegam: uma política (gera um relatório) ou uma esteira. Deixe **O que o modelo do formulário dispara** para seguir o modelo. Veja [Esteiras](/esteiras/visao-geral).
+Em **Ao concluir**, o produto pode sobrepor o que o modelo dispara quando os documentos chegam: uma política (gera um relatório) ou uma esteira. Deixe **O que o modelo do formulário dispara** para seguir o modelo. Como cada política e cada esteira analisa um tipo de documento só, o produto que atende **Os dois** tem um destino para cada tipo: **Ao concluir (CNPJ)** e **Ao concluir (CPF)**. Veja [Esteiras](/esteiras/visao-geral).
 
 ## Começar de um modelo
 

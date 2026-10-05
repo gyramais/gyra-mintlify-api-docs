@@ -39,13 +39,15 @@ Veja o ciclo completo em [Propostas](/propostas/visao-geral).
 POST /v1/proposals
 ```
 
-Registra um pedido novo. A proposta nasce em `DRAFT`, com `origin: "API"`. Com produto, ela congela o nome, a carteira, o valor fixo e a estrutura financeira do produto naquele momento: mudar o produto depois não altera a proposta.
+Registra um pedido novo. A proposta nasce em `DRAFT`, com `origin: "API"`. Com produto, ela congela o nome, a carteira, o valor fixo e a estrutura financeira do produto naquele momento: editar o produto depois não altera a proposta.
+
+O produto também pode ser definido pela esteira. A etapa **Enquadramento de produto** grava (ou troca) o produto enquanto a proposta não está encerrada, congelando o produto novo do mesmo jeito. Quem trocou e por quê ficam em `productSource`, na [leitura da proposta](#ler-uma-proposta).
 
 <ParamField body="document" type="string" required>
   CPF ou CNPJ do cliente, com ou sem máscara. O dígito verificador é conferido.
 </ParamField>
 <ParamField body="entityType" type="string">
-  `COMPANY` ou `PERSON`. Opcional: é deduzido do documento (14 dígitos é empresa, 11 é pessoa). Se vier, tem que bater com o documento.
+  `COMPANY` ou `PERSON`. Opcional: é deduzido do documento (14 dígitos é empresa, 11 é pessoa). Se vier, tem que bater com o documento. O produto precisa atender esse tipo (veja `entityTypes` em [Ler um produto](/api-reference/propostas/produtos-e-precificacao#ler-um-produto)).
 </ParamField>
 <ParamField body="name" type="string">
   Nome ou razão social. Até 200 caracteres.
@@ -77,7 +79,7 @@ Registra um pedido novo. A proposta nasce em `DRAFT`, com `origin: "API"`. Com p
   Modelo de solicitação usado para pedir os documentos do produto. Só vale quando o produto pede documentos.
 </ParamField>
 
-**Produto que pede documentos.** Se o produto tem documentos configurados e a sua organização tem o módulo de Cadastros, a proposta já abre e envia uma solicitação ao cliente. Nesse caso `contact.email` ou `contact.phone` é obrigatório, e a resposta traz `collectionSent` (`true` quando o link saiu). Veja [Dados de entrada](/esteiras/dados-de-entrada).
+**Produto que pede documentos.** Se o produto tem documentos configurados e a sua organização tem o módulo de Onboarding, a proposta já abre e envia uma solicitação ao cliente. Nesse caso `contact.email` ou `contact.phone` é obrigatório, e a resposta traz `collectionSent` (`true` quando o link saiu). Veja [Dados de entrada](/esteiras/dados-de-entrada).
 
 <CodeGroup>
 ```bash Requisição
@@ -105,6 +107,7 @@ curl -X POST https://gyra-core.gyramais.com.br/v1/proposals \
   "id": "66f1e0a3c2b9d40012a1b001",
   "createdAt": "2026-09-29T14:32:10.000Z",
   "updatedAt": "2026-09-29T14:32:10.000Z",
+  "removed": false,
   "organizationId": "6612a7f30000000000000001",
   "document": "11222333000181",
   "entityType": "COMPANY",
@@ -121,6 +124,7 @@ curl -X POST https://gyra-core.gyramais.com.br/v1/proposals \
   "portfolioId": null,
   "portfolioName": null,
   "pricingSnapshot": { "version": 1, "amortization": "PRICE", "periodicityMonths": 1 },
+  "productSource": null,
   "amountAlert": null,
   "answers": {
     "contact": {
@@ -133,7 +137,24 @@ curl -X POST https://gyra-core.gyramais.com.br/v1/proposals \
   "collectionId": null,
   "templateSlug": null,
   "createdByUserId": "6612a7f30000000000000009",
-  "issuedAt": null
+  "issuedAt": null,
+  "externalRef": null,
+  "externalKey": null,
+  "onCompleted": null,
+  "dispatchError": null,
+  "channelCorrespondentId": null,
+  "channelAgentId": null,
+  "statusChangedAt": "2026-09-29T14:32:10.000Z",
+  "analyzedAt": null,
+  "preApprovedAt": null,
+  "firmOfferAt": null,
+  "chosenAt": null,
+  "chosenAmountCents": null,
+  "chosenChannel": null,
+  "firmAmountCents": null,
+  "decision": null,
+  "decidedAt": null,
+  "rejectionStep": null
 }
 ```
 </CodeGroup>
@@ -149,6 +170,12 @@ curl -X POST https://gyra-core.gyramais.com.br/v1/proposals \
 <ResponseField name="amountAlert" type="string | null">`OUT_OF_RANGE` quando o valor pedido está fora da faixa do produto.</ResponseField>
 <ResponseField name="collectionId" type="string | null">Solicitação de documentos ligada à proposta.</ResponseField>
 <ResponseField name="collectionSent" type="boolean">Só aparece quando a proposta abriu uma solicitação. `false` significa que a solicitação existe mas o link não saiu.</ResponseField>
+<ResponseField name="channelCorrespondentId, channelAgentId" type="string | null">Correspondente e atendente, quando a proposta veio do [canal de correspondentes](/plataforma/correspondentes). `null` nas demais.</ResponseField>
+<ResponseField name="statusChangedAt" type="string">Última mudança de situação. Na criação, igual a `createdAt`.</ResponseField>
+<ResponseField name="analyzedAt, preApprovedAt, firmOfferAt, chosenAt, issuedAt" type="string | null">Marcos do pedido: primeira análise, primeira pré-aprovação, primeira oferta firme, última escolha de oferta e emissão. Começam em `null` e são preenchidos conforme a proposta avança.</ResponseField>
+<ResponseField name="decision, decidedAt, rejectionStep" type="string | null">Decisão final mais recente (`APPROVED` ou `REJECTED`), quando ela saiu e, se reprovada, a etapa que reprovou.</ResponseField>
+
+Os demais campos da proposta (`productSource`, `chosenAmountCents`, `chosenChannel`, `firmAmountCents`, `dispatchError`, `externalRef`, `externalKey`, `onCompleted`) estão na [leitura da proposta](#ler-uma-proposta).
 
 | Status | Mensagem | Quando |
 | --- | --- | --- |
@@ -156,6 +183,7 @@ curl -X POST https://gyra-core.gyramais.com.br/v1/proposals \
 | `400` | `"Documento inválido. Confira os números digitados."` | Dígito verificador errado |
 | `400` | `"O tipo informado não corresponde ao documento (CPF é pessoa, CNPJ é empresa)."` | `entityType` não bate com o documento |
 | `400` | `"Este produto não está disponível. Escolha outro."` | Produto desligado |
+| `400` | `"Este produto não atende pessoa física (CPF). Escolha outro produto."` ou `"Este produto não atende pessoa jurídica (CNPJ). Escolha outro produto."` | O produto não atende o tipo do documento |
 | `400` | `"A chave do produto informada não é válida."` | `productKey` fora do formato |
 | `404` | `"Produto não encontrado."` | `productKey` inexistente |
 | `400` | `"O contato vai no campo \"contact\", e não dentro de \"answers\"."` | `answers.contact` no corpo |
@@ -181,8 +209,8 @@ Lista as propostas da organização, com filtros, paginação e totais por carte
 <ParamField query="kind" type="string">`KYC`, `FINANCING` ou `INSTALLMENT_SALE`.</ParamField>
 <ParamField query="productKey" type="string">Chave do produto.</ParamField>
 <ParamField query="portfolioId" type="string">Id da carteira.</ParamField>
-<ParamField query="origin" type="string">`PUBLIC_FORM`, `OPERATOR`, `API` ou `BATCH`.</ParamField>
-<ParamField query="search" type="string">Nome ou dígitos do documento (a partir de 3 dígitos). Até 120 caracteres.</ParamField>
+<ParamField query="origin" type="string">`PUBLIC_FORM`, `OPERATOR`, `API`, `BATCH` ou `CRM` (criada pela integração com o HubSpot).</ParamField>
+<ParamField query="search" type="string">Parte do nome da proposta, parte da razão social ou do nome fantasia do cadastro do mesmo documento, ou dígitos do documento (a partir de 3). Até 120 caracteres.</ParamField>
 <ParamField query="page" type="integer" default="1">Página, a partir de `1`.</ParamField>
 <ParamField query="pageSize" type="integer" default="20">Itens por página, de `1` a `100`.</ParamField>
 
@@ -202,6 +230,8 @@ curl "https://gyra-core.gyramais.com.br/v1/proposals?status=WAITING_CUSTOMER&pag
       "document": "11222333000181",
       "entityType": "COMPANY",
       "name": "Padaria Exemplo Ltda",
+      "registryName": "PADARIA EXEMPLO LTDA",
+      "registryTradeName": "Padaria Exemplo",
       "kind": "FINANCING",
       "status": "WAITING_CUSTOMER",
       "origin": "API",
@@ -249,8 +279,10 @@ curl "https://gyra-core.gyramais.com.br/v1/proposals?status=WAITING_CUSTOMER&pag
 </CodeGroup>
 
 <ResponseField name="items" type="object[]">
-  Propostas da página, com os campos da proposta e dois resumos.
-  <Expandable title="resumos">
+  Propostas da página, mais recentes primeiro, com todos os campos da proposta (os da [criação](#criar-uma-proposta)) e estes extras. O exemplo acima mostra só parte dos campos.
+  <Expandable title="extras">
+    <ResponseField name="registryName" type="string | null">Razão social ou nome do cadastro da sua organização com o mesmo documento. `null` sem cadastro. É o nome que a tela de Propostas mostra.</ResponseField>
+    <ResponseField name="registryTradeName" type="string | null">Nome fantasia do mesmo cadastro.</ResponseField>
     <ResponseField name="currentOffer" type="object | null">Oferta vigente: rodada, tipo, situação, faixa, prazos, carências, taxa de risco, validade e o que foi escolhido.</ResponseField>
     <ResponseField name="lastRun" type="object | null">Última análise: `kind`, `refId` (relatório ou execução), `targetId` (política ou esteira) e `createdAt`.</ResponseField>
   </Expandable>
@@ -290,12 +322,32 @@ curl https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001 \
   "document": "11222333000181",
   "entityType": "COMPANY",
   "name": "Padaria Exemplo Ltda",
+  "registryName": "PADARIA EXEMPLO LTDA",
+  "registryTradeName": "Padaria Exemplo",
   "kind": "FINANCING",
   "status": "WAITING_CUSTOMER",
   "origin": "API",
   "requestedAmountCents": 25000000,
   "requestedTermMonths": 24,
   "productKey": "capital-giro",
+  "productSource": {
+    "operationResultId": "66f1e1b0c7d2e30012b3c101",
+    "stepId": "66e2b7f1a9c3d20011c4e301",
+    "userId": null,
+    "reason": null,
+    "previousProductKey": null,
+    "at": "2026-09-29T14:33:05.000Z"
+  },
+  "productLimits": {
+    "minCents": 1000000,
+    "maxCents": 100000000,
+    "termMinMonths": 6,
+    "termMaxMonths": 36,
+    "graceMaxMonths": 3,
+    "fixedRateBpsYear": null,
+    "riskMaxBpsYear": 1200
+  },
+  "dispatchError": null,
   "currentOfferId": "66f1e2c4d8a1b50013f2a002",
   "offers": [
     {
@@ -341,6 +393,25 @@ curl https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001 \
 ```
 </CodeGroup>
 
+A resposta traz todos os campos da proposta (os da [criação](#criar-uma-proposta)); o exemplo mostra só parte deles.
+
+<ResponseField name="registryName, registryTradeName" type="string | null">Razão social (ou nome) e nome fantasia do cadastro da sua organização com o mesmo documento. `null` sem cadastro.</ResponseField>
+<ResponseField name="productSource" type="object | null">
+  Preenchido quando a etapa **Enquadramento de produto** da esteira gravou ou trocou o produto. `null`: o produto veio na criação.
+  <Expandable title="campos">
+    <ResponseField name="operationResultId" type="string | null">Execução que gravou o produto.</ResponseField>
+    <ResponseField name="stepId" type="string | null">Etapa da esteira.</ResponseField>
+    <ResponseField name="userId" type="string | null">Analista, quando a escolha foi manual.</ResponseField>
+    <ResponseField name="reason" type="string | null">Motivo informado.</ResponseField>
+    <ResponseField name="previousProductKey" type="string | null">Produto anterior. `null` quando a proposta não tinha produto.</ResponseField>
+    <ResponseField name="at" type="string">Quando a troca foi gravada.</ResponseField>
+  </Expandable>
+</ResponseField>
+<ResponseField name="productLimits" type="object | null">Limites do produto congelado na proposta: `minCents` e `maxCents` (o valor fixo, quando há), `termMinMonths`, `termMaxMonths`, `graceMaxMonths`, `fixedRateBpsYear` (só quando a taxa é toda pré-fixada) e `riskMaxBpsYear` (teto do spread de risco). Limite ausente ou zero sai `null`. `null` inteiro quando a proposta não tem produto.</ResponseField>
+<ResponseField name="dispatchError" type="object | null">A análise que a proposta deveria disparar sozinha (o "Ao concluir" da solicitação) e não conseguiu: `reason` (o motivo, em português), `kind`, `targetId`, `entityType` e `at`. A proposta em `DRAFT` vai para `WAITING_OPERATOR`. O campo volta a `null` quando uma análise é registrada, por exemplo com [Rodar a análise](#rodar-a-análise).</ResponseField>
+<ResponseField name="chosenAmountCents, chosenChannel" type="integer | string | null">Valor da última escolha de oferta e por onde ela veio: `CUSTOMER` (página da oferta) ou `OPERATOR` (registrada em nome do cliente).</ResponseField>
+<ResponseField name="firmAmountCents" type="integer | null">Valor aprovado da última oferta firme.</ResponseField>
+<ResponseField name="externalRef" type="object | null">Registro de origem quando a proposta veio da integração com o HubSpot: `system`, `id` e `url` do negócio.</ResponseField>
 <ResponseField name="offers" type="object[]">Uma oferta por rodada, em ordem. O link e o token da oferta nunca aparecem aqui: use a [rota do link](/api-reference/propostas/ofertas#copiar-o-link-da-oferta). Campos em [Ofertas](/api-reference/propostas/ofertas#a-oferta).</ResponseField>
 <ResponseField name="runs" type="object[]">
   Cada análise disparada, da mais recente para a mais antiga. Rodar de novo cria um item novo, nunca sobrescreve.
@@ -415,8 +486,7 @@ A resposta é a proposta inteira com a situação nova (resumida acima).
 | `404` | `"Proposta não encontrada."` | Id inexistente |
 | `409` | `"A proposta está em {situação atual} e não pode ir para {situação pedida}."` | Mudança fora da tabela acima |
 | `409` | `"A proposta mudou de situação enquanto esta ação era feita. Atualize e tente de novo."` | Outra mudança chegou ao mesmo tempo |
-| `503` | `"Não foi possível cancelar a assinatura do contrato em andamento, e por isso a proposta não foi {cancelada, recusada ou vencida}. Tente de novo."` | A assinatura não cancelou; a situação foi mantida |
-| `502` | `"Não foi possível alterar a situação da proposta."` | Falha interna |
+| `502` | `"Não foi possível alterar a situação da proposta."` | Falha interna. Inclui o caso em que, ao encerrar, a assinatura de contrato em andamento não cancelou: a situação fica como estava e você pode repetir o pedido |
 
 ---
 
@@ -563,6 +633,12 @@ curl -X POST https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1
 | `409` | `"Esta proposta está encerrada ({cancelada, reprovada ou vencida}) e não pode rodar nova análise."` | Proposta em `CANCELED`, `REJECTED` ou `EXPIRED` |
 | `409` | `"Esta proposta já tem uma execução desta esteira em andamento. Nada foi disparado: decida ou conclua a execução atual antes de rodar de novo."` | A mesma esteira ainda está rodando. Traz `operationResultId` |
 | `409` | Mensagem da esteira sobre a execução aberta; na falta dela, `"Esta proposta já tem uma execução em andamento. Conclua ou encerre essa execução antes de rodar outra."` | A proposta já tem uma execução aberta. Traz `operationResultId` quando disponível |
+| `400` | `"Esta política é de esteira: rode a esteira que a usa."` | Com `REPORT`: a política está marcada para uso só dentro de esteira |
+| `400` | `"Política não está habilitada para ser utilizada"` | Com `REPORT`: a política está desligada |
+| `422` | `"The provided document does not match the selected policy"` | Com `REPORT`: a política é de CNPJ e a proposta é de CPF, ou o contrário |
+| `404` | `"Esteira não encontrada"` | Com `OPERATION`: a esteira não existe nesta organização |
+| `400` | `"A esteira \"{nome}\" está inativa. Ative a esteira para executá-la."` | Com `OPERATION`: a esteira está desligada |
+| `400` | `"A esteira \"{nome}\" analisa {CPF ou CNPJ}, mas o documento informado é um {CPF ou CNPJ}."` | Com `OPERATION`: a esteira é de outro tipo de documento |
 | `503` | `"O relatório foi criado, mas o processamento ainda não começou. Ele já está ligado à proposta; não rode de novo."` | Traz `reportId` e `proposalRunId`. O relatório processa sozinho |
 | `502` | `"A esteira não devolveu a execução criada."` | Falha ao criar a execução |
 | `502` | `"O relatório não foi criado."` | Falha ao criar o relatório |

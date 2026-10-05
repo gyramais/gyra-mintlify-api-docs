@@ -1,12 +1,14 @@
 ---
 title: "Solicitações no toolbox"
-description: "Pedir documentos, formulário, termo, assinatura e identidade ao cliente final por um link: montar o modelo, enviar, acompanhar e resolver."
+description: "Pedir documentos, formulário, termo, assinatura e identidade ao cliente final por um link, no Onboarding: montar o modelo, enviar, acompanhar e resolver."
 icon: "paper-plane"
 surface: plataforma
 domain: cadastro
 audience: operador
 lang: nao-tecnica
 ---
+
+Em **Solicitações** você pede ao cliente final o que falta por um link e acompanha cada resposta, item a item, até o pedido fechar.
 
 <Info>
   **Resumo:** menu lateral, seção **Onboarding**, **Solicitações**. É onde você pede ao cliente final o que falta e acompanha a resposta. O pedido sai por um link (e-mail, WhatsApp, os dois, ou você mesmo entrega), e o que chega é analisado e arquivado no [cadastro](/toolbox/cadastros) da pessoa ou da empresa.
@@ -18,75 +20,93 @@ lang: nao-tecnica
 
 ## As telas
 
+A seção tem três abas: **Enviadas**, **Modelos** e **Termos e contratos**.
+
 | Tela | Para quê |
 | --- | --- |
-| **Solicitações** | A listagem, com filtro por situação, cadastro e período |
+| **Enviadas** | A listagem, com busca por empresa, documento ou destinatário e filtro por situação e período |
 | **Nova solicitação** | Montar e disparar o pedido |
-| **Solicitação** | Acompanhar item a item e resolver o que precisa de decisão |
+| A solicitação | Acompanhar item a item e resolver o que precisa de decisão |
 | **Modelos** | O que se pede, publicado em versões, nas abas **Meus** e **Templates GYRA+** |
-| **Termos** | O que se assina, publicado em versões |
+| **Termos e contratos** | O que se aceita ou assina, publicado em versões |
 
-As verificações de identidade de todas as solicitações ficam numa tela própria, logo abaixo no menu: [Validação de identidade](/toolbox/validacao-de-identidade).
+As verificações de identidade de todas as solicitações ficam numa tela própria, logo abaixo no menu: [Validação de identidade](/toolbox/validacao-de-identidade). No **Início**, o bloco **Solicitações pendentes** conta as que esperam o cliente.
 
 ## Nova solicitação
 
 <Steps>
-  <Step title="Escolher o modelo">
-    O modelo diz o que será pedido. A tela mostra os modelos vigentes e ligados, com as métricas de uso de cada um. Modelo desligado não aparece aqui.
+  <Step title="Modelo">
+    Em **O que pedir**, escolha o modelo; a lista mostra os modelos vigentes e ligados, e modelo desligado não aparece. Em **De quem**, informe o CPF ou o CNPJ, ou busque um cadastro pelo nome. Se o documento ainda não tem cadastro, seguir cria um.
   </Step>
-  <Step title="Escolher o cadastro">
-    Digite o CNPJ ou o CPF. Se o cadastro não existir, ele é criado. Se existir, a tela mostra o que ele **já tem** e não vai pedir de novo, com a opção de **pedir mesmo assim** item a item.
+  <Step title="Destinatários">
+    Em **Quem recebe**, marque as pessoas, até 30. Em empresa, a lista traz quem está no quadro societário, com os contatos guardados de cada um, e você pode **Acrescentar pessoa** à mão. Os filtros **Marcados** e **Com contato salvo** ajudam em empresa com muitos sócios. Quando o modelo tem assinatura, a tela sugere **Quem assina, segundo o documento da empresa**, com o regime de assinatura já lido, e **Usar estas partes** aplica a sugestão.
   </Step>
-  <Step title="Escolher os destinatários">
-    Até 30 pessoas. A tela sugere os contatos que aquele documento já usou antes, e sugere **quem assina** a partir do documento societário vigente do cadastro, com o regime de assinatura já lido.
-  </Step>
-  <Step title="Ajustar prazo, canal e modo">
-    Prazo (padrão 7 dias), canal (e-mail, WhatsApp, os dois, ou nenhum) e modo de resposta (automático ou com revisão). Você pode escrever um recado que vai junto no convite.
-  </Step>
-  <Step title="Pré-visualizar e enviar">
-    Dá para ver a mensagem exata que vai sair, com a sua marca, antes de mandar. Ou salvar como rascunho e enviar depois.
+  <Step title="Revisão">
+    Confira o que será pedido. Item marcado **Já no cadastro** não é pedido de novo, a menos que você escolha **Pedir mesmo assim**. Escreva, se quiser, o **Recado para o destinatário (opcional)**, escolha **Como avisar o destinatário**, o **Prazo (dias)** e a **Resposta** (**Resposta automática** ou **Revisão do operador**), e clique em **Enviar solicitação**.
   </Step>
 </Steps>
 
+| Como avisar o destinatário | O que acontece |
+| --- | --- |
+| **A gente avisa** | A plataforma manda por e-mail e por WhatsApp, com a sua marca |
+| **Só por e-mail** | Nada de WhatsApp, mesmo para quem tem celular cadastrado |
+| **Só me dê o link** | Nenhuma mensagem sai. Você recebe a URL e entrega do seu jeito |
+
 <Tip>
-  Escolhendo o canal **nenhum**, a plataforma não avisa ninguém: a solicitação é criada, os links são gerados e aparecem na tela para você entregar pelo seu próprio canal. Lembrete também não sai.
+  Com **Só me dê o link**, a tela para em **Solicitação criada. O link é seu.**, com o botão de copiar de cada destinatário. Copie antes de sair: o link só aparece ali. Lembrete também não sai.
 </Tip>
+
+O atalho **Solicitar documentos**, no dossiê do cliente, abre esta tela com o cadastro já escolhido.
 
 ## Acompanhar
 
 A tela da solicitação mostra:
 
 - **Cada item**, com o estado, o parecer da análise e a evidência.
-- **Cada destinatário**, com o estado da entrega (enviado, entregue, aberto, em andamento, concluído, falhou) e o link dele, reemitível.
-- **A trilha**, com quem fez o quê e quando.
+- **Cada destinatário**, com o estado da entrega e o link dele, que você pode reenviar.
+- **As respostas do formulário**, campo a campo, com o que veio da extração e o que o destinatário mudou ou contestou. Em **Sócios informados pelo destinatário**, cada sócio aparece com nome, documento, função, participação e **Contato**.
+- **O histórico**, com quem fez o quê e quando.
 - **A origem**, quando a solicitação não foi aberta à mão: **Renovação automática**, **Aberta por uma esteira** ou **Veio do link público**.
 
 Na solicitação que veio do link público, se o contato informado não é o que o cadastro já conhece, a tela mostra um aviso. Nada é alterado no cadastro: você decide o que fazer com a diferença.
+
+Quando o **Ao concluir** do modelo não conseguiu disparar a análise (por exemplo, o modelo não tem esteira ou política para o tipo de documento de quem respondeu), a tela mostra **A análise ao concluir não foi disparada.**, com o motivo, para você rodar à mão.
 
 ### Estados do item
 
 | Estado | O que quer dizer |
 | --- | --- |
-| Pendente | Esperando o destinatário |
-| Já no cadastro | O cadastro já tem, não foi pedido |
-| Recebido | Chegou, ainda não processado |
-| Processando | A análise está rodando |
-| Aprovado | Passou |
-| Reprovado | Não passou, com motivo |
-| Análise manual | Precisa de olho humano |
-| Aguardando operador | A IA avaliou e você decide (modo com revisão) |
-| Dispensado | Você tirou o item do pedido |
-| Vencido | Passou do prazo |
+| **Aguardando envio** | Esperando o destinatário |
+| **Já no cadastro** | O cadastro já tem, não foi pedido |
+| **Recebido** | Chegou, ainda não processado |
+| **Analisando** | A análise está rodando |
+| **Validado** | Passou |
+| **Reprovado** | Não passou, com motivo |
+| **Análise manual** | Precisa de olho humano |
+| **Aguardando você** | A IA avaliou e você decide (modo com revisão) |
+| **Dispensado** | Você tirou o item do pedido |
+| **Vencido** | Passou do prazo |
+| **Recusado** | Uma das partes recusou assinar pela Clicksign |
+
+### Estados do destinatário
+
+**Não enviado**, **Entregue**, **Aberto**, **Respondendo**, **Concluído**, **Falha no envio** e **Sem item** (nada foi pedido a esta pessoa).
 
 ### Decidir
 
-Nos itens em **aguardando operador** ou **análise manual**, você tem três saídas:
+Nos itens em **Aguardando você** ou **Análise manual**, você tem três saídas:
 
 | Decisão | O que acontece |
 | --- | --- |
-| Aprovar | O item fecha |
-| Pedir de novo | O destinatário recebe o pedido outra vez, com o motivo que você escrever (obrigatório) |
-| Dispensar | O item sai do pedido |
+| **Aprovar** | O item fecha |
+| **Pedir reenvio** | O destinatário recebe o pedido outra vez, com o motivo que você escrever, em português, do jeito que ele vai ler |
+| **Dispensar** | O item sai do pedido |
+
+O mesmo item aceita até 3 pedidos de reenvio. Depois disso, sobram aprovar ou dispensar.
+
+<Tip>
+  A **Fila de revisão**, em **Clientes**, junta os itens esperando você de todas as solicitações, com atalhos de teclado para decidir em sequência.
+</Tip>
 
 ### Verificação de identidade
 
@@ -104,15 +124,20 @@ Cada item do modelo é de uma espécie:
 
 | Espécie | O que o cliente faz |
 | --- | --- |
-| Documento | Envia um arquivo |
-| Formulário | Responde perguntas que você montou |
-| Termo | Lê e aceita |
-| Assinatura | Assina, sozinho ou com outras partes |
-| Identidade | Prova quem é |
+| **Documento** | Envia um arquivo |
+| **Formulário** | Responde perguntas que você montou |
+| **Consentimento** | Lê e aceita um termo |
+| **Assinatura eletrônica** | Assina, sozinho ou com outras partes |
+| **Verificação de identidade** | Prova quem é |
+| **Item personalizado** | O pedido que não cabe nas outras espécies |
 
 E declara, quando for documento: o tipo pedido (ou o **requisito societário**, que a natureza jurídica da empresa resolve), a recência exigida, os formatos aceitos e se aceita mais de um arquivo.
 
 O modelo também define prazo, lembretes, canal, modo de resposta e o comportamento (o que fazer com item reprovado, se pede o que o cadastro já tem, se trava a assinatura enquanto uma dependência não conclui).
+
+Cada item também diz se vale para **Pessoa física e jurídica**, **Só pessoa física** ou **Só pessoa jurídica** (em **Aplica-se a**) e se é **Um por pessoa**, quando cada destinatário pessoa física recebe o seu.
+
+No editor, você vê a **Prévia do e-mail do destinatário** e a do convite por WhatsApp antes de usar o modelo.
 
 Modelos podem ser **duplicados** numa cópia editável. Salvar publica uma versão nova; o endereço estável entre versões é o mesmo, então uma integração que aponta para o modelo passa a usar a versão nova sozinha.
 
@@ -129,14 +154,16 @@ No editor do modelo, a seção **Ao concluir** diz o que acontece quando a solic
 | Opção | O que acontece |
 | --- | --- |
 | **Nada** (padrão) | A resposta fica registrada no cadastro. Ninguém é acionado |
-| **Gerar relatório** | Escolha a **Política**. A GYRA+ gera o relatório com o documento do cadastro |
-| **Rodar esteira** | Escolha a **Esteira**. A GYRA+ roda a esteira com o documento do cadastro |
+| **Gerar relatório** | Escolha a **Política para CNPJ** e a **Política para CPF**. A GYRA+ gera o relatório com o documento do cadastro |
+| **Rodar esteira** | Escolha a **Esteira para CNPJ** e a **Esteira para CPF**. A GYRA+ roda a esteira com o documento do cadastro |
 
-Detalhes em [Ao concluir](/kyc/solicitacoes#ao-concluir).
+Cada seletor só mostra o que analisa aquele tipo, e o de política só mostra as de uso **Relatório**. Depois de escolher, a tela conta em português o que vai acontecer. Se você escolhe o destino de um tipo e deixa o outro em branco, o aviso aparece antes de salvar: quem responder com aquele documento fica com a pendência registrada, sem análise.
+
+Detalhes em [Ao concluir](/onboarding/solicitacoes#ao-concluir).
 
 ### Link público
 
-A seção **Link público** transforma o modelo num [formulário público](/kyc/formulario-publico): um endereço só, que qualquer pessoa abre para começar a própria solicitação.
+A seção **Link público** transforma o modelo num [formulário público](/onboarding/formulario-publico): um endereço só, que qualquer pessoa abre para começar a própria solicitação.
 
 | Campo | O que faz |
 | --- | --- |
@@ -147,13 +174,13 @@ A seção **Link público** transforma o modelo num [formulário público](/kyc/
 | **Horas até aceitar uma nova resposta do mesmo cadastro** | Por quanto tempo quem já concluiu não abre outra solicitação |
 | **Endereço** | Aparece depois de salvar, com o botão **Copiar endereço** |
 
-Com o módulo de Propostas, a seção também tem o **Objetivo** do link (**Cadastro (documentos)**, **Pedido de financiamento** ou **Pedido de venda a prazo**), os **Produtos oferecidos** e as opções **Pedir o valor** e **Pedir o prazo**. Ver [Formulário público](/kyc/formulario-publico#receba-pedidos-de-financiamento-ou-venda-a-prazo).
+Com o módulo de Propostas, a seção também tem o **Objetivo** do link (**Cadastro (documentos)**, **Pedido de financiamento** ou **Pedido de venda a prazo**), os **Produtos oferecidos** e as opções **Pedir o valor** e **Pedir o prazo**. Ver [Formulário público](/onboarding/formulario-publico#receba-pedidos-de-financiamento-ou-venda-a-prazo).
 
-Detalhes de montagem em [Formulários](/kyc/formularios) e [Solicitações de coleta](/kyc/solicitacoes).
+Detalhes de montagem em [Formulários](/onboarding/formularios) e [Solicitações de coleta](/onboarding/solicitacoes).
 
-## Termos
+## Termos e contratos
 
-O que se assina. Duas origens:
+O que se aceita ou assina. Duas origens:
 
 - **Escrito aqui**, no editor, com variáveis que a plataforma preenche (`<<username>>`, `<<cnpj>>`, `<<form.faturamento-medio-mensal>>`, `<<doc.CONTRATO_SOCIAL.companyName>>`). A via assinada é o PDF que desenhamos.
 - **PDF do jurídico**, guardado como chegou. A pessoa lê e assina aquele arquivo, e os dados entram em caixas que você posiciona sobre as páginas.
@@ -162,25 +189,25 @@ Dá para **importar um contrato em Word**, que volta como rascunho editável, e 
 
 O termo de SCR já vem no catálogo da plataforma: você vê e usa, mas não edita. Enquanto o jurídico não publica a versão final, ele circula marcado como minuta.
 
-Detalhes em [Termos e assinatura](/kyc/termos-e-assinatura).
+Detalhes em [Termos e assinatura](/onboarding/termos-e-assinatura).
 
 ## A sua marca no que o cliente vê
 
-Nas configurações da organização, que ficam no menu da organização no topo da tela, você coloca logo e cores na página do destinatário, usa domínio próprio no link, remetente próprio no e-mail e o WhatsApp da sua empresa no convite.
+Nas configurações da organização, que ficam no menu da organização no topo do menu lateral, você coloca logo e cores na página do destinatário, usa domínio próprio no link, remetente próprio no e-mail e o WhatsApp da sua empresa no convite.
 
 ## Próximos passos
 
 <CardGroup cols={2}>
-  <Card title="Cadastros" icon="folder-open" href="/toolbox/cadastros">
+  <Card title="Clientes" icon="folder-open" href="/toolbox/cadastros">
     Onde o que foi entregue vai parar.
   </Card>
-  <Card title="Verificação de identidade" icon="user-check" href="/kyc/verificacao-de-identidade">
+  <Card title="Verificação de identidade" icon="user-check" href="/onboarding/verificacao-de-identidade">
     Os três caminhos e quando usar cada um.
   </Card>
-  <Card title="Página do destinatário" icon="link" href="/kyc/pagina-do-destinatario">
+  <Card title="Página do destinatário" icon="link" href="/onboarding/pagina-do-destinatario">
     O que o cliente final vê.
   </Card>
-  <Card title="Formulário público" icon="globe" href="/kyc/formulario-publico">
+  <Card title="Formulário público" icon="globe" href="/onboarding/formulario-publico">
     O link aberto para o cliente começar sozinho.
   </Card>
   <Card title="Validação de identidade" icon="id-card" href="/toolbox/validacao-de-identidade">

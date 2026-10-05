@@ -8,10 +8,10 @@ audience: ambos
 lang: nao-tecnica
 ---
 
-Uma proposta é o pedido do cliente final (quanto quer, em quanto tempo, para qual produto) e é o fio que liga tudo o que acontece depois: análise, oferta, escolha e contrato. Com ela, você responde a qualquer momento a pergunta "em que pé está o pedido deste cliente?".
+Uma proposta é o pedido do cliente final (quanto quer, em quanto tempo, para qual produto) e é o fio que liga tudo o que acontece depois: análise, oferta, escolha e contrato. Você recebe pedidos por integração nativa (o HubSpot já está disponível), por formulário público, pela API ou pela tela, e todos seguem o mesmo fluxo automatizado de análise, pré-aprovação e aprovação com alçadas.
 
 <Info>
-  **Resumo:** cada pedido vira uma proposta, com valor próprio. A proposta congela o produto do dia, roda uma análise (política ou esteira), recebe ofertas por rodada e termina em **Oferta emitida**, **Recusada**, **Cancelada** ou **Vencida**.
+  **Resumo:** cada pedido vira uma proposta, com valor próprio. A proposta congela o produto do dia (ou recebe o produto que a esteira enquadrar), roda uma análise (política ou esteira), recebe ofertas por rodada e termina em **Oferta emitida**, **Recusada**, **Cancelada** ou **Vencida**.
 </Info>
 
 <Note>
@@ -22,7 +22,7 @@ Uma proposta é o pedido do cliente final (quanto quer, em quanto tempo, para qu
 
 A proposta registra o **pedido**, não a análise. Dois pedidos do mesmo cliente no mesmo dia são duas propostas, cada uma com seu valor, seu prazo e sua história. A GYRA+ não junta pedidos parecidos: se o cliente pediu duas vezes, você vê as duas.
 
-A proposta também não exige cadastro prévio. Ela guarda o CPF ou CNPJ, o nome e o tipo (pessoa ou empresa, deduzido do documento). Se a sua organização já tem o [cadastro](/kyc/visao-geral) daquele documento, a proposta se liga a ele sozinha.
+A proposta também não exige cadastro prévio. Ela guarda o CPF ou CNPJ, o nome informado no pedido (opcional) e o tipo (pessoa ou empresa, deduzido do documento). Se a sua organização já tem o [cadastro](/onboarding/visao-geral) daquele documento, a proposta se liga a ele sozinha, e a lista e o detalhe mostram o nome do cadastro (razão social ou, sem ela, o nome fantasia). O nome digitado no pedido fica como reserva para quando não há cadastro. A busca da lista também acha a proposta pelo nome do cadastro.
 
 Uma proposta de capital de giro, por exemplo, guarda:
 
@@ -40,12 +40,21 @@ Uma proposta de capital de giro, por exemplo, guarda:
 
 Quando a proposta nasce com um [produto](/propostas/produtos), ela copia o nome, a carteira, o valor de catálogo (se o produto tem valor fixo) e a [estrutura financeira](/propostas/precificacao) daquele dia. Mudar o produto depois não altera propostas antigas: a simulação e a oferta de cada pedido usam as regras que valiam quando ele entrou.
 
-O produto precisa estar ligado. Produto desligado some do formulário e não aceita pedido novo.
+O produto precisa estar ligado e atender o tipo do documento. Produto desligado some do formulário e não aceita pedido novo. Produto que atende só pessoa jurídica recusa um pedido com CPF (e vice-versa), venha ele da tela, da API, do formulário ou do HubSpot: "Este produto não atende pessoa física (CPF). Escolha outro produto."
 
 Duas regras de valor:
 
 - **Produto de valor fixo:** o valor do catálogo manda. O que o cliente digitou fica guardado, mas a proposta nasce com o valor do produto.
 - **Produto com faixa de valor:** pedido fora da faixa **não é recusado**. A proposta nasce com um alerta de valor fora da faixa, e quem analisa decide.
+
+### Produto enquadrado pela esteira
+
+O pedido não precisa chegar com o produto certo. A etapa **Enquadramento de produto** da [esteira](/esteiras/etapas) escolhe o produto durante a análise, por regras, por fórmula ou pela mão de um analista, e grava esse produto na proposta. A gravação congela o mesmo que a criação congela: nome, valor de catálogo, carteira e estrutura financeira do dia. A GYRA+ também guarda quem trocou, em que etapa, o motivo e qual era o produto anterior.
+
+- As etapas seguintes da esteira leem o produto enquadrado e os limites dele (valor, prazo, carência e teto do spread de risco).
+- Repetir o mesmo produto não muda nada.
+- Proposta encerrada não troca de produto: "A proposta está encerrada: o produto não pode mais ser trocado."
+- Rodar a análise de novo pode trocar o produto: vale o enquadramento da execução nova.
 
 ## Situações
 
@@ -56,7 +65,7 @@ A situação diz em que pé está o pedido. Ela é movida pela análise (a estei
 | **Rascunho** | A proposta existe, mas nenhuma análise rodou ainda |
 | **Em análise** | Uma política ou esteira está trabalhando no pedido |
 | **Esperando o cliente** | A pré-aprovação foi enviada e o cliente precisa escolher valor e prazo |
-| **Esperando você** | A esteira parou numa decisão humana: revisão, revisão da oferta, alçada ou decisão no relatório |
+| **Esperando você** | A esteira parou numa decisão humana (revisão, revisão da oferta, alçada ou decisão no relatório), ou a análise automática não pôde ser disparada |
 | **Oferta emitida** | O pedido foi aprovado e a oferta final está registrada |
 | **Recusada** | O pedido foi recusado |
 | **Cancelada** | Alguém da sua equipe cancelou o pedido |
@@ -66,11 +75,15 @@ A situação diz em que pé está o pedido. Ela é movida pela análise (a estei
   Comitê de crédito IA rodando e solicitação de documentos aberta **não** mudam a situação: a proposta segue **Em análise** enquanto a esteira trabalha. **Esperando você** aparece só quando alguém da sua equipe precisa agir.
 </Tip>
 
+### Quando a análise não sai
+
+A análise que dispara sozinha quando a solicitação conclui (o **Ao concluir** do produto ou do modelo) pode não sair, por exemplo quando o destino escolhido analisa outro tipo de documento. Nesse caso, a proposta em **Rascunho** vai para **Esperando você** e o detalhe mostra "A análise não foi disparada." com o motivo. Rode a análise pela tela ou ajuste o destino: assim que uma análise sai, o aviso some.
+
 ### O caminho típico
 
 <Steps>
   <Step title="Rascunho">
-    O pedido entra pelo formulário, pela tela ou pela API.
+    O pedido entra pelo HubSpot, pelo formulário, pela tela ou pela API.
   </Step>
   <Step title="Em análise">
     Você (ou o disparo automático do formulário) roda uma política ou uma [esteira](/esteiras/visao-geral).
@@ -105,9 +118,12 @@ Duas pessoas agindo ao mesmo tempo não se atropelam: a segunda recebe o aviso d
 
 | Origem | Como aparece | Como nasce |
 | --- | --- | --- |
-| Formulário público | **link público** | O cliente preenche o [formulário com link aberto](/kyc/formulario-publico) de um modelo com objetivo de crédito |
+| HubSpot | **CRM** | Um negócio entra num estágio gatilho do seu funil e a [integração nativa com o HubSpot](/propostas/hubspot) cria a proposta e roda a análise da regra |
+| Formulário público | **link público** | O cliente preenche o [formulário com link aberto](/onboarding/formulario-publico) de um modelo com objetivo de crédito |
 | Operador | **operador** | Alguém da sua equipe clica em **Nova proposta** no toolbox |
 | API | **API** | O seu sistema cria a proposta com um usuário de API |
+
+Com o [canal de correspondentes](/plataforma/correspondentes), o pedido também pode nascer no portal do parceiro: a proposta entra sem produto, roda a esteira escolhida em **Entrada do canal** e o **Enquadramento de produto** escolhe o produto, reprovando o que aquele correspondente não pode ofertar. Na pré-aprovação, a esteira pode enviar a oferta indicativa ao atendente do canal, que escolhe o valor e o prazo no próprio portal.
 
 <Accordion title="Pedidos repetidos pelo formulário público">
   A proposta nunca é deduplicada: cada envio do formulário cria um pedido novo. Quem evita pedir os mesmos documentos duas vezes é a **solicitação**:
@@ -116,14 +132,14 @@ Duas pessoas agindo ao mesmo tempo não se atropelam: a segunda recebe o aviso d
   - se a solicitação já foi concluída dentro da janela do modelo (24 horas por padrão) e o contato é o mesmo, a proposta nova nasce e a análise dispara, sem pedir documentos de novo;
   - se o contato é outro, o pedido é recusado, para ninguém sequestrar o pedido de outra pessoa.
 
-  O modelo também tem um teto diário de pedidos (50 por padrão), que protege você do custo de análises disparadas em massa. Detalhes em [Formulário público](/kyc/formulario-publico).
+  O modelo também tem um teto diário de pedidos (50 por padrão), que protege você do custo de análises disparadas em massa. Detalhes em [Formulário público](/onboarding/formulario-publico).
 </Accordion>
 
 ## Como a proposta se liga ao resto
 
 ```
 Proposta (o pedido)
-  ├── Produto e carteira      → congelados na criação
+  ├── Produto e carteira      → congelados na criação ou no enquadramento
   ├── Cadastro                → ligado pelo documento, quando existe
   ├── Solicitação             → documentos pedidos ao cliente
   ├── Execuções               → cada análise, com motivo
@@ -135,7 +151,7 @@ Proposta (o pedido)
 
 ### Solicitação de documentos
 
-Se o produto pede documentos e a sua organização tem o módulo de Onboarding, criar a proposta abre uma [solicitação](/kyc/solicitacoes) para o cliente, com os documentos do produto somados aos do modelo. Nesse caso, informe o e-mail ou o celular do cliente: é por ali que o link chega.
+Se o produto pede documentos e a sua organização tem o módulo de Onboarding, criar a proposta abre uma [solicitação](/onboarding/solicitacoes) para o cliente, com os documentos do produto somados aos do modelo. Nesse caso, informe o e-mail ou o celular do cliente: é por ali que o link chega.
 
 ### Execuções
 
@@ -157,6 +173,7 @@ A GYRA+ avisa o cliente final em um momento: quando a pré-aprovação é enviad
 
 - **Pela API:** consulte a proposta e veja a situação, as ofertas e as execuções.
 - **Pelo webhook da execução:** quando a execução da esteira termina, a GYRA+ avisa o seu sistema. Guarde o identificador da execução devolvido ao rodar a análise para ligar o aviso à proposta. Veja [Execuções](/esteiras/execucoes).
+- **No HubSpot:** a proposta que nasceu de um negócio devolve a situação, o limite e a validade para os campos "Gyra+" do próprio negócio. Veja [HubSpot](/propostas/hubspot).
 
 Se a proposta abriu uma solicitação, os webhooks de solicitação (`collection.*`) contam o andamento dos documentos.
 
@@ -178,5 +195,11 @@ Tudo o que a tela faz com propostas, produtos e carteiras está disponível na A
   </Card>
   <Card title="Propostas no toolbox" icon="table-list" href="/toolbox/propostas">
     Lista, detalhe, abas e ações da tela.
+  </Card>
+  <Card title="HubSpot" icon="hubspot" href="/propostas/hubspot">
+    Negócio do funil vira proposta, e a decisão volta para o negócio.
+  </Card>
+  <Card title="Painel gerencial" icon="chart-line" href="/propostas/gerencial">
+    Volume, aprovação, gargalos e quem traz o negócio.
   </Card>
 </CardGroup>

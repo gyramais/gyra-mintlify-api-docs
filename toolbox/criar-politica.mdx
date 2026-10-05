@@ -27,16 +27,21 @@ Se o caso é próximo de algum template, **sempre prefira clonar** pela opção 
 
 ## Fluxo
 
-O editor tem um menu **Configurar política** à esquerda com seis etapas. Você não precisa percorrer todas: só duas são obrigatórias, **Fontes de dados** (o Relatório base) e **Decisão e alçada** (o Objetivo). As outras quatro existem para quem precisa delas.
+O editor tem um menu **Configurar política** à esquerda com seis etapas. Você não precisa percorrer todas: só duas são obrigatórias, **Fontes de dados** (o Relatório base) e **Decisão e inteligência** (o Objetivo). As outras quatro existem para quem precisa delas.
 
 <Steps>
   <Step title="Entrar em Nova Política">
-    *Política de Crédito, Políticas, Nova política*. O editor abre em branco, com o menu de etapas à esquerda e o nome da política no topo, ao lado do status **Inativa**.
+    *Política de Crédito, Políticas, Nova política*. Na criação, escolha **Onde a política é usada**, obrigatório:
+
+    - **Relatório**: roda sozinha pelo campo de CPF/CNPJ e pelos disparos; mostra só o que as fontes do relatório trazem.
+    - **Esteira**: roda como etapa de esteira; mostra todas as variáveis, inclusive de formulário, e a esteira confere ao inserir.
+
+    O editor abre com o menu de etapas à esquerda e o nome da política no topo, ao lado do status **Inativa**. O uso pode ser trocado depois, no topo de **Fontes de dados**. Ver [Onde a política é usada](/concepts/politica-de-credito#onde-a-pol%C3%ADtica-%C3%A9-usada).
   </Step>
   <Step title="Fontes de dados">
     *"Escolha de onde vêm os dados que esta política usa nas análises. Ative só o que fizer sentido para o seu processo."*
 
-    Comece pelo **Relatório base**, que é obrigatório e destrava todo o resto:
+    Comece pelo **Relatório base**, que destrava todo o resto. Ele é obrigatório no uso Relatório; no uso Esteira, existe também a opção **Nenhum**, que faz da política uma camada de aprofundamento:
 
     - **Tipo de documento**: Pessoa Jurídica (CNPJ) ou Pessoa Física (CPF).
     - **Nível**: **Simples** (cadastral, contatos, renda e sócios diretos), **Essencial** (+ rede até 3º grau, processos desde 2014 e alterações cadastrais), **Completo** (+ PEP, sanções e certidões oficiais) ou **Completo+** (+ processos desde 1980, licenças e benefícios).
@@ -84,25 +89,26 @@ O editor tem um menu **Configurar política** à esquerda com seis etapas. Você
 
     Três fórmulas em sintaxe de planilha, para limite, taxa e prazo. Catálogo e exemplos em [Precificação](/concepts/precificacao).
   </Step>
-  <Step title="Decisão e alçada">
-    *"Objetivo da política, decisão automática e quem pode alterar análises."*
+  <Step title="Decisão e inteligência">
+    *"Configure como a inteligência da GYRA+ apoia a deliberação de crédito nesta política."*
 
-    - **Objetivo** da política, obrigatório para salvar. É o que a operação está decidindo (capital de giro, contratação, abertura de conta), e serve de contexto para a análise de IA.
-    - **Usar resultado da política no relatório**: ligado, o resultado vira o status do relatório automaticamente; desligado, o relatório fica pendente até um analista decidir.
-    - **Quem pode alterar análises**: os papéis com alçada para reverter uma decisão.
-    - **[Comitê de Crédito IA](/concepts/comite-de-credito)**, quando o Relatório base tem pipeline de parecer: se o comitê é convocado sozinho e em qual modo.
+    - **Objetivo da política**, obrigatório para salvar. É o que a operação está decidindo (capital de giro, contratação, abertura de conta), e serve de contexto para a análise de IA.
+    - **Quem pode sobrepor a decisão**: quem tem alçada para reverter uma decisão.
+    - **Parecer IA**: só leitura. Quem liga é a GYRA+; a tela mostra se está ativo e por quê.
+    - **Rota por resultado**: para **Aprovado**, **Alerta** e **Alerta severo**, decidir sozinha ou **Enviar para revisão**. Vale para relatórios avulsos; em esteiras, vale a etapa Decisão.
+    - **Quem revisa**: **Analista**, **Comitê IA recomenda, analista decide** ou **Comitê IA decide**. As opções do [Comitê de Crédito IA](/concepts/comite-de-credito) só ficam disponíveis com Parecer IA ativo.
   </Step>
   <Step title="Salvar e habilitar">
-    Salve e ligue o toggle de status no topo. Enquanto estiver **Inativa**, a política não aparece no input de análise e não pode ser executada. Ativada, ela passa a aparecer para todos os usuários com permissão ao digitar um documento compatível.
+    Salve e ligue o toggle de status no topo. Enquanto estiver **Inativa**, a política não aparece no input de análise e não pode ser executada. Ativada, uma política de uso Relatório passa a aparecer para todos os usuários com permissão ao digitar um documento compatível; uma de uso Esteira fica disponível para as etapas das esteiras.
 
     <Note>
-      Salvar sem o **Objetivo** preenchido não passa: o editor avisa, leva você para *Decisão e alçada* e marca a etapa como obrigatória.
+      Salvar sem o **Objetivo** preenchido não passa: o editor avisa, leva você para *Decisão e inteligência* e marca a etapa como obrigatória.
     </Note>
   </Step>
 </Steps>
 
 <Tip>
-  Para a primeira política, o caminho mais curto é: **Relatório base**, três ou quatro **Condições** de corte óbvio e **Decisão e alçada** com o objetivo preenchido. Classificação de risco e Precificação você adiciona depois, quando já tiver volume para calibrar.
+  Para a primeira política, o caminho mais curto é: **Relatório base**, três ou quatro **Condições** de corte óbvio e **Decisão e inteligência** com o objetivo preenchido. Classificação de risco e Precificação você adiciona depois, quando já tiver volume para calibrar.
 </Tip>
 
 ## Estrutura mínima recomendada

@@ -1,6 +1,6 @@
 ---
 title: "Visão geral da API"
-description: "Endereço, autenticação, versionamento, capacidades e erros das rotas de Cadastros e Solicitações. Leia uma vez, vale para todas."
+description: "Endereço, autenticação, versionamento, capacidades e erros das rotas do Onboarding. Leia uma vez, vale para todas."
 surface: api
 domain: cadastro
 audience: integrador
@@ -41,14 +41,20 @@ Cada rota responde nos dois caminhos:
 
 ## Capacidades
 
-Sem a capacidade, a rota responde `404`: ela não existe para aquela organização.
+Sem a capacidade, a rota responde `404` com a mensagem `Recurso não encontrado.`: ela não existe para aquela organização.
 
 | Capacidade | O que libera |
 | --- | --- |
-| `kycEnabled` | O módulo inteiro |
-| `scrEnabled` | Cadastros e Solicitações para resolver o cadastro do destinatário |
+| `kycEnabled` | O módulo inteiro: cadastros, documento, formulário, termo, item livre e verificação de identidade |
+| `scrEnabled` | O item de autorização de SCR. Sem `kycEnabled`, só esse item pode ser pedido numa solicitação |
 | `communicationBrandingEnabled` | Marca, domínio próprio, remetente e WhatsApp da sua empresa |
 | `identityEmailEnabled` | O Valida+ como método de identidade |
+
+<Note>
+  Com credencial de integração, as rotas `/v1/registry` exigem `kycEnabled`. Pedir numa solicitação um item que a organização não contratou responde `403` com o nome do item, por exemplo `Sua organização não pode pedir verificação de identidade nesta solicitação. Fale com a GYRA+ para habilitar.`
+</Note>
+
+As rotas de cadastro e de solicitação pedem a permissão `can-use-registry-api` (credencial de integração) ou `can-generate-report`. As rotas de webhook pedem `can-use-registry-api` ou `can-manage-settings`.
 
 ## Erros
 
@@ -56,18 +62,19 @@ O corpo é sempre `{ code, message }`, com a mensagem em português.
 
 | Código | Quando |
 | --- | --- |
-| `400` | Corpo ou parâmetro inválido. A mensagem concatena todas as falhas |
+| `400` | Corpo ou parâmetro inválido, inclusive id fora do formato de 24 caracteres hexadecimais. A mensagem concatena todas as falhas por vírgula |
 | `401` | Token ausente, expirado ou inválido |
-| `403` | Sem a permissão exigida pela rota |
+| `403` | Sem a permissão exigida pela rota, ou item que a organização não contratou |
 | `404` | Recurso inexistente **ou** capacidade não liberada |
-| `413` | Arquivo acima do teto (15 MB no envio síncrono, 50 MB no presign) |
-| `422` | O pedido é válido mas não cabe no estado atual do recurso |
-| `429` | Limite de requisições |
+| `409` | O pedido não cabe no estado atual: arquivo repetido no cadastro, documento já decidido por um operador, solicitação encerrada, item que não aguarda decisão |
+| `413` | Arquivo acima de 15 MB no envio síncrono. No presign, o teto de 50 MB responde `400` |
+| `429` | Documento que já chegou a 5 tentativas de reprocessamento |
+| `502` | Um serviço interno não respondeu. A mensagem diz o que não foi feito; tente de novo |
 
 <Warning>
   Não faça match exato da mensagem: ela muda sem aviso. Use o `code`.
 
-  E campo que a API não conhece é **descartado em silêncio**, não recusado. Se algo que você mandou não aparece na resposta, confira o nome antes de investigar o resto.
+  E campo que a API não conhece é **descartado em silêncio**, não recusado. Se algo que você mandou não aparece na resposta, confira o nome antes de investigar o resto. Já um **valor** fora da lista num campo conhecido (um `kycStatus` inexistente, por exemplo) é recusado com `400`.
 </Warning>
 
 ## Identificadores
@@ -89,7 +96,11 @@ Todo id é um ObjectId de 24 caracteres hexadecimais. CNPJ e CPF são aceitos co
   Para montar um seletor de modelo no seu sistema, use `enabled=true`: é o mesmo critério que o toolbox usa na nova solicitação.
 </Tip>
 
-Cada modelo da listagem traz `enabled`, `scope` e, quando o [formulário público](/kyc/formulario-publico) está configurado, `publicFormUrl` com o endereço pronto. `onCompleted` diz o que o modelo faz [ao concluir](/kyc/solicitacoes#ao-concluir).
+Cada modelo da listagem traz `enabled`, `scope` e, quando o [formulário público](/onboarding/formulario-publico) está configurado, `publicFormUrl` com o endereço pronto. `metrics` traz o uso do modelo na sua organização: `collections`, `completedCollections`, `completionRate` e `averageCompletionHours`.
+
+`onCompleted` diz o que o modelo faz [ao concluir](/onboarding/solicitacoes#ao-concluir): `kind` é `NONE`, `POLICY` ou `OPERATION`, e `id` é a política ou a esteira. Quando o modelo tem um destino para CNPJ e outro para CPF, eles vêm em `byEntityType`, com as chaves `COMPANY` e `PERSON`, cada uma com o próprio `kind` e `id`.
+
+Em `items`, um item com `appliesTo` igual a `PJ` só nasce quando o cadastro é de pessoa jurídica, e `PF` só quando é de pessoa física. Sem `appliesTo`, o item vale para os dois.
 
 ### Ligar ou desligar um modelo
 
@@ -109,7 +120,7 @@ Resposta:
 
 O `id` pode ser o de qualquer versão: a mudança vale para todas as versões do modelo, e `updated` diz quantas foram alteradas. Num modelo GYRA+, a mudança vale só para a sua organização e `updated` é `1`.
 
-Modelo desligado some da escolha de modelo (nova solicitação e etapa da esteira), mas continua na listagem. Não é exclusão: solicitação já enviada com ele segue valendo.
+Modelo desligado some da escolha de modelo (nova solicitação e etapa da esteira), mas continua na listagem. Não é exclusão: solicitação já enviada com ele segue valendo, e o `slug` dele continua aceito em [`POST /v1/collections`](/api-reference/collection/post-collections). Modelo inexistente responde `404` com `Modelo não encontrado.`
 
 ## Listar as validações de identidade
 
@@ -164,9 +175,9 @@ Todas as verificações de identidade da organização, dos itens de identidade 
 | `source` | `ITEM` (item de identidade) ou `SIGNATORY` (parte de documento conjunto) |
 | `method` | `FACE_MATCH` ou `EMAIL` |
 | `flow` | Refina o face match: `DATABASE_VALIDATION` (sem documento, contra a base oficial) ou `DOCUMENT` (com documento) |
-| `verdict` | A [avaliação](/kyc/verificacao-de-identidade#o-que-a-plataforma-devolve) da verificação |
+| `verdict` | A [avaliação](/onboarding/verificacao-de-identidade#o-que-a-plataforma-devolve) da verificação |
 | `faceSimilarity`, `livenessScore`, `livenessStatus` | Os números da biometria, quando existem |
-| `fraudSignalsCount` | Quantos [sinais de antifraude](/kyc/verificacao-de-identidade#sinais-de-antifraude) a verificação levantou |
+| `fraudSignalsCount` | Quantos [sinais de antifraude](/onboarding/verificacao-de-identidade#sinais-de-antifraude) a verificação levantou |
 | `summary` | Contagem por resultado. Respeita período, método e busca, mas **não** o filtro `verdict`, para você montar abas com os totais |
 
 - O documento sai sempre mascarado. Imagens e o retorno cru do provedor não saem nesta rota.
@@ -174,11 +185,11 @@ Todas as verificações de identidade da organização, dos itens de identidade 
 
 ## O que não está aqui
 
-A API pública cobre a **integração**: ler documento, montar dossiê, pedir ao cliente e receber aviso.
+A API pública cobre a **integração**: ler documento, montar dossiê, pedir ao cliente e receber aviso. Além das páginas de cada rota, veja [Pessoas, contatos e dados declarados](/api-reference/onboarding/pessoas-e-contatos) e [Baixar a via assinada](/api-reference/onboarding/via-assinada).
 
-Configuração fica no toolbox: a [régua de validação](/kyc/regua-de-validacao), a montagem dos [modelos de coleta e de termo](/kyc/termos-e-assinatura) (pela API você lista e liga ou desliga, como acima), a [marca e os canais de envio](/kyc/pagina-do-destinatario) e os indicadores de acurácia. São telas com previa e versionamento, e um valor errado ali afeta todo documento que entrar depois.
+Configuração fica no toolbox: a [régua de validação](/onboarding/regua-de-validacao), a montagem dos [modelos de coleta e de termo](/onboarding/termos-e-assinatura) (pela API você lista e liga ou desliga, como acima), a [marca e os canais de envio](/onboarding/pagina-do-destinatario) e os indicadores de acurácia. São telas com previa e versionamento, e um valor errado ali afeta todo documento que entrar depois.
 
-As rotas do [link do destinatário](/kyc/pagina-do-destinatario) e do [formulário público](/kyc/formulario-publico) também não entram: elas pertencem às páginas que o seu cliente abre, sem credencial de integração.
+As rotas do [link do destinatário](/onboarding/pagina-do-destinatario) e do [formulário público](/onboarding/formulario-publico) também não entram: elas pertencem às páginas que o seu cliente abre, sem credencial de integração.
 
 ## Próximos passos
 

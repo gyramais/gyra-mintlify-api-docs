@@ -14,7 +14,7 @@ lang: nao-tecnica
   | Família | Sobre o quê | Referência |
   | --- | --- | --- |
   | **Relatório e crédito** | Relatório concluído, política avaliada, comitê deliberado, PDF pronto | Esta página e [Criar Webhook](/api-reference/webhook/post-webhook) |
-  | **Cadastros e Solicitações** | Documento analisado, solicitação concluída, mensagem que não chegou | [Eventos de webhook](/api-reference/kyc/eventos-de-webhook) |
+  | **Onboarding** | Documento analisado, solicitação concluída, mensagem que não chegou | [Eventos de webhook](/api-reference/onboarding/eventos-de-webhook) |
 
   Elas têm **envelope e assinatura diferentes**: a primeira manda `{ organizationId, webhookType, data }` e opcionalmente um segredo no cabeçalho `api-key`; a segunda manda `{ id, event, occurredAt, organizationId, data }` com assinatura HMAC. Não tente escrever um parser só para as duas.
 

@@ -34,20 +34,29 @@ Cada rodada é uma oferta nova registrada na proposta. Quando uma rodada nova co
 
 ## Rodada 1: a faixa pré-aprovada
 
-A faixa nasce da etapa **Pré-aprovação** da [esteira](/esteiras/etapas). Ela precisa vir antes da **Decisão**, e cada fórmula pode usar o que a análise já produziu.
+A faixa nasce da etapa **Pré-aprovação** da [esteira](/esteiras/etapas), que vem antes da decisão final. Em **Origem da faixa e revisão**, a **Fonte** diz de onde vêm valor, prazos e carências:
+
+| Fonte | Como a faixa nasce |
+| --- | --- |
+| **Fórmula** (padrão) | As fórmulas da etapa calculam a faixa |
+| **Produto da proposta** | Valor, prazos e carência saem dos limites do produto. As fórmulas ficam opcionais e só limitam dentro do produto. Sem produto na proposta, a etapa vai para o analista |
+| **Manual (o analista preenche)** | O analista preenche a faixa, que já vem pré-preenchida pelo produto |
+
+Em **Revisão do analista**, você decide se alguém confere a faixa antes de a oferta sair: **Nenhuma**, **Opcional (só fora do produto ou sem faixa)** ou **Obrigatória** (sempre, na fonte manual). Com revisão, a esteira para antes de mandar a oferta, e o analista confirma ou ajusta. Sair dos limites do produto exige justificativa. Em **Quem revisa**, escolha as pessoas; vazio, qualquer pessoa com acesso à execução revisa.
 
 | Campo da etapa | O que define | Exemplo |
 | --- | --- | --- |
-| **Valor mínimo (R$)** | Fórmula do menor valor | `#valor_pedido * 0.5` |
-| **Valor máximo (R$)** | Fórmula do maior valor | `#valor_pedido` |
-| **Prazos permitidos (meses)** | As opções de prazo | 12, 18, 24 |
-| **Prazo máximo por fórmula (opcional)** | Corta os prazos acima do resultado | |
-| **Carências permitidas (meses)** | As opções de carência (vazio = sem carência) | 0, 3, 6 |
+| **Valor mínimo (R$)** | Fórmula do menor valor (opcional com fonte no produto) | `#valor_pedido * 0.5` |
+| **Valor máximo (R$)** | Fórmula do maior valor (opcional com fonte no produto) | `#valor_pedido` |
+| **Prazos permitidos (meses)** | As opções de prazo. Com fonte no produto, vazio é do mínimo ao máximo do produto | 12, 18, 24 |
+| **Prazo máximo por fórmula (opcional)** | Corta os prazos acima do resultado | `#prazo_pedido` |
+| **Carências permitidas (meses)** | As opções de carência. Vazio é sem carência (com fonte no produto, até a carência máxima do produto) | 0, 3, 6 |
 | **Spread de risco (opcional)** | O spread do cliente, em pontos-base ao ano, limitado ao teto do produto | `250` (2,5% a.a.) |
-| **Validade (dias)** | Por quanto tempo o link vale (1 a 365, padrão 15) | 15 |
+| **Validade (dias)** | Por quanto tempo a oferta vale (1 a 365, padrão 15) | 15 |
+| **Enviar a oferta para** | **Cliente (contato da proposta)** ou **Atendente do canal (correspondente)** | |
 | **Enviar ao cliente** | Manda o link por **E-mail**, **SMS** ou os dois | |
-| **Esperar a escolha** | A esteira para até o cliente escolher | |
-| **Ao vencer** | O que fazer se o link vencer sem escolha | |
+| **Esperar a escolha** | A esteira para até a escolha | |
+| **Ao vencer** | O que fazer se a oferta vencer sem escolha | |
 
 Para o pedido de R$ 200 mil em 24 meses, as fórmulas acima dão uma faixa de R$ 100 mil a R$ 200 mil, em 12, 18 ou 24 meses, com 0, 3 ou 6 meses de carência.
 
@@ -63,6 +72,10 @@ A etapa pode aparecer mais de uma vez na esteira. Cada uma abre uma rodada, que 
 - **Enviar ao cliente** desligado: a oferta fica registrada como **Rascunho**, visível para a sua equipe, sem link.
 
 Esperar a escolha sem enviar não faz sentido, e a etapa não deixa salvar essa combinação.
+
+### Oferta para o atendente do canal
+
+Na proposta que nasceu no portal do parceiro do [canal de correspondentes](/plataforma/correspondentes), **Enviar a oferta para** pode ser **Atendente do canal (correspondente)**. Nesse caso nenhuma mensagem sai para o cliente: o atendente escolhe o valor e o prazo no próprio portal, a esteira espera a escolha por padrão e, quando a escolha é registrada, a página da oferta avisa o portal para ele voltar à operação. Proposta que não veio do canal não aceita esse destinatário.
 
 ## O aviso ao cliente
 

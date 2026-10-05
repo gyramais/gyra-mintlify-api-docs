@@ -16,8 +16,10 @@ Para acompanhar item a item e ver o estado de entrega de cada destinatário.
 
 `recipients[].status` em **`FAILED`** quer dizer que a mensagem **não chegou**. É o caso de ligar para o cliente, e é por isso que vale assinar `collection.message.failed`.
 
-`items[].files[]` traz o parecer de cada arquivo, quando o item aceita mais de um.
+`items[].files[]` traz o parecer de cada arquivo, quando o item aceita mais de um. Item com `signedDocumentAvailable: true` tem via assinada para [baixar](/api-reference/onboarding/via-assinada).
+
+O link de cada destinatário **não** volta aqui: ele só existe na resposta de criação e na de [envio](/api-reference/collection/post-collections-id-send).
 
 <Note>
-  Contexto e vocabulário em [Solicitações de coleta](/kyc/solicitacoes). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+  Contexto e vocabulário em [Solicitações de coleta](/onboarding/solicitacoes). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/onboarding/visao-geral).
 </Note>

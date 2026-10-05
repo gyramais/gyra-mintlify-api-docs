@@ -15,7 +15,7 @@ Dados de entrada são o que o cliente e o pedido informaram, organizados em chav
 </Info>
 
 <Note>
-  Estas rotas exigem o módulo de Propostas, de Cadastros **ou** de Formalização. Sem nenhum deles, respondem `403` com `"Os dados de entrada exigem o módulo de Propostas, de Cadastros ou de Formalização, que não está habilitado para a sua organização."`. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+  Estas rotas exigem o módulo de Propostas, de Onboarding **ou** de Formalização. Sem nenhum deles, respondem `403` com `"Os dados de entrada exigem o módulo de Propostas, de Cadastros ou de Formalização, que não está habilitado para a sua organização."`. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
 </Note>
 
 ## Chaves
@@ -35,10 +35,10 @@ Chaves da proposta:
 | --- | --- | --- |
 | `proposta.valor_pedido` | `NUMBER` | Valor pedido **em reais** (não em centavos). Valor fixo do produto quando não há pedido |
 | `proposta.prazo_pedido` | `NUMBER` | Prazo pedido, em meses |
-| `proposta.produto` | `STRING` | Chave do produto |
+| `proposta.produto` | `STRING` | Chave do produto. Quando a etapa **Enquadramento de produto** grava o produto, a leitura seguinte já traz o novo |
 | `proposta.carteira` | `STRING` | Nome da carteira |
 | `proposta.tipo` | `STRING` | `KYC`, `FINANCING` ou `INSTALLMENT_SALE` |
-| `proposta.origem` | `STRING` | `PUBLIC_FORM`, `OPERATOR`, `API` ou `BATCH` |
+| `proposta.origem` | `STRING` | `PUBLIC_FORM`, `OPERATOR`, `API`, `BATCH` ou `CRM` |
 | `proposta.tipo_pessoa` | `STRING` | `PJ` ou `PF` |
 | `proposta.participantes_qtd` | `NUMBER` | Participantes incluídos |
 | `proposta.avalistas_qtd` | `NUMBER` | Participantes com papel de avalista |

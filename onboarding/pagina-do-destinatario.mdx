@@ -24,17 +24,17 @@ O token tem 43 caracteres, um por destinatário. Ele identifica a pessoa e o esc
 
 ## Quem chega pelo formulário público
 
-O [formulário público](/kyc/formulario-publico) é a porta de entrada irmã desta página, no mesmo domínio (`/form/{código}`). A pessoa se identifica, confirma o contato por um código e é levada **para esta mesma página**, com o link da solicitação dela. Não existe um segundo portal: o que ela vê daí em diante é igual ao de qualquer destinatário.
+O [formulário público](/onboarding/formulario-publico) é a porta de entrada irmã desta página, no mesmo domínio (`/form/{código}`). A pessoa se identifica, confirma o contato por um código e é levada **para esta mesma página**, com o link da solicitação dela. Não existe um segundo portal: o que ela vê daí em diante é igual ao de qualquer destinatário.
 
 ## O que a pessoa faz na página
 
 | Item | O que aparece |
 | --- | --- |
 | `DOCUMENT` | Botão de envio, com os formatos e o tamanho aceitos daquele item, e o resultado da análise assim que sai |
-| `FORM` | O [formulário](/kyc/formularios), pré-preenchido com o que a IA já leu |
+| `FORM` | O [formulário](/onboarding/formularios), pré-preenchido com o que a IA já leu |
 | `CONSENT` | O texto do termo e o aceite |
 | `SIGNATURE` | O documento, o quadro de partes e a assinatura |
-| `IDENTITY` | A [verificação de identidade](/kyc/verificacao-de-identidade) |
+| `IDENTITY` | A [verificação de identidade](/onboarding/verificacao-de-identidade) |
 
 Ela pode ainda:
 
@@ -52,7 +52,7 @@ A página escuta um canal em tempo real e atualiza sozinha quando um item muda d
 | --- | --- |
 | Requisições por token | 30 por minuto |
 | Requisições por IP | 120 por minuto |
-| Reenvios de link por destinatário | 3 |
+| Envios do mesmo item depois de reprovado | 3. Depois disso, o item vai para a equipe que pediu |
 
 O token nunca é gravado nem registrado em log: o que se guarda é o hash dele. Estouro de limite responde `429` com mensagem em português.
 
@@ -75,7 +75,7 @@ As mesmas cores valem nas telas do toolbox: a marca é uma só, configurada num 
 
 ### Domínio próprio do link
 
-Em vez do domínio da plataforma, o link sai no seu domínio. Vale para o link do destinatário e para o endereço do [formulário público](/kyc/formulario-publico). Você declara o domínio, a plataforma devolve os registros de DNS a publicar, e depois pede a verificação. Enquanto o DNS não confere, o link continua saindo no domínio da plataforma.
+Em vez do domínio da plataforma, o link sai no seu domínio. Vale para o link do destinatário e para o endereço do [formulário público](/onboarding/formulario-publico). Você declara o domínio, a plataforma devolve os registros de DNS a publicar, e depois pede a verificação. Enquanto o DNS não confere, o link continua saindo no domínio da plataforma.
 
 ### Remetente próprio do e-mail
 

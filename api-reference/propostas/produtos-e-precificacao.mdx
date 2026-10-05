@@ -22,7 +22,7 @@ O produto diz o que você oferece e como cobra: tipo, faixa de valor, prazos, ta
 GET /v1/proposal-settings
 ```
 
-Diz se a organização organiza os produtos em carteiras. Quando as carteiras estão ligadas, todo produto tem uma.
+Diz se a organização organiza os produtos em carteiras e qual esteira recebe as propostas do canal de correspondentes. Quando as carteiras estão ligadas, todo produto tem uma.
 
 <CodeGroup>
 ```bash Requisição
@@ -34,12 +34,14 @@ curl https://gyra-core.gyramais.com.br/v1/proposal-settings \
 <CodeGroup>
 ```json 200
 {
-  "portfoliosEnabled": true
+  "portfoliosEnabled": true,
+  "channelEntryOperationId": null
 }
 ```
 </CodeGroup>
 
 <ResponseField name="portfoliosEnabled" type="boolean">`true` quando as carteiras estão ligadas. Desligado por padrão.</ResponseField>
+<ResponseField name="channelEntryOperationId" type="string | null">Esteira que toda proposta do [canal de correspondentes](/plataforma/correspondentes) roda ao nascer. `null` enquanto a organização não escolheu uma.</ResponseField>
 
 | Status | Mensagem | Quando |
 | --- | --- | --- |
@@ -53,7 +55,7 @@ curl https://gyra-core.gyramais.com.br/v1/proposal-settings \
 GET /v1/portfolios
 ```
 
-Lista as carteiras com os números de cada uma. Carteira agrupa produtos para acompanhar volume e rentabilidade.
+Lista as carteiras com os números de cada uma, em ordem alfabética. Carteira agrupa produtos para acompanhar volume e rentabilidade.
 
 <CodeGroup>
 ```bash Requisição
@@ -67,6 +69,10 @@ curl https://gyra-core.gyramais.com.br/v1/portfolios \
 [
   {
     "id": "66e0c1d2a3b4c50010d0a001",
+    "createdAt": "2026-09-10T11:58:00.000Z",
+    "updatedAt": "2026-09-10T11:58:00.000Z",
+    "removed": false,
+    "organizationId": "6612a7f30000000000000001",
     "name": "Varejo",
     "enabled": true,
     "productCount": 3,
@@ -140,6 +146,8 @@ curl https://gyra-core.gyramais.com.br/v1/products/capital-giro \
 ```json 200
 {
   "id": "66e0c3f4a5b6c70010e0b002",
+  "organizationId": "6612a7f30000000000000001",
+  "removed": false,
   "key": "capital-giro",
   "name": "Capital de giro",
   "kind": "FINANCING",
@@ -184,7 +192,7 @@ curl https://gyra-core.gyramais.com.br/v1/products/capital-giro \
 <ResponseField name="amount" type="object | null">Como o valor é definido: `mode` `FIXED` (com `valueCents`), `RANGE` (com `minCents` e ou `maxCents`) ou `FREE`.</ResponseField>
 <ResponseField name="pricing" type="object">Estrutura financeira. Veja [abaixo](#estrutura-financeira).</ResponseField>
 <ResponseField name="items" type="object[]">Documentos que o produto pede ao cliente, somados aos do modelo de solicitação.</ResponseField>
-<ResponseField name="onCompleted" type="object | null">O que roda quando a solicitação conclui: `kind` `POLICY` ou `OPERATION` e o `id` da política ou da esteira.</ResponseField>
+<ResponseField name="onCompleted" type="object | null">O que roda quando a solicitação conclui: `kind` `POLICY` ou `OPERATION` e o `id` da política ou da esteira. Com um destino por tipo de cliente, vem `kind: "NONE"`, `id: null` e `byEntityType` com `PERSON` e ou `COMPANY`, cada um com o seu `kind` e `id`.</ResponseField>
 <ResponseField name="enabled" type="boolean">Produto desligado não aceita proposta nova. Propostas que já o usaram não mudam.</ResponseField>
 
 | Status | Mensagem | Quando |

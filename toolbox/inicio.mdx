@@ -1,0 +1,153 @@
+---
+title: "Início"
+description: "A tela de entrada do Toolbox: uma barra que analisa CPF ou CNPJ e leva pedidos ao Assistente GYRA+, o que está esperando por você, o mês até agora e sugestões que acompanham a fase da sua organização."
+icon: "house"
+surface: plataforma
+domain: usuarios
+audience: operador
+lang: nao-tecnica
+---
+
+O Início mostra, numa tela só, o que espera por você hoje e o próximo passo mais útil, conforme a fase em que a sua organização está.
+
+<Info>
+  **Resumo:** no centro fica a **barra**: digite um CPF ou CNPJ para analisar, ou escreva um pedido para o [Assistente GYRA+](/plataforma/assistente-gyra). Abaixo dela vêm até três sugestões de um clique, a seção **Para resolver**, o mês até agora e a atividade recente. Cada bloco só aparece para quem tem o módulo e a permissão.
+</Info>
+
+## O que a tela mostra
+
+| Bloco | O que traz |
+| --- | --- |
+| **Saudação e status** | *Bom dia*, *Boa tarde* ou *Boa noite* com o seu primeiro nome, e uma linha que resume o que está esperando você. Com tudo zerado: *Tudo em dia. Nada esperando por você.* |
+| **Barra** | O campo grande do meio. CPF ou CNPJ analisa; texto vai para o Assistente GYRA+. |
+| **Sugestões** | Até três atalhos de um clique, escolhidos pela fase da organização. Veja **Sugestões que acompanham a sua organização**, abaixo. |
+| **Para resolver** | As filas que esperam a sua ação, com a contagem. |
+| **Mês até agora** | Análises do mês comparadas ao mesmo período do mês anterior e, para quem cuida do plano, a fatura até hoje. |
+| **Atividade recente** | As últimas ações da organização: quem fez, sobre o quê e quando. |
+
+Quando você rola a tela, a barra sobe para o topo numa versão compacta e continua ao alcance.
+
+## A barra: analisar ou perguntar
+
+A mesma barra aparece no topo de todas as telas. No Início ela ocupa o centro. Ela decide sozinha o que fazer com o que você digita:
+
+| Você digita | O que acontece |
+| --- | --- |
+| **CPF ou CNPJ** (inclusive CNPJ alfanumérico) | A máscara de documento entra e o cartão do documento abre, com a política ou esteira, a chave **Definir como padrão** e, para CNPJ, **Adicionar PDF de balanço (opcional)**. **Enter** analisa; **⌘ Enter** ou **Ctrl Enter** abre o relatório em nova guia. |
+| **Texto** | A máscara sai. **Enter** manda o pedido para o Assistente GYRA+, que responde no painel ao lado. Com o painel já aberto, o pedido continua a mesma conversa. |
+
+No cartão do documento, as setas para baixo e para cima trocam de opção:
+
+| Opção | Quando aparece |
+| --- | --- |
+| **Analisar** | Sempre. É a opção do Enter. |
+| **Perguntar à GYRA+ sobre este CPF** (ou CNPJ) | Com o Assistente GYRA+ ligado. Abre uma conversa sobre o documento. |
+| **Ver análises anteriores** | Só quando o documento já tem análise. A linha de baixo mostra quando foi a última (*Última hoje*, *Última ontem* ou a data) e o clique abre **Análises** filtrada por esse documento. |
+
+O **+** no canto da barra abre o **Lote de relatórios**, para analisar vários CPFs ou CNPJs de uma vez. Detalhes em [Rodar uma análise](/toolbox/rodar-operacao).
+
+<Tip>
+  **⌘K** (Mac) ou **Ctrl+K** (Windows e Linux) leva o cursor para a barra de qualquer tela. **Esc** fecha o cartão; um segundo Esc limpa o campo.
+</Tip>
+
+O que a barra aceita depende do seu acesso:
+
+- Quem pode analisar e tem o Assistente GYRA+ ligado vê *Digite um CPF ou CNPJ, ou peça qualquer coisa à GYRA+*.
+- Com o assistente desligado para você ou para a organização, a barra aceita só CPF e CNPJ.
+- Quem não pode analisar, mas tem o assistente, usa a barra só para pedidos em texto.
+
+## Para resolver
+
+Um bloco por fila que espera você, sempre no mesmo lugar. Clicar leva à tela da fila.
+
+| Bloco | Leva a | Aparece para |
+| --- | --- | --- |
+| **Aprovações nas esteiras** | As aprovações paradas nas [esteiras](/esteiras/execucoes) | Quem acessa **Esteiras** |
+| **Solicitações pendentes** | [Solicitações](/toolbox/solicitacoes) aguardando o cliente | Quem tem o módulo de Onboarding ou SCR |
+| **Identidades para revisar** | [Validação de identidade](/toolbox/validacao-de-identidade), na revisão manual | Quem tem o módulo de Onboarding |
+| **Propostas esperando você** | [Propostas](/propostas/visao-geral) esperando a sua ação | Quem tem o módulo de Propostas |
+
+Fila zerada aparece apagada, com *Nada esperando*. Com todas zeradas, a seção sai e a linha de status diz *Tudo em dia*. Módulo que a organização não contratou não vira bloco.
+
+## O mês até agora
+
+O título leva o nome do mês, como **Outubro até agora**.
+
+- **Análises:** o total do mês, comparado ao mesmo período do mês anterior (por exemplo, do dia 1 ao dia 5 contra o dia 1 ao dia 5 do mês passado). Com dez análises ou mais, uma barra divide **Aprovadas**, **Reprovadas** e **Em andamento**; com menos, a divisão vem em uma frase. **Ver análises** abre a lista completa.
+- **Fatura até hoje:** só para quem cuida do plano da organização. Mostra o valor estimado do mês, quanto do incluso já foi usado e o atalho **Plano e consumo**.
+
+## Atividade recente
+
+As cinco ações mais recentes da organização, como *analisou* um CNPJ, com quem fez e há quanto tempo. Ações iguais em sequência viram uma linha só. **Ver tudo** abre o histórico completo numa gaveta lateral.
+
+## Sugestões que acompanham a sua organização
+
+As sugestões debaixo da barra respondem a uma pergunta: qual é a próxima coisa mais útil para você agora? A ordem é fixa:
+
+<Steps>
+  <Step title="Sem política nem esteira: o cartão de configuração">
+    Enquanto a organização não tem política ou esteira para rodar, quem monta política vê o cartão **Sua análise de crédito ainda não está configurada** no lugar das sugestões, com as opções para começar (por exemplo, **Montar com a GYRA+**). **Agora não** esconde o cartão por 7 dias.
+  </Step>
+  <Step title="Implantação: os Primeiros passos">
+    Nos **30 primeiros dias** da organização, até dois passos pendentes dos [Primeiros passos](#primeiros-passos-e-novidades) viram sugestão, com a posição do primeiro (*Passo 2 de 5*). Um passo feito por fora conta como feito: política criada na tela de Políticas, análise rodada pela barra.
+  </Step>
+  <Step title="Fila: o que espera você">
+    Aprovações, propostas e solicitações paradas viram uma pergunta pronta ao Assistente GYRA+, com o tamanho da fila ao lado (*3 na fila*). Identidades para revisar viram atalho para a tela de revisão.
+  </Step>
+  <Step title="Descoberta: perguntas para começar">
+    Se sobrar espaço, entram perguntas ao assistente que combinam com os módulos que você usa, como *Como eu leio o parecer de uma análise?*.
+  </Step>
+</Steps>
+
+Com o Assistente GYRA+ desligado, nada vai para a IA: as filas viram atalhos para a tela. O **x** de cada sugestão a esconde por 7 dias, neste navegador.
+
+## Primeiros passos e Novidades
+
+Dois atalhos ficam no rodapé do menu lateral, acima de **Ajuda e documentação**:
+
+| Atalho | O que é |
+| --- | --- |
+| **Primeiros passos** | A lista de implantação da organização, com o progresso (por exemplo, 2/5). Cada passo leva à tela certa, abre uma escolha ou chama o assistente. Os passos que aparecem dependem do seu papel. |
+| **Novidades** | O que mudou na plataforma, com a contagem do que você ainda não viu. Abrir uma novidade mostra o vídeo, leva à tela ou pede ao assistente que apresente a novidade. |
+
+Os Primeiros passos aparecem para organizações novas e podem ser desligados pelo time GYRA+. No menu da própria lista, **Reiniciar passos** recomeça a contagem e **Ocultar primeiros passos** tira a lista do menu; para trazer de volta, use **Mostrar primeiros passos**, na área de ajuda. Com tudo concluído, a lista ainda fica no menu por 7 dias. Passo a passo da implantação em [Primeiro acesso](/toolbox/primeiro-acesso).
+
+No mesmo menu, **Conversas com a GYRA+** lista as três conversas mais recentes com o assistente, com **Nova conversa** e **Todas as conversas**.
+
+## No celular
+
+- O Início mostra a barra no centro, como no computador. Nas outras telas, o topo traz o ícone **Analisar CPF ou CNPJ** (para quem analisa), o ícone do Assistente GYRA+ e o botão do menu.
+- A política ou esteira é escolhida no seletor do próprio celular, e a lista não abre sozinha.
+- Tocar fora da barra fecha o cartão do documento; tocar no campo reabre.
+- As dicas de teclado somem em tela de toque.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="Não vejo a seção Para resolver.">
+    Ela só aparece quando alguma fila tem item esperando você. Com tudo zerado, a linha de status diz *Tudo em dia*. Se a fila nunca aparece, o seu papel ou os módulos da organização não dão acesso à tela dela. Ver [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+  </Accordion>
+  <Accordion title="Escrevi um nome e a barra não buscou o cliente.">
+    Texto vai para o Assistente GYRA+. Para analisar, digite o CPF ou o CNPJ. Para achar análises por nome, use a tela **Análises**.
+  </Accordion>
+  <Accordion title="As sugestões de Primeiros passos sumiram.">
+    O Início sugere passos só nos 30 primeiros dias da organização. A lista completa continua no rodapé do menu, em **Primeiros passos**, enquanto não for ocultada.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Assistente GYRA+" icon="sparkles" href="/plataforma/assistente-gyra">
+    O que ele lê e o que executa por você.
+  </Card>
+  <Card title="Rodar uma análise" icon="play" href="/toolbox/rodar-operacao">
+    Política, esteira, balanço e lote.
+  </Card>
+  <Card title="Primeiro acesso" icon="door-open" href="/toolbox/primeiro-acesso">
+    Do zero até a primeira análise.
+  </Card>
+  <Card title="Visão geral do Toolbox" icon="compass" href="/toolbox/visao-geral">
+    O mapa do menu e das configurações.
+  </Card>
+</CardGroup>

@@ -1,6 +1,6 @@
 ---
 title: Exportar Relatório (Assíncrono)
-description: Dispara a exportação do relatório em PDF/XLS de forma assíncrona. O arquivo é entregue via webhook REPORT_EXPORTED.
+description: Pede a geração do PDF ou do Excel do relatório. O link chega pelo webhook REPORT_EXPORTED.
 surface: api
 domain: relatorio
 audience: integrador
@@ -8,30 +8,9 @@ lang: tecnica
 openapi: get /report/export/{id}
 ---
 
-<Endpoint
-  method="GET"
-  path="/report/export/{id}"
-  headers={[
-    {
-      name: "Authorization",
-      type: "string",
-      required: true,
-      description: "Token JWT no formato Bearer. Exemplo: `Bearer abc123`"
-    }
-  ]}
-  pathParameters={[
-    {
-      name: "id",
-      type: "string",
-      required: true,
-      description: "ID do relatório a exportar"
-    }
-  ]}
-/>
-
 ### Quando usar
 
-Use este endpoint para **disparar** a exportação de um relatório em PDF ou XLS. A geração é assíncrona: a requisição retorna rapidamente e o arquivo fica disponível quando concluído — normalmente entregue por webhook do tipo `REPORT_EXPORTED`. Use essa variante quando não quiser bloquear a requisição esperando o PDF. Para resposta síncrona, use `GET /report/export-sync/{id}`.
+Use esta rota para gerar o arquivo do relatório sem segurar a conexão. A resposta volta na hora com `202`, e o link do arquivo chega pelo [webhook](/api-reference/webhook/post-webhook) `REPORT_EXPORTED` (um disparo por arquivo gerado). Para receber o link na própria resposta, use [Exportar Relatório (Síncrono)](/api-reference/report/get-reportexport-sync).
 
 ### Autenticação
 
@@ -41,57 +20,52 @@ Bearer JWT no header `Authorization`.
 
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
-| `id` | `path` | `string` | `sim` | ID do relatório a exportar. |
-| `type` | `query` | `string` | **`sim`** | Use `REPORT`. Omitir o parâmetro retorna `400`. |
-| `exportFormat` | `query` | `string` | `não` | `pdf`, `excel` ou `both`. |
-| `sectionOrder` | `query` | `string[]` | `não` | Ordem das seções no arquivo gerado. |
-| `format` | `query` | `string` | `não` | Formato do arquivo: `pdf`, `excel` ou `both`. Padrão: `pdf`. |
-| `sectionOrder` | `query` | `string[]` | `não` | Lista ordenada de seções a serem incluídas no PDF. Cada seção é informada repetindo o parâmetro (ex.: `sectionOrder=LOCATION&sectionOrder=SUMMARY&sectionOrder=PEFIN`). Define **quais** seções aparecem e **em que ordem**. Se omitido, o relatório é exportado no layout **default** do sistema, com todas as seções padrão na ordem padrão. Para a lista completa de seções suportadas, consulte o serviço `gyra-core`. |
+| `id` | `path` | `string` | sim | ID do relatório. |
+| `type` | `query` | `string` | **sim** | `REPORT` ou `REPORT_MINIFIED`. Use `REPORT`. Sem o parâmetro, a resposta é `400`. |
+| `exportFormat` | `query` | `string` | não | `pdf` (padrão), `excel` ou `both`. Com `both`, saem dois arquivos e dois webhooks. |
+| `sectionOrder` | `query` | `string[]` | não | Seções do arquivo, na ordem desejada. Repita o parâmetro para cada seção: `sectionOrder=LOCATION&sectionOrder=SUMMARY`. Só as seções listadas entram. |
+| `templateId` | `query` | `string` | não | ID de um modelo de exportação da organização. |
+| `systemTemplate` | `query` | `string` | não | Modelo nativo: `COMPLETE` ou `COMPACT`. |
+
+Sem `sectionOrder`, valem as seções e a ordem do modelo: o escolhido em `templateId` ou `systemTemplate`, senão o modelo padrão da organização, senão o padrão do sistema. O nível de detalhe do PDF (completo ou compacto) vem sempre do modelo, mesmo quando você manda `sectionOrder`.
 
 <Note>
-O parâmetro `sectionOrder` é **opcional**. Quando não enviado, o relatório é exportado no formato padrão do sistema. Quando enviado, o PDF contém apenas as seções listadas, exatamente na ordem informada.
+  Um relatório inexistente ou de outra organização não é recusado na resposta: o `202` volta normalmente e a falha chega pelo webhook `REPORT_EXPORTED`, com `exportUrl` nulo e o campo `error`.
 </Note>
 
 <RequestExample>
 
-```bash cURL (default)
-curl --location 'https://gyra-core.gyramais.com.br/report/export/69a207bcdd0197828df9155a?type=REPORT&format=pdf' \
---header 'Authorization: Bearer abc123'
+```bash cURL
+curl --request GET 'https://gyra-core.gyramais.com.br/report/export/6612a7f3a19b467000000000?type=REPORT&exportFormat=pdf' \
+  --header 'Authorization: Bearer SEU_TOKEN'
 ```
 
 ```bash cURL (com sectionOrder)
-curl --request GET \
-  --url 'https://gyra-core.gyramais.com.br/report/export/69a207bcdd0197828df9155a?type=REPORT&sectionOrder=LOCATION&sectionOrder=SUMMARY&sectionOrder=PEFIN' \
-  --header 'Authorization: Bearer abc123'
+curl --request GET 'https://gyra-core.gyramais.com.br/report/export/6612a7f3a19b467000000000?type=REPORT&sectionOrder=LOCATION&sectionOrder=SUMMARY&sectionOrder=PEFIN' \
+  --header 'Authorization: Bearer SEU_TOKEN'
 ```
 
 ```javascript JavaScript
-fetch("https://gyra-core.gyramais.com.br/report/export/69a207bcdd0197828df9155a?type=REPORT&format=pdf", {
-  method: "GET",
-  headers: {
-    "Authorization": "Bearer abc123",
-  },
-})
-  .then(res => res.json())
-  .then(console.log)
+const url = new URL("https://gyra-core.gyramais.com.br/report/export/6612a7f3a19b467000000000");
+url.searchParams.set("type", "REPORT");
+url.searchParams.set("exportFormat", "pdf");
+
+const resposta = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+const dados = await resposta.json();
 ```
 
 ```python Python
 import requests
 
-url = "https://gyra-core.gyramais.com.br/report/export/69a207bcdd0197828df9155a"
-headers = {"Authorization": "Bearer abc123"}
-params = {"type": "REPORT", "format": "pdf"}
-
-response = requests.get(url, headers=headers, params=params)
-print(response.json())
+resposta = requests.get(
+    "https://gyra-core.gyramais.com.br/report/export/6612a7f3a19b467000000000",
+    headers={"Authorization": f"Bearer {token}"},
+    params={"type": "REPORT", "exportFormat": "pdf"},
+)
+dados = resposta.json()
 ```
 
 </RequestExample>
-
-<Tip>
-Configure um webhook do tipo `REPORT_EXPORTED` para receber o link do arquivo assim que a exportação for concluída. Os links têm validade de 7 dias.
-</Tip>
 
 <ResponseExample>
 
@@ -109,18 +83,20 @@ Configure um webhook do tipo `REPORT_EXPORTED` para receber o link do arquivo as
 }
 ```
 
-```json 401 Unauthorized
-{
-  "code": 401,
-  "message": "Token de acesso inválido."
-}
-```
-
-```json 404 Not Found
-{
-  "code": 404,
-  "message": "Report not found"
-}
-```
-
 </ResponseExample>
+
+### O que chega no webhook
+
+```json
+{
+  "organizationId": "6612a7f3fa9e086b00000000",
+  "webhookType": "REPORT_EXPORTED",
+  "data": {
+    "reportId": "6612a7f3a19b467000000000",
+    "exportUrl": "https://exemplo.gyramais.com.br/relatorio.pdf",
+    "exportedAt": "2026-07-31T18:03:37.464Z"
+  }
+}
+```
+
+O link também fica gravado no relatório, em `exportUrl` (PDF) e `exportExcelUrl` (Excel). O link do Excel expira em 7 dias.

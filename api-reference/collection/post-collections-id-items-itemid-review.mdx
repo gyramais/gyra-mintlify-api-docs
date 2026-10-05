@@ -20,10 +20,12 @@ Modo de resposta com revisão: a IA avaliou e a decisão é sua.
 | `RESEND_REQUESTED` | O destinatário recebe o pedido outra vez | **obrigatório** |
 | `WAIVED` | O item sai do pedido | opcional |
 
+A resposta é a solicitação inteira, já com o item no status novo. Item que não está aguardando decisão responde `409`, e cada item aceita até 3 pedidos de reenvio: depois disso, aprove ou dispense.
+
 <Warning>
   Em `RESEND_REQUESTED`, o `comment` é o texto que **o cliente lê**. Escreva o que precisa ser corrigido, não o código da verificação.
 </Warning>
 
 <Note>
-  Contexto e vocabulário em [Solicitações de coleta](/kyc/solicitacoes). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+  Contexto e vocabulário em [Solicitações de coleta](/onboarding/solicitacoes). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/onboarding/visao-geral).
 </Note>

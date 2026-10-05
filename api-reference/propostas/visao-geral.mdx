@@ -34,6 +34,7 @@ As rotas de Propostas e de Dados de entrada respondem **só** com o prefixo `/v1
 
 ```
 /v1/proposals/...        propostas, ofertas, participantes, análise
+/v1/proposals/dashboard  indicadores gerenciais e exportação
 /v1/products/...         produtos (leitura)
 /v1/portfolios           carteiras (leitura)
 /v1/proposal-settings    configuração de propostas (leitura)
@@ -45,19 +46,19 @@ A exceção é o [fechamento externo](/api-reference/esteiras/fechamento-externo
 
 ## Módulo e permissões
 
-Sem o módulo de Propostas, as rotas `/v1/proposals`, `/v1/products`, `/v1/portfolios`, `/v1/proposal-settings` e `/v1/pricing` respondem `403`, e não `404`: assim você sabe que a rota existe e que falta contratar o módulo. Os dados de entrada aceitam qualquer um de três módulos.
+Sem o módulo de Propostas, as rotas `/v1/proposals`, `/v1/products`, `/v1/portfolios`, `/v1/proposal-settings` e `/v1/pricing` respondem `403`, e não `404`: assim você sabe que a rota existe e que falta contratar o módulo. Os dados de entrada aceitam qualquer um de três módulos: Propostas, Onboarding ou Formalização.
 
 | Situação | Status | Mensagem |
 | --- | --- | --- |
 | Organização sem o módulo de Propostas | `403` | `"Sua organização não tem o módulo de Propostas habilitado."` |
-| Dados de entrada sem Propostas, Cadastros nem Formalização | `403` | `"Os dados de entrada exigem o módulo de Propostas, de Cadastros ou de Formalização, que não está habilitado para a sua organização."` |
+| Dados de entrada sem Propostas, Onboarding nem Formalização | `403` | `"Os dados de entrada exigem o módulo de Propostas, de Cadastros ou de Formalização, que não está habilitado para a sua organização."` |
 | Credencial sem nenhuma das permissões da rota | `403` | `"Você não tem permissão para acessar este recurso."` |
 
 Cada rota exige uma permissão de um grupo. Basta ter uma delas.
 
 | Grupo | Rotas | Permissões aceitas |
 | --- | --- | --- |
-| Operar | todas as leituras, criar proposta, situação, participantes, ofertas, simulação | `can-generate-report` ou `can-use-registry-api` |
+| Operar | todas as leituras, criar proposta, situação, participantes, ofertas, simulação, indicadores gerenciais | `can-generate-report` ou `can-use-registry-api` |
 | Rodar análise | `POST /v1/proposals/{id}/run` | `can-generate-report` ou `can-create-report-api` |
 | Dados de entrada | `/v1/input-data/catalog`, `/v1/proposals/{id}/input-data` | `can-generate-report`, `can-use-registry-api`, `can-manage-credit-policy`, `can-manage-policy-rules` ou `can-manage-operations` |
 | Fechamento externo | `POST /operation/close` | `can-manage-operations`, `can-generate-report` ou `can-create-report-api` |
@@ -91,7 +92,7 @@ Só a lista de propostas é paginada.
 | `page` | `1` | a partir de `1` |
 | `pageSize` | `20` | de `1` a `100` |
 
-A resposta traz `total` (propostas que casam com o filtro) e `items` da página pedida. As demais listas (produtos, carteiras, modelos, índices) vêm inteiras.
+A resposta traz `total` (propostas que casam com o filtro) e `items` da página pedida. As demais listas (produtos, carteiras, modelos, índices) vêm inteiras. A [exportação gerencial](/api-reference/propostas/gerencial#exportar-as-propostas-do-período) não pagina: devolve até 5.000 propostas e avisa em `truncated` quando cortou.
 
 ## Repetir uma chamada com segurança
 
@@ -117,6 +118,8 @@ O corpo de erro é sempre `{ code, message }`, com `code` igual ao status HTTP e
 | `403` | Módulo não contratado ou credencial sem a permissão da rota |
 | `404` | Proposta, oferta, produto ou participante inexistente nesta organização |
 | `409` | O pedido não cabe no estado atual (situação, oferta já escolhida, execução em andamento) |
+| `422` | Com `REPORT`, a política não é do tipo de documento da proposta |
+| `429` | Já há uma exportação gerencial da sua organização em andamento |
 | `502` | Um serviço interno não respondeu. Tente de novo; a mensagem começa com `"Não foi possível..."` |
 | `503` | Parte da operação foi feita e parte não. Leia a mensagem antes de repetir |
 
@@ -204,6 +207,9 @@ A situação `WAITING_CUSTOMER` indica que a oferta indicativa foi enviada ao cl
   </Card>
   <Card title="Produtos e precificação" icon="calculator" href="/api-reference/propostas/produtos-e-precificacao">
     Produtos, carteiras, índices de mercado e simulação de parcelas.
+  </Card>
+  <Card title="Indicadores gerenciais" icon="chart-line" href="/api-reference/propostas/gerencial">
+    Os números da aba Gerencial e a exportação das propostas do período.
   </Card>
   <Card title="Dados de entrada" icon="table-list" href="/api-reference/propostas/dados-de-entrada">
     O que a proposta e o cliente informaram, no formato das regras.

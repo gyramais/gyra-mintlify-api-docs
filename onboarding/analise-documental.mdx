@@ -16,7 +16,7 @@ lang: tecnica
 
 <Steps>
   <Step title="CLASSIFY: que documento é este?">
-    O modelo lê o arquivo e diz qual dos [25 tipos](/kyc/tipos-de-documento) ele é, com confiança e alternativas. Quando alguma alternativa passa de 0,35 de confiança, o resultado vem marcado como `ambiguous` e o documento vai para revisão humana.
+    O modelo lê o arquivo e diz qual dos [25 tipos](/onboarding/tipos-de-documento) ele é, com confiança e alternativas. Quando alguma alternativa passa de 0,35 de confiança, o resultado vem marcado como `ambiguous` e o documento vai para revisão humana.
 
     Esta etapa é **pulada** quando o envio traz `typeHint`, que afirma o tipo.
   </Step>
@@ -24,7 +24,7 @@ lang: tecnica
     A extração usa o schema **daquele tipo**. Cada campo folha volta como a tripla `{ value, confidence, page }`. Campo ausente no documento vem com `value: null` e `confidence: 0`, nunca inventado.
   </Step>
   <Step title="VALIDATE: ele passa nas verificações?">
-    As verificações da [régua](/kyc/regua-de-validacao) rodam sobre o que foi lido: autenticidade, titularidade e fé pública. Cada uma devolve `PASS`, `FAIL`, `WARN` ou `SKIP`, com evidência.
+    As verificações da [régua](/onboarding/regua-de-validacao) rodam sobre o que foi lido: autenticidade, titularidade e fé pública. Cada uma devolve `PASS`, `FAIL`, `WARN` ou `SKIP`, com evidência.
   </Step>
   <Step title="Parecer">
     Veredito, score, justificativa e evidências, selados com um `contentHash` conferível.
@@ -73,7 +73,7 @@ Os dois campos de tipo do envio parecem sinônimos e não são:
   Enviando os dois, `typeHint` vence e a conferência sai `SKIP`.
 </Tip>
 
-Quando o item nasceu de um [requisito societário](/kyc/tipos-de-documento#requisito-societário-em-vez-de-tipo-fixo), o pedido é um **conjunto** de tipos (`expectedTypes`), e qualquer um deles satisfaz.
+Quando o item nasceu de um [requisito societário](/onboarding/tipos-de-documento#requisito-societário-em-vez-de-tipo-fixo), o pedido é um **conjunto** de tipos (`expectedTypes`), e qualquer um deles satisfaz.
 
 ## Reprocessamento seletivo
 

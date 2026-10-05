@@ -1,6 +1,6 @@
 ---
 title: "Etapas"
-description: "Catálogo completo dos 13 tipos de etapa da esteira: o que cada um faz, o que você configura e o que acontece quando algo dá errado."
+description: "Catálogo completo dos 14 tipos de etapa da esteira: o que cada um faz, o que você configura e o que acontece quando algo dá errado."
 icon: "list-ol"
 surface: conceito
 domain: esteira
@@ -11,7 +11,7 @@ lang: nao-tecnica
 Cada etapa faz uma coisa só, e a esteira é a soma delas na ordem que você escolhe. Esta página é a referência de todos os tipos.
 
 <Info>
-  **Resumo:** são 13 tipos de etapa. Os da análise produzem relatório e decisão, os da decisão definem a rota e a oferta, e os da formalização só rodam com o crédito aprovado. Toda etapa tem nome, condição **Executar quando** e a configuração do tipo.
+  **Resumo:** são 14 tipos de etapa. Os da análise produzem relatório, escolhem o produto e pedem o que falta ao cliente; os da decisão definem a rota, a oferta e quem aprova; e os da formalização só rodam com o crédito aprovado. Toda etapa tem nome, condição **Executar quando** e a configuração do tipo.
 </Info>
 
 ## Catálogo
@@ -23,6 +23,7 @@ Cada etapa faz uma coisa só, e a esteira é a soma delas na ordem que você esc
 | **Checkpoint** | Análise | Pausa para decisão do analista |
 | **Vínculos** | Análise | Analisa sócios, empresas e demais vínculos |
 | **Solicitação** | Análise ou formalização | Pede documento ou dado ao cliente e espera |
+| **Enquadramento de produto** | Análise | Define o produto da proposta e abre os caminhos |
 | **Pré-aprovação** | Análise | Faixa indicativa para o cliente escolher |
 | **Decisão** | Decisão | Rotas, revisão e oferta da jornada |
 | **Revisão da oferta** | Decisão | Confirma ou ajusta a oferta antes da aprovação |
@@ -32,14 +33,32 @@ Cada etapa faz uma coisa só, e a esteira é a soma delas na ordem que você esc
 | **Contrato e assinatura** | Formalização | Gera o contrato e colhe as assinaturas |
 | **Aguardar fechamento externo** | Formalização | Espera o parceiro fechar a operação pela API |
 
+## A primeira etapa
+
+A primeira etapa roda só com o documento, a proposta e os [dados de entrada](/esteiras/dados-de-entrada), porque ainda não existe relatório. Por isso ela pode ser:
+
+| Primeira etapa | Para quê |
+| --- | --- |
+| **Análise** | Começar pela consulta e pela política, o caminho clássico |
+| **Checkpoint** | Uma conferência humana antes de gastar com consulta |
+| **Solicitação** | Pedir formulário e documentos ao cliente antes de qualquer consulta: as respostas viram dados de entrada que a Análise seguinte já lê |
+| **Enquadramento de produto** | A proposta chega sem produto e a esteira decide o produto (e o caminho) primeiro |
+| **Integração** | Consultar o seu sistema antes de tudo |
+
+Numa esteira nova, a primeira etapa é que cria a esteira: o construtor oferece **Análise**, **Checkpoint**, **Solicitação** e **Enquadramento de produto**. A Integração pode ir para o topo depois que a esteira existe. Aprofundar, Vínculos e Comitê de crédito IA precisam de uma Análise antes deles.
+
+A primeira etapa não tem decisão anterior: ela roda sempre, ou por uma condição sobre a proposta e os dados de entrada.
+
 <Note>
-  Numa esteira nova, antes do primeiro Salvar, o construtor oferece só **Análise** e **Checkpoint**: a primeira etapa é que cria a esteira. **Contrato e assinatura** e **Aguardar fechamento externo** aparecem conforme os módulos da sua organização. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+  **Contrato e assinatura** e **Aguardar fechamento externo** aparecem conforme os módulos da sua organização. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
 </Note>
 
 ## Regras que valem para todas
 
-- **Executar quando**: **Sempre**, **Se aprovado**, **Se aprovado ou alerta**, **Se alerta severo** ou **Personalizada** (fórmula). A primeira etapa roda sempre. A condição olha a última decisão registrada na execução.
-- **Etapa pulada não é reprovação.** Ela aparece como "não rodou", com o motivo.
+- **Executar quando**: **Sempre**, **Se aprovado**, **Se aprovado ou alerta**, **Se alerta severo**, **Por produto** ou **Personalizada** (fórmula). A condição olha a última decisão registrada na execução.
+- **Por produto** faz a etapa rodar só para os produtos que você escolher (o que o Enquadramento gravou ou o que veio na proposta), e pode ainda exigir a decisão anterior.
+- **Etapa pulada não é reprovação.** Quando a condição dá falso, a etapa aparece como "não rodou", com o motivo.
+- **Condição que não calcula para a execução.** Se a fórmula do **Executar quando** não pode ser calculada, a etapa não é pulada em silêncio: a execução para em erro, com o motivo, para você corrigir a condição e rodar de novo. Na formalização (Contrato, Integração e Fechamento externo), a etapa para no analista.
 - **Nome repetido** ganha um complemento na tela, como "(2ª análise)" ou "(2ª vez)", para você distinguir.
 - **Tipo não se troca.** Para mudar o tipo, remova a etapa e adicione outra: "Não é possível trocar o tipo da etapa ... Remova a etapa e adicione outra."
 
@@ -49,9 +68,9 @@ Aplica uma [política de crédito](/concepts/politica-de-credito) ao documento, 
 
 | Você configura | Detalhe |
 | --- | --- |
-| **Política** | Obrigatória. Na primeira etapa ela define se a esteira analisa CPF ou CNPJ. |
+| **Política** | Obrigatória, do mesmo tipo de documento (CPF ou CNPJ) que a esteira analisa. |
 
-- A primeira Análise da esteira precisa gerar relatório: "A primeira etapa precisa gerar um relatório. Escolha pelo menos o Simples na política desta etapa."
+- A primeira consulta da esteira precisa gerar relatório: "A primeira consulta da esteira precisa gerar um relatório. Escolha pelo menos o Simples na política dela."
 - Uma segunda Análise, numa esteira com Decisão, não abre relatório novo: ela entra no relatório existente, como uma camada.
 - A precificação da política fica disponível para as etapas seguintes como `LIMITE_SUGERIDO`, `TAXA_SUGERIDA` e `PRAZO_SUGERIDO`.
 - Se o disparo da primeira Análise falhar, a execução termina em **erro** com o motivo.
@@ -82,6 +101,8 @@ Pausa a esteira até um analista decidir. Útil para uma conferência humana num
 
 O analista decide na página da execução, com **Aprovar** ou **Reprovar**. Reprovar exige comentário: "Para reprovar, escreva o motivo no comentário." Se o analista acabou de decidir no relatório, o Checkpoint já nasce decidido.
 
+Reprovar num Checkpoint antes da Decisão recusa a proposta: a execução grava a decisão final **Reprovado** e termina **reprovada**.
+
 ## Vínculos
 
 Descobre sócios, empresas ligadas, filiais, empresas no mesmo endereço e parentes, e analisa cada grupo com a política que você escolher. É o sucessor da antiga cascata de relatórios das Operações.
@@ -94,30 +115,67 @@ Descobre sócios, empresas ligadas, filiais, empresas no mesmo endereço e paren
 | **Peso na jornada** | **Só informa** (não pesa na decisão), **Pior resultado do grupo** ou **Regra do grupo**. |
 
 - Os vínculos saem do relatório da última Análise antes da etapa. Se essa Análise gera só o relatório Simples, a ativação recusa: use Essencial ou superior.
+- A esteira pode ter mais de uma etapa Vínculos: cada uma analisa os vínculos dos seus próprios grupos.
 - As fórmulas das etapas seguintes podem usar agregados de cada grupo.
+- Uma política que usa dados de formulário não pode ser usada em Vínculos: esses dados só existem para o titular.
 
 Os dados de vínculo vêm da seção [Vínculos societários](/sources/vinculos-societarios) do relatório.
 
 ## Solicitação
 
-Abre uma [solicitação](/kyc/solicitacoes) do módulo de Cadastros e pausa a esteira até o cliente responder.
+Abre uma [solicitação](/onboarding/solicitacoes) do módulo de Cadastros e pausa a esteira até o cliente responder.
 
 | Você configura | Opções |
 | --- | --- |
 | **Modelo de solicitação** | Obrigatório: "Escolha o modelo de solicitação que esta etapa vai enviar." |
-| **Para quem** | **Titular do cadastro** (padrão), **Sócios informados**, **Representantes legais**, **Escolher na hora** |
+| **Para quem** | **Titular do cadastro** (padrão), **Sócios informados**, **Representantes legais**, **Escolher na hora**, **Atendente do canal (correspondente)** |
+| **Pedir documentos de** | **Empresa principal** (padrão) ou **Cada vínculo encontrado na etapa Vínculos** |
+| **Se não houver vínculos** | Só na Solicitação por vínculo: **Seguir a esteira** (padrão), **Avisar o analista**, **Reprovar** |
 | **Prazo** | Em dias, de 1 a 180. Em branco, vale o prazo do modelo. |
 | **Se o prazo vencer** | **Avisar o analista** (padrão), **Seguir sem**, **Recusar** |
 
 - Quando a solicitação fecha, a esteira recarrega os [dados de entrada](/esteiras/dados-de-entrada) e continua.
 - Vencida ou cancelada: **Avisar o analista** para a esteira e espera; **Seguir sem** continua sem o dado; **Recusar** reprova.
 - **Escolher na hora** não é resolvido pela esteira sozinha: um analista precisa decidir quem recebe.
+- **Atendente do canal (correspondente)**: quem cria a operação no portal do parceiro preenche. Use na esteira de entrada do canal. Veja [Correspondentes](/plataforma/correspondentes).
 - A solicitação aberta pela esteira não dispara outra esteira, mesmo que o modelo tenha isso configurado.
-- Antes da Decisão, sem modelo, a etapa é pulada com o motivo. Na formalização o modelo é obrigatório, porque é ali que o cliente assina.
+- Toda Solicitação precisa do modelo para a esteira ser ativada.
+
+### Solicitação por vínculo
+
+Com **Pedir documentos de** em **Cada vínculo encontrado na etapa Vínculos**, a etapa abre uma solicitação para cada vínculo das etapas Vínculos anteriores (sem repetir documento e sem o titular), enviada a quem está em **Para quem**. No construtor, a etapa ganha o selo **Uma por vínculo**.
+
+- A etapa espera até todas as solicitações serem respondidas.
+- Uma solicitação recusada reprova a etapa e encerra as demais.
+- Precisa de uma etapa Vínculos antes: "A Solicitação por vínculo precisa de uma etapa Vínculos antes dela."
 
 <Note>
   A etapa exige o módulo de Cadastros (ou o de SCR). Sem ele: "A organização não tem o módulo de Cadastros habilitado para abrir solicitações."
 </Note>
+
+## Enquadramento de produto
+
+Escolhe o produto da proposta durante a esteira e grava na proposta. A proposta pode chegar sem produto e ganhar o produto aqui. As etapas seguintes leem `produto` e os limites dele, e podem rodar só para um produto (**Executar quando**, **Por produto**).
+
+| Você configura | Opções |
+| --- | --- |
+| **Modo** | **Por regras**, **Por fórmula** ou **Manual (o analista escolhe)** |
+| Regras | Cada regra tem **Produto** e **Quando** (uma fórmula). A primeira verdadeira escolhe o produto. |
+| **Fórmula que devolve o produto** | No modo por fórmula. O resultado é a chave do produto, por exemplo `IF(valor_pedido > 1000000, "INV", "CG")`. |
+| **Se nenhuma regra enquadrar** | **Mandar para o analista** (padrão), **Reprovar a proposta** ou **Usar um produto padrão** |
+| **Quem escolhe o produto** | Os analistas designados quando a etapa vai para o analista. Vazio: qualquer pessoa com acesso à execução. |
+| **Produto que veio no formulário** | **A etapa decide (troca o do formulário)** (padrão) ou **Manter o produto que veio na proposta** |
+
+- O Enquadramento não decide crédito: ele não muda a "última decisão" que as opções prontas do **Executar quando** leem.
+- Vem antes da Decisão. Sem Pré-aprovação nem Decisão depois dele, o construtor avisa que o produto escolhido não é usado.
+- Regra ou fórmula que não calcula nunca pula para a regra seguinte nem reprova: usa o produto padrão (quando ele é o fallback) ou vai para o analista, com o motivo.
+- Quando vai para o analista, a execução fica **aguardando escolha do produto**. O analista escolhe e clica em **Confirmar produto**, ou reprova.
+- Reprovar no Enquadramento recusa a proposta: a execução grava a decisão final **Reprovado**.
+- Sem proposta ligada à execução, não há onde gravar o produto, e a etapa vai para o analista.
+- Proposta de um correspondente que não pode ofertar o produto escolhido é reprovada ali, com o motivo "O produto X não está habilitado para este correspondente.". Veja [Correspondentes](/plataforma/correspondentes).
+- Para ativar, o modo por regras precisa de ao menos uma regra completa, o modo por fórmula precisa da fórmula, e **Usar um produto padrão** precisa do produto padrão.
+
+Os produtos são cadastrados em [Produtos](/propostas/produtos).
 
 ## Pré-aprovação
 
@@ -125,11 +183,14 @@ Calcula uma faixa de oferta indicativa (valor mínimo e máximo, prazos, carênc
 
 | Você configura | Detalhe |
 | --- | --- |
+| **Fonte** | **Fórmula** (padrão), **Produto da proposta** ou **Manual (o analista preenche)**. Com **Produto da proposta**, valor, prazos e carência saem do produto, e as fórmulas abaixo são opcionais e só limitam dentro dele. Sem produto, a etapa vai para o analista. |
+| **Revisão do analista** | **Nenhuma**, **Opcional (só fora do produto ou sem faixa)** ou **Obrigatória**. Com revisão, a esteira para antes de mandar a oferta, e **Quem revisa** define os analistas (vazio: qualquer pessoa com acesso à execução). |
 | **Valor mínimo (R$)** e **Valor máximo (R$)** | Fórmulas, por exemplo `valor_pedido * 0.5` e `valor_pedido`. |
 | **Prazos permitidos (meses)** | Pelo menos um. **Prazo máximo por fórmula** é opcional. |
 | **Carências permitidas (meses)** | Vazio = sem carência. |
 | **Spread de risco** | Opcional, em pontos-base ao ano: 250 = 2,5% a.a. Limitado ao máximo do produto. |
 | **Validade (dias)** | Padrão 15, máximo 365. |
+| **Enviar a oferta para** | **Cliente (contato da proposta)** (padrão) ou **Atendente do canal (correspondente)** |
 | **Enviar ao cliente** | Por **E-mail** e/ou **SMS**. |
 | **Esperar a escolha** | Pausa até o cliente escolher. |
 | **Ao vencer** | **Parar para o analista** (padrão), **Encerrar a proposta como vencida**, **Seguir sem a escolha** |
@@ -137,6 +198,8 @@ Calcula uma faixa de oferta indicativa (valor mínimo e máximo, prazos, carênc
 - Vem antes da Decisão e pode aparecer mais de uma vez.
 - Sem proposta ligada à execução, é pulada: "Execução sem proposta ligada: não há pedido para receber a oferta."
 - Faixa impossível (fórmula sem valor, mínimo maior que o máximo, nenhum prazo cabe): a etapa não inventa oferta e para esperando um analista.
+- Na revisão, o analista confirma ou ajusta a faixa e clica em **Enviar oferta**. Sair dos limites do produto exige justificativa no comentário. Reprovar na revisão recusa a proposta e grava a decisão final **Reprovado**.
+- Com **Atendente do canal (correspondente)**, nenhuma mensagem é enviada: o atendente escolhe o valor e o prazo no portal do parceiro, e a esteira espera a escolha por padrão. Veja [Correspondentes](/plataforma/correspondentes).
 - Depois da escolha, as etapas seguintes leem `valor_escolhido`, `prazo_escolhido` e `carencia_escolhida`.
 
 A experiência do cliente e as duas rodadas de oferta estão em [Pré-aprovação e oferta](/propostas/pre-aprovacao-e-oferta).
@@ -151,6 +214,7 @@ Consolida o resultado de todas as etapas anteriores, escolhe a rota de cada desf
 | **Quem revisa** | **Analista**, **Comitê IA sugere**, **Comitê IA decide** |
 | **Oferta** | **Sem oferta** ou **Gerar oferta**, com **Limite aprovado**, **Taxa mensal** e **Prazo (meses)** em valor fixo ou fórmula |
 | **Condição extra** | Opcional. Se não atender: aprovar sem oferta ou enviar para revisão. |
+| **Configurações por condição** | Opcional. Cada configuração tem **Nome**, **Quando** (fórmula, com atalho por produto) e troca a rota, **Quem revisa** e os revisores. A primeira verdadeira vale; o resto segue a configuração padrão. |
 
 Revisão da oferta, Comitê IA e Alçada são ligados dentro da Decisão. Detalhes em [Decisão, alçada e comitê](/esteiras/decisao-alcada-e-comite).
 
@@ -171,7 +235,7 @@ O [Comitê de crédito IA](/concepts/comite-de-credito) delibera sobre os relat�
 | Objetivo e **Orientações por agente** | Opcionais. Somam às regras da organização. |
 
 - Aparece uma vez só, dentro da Decisão.
-- Exige Parecer ligado em pelo menos uma política ou camada anterior: "Ative o Parecer em ao menos uma política ou camada antes do Comitê IA."
+- Precisa de uma Análise antes e de pelo menos uma política anterior com Parecer IA. O Parecer IA é habilitado pela GYRA+; sem ele, o construtor avisa: "Nenhuma política antes do Comitê IA tem Parecer IA. Escolha uma política com Parecer IA ou fale com a GYRA+ para habilitar."
 - Sem relatório anterior: erro "Nenhum relatório anterior disponível para o comitê."
 - Se o comitê não puder ser convocado, a revisão vai para o analista.
 

@@ -18,7 +18,7 @@ Para usar a API da GYRA+ você precisa de credenciais vinculadas à sua organiza
 
 <Steps>
   <Step title="Abra Configurações, API & MCP">
-    A tela exige a permissão de **gerenciar configurações** (Administrador, Owner, Superuser).
+    Criar e revogar credenciais exige a permissão de **gerenciar configurações** da organização.
   </Step>
   <Step title="Crie a credencial">
     Na seção **Credenciais de API**, clique em criar e dê um nome reconhecível (`backend-producao`, `n8n-homologacao`).
@@ -40,7 +40,7 @@ Troque o par por um token de acesso em `POST /auth/authenticate`, com os headers
 
 | Header               | Tipo     | Obrigatório | Descrição                          |
 |----------------------|----------|-------------|------------------------------------|
-| `gyra-client-id`     | `string` | sim         | Identificador da sua organização   |
+| `gyra-client-id`     | `string` | sim         | Client ID da credencial            |
 | `gyra-client-secret` | `string` | sim         | Chave secreta gerada no painel     |
 
 ```bash

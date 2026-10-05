@@ -26,9 +26,9 @@ A aba **Produtos** lista os produtos da organização, com filtro por tipo e por
 | --- | --- |
 | **Produto** | O nome do produto |
 | **Carteira** | A carteira do produto (ou **Sem carteira**) |
+| **Estrutura** | Amortização e taxa, em resumo |
 | **Valor** | Fixo, faixa ou livre |
 | **Prazo** | Os limites de prazo |
-| **Estrutura** | Amortização e taxa, em resumo |
 | **Ao concluir** | A política ou a esteira que o produto dispara |
 | **Ativo** | Liga e desliga o produto |
 
@@ -60,7 +60,7 @@ Desligar um produto o tira do formulário e bloqueia pedidos novos. As propostas
 | **Tipo** | **Financiamento** ou **Venda a prazo** |
 | **Finalidade** | Vem do catálogo de objetivos da política de crédito |
 | **Carteira** | Obrigatória com carteiras ligadas. A proposta congela a carteira do dia em que nasce |
-| **Atende** | Pessoa jurídica, pessoa física ou **Os dois**. O formulário público só oferece o produto a esse público |
+| **Atende** | **PJ**, **PF** ou **Os dois**. O formulário público só oferece o produto a esse público, e nenhuma proposta com o produto aceita documento de outro tipo |
 
 ## Valor e limites
 
@@ -110,7 +110,7 @@ Em **Encargos**, adicione **IOF**, **Tarifa de análise**, **Seguro**, **Fundo g
 
 **Documentos:** o que o cliente envia para este produto, acrescentado ao que o modelo do formulário já pede. Exige o módulo de Onboarding.
 
-**Ao concluir:** o que roda quando os documentos chegam. Deixe **O que o modelo do formulário dispara** para seguir o modelo, ou escolha uma política (em **Políticas**) ou uma esteira (em **Esteiras**) só para este produto.
+**Ao concluir:** o que roda quando os documentos chegam. Deixe **O que o modelo do formulário dispara** para seguir o modelo, ou escolha uma política (em **Políticas**) ou uma esteira (em **Esteiras**) só para este produto. Com **Atende** em **Os dois**, aparecem **Ao concluir (CNPJ)** e **Ao concluir (CPF)**, e cada seletor mostra só as políticas e esteiras daquele tipo.
 
 ## Simulação ao vivo
 

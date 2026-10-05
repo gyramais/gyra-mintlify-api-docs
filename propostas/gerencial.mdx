@@ -1,0 +1,135 @@
+---
+title: "Painel gerencial"
+description: "A aba Gerencial de Propostas: volume, aprovação, conversão, onde as propostas param, quem traz o negócio e o mix por produto, com visões salvas e exportação para Excel."
+icon: "chart-line"
+surface: plataforma
+domain: proposta
+audience: operador
+lang: nao-tecnica
+---
+
+A aba **Gerencial** mostra a operação de crédito inteira numa tela: quanto entrou, quanto foi aprovado, onde as propostas estão paradas e quem traz o negócio. Você acompanha a semana sem montar planilha, e quando precisa da planilha, ela sai pronta.
+
+<Info>
+  **Resumo:** menu lateral, **Operação**, **Propostas**, aba **Gerencial**. No topo, até seis indicadores com a variação contra o período anterior. Abaixo, blocos que você liga, desliga e reordena. Visões prontas e salvas guardam o recorte, e **Exportar** baixa tudo em Excel.
+</Info>
+
+<Note>
+  A aba faz parte do módulo de Propostas. Os filtros e as quebras por correspondente e atendente aparecem só para quem tem o [canal de correspondentes](/plataforma/correspondentes).
+</Note>
+
+## Período, filtros e comparação
+
+| Controle | O que faz |
+| --- | --- |
+| Período | **7 dias**, **30 dias** (padrão), **90 dias** ou **12 meses** |
+| **Origem** | **Link público**, **Operador**, **API**, **Lote** e, com o canal, **Canal de correspondentes** |
+| **Correspondente**, **Tipo de canal**, **Atendente** | Só com o canal de correspondentes |
+| **Produto** | Os produtos da organização |
+| **Carteira** | Com as carteiras em uso |
+| **Cliente** | **Empresa (CNPJ)** ou **Pessoa (CPF)** |
+| **Situação** | As [situações](/propostas/visao-geral) da proposta |
+| **Comparar com o período anterior** | Mostra a variação de cada número contra o período de mesmo tamanho logo antes |
+
+Cada filtro aceita vários valores. **Limpar filtros** volta tudo ao início. Os números podem levar até um minuto para refletir mudanças recentes.
+
+## Indicadores do topo
+
+| Indicador | O que conta |
+| --- | --- |
+| **Propostas recebidas** | Propostas criadas no período |
+| **Valor solicitado** | Soma do valor pedido |
+| **Taxa de aprovação** | Aprovadas sobre decididas (aprovadas mais reprovadas). Conta como aprovada a proposta que chegou à pré-aprovação ou além |
+| **Valor ofertado emitido** | Valor das ofertas emitidas |
+| **Ticket médio** | Valor médio solicitado por proposta |
+| **Tempo até a oferta** | Mediana, em dias, do pedido à oferta emitida |
+| **Conversão ponta a ponta** | Ofertas emitidas sobre propostas recebidas |
+| **Abertas agora** | Propostas em aberto neste momento, independente do período |
+| **Fora do SLA** | Abertas há mais tempo que o SLA da situação em que estão |
+
+O padrão mostra os seis primeiros. Cada cartão traz a variação, uma minilinha das últimas 12 semanas e o valor anterior. Clique num cartão para levá-lo ao gráfico **Evolução**.
+
+Com uma meta de aprovação definida na visão, o cartão **Taxa de aprovação** diz se você está **na meta** ou **abaixo**.
+
+Acima dos indicadores, uma faixa traz até três destaques calculados a partir dos mesmos números: o que piorou, o que está fora do SLA e quem lidera.
+
+## Os blocos
+
+| Bloco | O que mostra |
+| --- | --- |
+| **Funil da proposta** | Quantas chegaram a cada etapa (**Recebidas**, **Em análise**, **Pré-aprovadas**, **Oferta firme**, **Escolhida**, **Emitida**), em quantidade ou valor, com a perda entre elas |
+| **Onde está parado** | As abertas agora, por tempo na situação atual (até 2 dias, de 3 a 7 dias, há mais de 7 dias), com o que está fora do SLA e as que estão paradas há mais tempo |
+| **Evolução** | A série semanal do indicador escolhido, com o período anterior |
+| **Mix por produto** | A participação de cada produto nas propostas recebidas, com o valor solicitado ao lado |
+| **Quem traz o negócio** | A quebra por correspondente, atendente, produto, carteira, origem ou PF/PJ |
+| **Onde as propostas reprovam** | A etapa da esteira que reprovou, na decisão final |
+| **Tempo de ciclo** | Mediana e p90, em dias, entre cada par de etapas |
+| **Ofertas** | O que o cliente faz com a oferta firme: escolhidas, vencidas sem escolha e o valor aceito contra o solicitado |
+
+Alguns números levam direto à aba **Lista**, já filtrada: as situações de **Onde está parado** e as ofertas emitidas do funil.
+
+### Quem traz o negócio
+
+A tabela quebra o período por **Correspondente**, **Atendente**, **Produto**, **Carteira**, **Origem** ou **PF / PJ**. Cada linha mostra **Propostas**, **Solicitado**, **Aprovação**, **Conversão**, **Emitido**, **Tempo até a oferta**, **Fora do SLA** e a minilinha de 12 semanas, com o **Total** no fim.
+
+- **Ordenar** por qualquer coluna.
+- **Com alerta** mostra só as linhas que pedem atenção: aprovação caiu 15 pontos percentuais ou mais contra o período anterior (com pelo menos 8 propostas nos dois períodos), ou 5 ou mais propostas fora do SLA.
+- **Clique numa linha** para filtrar a visão inteira por ela. Clique de novo, ou em **Limpar**, para desfazer.
+
+Sem o canal de correspondentes, a quebra começa por produto.
+
+## Visões
+
+Uma visão guarda o período, os filtros, os indicadores, os blocos, a quebra, a meta e o SLA. As prontas aparecem para todos:
+
+| Visão pronta | Para quem |
+| --- | --- |
+| **Diretoria** | O retrato completo, com todos os blocos |
+| **Canal de correspondentes** | O canal, quebrado por correspondente. Só com o canal de correspondentes |
+| **Fila da operação** | Abertas, fora do SLA e tempo, quebrado por atendente |
+| **Risco e política** | Aprovação, reprovações e mix, quebrado por produto |
+
+### Personalizar
+
+**Personalizar** abre a configuração da visão aberta:
+
+- **Indicadores do topo:** até seis, na ordem em que forem ligados.
+- **Blocos:** quais aparecem e em que ordem.
+- **Meta de aprovação (%):** de 1 a 100. Vazio é sem meta.
+- **SLA por situação (dias):** para **Esperando você** (padrão 2), **Em análise** (padrão 1) e **Esperando o cliente** (padrão 7).
+
+**Aplicar** muda só a visão aberta. Com mudanças não salvas, a barra mostra **Alterações não salvas**, com **Descartar**.
+
+### Salvar visão
+
+**Salvar visão** pede um **Nome** (até 60 caracteres) e **Quem vê**:
+
+- **Só eu:** fica na sua lista de visões.
+- **Toda a equipe:** aparece para todos da organização, com a marca **equipe**.
+
+Na visão que você criou, dá para atualizá-la, **Salvar como nova** ou **Excluir esta visão**. Nas visões prontas e nas de outras pessoas, **Salvar visão** sempre cria uma visão nova, assim como o botão **+** ao lado das visões.
+
+## Exportar para Excel
+
+**Exportar** baixa a planilha `painel-propostas-AAAA-MM-DD.xlsx` com o mesmo recorte da tela. Cada bloco vira uma aba:
+
+| Aba | O que traz |
+| --- | --- |
+| **Resumo** | Período, filtros, comparação e data de geração |
+| **Indicadores** | Cada indicador no período, no período anterior e a variação |
+| **Funil**, **Evolução semanal**, **Mix por produto**, **Reprovações**, **Tempo de ciclo**, **Ofertas**, **Onde está parado** | Os números de cada bloco |
+| **Por** e a quebra escolhida | A tabela de **Quem traz o negócio** |
+| **Propostas** | Uma linha por proposta do período: data, CPF/CNPJ, nome, origem, correspondente, atendente, produto, carteira, situação, valores, decisão, etapa da reprovação e a data de cada etapa |
+
+A aba **Propostas** traz até 5.000 propostas. Acima disso, a planilha sai com as 5.000 mais recentes e a tela avisa: reduza o período para ter todas.
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Propostas no toolbox" icon="table-list" href="/toolbox/propostas">
+    A lista, o detalhe e as ações de cada proposta.
+  </Card>
+  <Card title="Correspondentes" icon="handshake" href="/plataforma/correspondentes">
+    O canal que aparece na quebra por correspondente e atendente.
+  </Card>
+</CardGroup>

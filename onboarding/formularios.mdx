@@ -13,7 +13,7 @@ lang: nao-tecnica
 </Info>
 
 <Note>
-  Esta página trata do item `FORM`, respondido **dentro** de uma solicitação já aberta. O link aberto que qualquer pessoa usa para **começar** o próprio cadastro ou pedido é outra coisa: está em [Formulário público](/kyc/formulario-publico).
+  Esta página trata do item `FORM`, respondido **dentro** de uma solicitação já aberta. O link aberto que qualquer pessoa usa para **começar** o próprio cadastro ou pedido é outra coisa: está em [Formulário público](/onboarding/formulario-publico).
 </Note>
 
 ## Onde o formulário mora
@@ -99,7 +99,19 @@ A `key` é **kebab-case** (`faturamento-medio-mensal`), até 60 caracteres, e é
 
 ## Sócios
 
-Com `allowPartners: true`, o destinatário pode acrescentar sócios ao formulário (nome, documento e participação). É o caminho para o quadro societário que a empresa declara, ao lado do que a fonte oficial diz.
+Com `allowPartners: true`, o destinatário pode acrescentar sócios ao formulário: nome, documento, função, participação, e-mail e telefone. Para sócio pessoa física, o formulário pergunta também estado civil e regime de bens, a menos que o modelo desligue com `partnerFields: []`. É o caminho para o quadro societário que a empresa declara, ao lado do que a fonte oficial diz.
+
+## Para onde vai a resposta
+
+A resposta enviada não fica presa na solicitação. Ela vai para o [cadastro](/onboarding/cadastro-documental):
+
+| O que | Onde aparece |
+| --- | --- |
+| Cada campo respondido, pronto ou livre | Em **Dados declarados pelo cliente**, com o nome da variável da esteira (`form.<modelo>.<campo>`) |
+| O e-mail e o telefone de cada sócio, e os do próprio titular quando o formulário pergunta | Nos [contatos](/onboarding/cadastro-documental#contatos) daquela pessoa, com a origem **Formulário** |
+| Os sócios declarados | No quadro societário do cadastro da empresa, com a origem **Formulário**, só onde há lacuna: o CPF completo de quem a fonte oficial mostra mascarado, ou o sócio que o quadro ainda não tem |
+
+É por isso que a [etapa Solicitação](/esteiras/etapas#solicitação) da esteira, no modo dos sócios, já encontra o contato de quem o cliente acabou de informar, sem esperar um primeiro envio.
 
 ## Pré-preenchimento pela extração
 
@@ -119,4 +131,4 @@ Três coisas acontecem em volta disso, e todas viram trilha:
 
 ## O formulário no termo
 
-As respostas do formulário podem ser citadas dentro de um [termo](/kyc/termos-e-assinatura), pela variável `<<form.CHAVE>>`. Quando o termo cita uma resposta, ele só fica assinável depois que o formulário concluir (comportamento `blockSignatureUntilDependenciesMet`, ligado por padrão).
+As respostas do formulário podem ser citadas dentro de um [termo](/onboarding/termos-e-assinatura), pela variável `<<form.CHAVE>>`. Quando o termo cita uma resposta, ele só fica assinável depois que o formulário concluir (comportamento `blockSignatureUntilDependenciesMet`, ligado por padrão).

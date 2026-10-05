@@ -49,6 +49,20 @@ A Decisão olha o **pior resultado entre as etapas e os grupos de vínculos** da
 
 As duas opções com Comitê exigem a etapa Comitê de crédito IA ligada na esteira.
 
+### Configurações por condição
+
+Uma esteira pode tratar casos diferentes de jeitos diferentes, sem duplicar a esteira. Em **Configurações por condição**, cada configuração tem:
+
+| Campo | O que é |
+| --- | --- |
+| **Nome** | Por exemplo, "Investimento" |
+| **Quando** | Uma fórmula, como `produto = "INV"`. Os botões de produto preenchem a condição para você. |
+| **Aprovado**, **Alerta**, **Alerta severo** | A rota desta condição, ou **Igual à padrão** |
+| **Quem revisa** | **Analista**, **Comitê IA sugere**, **Comitê IA decide** ou **Igual à padrão** |
+| **Analistas da revisão** e **Quem revisa a oferta** | Quem decide nesta condição |
+
+A primeira condição verdadeira vale; o que ela não troca segue a configuração padrão. O Comitê IA é uma etapa só, então ele tem o mesmo papel em todas as configurações.
+
 ## A oferta
 
 Com **Gerar oferta**, a Decisão monta a oferta com três valores, cada um em **Valor fixo** ou **Fórmula**:
@@ -83,7 +97,7 @@ O [Comitê de crédito IA](/concepts/comite-de-credito) reúne os relatórios de
 | **Orientações por agente** | Opcional. Soma às regras da organização. |
 
 - O comitê só delibera quando todos os relatórios que ele vai ler estão prontos.
-- Exige o Parecer ligado em pelo menos uma política ou camada anterior: "Ative o Parecer em ao menos uma política ou camada antes do Comitê IA."
+- Exige pelo menos uma política anterior com Parecer IA. O Parecer IA é habilitado pela GYRA+ por política ou pelo nível do relatório; você não liga nem desliga na política.
 - Se o comitê não puder ser convocado, a revisão vai para o analista, e a execução não fica parada.
 - Na página da execução, a recomendação aparece como "Comitê de IA recomenda aprovar", "aprovar com ressalvas", "levar à alçada" ou "recusar", com a posição de cada agente (**Concorda**, **Concorda com ressalva**, **Diverge**).
 - Quando o comitê termina, sua organização pode receber o webhook `COMMITTEE_FINISHED`. Veja [Criar webhook](/api-reference/webhook/post-webhook).

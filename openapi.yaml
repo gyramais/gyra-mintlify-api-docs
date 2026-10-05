@@ -128,7 +128,7 @@ paths:
           in: query
           schema:
             type: string
-          description: 'Filtra o parecer de UMA secao (ex: PROCESSES, SCR, BALANCE_SHEET). Sem o parametro, retorna todos os pareceres concluidos.'
+          description: 'Filtra o parecer de UMA secao (ex: PROCESSES, SCR, PEFIN). Sem o parametro, retorna todos os pareceres concluidos. Tipo de secao invalido responde 400; secao sem parecer responde insights vazio.'
       responses:
         200:
           description: 'Envelope com reportId, document, committee { status, decision, result, at } e insights[] (parecer por secao).'
@@ -189,17 +189,19 @@ paths:
       parameters:
         - name: gyra-client-secret
           in: header
-          description: 'Client Secret da integracao. Obtido no painel Toolbox em Configuracoes > Integracao.'
+          required: true
+          description: 'Client Secret da credencial. Gerado no Toolbox em Configuracoes > API & MCP e mostrado uma unica vez.'
           schema:
             type: string
         - name: gyra-client-id
           in: header
-          description: 'Client ID da integracao. Obtido no painel Toolbox em Configuracoes > Integracao.'
+          required: true
+          description: 'Client ID da credencial. Gerado no Toolbox em Configuracoes > API & MCP.'
           schema:
             type: string
       responses:
         '200':
-          description: Objeto com accessToken (JWT) e expiresIn (tempo em segundos).
+          description: 'Sessao criada: accessToken (JWT) e expiresAt (24 horas apos a emissao).'
           content:
             application/json:
               schema:
@@ -237,15 +239,24 @@ paths:
                 userId: 6612a7f3b4c5d6e700000000
                 loggedOutAt: null
                 organizationId: 6612a7f30000000000000001
+        '400':
+          description: O gyra-client-id nao corresponde a nenhuma credencial (inclusive credencial revogada).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 400
+                message: ClientId inválido.
         '401':
-          description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
+          description: O gyra-client-secret nao confere com o client id.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 401
-                message: Token de acesso inválido.
+                message: ClientSecret inválido.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -254,7 +265,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - auth
       summary: Gerar token de acesso JWT
@@ -343,14 +354,14 @@ paths:
                 url: 'https://api.suaempresa.com/gyra/webhook'
                 apiKey: null
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Tipo invalido, url ausente, ou a URL nao respondeu 2xx ao POST de teste feito antes de salvar.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: URL de webhook inválida.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -360,15 +371,6 @@ paths:
               example:
                 code: 401
                 message: Token de acesso inválido.
-        '403':
-          description: O usuario autenticado nao tem a permissao exigida pela rota.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 403
-                message: Você não tem permissão para executar esta ação.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -377,25 +379,34 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - webhook
       summary: Criar webhook para notificacoes
       description: |
-          Registra uma URL de webhook para receber notificacoes em tempo real.
-          
-          Tipos de webhook disponiveis:
-          - REPORT: notificado quando um relatorio muda de status (PENDING → APPROVED/DENIED/ALERT)
-          - REPORT_FINISHED: notificado quando o processamento do relatorio finaliza
-          - REPORT_STATUS: notificado em cada mudanca de status intermediaria
-          - CREDIT_POLICY: notificado quando a politica de credito e avaliada
-          - OPTIN: notificado quando um opt-in e processado
-          
-          O webhook recebe um POST na URL configurada com o payload do evento.
-          Se apiKey for informada, sera enviada no header api-key da requisicao.
-          
-          RECOMENDADO: Sempre configure um webhook ao criar relatorios. Evita
-          a necessidade de polling com get_report.
+          Registra uma URL que recebe um POST a cada evento do tipo escolhido. Cada webhook
+          escuta um tipo; para varios tipos, cadastre varios webhooks.
+
+          Antes de salvar, a GYRA+ faz um POST de teste na URL com o corpo
+          {"message": "Teste de webhook cadastrado com sucesso!"}. Se a URL nao responder 2xx,
+          o cadastro e recusado com 400 "URL de webhook inválida.".
+
+          Tipos:
+          - REPORT: cada secao do relatorio atualizada (varios disparos por relatorio)
+          - REPORT_FINISHED: todas as fontes do relatorio terminaram
+          - REPORT_STATUS: decisao gravada no relatorio (manual ou automatica)
+          - CREDIT_POLICY: o resultado da politica de credito mudou de status
+          - REPORT_EXPORTED: arquivo exportado pronto (ou falha da exportacao)
+          - COMMITTEE_FINISHED: o Comite de Credito IA concluiu ou falhou
+          - OPERATION: execucao de esteira concluiu com status final
+          - OPTIN: fluxo de opt-in
+
+          Envelope de todo evento: { organizationId, webhookType, data }. Se apiKey for
+          informada, vai no header api-key. Entrega com falha de rede, 5xx, 408, 425 ou 429
+          e tentada de novo ate 3 vezes.
+
+          REPORT, REPORT_FINISHED e COMMITTEE_FINISHED so saem para relatorios criados
+          depois do cadastro do webhook.
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -442,7 +453,7 @@ paths:
         - name: webhookId
           required: false
           in: query
-          description: 'ID do webhook especifico (opcional). Sem este parametro, retorna todos.'
+          description: 'ID de um webhook (opcional). Sem este parametro, retorna todos os webhooks da organizacao do token. A resposta e sempre um array.'
           schema:
             example: 664b63037707171ba58cf311
             type: string
@@ -466,14 +477,14 @@ paths:
                   url: 'https://api.suaempresa.com/gyra/webhook'
                   apiKey: null
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: webhookId enviado vazio.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: id should not be empty
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -483,15 +494,6 @@ paths:
               example:
                 code: 401
                 message: Token de acesso inválido.
-        '403':
-          description: O usuario autenticado nao tem a permissao exigida pela rota.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 403
-                message: Você não tem permissão para executar esta ação.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -500,7 +502,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - webhook
       summary: Consultar webhooks cadastrados
@@ -548,7 +550,7 @@ paths:
             type: string
       responses:
         '200':
-          description: Confirmacao de remocao.
+          description: O webhook removido.
           content:
             application/json:
               schema:
@@ -556,17 +558,29 @@ paths:
                 properties:
                   id:
                     type: string
+                  type:
+                    type: string
+                  url:
+                    type: string
+                  apiKey:
+                    type: string
+                    nullable: true
+                  organizationId:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+                  updatedAt:
+                    type: string
+                    format: date-time
               example:
                 id: 6612a7f344eb43f000000000
-        '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                createdAt: '2026-07-31T18:02:54.965Z'
+                updatedAt: '2026-07-31T18:02:54.965Z'
+                organizationId: 6612a7f3fa9e086b00000000
+                type: REPORT_FINISHED
+                url: 'https://api.suaempresa.com/gyra/webhook'
+                apiKey: null
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -576,24 +590,15 @@ paths:
               example:
                 code: 401
                 message: Token de acesso inválido.
-        '403':
-          description: O usuario autenticado nao tem a permissao exigida pela rota.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 403
-                message: Você não tem permissão para executar esta ação.
         '404':
-          description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
+          description: Webhook inexistente.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 404
-                message: Cadastro não encontrado.
+                message: 'An operation failed because it depends on one or more records that were required but not found. Record to delete does not exist.'
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -602,7 +607,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - webhook
       summary: Deletar webhook
@@ -661,15 +666,6 @@ paths:
                   - values:
                       bureau:
                         protestsQuantity: 15
-        '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -687,7 +683,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -696,7 +692,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - report
       security:
@@ -714,7 +710,8 @@ paths:
           - PEP e sancoes internacionais
           - Resultado da politica de credito
           
-          Use get_report para obter a lista de secoes e seus IDs.
+          Use get_report para obter a lista de secoes e seus IDs. Um id que nao
+          corresponde a nenhuma secao responde 200 sem corpo.
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -753,8 +750,7 @@ paths:
               $ref: '#/components/schemas/CreateReportDto'
             example:
               policyId: 6612a7f3625ea4ab00000000
-              document: 11.444.777/0001-61
-              type: cnpj
+              document: '11222333000181'
       responses:
         '200':
           description: 'Objeto do relatorio com id, status (PENDING), document, type e createdAt.'
@@ -773,14 +769,14 @@ paths:
                   value: PENDING
                 createdAt: '2026-07-31T13:42:37.059Z'
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'CPF ou CNPJ invalido no corpo.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'Você precisa inserir um CNPJ ou CPF válido.'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -798,7 +794,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -807,7 +803,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - report
       security:
@@ -825,8 +821,8 @@ paths:
             1. Webhook configurado (create_webhook), recomendado para integracoes.
             2. Polling em get_report ate reportProgress.isFinalized === true.
           
-          Status (apos analyze_report manual): PENDING → APPROVED, DENIED ou ALERT.
-          A maioria dos clientes deixa em PENDING e usa o resultado da politica.
+          Status do relatorio: PENDING ate uma decisao; APPROVED ou REJECTED depois de
+          analyze_report. O resultado da politica fica em policyStatus.
           
           O tipo de relatorio (SIMPLES, ESSENCIAL, COMPLETO, COMPLETO+) e determinado
           pela politica de credito (policyId) utilizada.
@@ -840,7 +836,7 @@ paths:
               curl --request POST 'https://gyra-core.gyramais.com.br/report' \
                 --header 'Authorization: Bearer <token>' \
                 --header 'Content-Type: application/json' \
-                --data '{"policyId":"6612a7f3625ea4ab00000000","document":"11.444.777/0001-61","type":"cnpj"}'
+                --data '{"policyId":"6612a7f3625ea4ab00000000","document":"11222333000181"}'
         - lang: JavaScript
           label: Node
           source: |
@@ -852,8 +848,7 @@ paths:
                 },
                 body: JSON.stringify({
                   "policyId": "6612a7f3625ea4ab00000000",
-                  "document": "11.444.777/0001-61",
-                  "type": "cnpj"
+                  "document": "11222333000181"
                 }),
               });
               
@@ -868,8 +863,7 @@ paths:
                   headers={"Authorization": f"Bearer {token}"},
                   json={
                       "policyId": "6612a7f3625ea4ab00000000",
-                      "document": "11.444.777/0001-61",
-                      "type": "cnpj"
+                      "document": "11222333000181"
                   },
               )
               
@@ -898,21 +892,20 @@ paths:
             enum:
               - PENDING
               - APPROVED
-              - DENIED
-              - ALERT
-          description: Status do relatorio.
+              - REJECTED
+          description: Status do relatorio, em maiusculas.
         - name: document
           in: query
           required: false
           schema:
             type: string
-          description: CPF ou CNPJ (apenas numeros).
+          description: 'CPF ou CNPJ sem mascara, com digito verificador valido.'
         - name: userId
           in: query
           required: false
           schema:
             type: string
-          description: ID do usuario criador.
+          description: 'ID do usuario criador. O valor api-user traz so os relatorios criados pela API.'
         - name: createdAtBetween
           in: query
           required: false
@@ -984,14 +977,14 @@ paths:
                     finalizedAt: '2026-07-31T17:50:11.585Z'
                     elapsedTimeMs: 148578
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'statusValue fora de PENDING, APPROVED ou REJECTED, ou document com digito verificador invalido.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'Você precisa inserir um status de relatório válido.'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -1009,7 +1002,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -1018,7 +1011,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - report
       security:
@@ -1068,21 +1061,20 @@ paths:
             enum:
               - PENDING
               - APPROVED
-              - DENIED
-              - ALERT
-          description: Status do relatorio.
+              - REJECTED
+          description: Status do relatorio, em maiusculas.
         - name: document
           in: query
           required: false
           schema:
             type: string
-          description: CPF ou CNPJ (apenas numeros).
+          description: 'CPF ou CNPJ sem mascara, com digito verificador valido.'
         - name: userId
           in: query
           required: false
           schema:
             type: string
-          description: ID do usuario criador.
+          description: 'ID do usuario criador. O valor api-user traz so os relatorios criados pela API.'
         - name: createdAtBetween
           in: query
           required: false
@@ -1113,25 +1105,21 @@ paths:
           description: ID do batch.
       responses:
         '200':
-          description: Objeto com count (numero de relatorios).
+          description: Numero de relatorios que atendem aos filtros (o corpo e o proprio numero).
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  count:
-                    type: integer
-              example:
-                count: 128
+                type: integer
+              example: 128
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'statusValue fora de PENDING, APPROVED ou REJECTED, ou document com digito verificador invalido.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'Você precisa inserir um status de relatório válido.'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -1149,7 +1137,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -1158,7 +1146,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - report
       security:
@@ -1204,9 +1192,51 @@ paths:
           schema:
             type: string
           description: ID do relatorio a exportar.
+        - name: type
+          required: true
+          in: query
+          schema:
+            type: string
+            enum:
+              - REPORT
+              - REPORT_MINIFIED
+          description: 'Obrigatorio. Use REPORT. Sem ele, a resposta e 400.'
+        - name: exportFormat
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - pdf
+              - excel
+              - both
+          description: 'pdf (padrao), excel ou both. Com both saem dois arquivos e dois webhooks.'
+        - name: sectionOrder
+          required: false
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: 'Secoes do arquivo, na ordem desejada. Repita o parametro para cada secao. Sem ele, valem as secoes e a ordem do modelo.'
+        - name: templateId
+          required: false
+          in: query
+          schema:
+            type: string
+          description: ID de um modelo de exportacao da organizacao.
+        - name: systemTemplate
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - COMPLETE
+              - COMPACT
+          description: Modelo nativo de exportacao.
       responses:
-        '200':
-          description: 'Objeto { status: "processing", reportId }, o arquivo chega via webhook.'
+        '202':
+          description: 'Objeto { status: "processing", reportId }. O arquivo chega pelo webhook REPORT_EXPORTED.'
           content:
             application/json:
               schema:
@@ -1214,21 +1244,21 @@ paths:
                 properties:
                   status:
                     type: string
-                    description: 'processing: o arquivo chega pelo webhook `report.exported`.'
+                    description: 'processing: o arquivo chega pelo webhook REPORT_EXPORTED.'
                   reportId:
                     type: string
               example:
                 status: processing
                 reportId: 6612a7f3a19b467000000000
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Parametro type ausente ou invalido, ou exportFormat fora de pdf, excel, both.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'type must be one of the following values: REPORT, REPORT_MINIFIED,type should not be empty'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -1246,7 +1276,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -1255,7 +1285,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - report
       security:
@@ -1282,12 +1312,12 @@ paths:
         - lang: cURL
           label: cURL
           source: |
-              curl --request GET 'https://gyra-core.gyramais.com.br/report/export/6612a7f30000000000000001' \
+              curl --request GET 'https://gyra-core.gyramais.com.br/report/export/6612a7f30000000000000001?type=REPORT' \
                 --header 'Authorization: Bearer <token>'
         - lang: JavaScript
           label: Node
           source: |
-              const resposta = await fetch("https://gyra-core.gyramais.com.br/report/export/6612a7f30000000000000001", {
+              const resposta = await fetch("https://gyra-core.gyramais.com.br/report/export/6612a7f30000000000000001?type=REPORT", {
                 method: "GET",
                 headers: { Authorization: `Bearer ${token}` },
               });
@@ -1299,7 +1329,7 @@ paths:
               import requests
               
               resposta = requests.get(
-                  "https://gyra-core.gyramais.com.br/report/export/6612a7f30000000000000001",
+                  "https://gyra-core.gyramais.com.br/report/export/6612a7f30000000000000001?type=REPORT",
                   headers={"Authorization": f"Bearer {token}"},
               )
               
@@ -1314,32 +1344,105 @@ paths:
           schema:
             type: string
           description: ID do relatorio a exportar.
+        - name: type
+          required: true
+          in: query
+          schema:
+            type: string
+            enum:
+              - REPORT
+              - REPORT_MINIFIED
+          description: 'Obrigatorio. Use REPORT. Sem ele, a resposta e 400.'
+        - name: exportFormat
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - pdf
+              - excel
+              - both
+          description: 'pdf (padrao) ou excel. both nao e suportado nesta rota: use a exportacao assincrona.'
+        - name: sectionOrder
+          required: false
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: 'Secoes do arquivo, na ordem desejada. Repita o parametro para cada secao. Sem ele, valem as secoes e a ordem do modelo.'
+        - name: templateId
+          required: false
+          in: query
+          schema:
+            type: string
+          description: ID de um modelo de exportacao da organizacao.
+        - name: systemTemplate
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - COMPLETE
+              - COMPACT
+          description: Modelo nativo de exportacao.
       responses:
-        '200':
-          description: 'Objeto com a URL de download do PDF gerado (assinada, com expiracao).'
+        '202':
+          description: 'Registro da exportacao, com o arquivo ja pronto. O link esta em url.'
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  exportUrl:
+                  id:
                     type: string
-                    description: 'URL assinada do PDF, com validade.'
-                  exportedAt:
+                  url:
+                    type: string
+                    description: Link do arquivo gerado.
+                  payload:
+                    type: object
+                    properties:
+                      reportId:
+                        type: string
+                      type:
+                        type: string
+                        description: PDFMAKE para PDF, EXCEL para Excel.
+                      generatedAt:
+                        type: string
+                        format: date-time
+                  userId:
+                    type: string
+                  organizationId:
+                    type: string
+                  typeId:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+                  updatedAt:
                     type: string
                     format: date-time
               example:
-                exportUrl: 'https://exemplo.gyramais.com.br/arquivo'
-                exportedAt: '2026-07-31T14:40:00.000Z'
+                id: 6612a7f32b77480800000000
+                createdAt: '2026-07-31T18:03:37.465Z'
+                updatedAt: '2026-07-31T18:03:37.465Z'
+                userId: 6612a7f3615ff3f200000000
+                organizationId: 6612a7f3fa9e086b00000000
+                typeId: 6612a7f371f08b3400000000
+                url: 'https://exemplo.gyramais.com.br/relatorio.pdf'
+                payload:
+                  reportId: 6612a7f3a19b467000000000
+                  type: PDFMAKE
+                  generatedAt: '2026-07-31T18:03:37.464Z'
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Parametro type ausente ou invalido, ou exportFormat fora de pdf, excel, both.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'type must be one of the following values: REPORT, REPORT_MINIFIED,type should not be empty'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -1357,7 +1460,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -1366,7 +1469,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - report
       security:
@@ -1377,14 +1480,8 @@ paths:
           implementar integracao com cliente HTTP que suporta timeout longo (>= 6 min).
           Para um usuario apenas exportando no chat, use export_report_and_wait.
           
-          O endpoint BLOQUEIA ate a geracao concluir, pode levar ate 6 minutos para
-          relatorios completos. Cuidado: idle timeout de proxy/ALB tipico e 60s, entao
-          isso so funciona se o cliente controla o caminho de rede (chamada server-to-server
-          sem proxy intermediario).
-          
-          Pode ser chamado a qualquer momento, nao exige que o relatorio esteja
-          finalizado nem analisado. Se o relatorio ainda esta processando, o PDF
-          contem apenas as secoes prontas ate o momento.
+          O endpoint BLOQUEIA ate a geracao concluir e responde 202 com o registro da
+          exportacao (link em url). Use timeout longo no cliente HTTP.
           
           Para fluxo interativo de agente, prefira export_report_and_wait (timeout
           previsivel de 2min, com aviso quando relatorio nao esta finalizado).
@@ -1393,12 +1490,12 @@ paths:
         - lang: cURL
           label: cURL
           source: |
-              curl --request GET 'https://gyra-core.gyramais.com.br/report/export-sync/6612a7f30000000000000001' \
+              curl --request GET 'https://gyra-core.gyramais.com.br/report/export-sync/6612a7f30000000000000001?type=REPORT' \
                 --header 'Authorization: Bearer <token>'
         - lang: JavaScript
           label: Node
           source: |
-              const resposta = await fetch("https://gyra-core.gyramais.com.br/report/export-sync/6612a7f30000000000000001", {
+              const resposta = await fetch("https://gyra-core.gyramais.com.br/report/export-sync/6612a7f30000000000000001?type=REPORT", {
                 method: "GET",
                 headers: { Authorization: `Bearer ${token}` },
               });
@@ -1410,7 +1507,7 @@ paths:
               import requests
               
               resposta = requests.get(
-                  "https://gyra-core.gyramais.com.br/report/export-sync/6612a7f30000000000000001",
+                  "https://gyra-core.gyramais.com.br/report/export-sync/6612a7f30000000000000001?type=REPORT",
                   headers={"Authorization": f"Bearer {token}"},
               )
               
@@ -1456,15 +1553,6 @@ paths:
                   finalizedAt: '2026-07-31T17:50:11.585Z'
                   elapsedTimeMs: 148578
                 createdAt: '2026-07-31T17:47:43.007Z'
-        '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -1482,7 +1570,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -1491,23 +1579,22 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - report
       security:
         - authorization: []
       summary: Consultar relatorio por ID
       description: |
-          Retorna o relatorio completo com secoes, decisao da politica e score.
-          
-          Se o relatorio esta em processamento, o status sera PENDING.
-          Quando pronto, o objeto retornado contem:
-          - status: APPROVED, DENIED ou ALERT
-          - policyResult: decisao automatica com regras avaliadas
-          - sections[]: array de secoes (BASIC_INFORMATION, PROCESSES, PROTESTS, SCR, etc.)
-          - commentary: analise do analista (se houver)
-          
-          Use details=false para obter apenas metadados sem o conteudo das secoes.
+          Retorna o relatorio com secoes, decisao e metadados.
+
+          status.value e PENDING ate uma decisao, e APPROVED ou REJECTED depois. O
+          resultado da politica fica em policyStatus; a decisao manual, em analystName e
+          commentary.
+
+          Com credencial de API, a resposta tem a mesma forma de GET /v2/report/{id} e os
+          parametros details e tabType sao ignorados. Para integracoes novas, use
+          GET /v2/report/{id}.
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -1579,15 +1666,6 @@ paths:
                         injunction: false
                         protestsQuantity: 15
                         protestsTotalValue: 'R$ 102.390,05'
-        '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -1605,7 +1683,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -1614,33 +1692,33 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - report
       security:
         - authorization: []
       summary: Consultar secao especifica do relatorio
       description: |
-          Retorna uma secao especifica de um relatorio pelo tipo.
-          
-          Tipos de secao disponiveis:
-          - BASIC_INFORMATION: dados cadastrais, endereco, socios
-          - PROCESSES: processos judiciais
-          - PROTESTS: protestos em cartorio
-          - PEFIN_REFIN: dividas Pefin/Refin
-          - SCR: dados do Sistema de Informacoes de Credito do Banco Central
-          - PEP_SANCTIONS: Pessoa Politicamente Exposta e sancoes
-          - CREDIT_POLICY: resultado da avaliacao da politica de credito
+          Retorna uma secao de um relatorio pelo tipo (sectionType, em maiusculas).
+
+          Exemplos de tipo: BASIC_INFORMATION, LOCATION, RELATIONS, SCORE, PROCESSES,
+          PROTESTS, PEFIN, REFIN, SCR, SCR_SUMMARY, PEP, SANCTIONS, BALANCE_SHEET, DRE,
+          FINANCIAL_INDICATORS, FINANCIAL_INSIGHTS, CREDIT_POLICY, PRICING. Lista completa
+          em /api-reference/report/get-report-section.
+
+          404 "Tipo de seção não encontrado" para tipo invalido, 404 "Seção não encontrada"
+          quando o relatorio nao tem a secao, 404 "Relatório não encontrado" para relatorio
+          inexistente ou de outra organizacao.
       x-codeSamples:
         - lang: cURL
           label: cURL
           source: |
-              curl --request GET 'https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/section/valor' \
+              curl --request GET 'https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/section/PROTESTS' \
                 --header 'Authorization: Bearer <token>'
         - lang: JavaScript
           label: Node
           source: |
-              const resposta = await fetch("https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/section/valor", {
+              const resposta = await fetch("https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/section/PROTESTS", {
                 method: "GET",
                 headers: { Authorization: `Bearer ${token}` },
               });
@@ -1652,7 +1730,7 @@ paths:
               import requests
               
               resposta = requests.get(
-                  "https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/section/valor",
+                  "https://gyra-core.gyramais.com.br/report/6612a7f30000000000000001/section/PROTESTS",
                   headers={"Authorization": f"Bearer {token}"},
               )
               
@@ -1699,21 +1777,33 @@ paths:
                 policyId: 6612a7f3625ea4ab00000000
                 analystId: 6612a7f3615ff3f200000000
                 analystName: Usuário API
-                commentary: Teste de documentacao da API
+                commentary: Aprovado após análise manual.
+                policyStatus: APPROVED
+                operationResultId: null
+                document: '11222333000181'
                 status:
                   id: 6612a7f33fdd7d9400000000
                   title: Aprovado
                   value: APPROVED
                   color: '#74DA42'
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Corpo sem id ou approved, ou relatorio ja decidido (use POST /report/re-analyze).'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'O relatório já foi analisado.'
+        '404':
+          description: Relatorio inexistente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 404
+                message: O relatório não foi encontrado.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -1731,7 +1821,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -1740,18 +1830,18 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - report
       security:
         - authorization: []
       summary: Analisar/aprovar relatorio
       description: |
-          Registra a analise de um relatorio por um analista de credito.
-          
-          Define o status de aprovacao (approved: true/false), comentarios do analista
-          e decisao manual. Usado quando a decisao automatica da politica precisa de
-          revisao humana.
+          Registra a decisao manual de um relatorio PENDING: approved true vira APPROVED,
+          false vira REJECTED. commentary e opcional. Vale uma vez por relatorio: num
+          relatorio ja decidido a resposta e 400 "O relatório já foi analisado." (use
+          re-analyze). Com credencial de API, a decisao fica assinada como "Usuário API".
+          Dispara o webhook REPORT_STATUS.
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -1809,17 +1899,13 @@ paths:
                   description: ID do relatorio a re-analisar.
                 approved:
                   type: boolean
-                  description: 'true para aprovar, false para negar.'
-                commentary:
-                  type: string
-                  description: Comentario do analista (opcional).
+                  description: 'Nova decisao: true aprova, false reprova.'
               required:
                 - id
                 - approved
             example:
               id: 6612a7f3a19b467000000000
               approved: false
-              commentary: 'Revisão: informação adicional identificou risco não mapeado. Decisão alterada para negado.'
       responses:
         '200':
           description: Relatorio atualizado com a nova analise.
@@ -1831,22 +1917,32 @@ paths:
                 description: O relatorio com a decisao manual substituida.
               example:
                 id: 6612a7f3a19b467000000000
-                analystName: Usuário API
-                commentary: Revisao apos envio de balanco
+                organizationId: 6612a7f3fa9e086b00000000
+                policyId: 6612a7f3625ea4ab00000000
+                analystId: 6612a7f3b4c5d6e700000000
+                analystName: Maria Souza
+                commentary: Aprovado após análise manual.
+                previousAnalystId: 6612a7f3615ff3f200000000
+                previousAnalystName: Usuário API
                 status:
+                  id: 6612a7f3410dcd8100000002
+                  value: REJECTED
+                previousStatus:
                   id: 6612a7f33fdd7d9400000000
                   title: Aprovado
                   value: APPROVED
                   color: '#74DA42'
+                analyzedAt: '2026-08-01T10:12:40.110Z'
+                previousAnalyzedAt: '2026-07-31T18:20:02.004Z'
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Corpo sem id ou approved.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'id should not be empty,id must be a string,approved should not be empty,approved must be a boolean value'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -1864,7 +1960,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -1873,15 +1969,18 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - report
       security:
         - authorization: []
       summary: Re-analisar relatorio
       description: |
-          Re-analisa um relatorio previamente analisado. Verifica se o usuario
-          tem permissao para editar relatorios com base na politica de credito configurada.
+          Troca a decisao de um relatorio e guarda a anterior em previousStatus,
+          previousAnalystId, previousAnalystName e previousAnalyzedAt. So refaz quem esta
+          na lista de quem pode editar relatorios da politica (por usuario ou papel); fora
+          dela a resposta e 401 "Você não tem permissão para reanalisar esse relatório.".
+          O campo commentary nao e alterado nesta rota.
           
           Util quando dados adicionais foram obtidos ou a decisao precisa ser revisada.
       x-codeSamples:
@@ -1891,7 +1990,7 @@ paths:
               curl --request POST 'https://gyra-core.gyramais.com.br/report/re-analyze' \
                 --header 'Authorization: Bearer <token>' \
                 --header 'Content-Type: application/json' \
-                --data '{"id":"6612a7f3a19b467000000000","approved":false,"commentary":"Revisão: informação adicional identificou risco não mapeado. Decisão alterada para negado."}'
+                --data '{"id":"6612a7f3a19b467000000000","approved":false}'
         - lang: JavaScript
           label: Node
           source: |
@@ -1903,8 +2002,7 @@ paths:
                 },
                 body: JSON.stringify({
                   "id": "6612a7f3a19b467000000000",
-                  "approved": false,
-                  "commentary": "Revisão: informação adicional identificou risco não mapeado. Decisão alterada para negado."
+                  "approved": false
                 }),
               });
               
@@ -1919,8 +2017,7 @@ paths:
                   headers={"Authorization": f"Bearer {token}"},
                   json={
                       "id": "6612a7f3a19b467000000000",
-                      "approved": False,
-                      "commentary": "Revisão: informação adicional identificou risco não mapeado. Decisão alterada para negado."
+                      "approved": False
                   },
               )
               
@@ -1932,21 +2029,48 @@ paths:
         - name: percentages
           required: false
           in: query
-          description: Enable percentage of policies
+          description: 'true acrescenta percentages, a distribuicao dos resultados de cada politica.'
           schema:
-            type: boolean
+            type: string
+            enum:
+              - 'true'
+              - 'false'
         - name: enabled
           required: false
           in: query
-          description: Filtrar por politicas ativas. "true" ou "false" (como string).
+          description: 'true traz so as politicas habilitadas para a organizacao; false, so as desabilitadas.'
           schema:
-            type: boolean
+            type: string
+            enum:
+              - 'true'
+              - 'false'
         - name: protected
           required: false
           in: query
-          description: Incluir politicas protegidas do sistema. "true" ou "false" (como string).
+          description: 'true inclui tambem as politicas protegidas, que nao pertencem a organizacao.'
           schema:
-            type: boolean
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: usage
+          required: false
+          in: query
+          description: 'REPORT (roda sozinha, inclusive em POST /v2/report) ou PIPELINE (so roda dentro de esteira).'
+          schema:
+            type: string
+            enum:
+              - REPORT
+              - PIPELINE
+        - name: includeUser
+          required: false
+          in: query
+          description: 'true acrescenta user, com quem criou a politica.'
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
       responses:
         '200':
           description: 'Array de politicas com id, name, enabled, documentType, grupos de regras e configuracoes.'
@@ -1977,31 +2101,60 @@ paths:
                     enabled:
                       type: boolean
                       description: Politica desabilitada nao pode ser executada.
+                    usage:
+                      type: string
+                      enum:
+                        - REPORT
+                        - PIPELINE
+                      description: So REPORT roda em POST /v2/report.
+                    kind:
+                      type: string
+                      enum:
+                        - BASE
+                        - LAYER
+                    version:
+                      type: number
+                    parecerEnabled:
+                      type: boolean
+                    integrationGroup:
+                      type: object
+                      nullable: true
+                      additionalProperties: true
                     organizationId:
                       type: string
                     createdAt:
                       type: string
                       format: date-time
               example:
-                - name: EMPRESA EXEMPLO LTDA
+                - id: 6612a7f3625ea4ab00000000
+                  name: Crédito PJ Completo+
+                  kind: BASE
+                  usage: REPORT
                   reportType: CUSTOMER_GYRA_360_PLUS
                   documentType: CNPJ
                   bureauType: BOAVISTA
-                  hasSCR: false
+                  hasSCR: true
                   balanceRuleEnabled: false
-                  enabled: false
-                  id: 6612a7f32ef457de00000000
+                  version: 3
+                  enabled: true
+                  parecerEnabled: true
+                  integrationGroup:
+                    id: 6612a7f3ae25b13000000000
+                    documentType: CNPJ
+                    label: Completo+
+                    name: CUSTOMER_GYRA_360_PLUS
+                    hasParecer: true
                   organizationId: 6612a7f3fa9e086b00000000
-                  createdAt: '2024-07-24T17:32:51.896Z'
+                  createdAt: '2026-05-12T14:03:51.896Z'
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'usage fora de REPORT ou PIPELINE.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'usage must be one of the following values: REPORT, PIPELINE'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -2019,7 +2172,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -2028,7 +2181,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - credit-policy/policy
       security:
@@ -2043,11 +2196,13 @@ paths:
           - Tipo de relatorio gerado (SIMPLES, ESSENCIAL, COMPLETO, COMPLETO+)
           - Grupos de regras com pesos e thresholds
           
-          O policyId retornado e necessario para criar relatorios (create_report).
-          
-          Filtros opcionais:
-          - enabled: true para ver apenas politicas ativas
-          - protected: true para incluir politicas protegidas (padrao do sistema)
+          O policyId retornado e necessario para criar relatorios (create_report). Para
+          a API, use uma politica com enabled true e usage REPORT.
+
+          Filtros opcionais (valores como string):
+          - enabled: true para ver apenas politicas habilitadas
+          - usage: REPORT ou PIPELINE
+          - protected: true para incluir politicas protegidas
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -2091,40 +2246,29 @@ paths:
               required:
                 - sectionId
             example:
-              reportId: 6612a7f3a19b467000000000
+              sectionId: 6612a7f3dc5b830500000000
       responses:
         '200':
-          description: 'Insight gerado com analise, pontos de atencao e recomendacoes.'
+          description: 'Texto gerado em output. Se a secao ja tinha um insight, devolve o mesmo texto sem gerar de novo.'
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-                description: Pareceres por secao e o resumo da decisao do comite. A leitura completa esta em /concepts/pareceres-gyra-ia.
+                properties:
+                  output:
+                    type: string
               example:
-                reportId: 6612a7f3a19b467000000000
-                document: '43591367000130'
-                committee:
-                  status: DONE
-                  decision: REJECTED
-                  result:
-                    decision: REJECTED
-                    synthesis:
-                      decision: REJECTED
-                      resumo: 'Comitê confirma negativa da política: CNPJ suspenso e passivos relevantes inviabilizam a concessão.'
-                      proximaAcao: Arquivar o processo e não retomar sem regularização cadastral comprovada.
-                      confidence: 0.97
-                      conditions: []
-                      alcadaLevel: null
+                output: 'A empresa tem dois protestos recentes em São Paulo, somando R$ 5.850,33...'
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Corpo sem sectionId, secao ainda nao finalizada ou plano sem o recurso.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'sectionId should not be empty,sectionId must be a string'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -2142,7 +2286,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -2151,7 +2295,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - insight
       summary: Gerar insight com IA para secao do relatorio
@@ -2162,9 +2306,9 @@ paths:
           pontos de atencao e recomendacoes. O insight e salvo como comentario
           na secao do relatorio.
           
-          Requisitos:
+          Requisitos (senao 400):
           - A secao deve estar finalizada (processamento completo)
-          - A organizacao deve ter plano que suporte IA (nao disponivel em planos Trial ou Basic)
+          - A organizacao deve ter plano que suporte o recurso (nao disponivel em planos Trial ou Basic)
           
           Use get_report para obter os IDs das secoes disponiveis.
       x-codeSamples:
@@ -2174,7 +2318,7 @@ paths:
               curl --request POST 'https://gyra-core.gyramais.com.br/insight' \
                 --header 'Authorization: Bearer <token>' \
                 --header 'Content-Type: application/json' \
-                --data '{"reportId":"6612a7f3a19b467000000000"}'
+                --data '{"sectionId":"6612a7f3dc5b830500000000"}'
         - lang: JavaScript
           label: Node
           source: |
@@ -2185,7 +2329,7 @@ paths:
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                  "reportId": "6612a7f3a19b467000000000"
+                  "sectionId": "6612a7f3dc5b830500000000"
                 }),
               });
               
@@ -2199,7 +2343,7 @@ paths:
                   "https://gyra-core.gyramais.com.br/insight",
                   headers={"Authorization": f"Bearer {token}"},
                   json={
-                      "reportId": "6612a7f3a19b467000000000"
+                      "sectionId": "6612a7f3dc5b830500000000"
                   },
               )
               
@@ -2215,8 +2359,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateReportDto'
             example:
-              document: 11.444.777/0001-61
-              type: cnpj
+              document: '11222333000181'
               policyId: 6612a7f3625ea4ab00000000
       responses:
         '200':
@@ -2226,31 +2369,35 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-                description: 'O relatorio recem-criado. O processamento e assincrono: acompanhe por webhook `report.finished` ou por GET /v2/report/{id}.'
+                description: 'O relatorio criado. O processamento e assincrono: acompanhe pelo webhook REPORT_FINISHED ou por GET /v2/report/{id}. Mesmo documento, politica, versao e dia devolvem o mesmo relatorio.'
               example:
+                reportProgress:
+                  steps:
+                    - event: REPORT_CHECKING
+                      message: Report sent to check the document.
                 id: 6612a7f3a19b467000000000
                 createdAt: '2026-07-31T13:42:37.059Z'
                 updatedAt: '2026-07-31T13:42:37.059Z'
-                document: '43591367000130'
+                document: '11222333000181'
                 organizationId: 6612a7f3fa9e086b00000000
                 customerId: 6612a7f388be48e900000000
                 months: 12
-                policyVersion: 1.11
-                verified: true
+                policyVersion: 3
+                verified: false
+                operationId: null
+                operationResultId: null
                 status:
-                  id: 6612a7f33fdd7d9400000000
+                  id: 6612a7f3410dcd8100000000
                   value: PENDING
-                reportProgress:
-                  steps: []
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Corpo invalido: document com digito verificador invalido, policyId ausente, politica nao habilitada ou politica de esteira.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'Você precisa inserir um CNPJ ou CPF válido.'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -2268,7 +2415,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -2277,15 +2424,24 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - report
       security:
         - authorization: []
       summary: Criar relatorio (API v2)
       description: |
-          Versao v2 da criacao de relatorio. Mesma funcionalidade de create_report
-          com payload revisado. Use create_report_v2 para novas integracoes.
+          Cria a analise de um CPF ou CNPJ com a politica informada. Use para novas
+          integracoes. Corpo: document (obrigatorio, digito verificador validado),
+          policyId (obrigatorio, politica habilitada e de usage REPORT) e months (opcional).
+          O campo type e ignorado: o tipo vem da politica.
+
+          Mesmo documento, politica, versao da politica e dia: devolve o relatorio que ja
+          existe (decidido, sem reprocessar; PENDING, com a coleta disparada de novo).
+
+          Erros: 400 politica ausente, nao habilitada ou de esteira; 422 documento de tipo
+          diferente do da politica; 503 com reportId quando o relatorio foi criado mas a
+          analise nao foi enfileirada.
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -2293,7 +2449,7 @@ paths:
               curl --request POST 'https://gyra-core.gyramais.com.br/v2/report' \
                 --header 'Authorization: Bearer <token>' \
                 --header 'Content-Type: application/json' \
-                --data '{"document":"11.444.777/0001-61","type":"cnpj","policyId":"6612a7f3625ea4ab00000000"}'
+                --data '{"document":"11222333000181","policyId":"6612a7f3625ea4ab00000000"}'
         - lang: JavaScript
           label: Node
           source: |
@@ -2304,8 +2460,7 @@ paths:
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                  "document": "11.444.777/0001-61",
-                  "type": "cnpj",
+                  "document": "11222333000181",
                   "policyId": "6612a7f3625ea4ab00000000"
                 }),
               });
@@ -2320,8 +2475,7 @@ paths:
                   "https://gyra-core.gyramais.com.br/v2/report",
                   headers={"Authorization": f"Bearer {token}"},
                   json={
-                      "document": "11.444.777/0001-61",
-                      "type": "cnpj",
+                      "document": "11222333000181",
                       "policyId": "6612a7f3625ea4ab00000000"
                   },
               )
@@ -2345,32 +2499,60 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-                description: O relatorio com o estado do processamento. O dicionario completo das secoes esta em /data/estrutura-relatorio.
+                description: 'O relatorio com status, progresso e todas as secoes (com conteudo, pareceres e erros). O dicionario das secoes esta em /data/estrutura-relatorio.'
               example:
                 id: 6612a7f3a19b467000000000
-                document: '43591367000130'
+                createdAt: '2026-07-31T13:42:37.059Z'
+                updatedAt: '2026-07-31T13:43:28.150Z'
+                document: '11222333000181'
+                yearMonthDay: 20260731
+                policyId: 6612a7f3625ea4ab00000000
+                policyVersion: 3
+                policyName: Completo+
                 organizationId: 6612a7f3fa9e086b00000000
-                months: 12
-                policyVersion: 1.11
-                verified: true
+                commentary: null
+                userId: 6612a7f338154f0100000000
                 status:
                   id: 6612a7f33fdd7d9400000000
                   value: APPROVED
                 reportProgress:
                   isFinalized: true
-                  finalizedAt: '2026-07-31T18:03:37.453Z'
+                  finalizedAt: '2026-07-31T13:43:24.194Z'
                   steps: []
-                createdAt: '2026-07-31T13:42:37.059Z'
-                updatedAt: '2026-07-31T18:03:37.453Z'
-        '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+                analystId: null
+                analystName: null
+                sections:
+                  - id: 6612a7f30a2c8b1a00000000
+                    type:
+                      id: 6612a7f3cd81d4f900000000
+                      title: Sanções
+                      value: SANCTIONS
+                    comments: []
+                    sectionDetails:
+                      - values: {}
+                        errors: []
+                    parecer: Texto do parecer da seção...
+                    parecerScore: 10
+                    parecerRiskLevel: LOW
+                    parecerStatus: DONE
+                    parecerFeedback: null
+                    errors: []
+                verified: true
+                exportUrl: null
+                exportExcelUrl: null
+                parecerEnabled: true
+                committeeStatus: null
+                committeeDecision: null
+                committeeResult: null
+        '404':
+          description: Relatorio inexistente ou de outra organizacao.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
-                code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                code: 404
+                message: Relatório não encontrado
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -2388,7 +2570,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -2397,15 +2579,17 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - report
       security:
         - authorization: []
       summary: Consultar relatorio (API v2)
       description: |
-          Versao v2 da consulta de relatorio. Retorna o relatorio com estrutura
-          atualizada. Use get_report_v2 para novas integracoes.
+          Retorna o relatorio completo: status (PENDING, APPROVED, REJECTED), progresso,
+          politica, decisao manual, todas as secoes com conteudo e Parecer IA, e o resultado
+          do Comite de Credito IA. Nao aceita filtros. Relatorio inexistente ou de outra
+          organizacao responde 404 "Relatório não encontrado".
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -2461,23 +2645,44 @@ paths:
                 tradeName: AURORA
                 legalNature: Sociedade Empresária Limitada
                 kycStatus: PENDING
-                kycRenewalDue: '2027-03-31T00:00:00.000Z'
+                kycRenewalDue: null
                 completeness: 0
                 documentsCount: 0
                 pendingCount: 0
                 reportId: null
                 basicDataSyncedAt: '2026-09-05T12:58:10.000Z'
+                crossDocument: null
                 createdAt: '2026-09-05T12:58:10.000Z'
-                updatedAt: '2026-09-05T13:07:44.000Z'
+                updatedAt: '2026-09-05T12:58:10.000Z'
+                completenessSlots:
+                  - key: CONTRATO_SOCIAL
+                    types:
+                      - CONTRATO_SOCIAL
+                      - ALTERACAO_CONTRATUAL
+                      - ESTATUTO_SOCIAL
+                      - REQUERIMENTO_EMPRESARIO
+                    filled: false
+                    documentId: null
+                  - key: IRPJ_ECF
+                    types:
+                      - IRPJ_ECF
+                    filled: false
+                    documentId: null
+                  - key: CERTIDAO_JUNTA
+                    types:
+                      - CERTIDAO_JUNTA
+                    filled: false
+                    documentId: null
+                signingAuthority: null
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Corpo invalido. A mensagem concatena todas as falhas por virgula.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: Você precisa inserir um CNPJ ou CPF válido.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -2495,7 +2700,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -2504,16 +2709,38 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
+        '404':
+          description: 'O modulo Onboarding nao esta liberado para a organizacao: para ela, a rota nao existe.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 404
+                message: Recurso não encontrado.
+        '502':
+          description: 'O servico de cadastro nao respondeu. Tente de novo.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível criar o cadastro.
       tags:
         - registry
       security:
         - authorization: []
       description: |
           Cria o dossie documental de um CNPJ ou CPF na organizacao autenticada.
-          
+
           IDEMPOTENTE POR DOCUMENTO: chamar de novo com o mesmo CNPJ devolve o cadastro que ja existe,
-          em vez de duplicar. E seguro chamar no inicio de qualquer jornada.
+          em vez de duplicar. E seguro chamar no inicio de qualquer jornada. Cadastro removido antes
+          volta a ficar ativo, com o historico que ja tinha.
+
+          A resposta traz o mesmo corpo do detalhe do cadastro, inclusive `completenessSlots` e
+          `signingAuthority`.
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -2556,7 +2783,52 @@ paths:
     get:
       operationId: RegistryController_list
       summary: Listar cadastros da organizacao
-      parameters: []
+      parameters:
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+          description: 'Casa por razao social, nome fantasia ou parte do CNPJ/CPF (mascara e ignorada).'
+        - name: entityType
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - COMPANY
+              - PERSON
+          description: COMPANY (pessoa juridica) ou PERSON (pessoa fisica).
+        - name: kycStatus
+          required: false
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - PENDING
+                - PROCESSING
+                - UP_TO_DATE
+                - ATTENTION
+                - EXPIRED
+                - RENEWING
+          description: Uma ou mais situacoes. Repita o parametro para varias.
+        - name: skip
+          required: false
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+          description: Quantos pular. Padrao 0.
+        - name: take
+          required: false
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+          description: 'Tamanho da pagina. Padrao 20, maximo 50.'
       responses:
         '200':
           description: Pagina de cadastros com situacao e completude.
@@ -2577,11 +2849,30 @@ paths:
                     completeness: 0.66
                     documentsCount: 4
                     pendingCount: 1
-                    reportId: 6612a7f3a19b467000000000
+                    reportId: null
                     basicDataSyncedAt: '2026-09-05T12:58:10.000Z'
+                    crossDocument: null
                     createdAt: '2026-09-05T12:58:10.000Z'
                     updatedAt: '2026-09-05T13:07:44.000Z'
                 total: 1
+        '400':
+          description: 'Parametro invalido, inclusive valor de kycStatus fora da lista. A mensagem concatena todas as falhas por virgula.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 400
+                message: 'each value in kycStatus must be one of the following values: PENDING, PROCESSING, UP_TO_DATE, ATTENTION, EXPIRED, RENEWING'
+        '404':
+          description: 'O modulo Onboarding nao esta liberado para a organizacao: para ela, a rota nao existe.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 404
+                message: Recurso não encontrado.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -2599,7 +2890,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -2608,20 +2899,22 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - registry
       security:
         - authorization: []
       description: |
-          Lista os cadastros, com busca e filtro por situacao.
-          
+          Lista os cadastros, com busca e filtro por situacao, do atualizado mais recentemente para o
+          mais antigo. Cadastro removido nao aparece.
+
           Situacoes: PENDING (sem documento validado), PROCESSING (documento em analise),
           UP_TO_DATE (tudo validado), ATTENTION (divergencia, vencimento proximo ou ressalva),
           EXPIRED (renovacao vencida), RENEWING (renovacao em curso).
-          
-          ATENCAO: valor de kycStatus fora dessa lista e descartado em silencio pela validacao, e a
-          consulta devolve a lista INTEIRA sem erro. Confira o valor antes de concluir qualquer coisa.
+
+          Valor de kycStatus fora dessa lista e recusado com 400.
+
+          `completenessSlots` e `signingAuthority` so vem no detalhe do cadastro.
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -2906,26 +3199,42 @@ paths:
                   decidedByOperator: false
                 processedAt: '2026-09-05T13:07:44.000Z'
                 attempt: 1
-        '201':
-          description: 'Resultado completo (200) com type, extraction, validation.checks[] e assessment; ou { documentId, statusUrl } (202) quando ainda processa.'
         '202':
-          description: 'O pipeline nao fechou dentro de `waitSeconds`. Continue por GET na `statusUrl`, ou assine o webhook `registry.document.assessed` e pare de fazer polling.'
+          description: 'O pipeline nao fechou dentro de `waitSeconds`. `statusUrl` e um caminho relativo, sem o prefixo de versao: continue por GET nele (ou em /v1/registry/documents/{docId}/status), ou assine o webhook `registry.document.assessed` e pare de fazer polling.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RegistryValidateAccepted'
               example:
                 documentId: 6612a7f30000000000000031
-                statusUrl: 'https://gyra-core.gyramais.com.br/v1/registry/documents/6612a7f30000000000000031/status'
+                statusUrl: /registry/documents/6612a7f30000000000000031/status
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Corpo invalido, arquivo ausente, tipo de arquivo fora de PDF/JPG/PNG ou conteudo que nao confere com o tipo declarado.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'O arquivo do documento é obrigatório (campo "file").'
+        '404':
+          description: 'O modulo Onboarding nao esta liberado para a organizacao: para ela, a rota nao existe.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 404
+                message: Recurso não encontrado.
+        '502':
+          description: 'O armazenamento ou o servico de cadastro nao respondeu. Tente de novo.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível iniciar a validação do documento.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -2943,25 +3252,16 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '413':
-          description: Arquivo acima do teto da rota.
+          description: 'Arquivo acima de 15MB. Para arquivos maiores, use o envio por URL assinada (presign + confirmacao).'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 413
-                message: Arquivo maior que 50MB.
-        '422':
-          description: O pedido e valido mas nao pode ser cumprido no estado atual.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 422
-                message: A solicitação já foi cancelada.
+                message: File too large
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -2970,7 +3270,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - registry
       security:
@@ -3179,14 +3479,14 @@ paths:
                 processedAt: '2026-09-05T13:07:44.000Z'
                 attempt: 1
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: Identificador fora do formato ObjectId (24 caracteres hexadecimais).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'O identificador informado em "docId" não é válido.'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -3204,16 +3504,25 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
-          description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
+          description: 'Documento inexistente na organizacao, ou modulo Onboarding nao liberado (nesse caso a mensagem e "Recurso não encontrado."). As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 404
-                message: Cadastro não encontrado.
+                message: Documento não encontrado.
+        '502':
+          description: 'O servico de cadastro nao respondeu. Tente de novo.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível consultar o status do documento.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -3222,7 +3531,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - registry
       security:
@@ -3283,19 +3592,40 @@ paths:
                 completeness: 0.66
                 documentsCount: 4
                 pendingCount: 1
-                reportId: 6612a7f3a19b467000000000
+                reportId: null
                 basicDataSyncedAt: '2026-09-05T12:58:10.000Z'
+                crossDocument: null
                 createdAt: '2026-09-05T12:58:10.000Z'
                 updatedAt: '2026-09-05T13:07:44.000Z'
-        '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+                completenessSlots:
+                  - key: CONTRATO_SOCIAL
+                    types:
+                      - CONTRATO_SOCIAL
+                      - ALTERACAO_CONTRATUAL
+                      - ESTATUTO_SOCIAL
+                      - REQUERIMENTO_EMPRESARIO
+                    filled: true
+                    documentId: 6612a7f30000000000000031
+                  - key: IRPJ_ECF
+                    types:
+                      - IRPJ_ECF
+                    filled: true
+                    documentId: 6612a7f30000000000000032
+                  - key: CERTIDAO_JUNTA
+                    types:
+                      - CERTIDAO_JUNTA
+                    filled: false
+                    documentId: null
+                signingAuthority: null
+        '502':
+          description: 'O servico de cadastro nao respondeu. Tente de novo.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
-                code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                code: 502
+                message: Não foi possível consultar o cadastro.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -3313,7 +3643,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
           description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
           content:
@@ -3331,7 +3661,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - registry
       security:
@@ -3397,8 +3727,9 @@ paths:
                 completeness: 0.66
                 documentsCount: 4
                 pendingCount: 1
-                reportId: 6612a7f3a19b467000000000
+                reportId: null
                 basicDataSyncedAt: '2026-09-05T12:58:10.000Z'
+                crossDocument: null
                 createdAt: '2026-09-05T12:58:10.000Z'
                 updatedAt: '2026-09-05T13:07:44.000Z'
                 completenessSlots:
@@ -3407,8 +3738,14 @@ paths:
                       - CONTRATO_SOCIAL
                       - ALTERACAO_CONTRATUAL
                       - ESTATUTO_SOCIAL
+                      - REQUERIMENTO_EMPRESARIO
                     filled: true
                     documentId: 6612a7f30000000000000031
+                  - key: IRPJ_ECF
+                    types:
+                      - IRPJ_ECF
+                    filled: true
+                    documentId: 6612a7f30000000000000032
                   - key: CERTIDAO_JUNTA
                     types:
                       - CERTIDAO_JUNTA
@@ -3439,14 +3776,23 @@ paths:
                     clauseExcerpt: A administração da sociedade caberá isoladamente ao sócio CARLOS EDUARDO SILVA...
                     confidence: 0.94
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: Identificador fora do formato ObjectId (24 caracteres hexadecimais).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'O identificador informado em "id" não é válido.'
+        '502':
+          description: 'O servico de cadastro nao respondeu. Tente de novo.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível consultar o cadastro.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -3464,7 +3810,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
           description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
           content:
@@ -3482,7 +3828,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - registry
       security:
@@ -3546,18 +3892,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/RegistryPresignResponse'
               example:
-                key: registry/6612a7f30000000000000001/8f2c9a1b-contrato-social.pdf
-                uploadUrl: 'https://arquivos.gyramais.com.br/...&X-Amz-Signature=...'
+                key: presigned/contrato-social-3f6c2a9e-8b1d-4c7a-9e2f-5a1b7c3d9e40.pdf
+                uploadUrl: 'https://<bucket>.s3.amazonaws.com/presigned/contrato-social-3f6c2a9e-8b1d-4c7a-9e2f-5a1b7c3d9e40.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Signature=...'
                 expiresInSeconds: 900
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Corpo invalido: nome ausente, tamanho acima de 50MB (52.428.800 bytes) ou tipo fora de PDF, JPG e PNG. A mensagem concatena todas as falhas por virgula.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: Arquivo maior que 50MB.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -3575,7 +3921,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
           description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
           content:
@@ -3584,16 +3930,16 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 404
-                message: Cadastro não encontrado.
-        '413':
-          description: Arquivo acima do teto da rota.
+                message: Recurso não encontrado.
+        '502':
+          description: 'O armazenamento nao respondeu. Tente de novo.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
-                code: 413
-                message: Arquivo maior que 50MB.
+                code: 502
+                message: Não foi possível preparar o upload do documento.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -3602,7 +3948,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - registry
       security:
@@ -3681,7 +4027,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ConfirmRegistryDocumentDto'
             example:
-              key: registry/6612a7f30000000000000001/8f2c9a1b-contrato-social.pdf
+              key: presigned/contrato-social-3f6c2a9e-8b1d-4c7a-9e2f-5a1b7c3d9e40.pdf
               fileName: contrato-social.pdf
               expectedType: CONTRATO_SOCIAL
               callbackUrl: 'https://api.suaempresa.com/gyra/kyc'
@@ -3696,14 +4042,32 @@ paths:
                 documentId: 6612a7f30000000000000031
                 status: RECEIVED
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Corpo invalido (key e fileName sao obrigatorios). A mensagem concatena todas as falhas por virgula.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'key should not be empty,key must be a string'
+        '409':
+          description: 'O mesmo arquivo (mesmo conteudo) ja esta neste cadastro.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 409
+                message: Este arquivo já existe neste cadastro.
+        '502':
+          description: 'O armazenamento ou o servico de cadastro nao respondeu. Tente de novo.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível registrar o documento.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -3721,9 +4085,9 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
-          description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
+          description: 'Cadastro inexistente, personDocument que nao e pessoa deste cadastro ("Pessoa não encontrada neste cadastro."), ou modulo Onboarding nao liberado ("Recurso não encontrado.").'
           content:
             application/json:
               schema:
@@ -3739,7 +4103,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - registry
       security:
@@ -3751,7 +4115,7 @@ paths:
               curl --request POST 'https://gyra-core.gyramais.com.br/v1/registry/6612a7f30000000000000001/documents' \
                 --header 'Authorization: Bearer <token>' \
                 --header 'Content-Type: application/json' \
-                --data '{"key":"registry/6612a7f30000000000000001/8f2c9a1b-contrato-social.pdf","fileName":"contrato-social.pdf","expectedType":"CONTRATO_SOCIAL","callbackUrl":"https://api.suaempresa.com/gyra/kyc"}'
+                --data '{"key":"presigned/contrato-social-3f6c2a9e-8b1d-4c7a-9e2f-5a1b7c3d9e40.pdf","fileName":"contrato-social.pdf","expectedType":"CONTRATO_SOCIAL","callbackUrl":"https://api.suaempresa.com/gyra/kyc"}'
         - lang: JavaScript
           label: Node
           source: |
@@ -3762,7 +4126,7 @@ paths:
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                  "key": "registry/6612a7f30000000000000001/8f2c9a1b-contrato-social.pdf",
+                  "key": "presigned/contrato-social-3f6c2a9e-8b1d-4c7a-9e2f-5a1b7c3d9e40.pdf",
                   "fileName": "contrato-social.pdf",
                   "expectedType": "CONTRATO_SOCIAL",
                   "callbackUrl": "https://api.suaempresa.com/gyra/kyc"
@@ -3779,7 +4143,7 @@ paths:
                   "https://gyra-core.gyramais.com.br/v1/registry/6612a7f30000000000000001/documents",
                   headers={"Authorization": f"Bearer {token}"},
                   json={
-                      "key": "registry/6612a7f30000000000000001/8f2c9a1b-contrato-social.pdf",
+                      "key": "presigned/contrato-social-3f6c2a9e-8b1d-4c7a-9e2f-5a1b7c3d9e40.pdf",
                       "fileName": "contrato-social.pdf",
                       "expectedType": "CONTRATO_SOCIAL",
                       "callbackUrl": "https://api.suaempresa.com/gyra/kyc"
@@ -3797,48 +4161,94 @@ paths:
           schema:
             type: string
           description: Id do cadastro.
+        - name: type
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - CONTRATO_SOCIAL
+              - ALTERACAO_CONTRATUAL
+              - ESTATUTO_SOCIAL
+              - REQUERIMENTO_EMPRESARIO
+              - PROCURACAO_PJ
+              - IRPJ_ECF
+              - DECLARACAO_FATURAMENTO
+              - CERTIDAO_JUNTA
+              - ATA_ASSEMBLEIA
+              - DOC_IDENTIDADE
+              - COMPROVANTE_RESIDENCIA
+              - DIRPF
+              - COMPROVANTE_RENDA
+              - CERTIDAO_PF
+              - PROCURACAO_PF
+              - FORA_DE_ESCOPO
+              - NAO_IDENTIFICADO
+              - CERTIDAO_PGFN_PJ
+              - CERTIDAO_FGTS
+              - CADIN_FEDERAL
+              - CADIN_ESTADUAL
+              - CERTIDAO_QSA
+              - CERTIFICADO_SIMPLES_NACIONAL
+              - ESOCIAL_PJ
+              - COMPROVACAO_ESTADO_CIVIL
+              - DEMONSTRACOES_FINANCEIRAS
+              - EXTRATO_BANCARIO
+          description: So os documentos deste tipo.
+        - name: includeHistory
+          required: false
+          in: query
+          schema:
+            type: boolean
+          description: 'true traz tambem as versoes aprovadas que ja foram substituidas por uma mais nova do mesmo tipo.'
       responses:
         '200':
-          description: 'Documentos com tipo, versao, status, veredito e data.'
+          description: 'Documentos com tipo, versao, status, veredito e data, dentro de `documents`.'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RegistryDocument'
+                type: object
+                properties:
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RegistryDocument'
               example:
-                - id: 6612a7f30000000000000031
-                  registryId: 6612a7f30000000000000001
-                  personId: null
-                  type: CONTRATO_SOCIAL
-                  status: VALIDATED
-                  version: 2
-                  isCurrent: true
-                  supersedesId: 6612a7f30000000000000030
-                  fileUrl: 'https://arquivos.gyramais.com.br/...'
-                  fileName: contrato-social.pdf
-                  mimeType: application/pdf
-                  sizeBytes: 1843200
-                  pageCount: 12
-                  parentDocumentId: null
-                  classification:
+                documents:
+                  - id: 6612a7f30000000000000031
+                    registryId: 6612a7f30000000000000001
+                    personId: null
                     type: CONTRATO_SOCIAL
-                    confidence: 0.94
-                  yearReference: null
-                  attempt: 1
-                  lastError: null
-                  verdict: VALIDO
-                  createdAt: '2026-09-05T13:02:11.000Z'
-                  updatedAt: '2026-09-05T13:07:44.000Z'
+                    expectedType: CONTRATO_SOCIAL
+                    status: VALIDATED
+                    version: 2
+                    isCurrent: true
+                    supersedesId: 6612a7f30000000000000030
+                    fileUrl: 'https://<bucket>.s3.amazonaws.com/presigned/contrato-social-3f6c2a9e-8b1d-4c7a-9e2f-5a1b7c3d9e40.pdf'
+                    fileName: contrato-social.pdf
+                    mimeType: application/pdf
+                    sizeBytes: 1843200
+                    pageCount: 12
+                    parentDocumentId: null
+                    classification:
+                      type: CONTRATO_SOCIAL
+                      confidence: 0.94
+                    yearReference: null
+                    attempt: 1
+                    lastError: null
+                    statusReason: null
+                    verdict: VALIDO
+                    createdAt: '2026-09-05T13:02:11.000Z'
+                    updatedAt: '2026-09-05T13:07:44.000Z'
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Identificador fora do formato ObjectId, ou `type` fora da lista.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'O identificador informado em "id" não é válido.'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -3856,7 +4266,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
           description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
           content:
@@ -3874,15 +4284,20 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - registry
       security:
         - authorization: []
       description: |
-          Lista os documentos do dossie. Por padrao traz so a versao VIGENTE de cada tipo;
-          com includeHistory, traz todas as versoes.
-          
+          Lista os documentos do dossie, agrupados por tipo e do mais novo para o mais antigo. Cada
+          documento traz `verdict`, o veredito que vale hoje (a decisao do operador, quando houver,
+          vence o parecer automatico).
+
+          Por padrao some so a versao APROVADA que ja foi substituida por uma vigente do mesmo tipo
+          (e da mesma pessoa). Documento reprovado, inconclusivo, em analise ou em processamento
+          aparece sempre. Com includeHistory, traz todas as versoes.
+
           Nada e sobrescrito: uma alteracao contratual nova nao apaga a antiga, vira a versao vigente.
       x-codeSamples:
         - lang: cURL
@@ -4084,14 +4499,14 @@ paths:
                 processedAt: '2026-09-05T13:07:44.000Z'
                 attempt: 1
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: Identificador fora do formato ObjectId (24 caracteres hexadecimais).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'O identificador informado em "docId" não é válido.'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -4109,7 +4524,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
           description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
           content:
@@ -4118,7 +4533,16 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 404
-                message: Cadastro não encontrado.
+                message: Documento não encontrado.
+        '502':
+          description: 'O servico de cadastro nao respondeu. Tente de novo.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível consultar o resultado do documento.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -4127,7 +4551,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - registry
       security:
@@ -4187,7 +4611,7 @@ paths:
             type: string
           description: Id do documento.
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
@@ -4198,7 +4622,7 @@ paths:
               forceType: ALTERACAO_CONTRATUAL
       responses:
         '202':
-          description: 'Confirmacao do reprocessamento (202), com a tentativa nova.'
+          description: 'Confirmacao do reprocessamento (202), com a tentativa nova. O documento volta a RECEIVED.'
           content:
             application/json:
               schema:
@@ -4206,28 +4630,43 @@ paths:
                 properties:
                   documentId:
                     type: string
+                  status:
+                    type: string
+                    description: Sempre RECEIVED nesta resposta.
                   attempt:
                     type: integer
                     description: A tentativa que acabou de comecar.
-                  stages:
-                    type: array
-                    items:
-                      type: string
-                    description: As etapas que vao rodar nesta tentativa.
               example:
                 documentId: 6612a7f30000000000000031
+                status: RECEIVED
                 attempt: 2
-                stages:
-                  - VALIDATE
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Corpo invalido (etapa fora de CLASSIFY/EXTRACT/VALIDATE, tipo fora da lista, URL invalida) ou identificador fora do formato ObjectId.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'each value in stages must be one of the following values: CLASSIFY, EXTRACT, VALIDATE'
+        '409':
+          description: 'Um operador ja decidiu este documento. Mande overrideFeedback true para substituir a decisao pelo parecer novo.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 409
+                message: Este documento já foi decidido por um operador. Reprocessar vai substituir essa decisão pelo novo parecer.
+        '429':
+          description: 'O documento ja chegou ao limite de 5 tentativas.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 429
+                message: Limite de reprocessamentos atingido.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -4245,7 +4684,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
           description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
           content:
@@ -4254,16 +4693,16 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 404
-                message: Cadastro não encontrado.
-        '422':
-          description: O pedido e valido mas nao pode ser cumprido no estado atual.
+                message: Documento não encontrado.
+        '502':
+          description: 'O servico de cadastro nao respondeu. Tente de novo.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
-                code: 422
-                message: A solicitação já foi cancelada.
+                code: 502
+                message: Não foi possível reprocessar o documento.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -4272,7 +4711,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - registry
       security:
@@ -4333,36 +4772,63 @@ paths:
           description: Id do cadastro.
       responses:
         '200':
-          description: 'Pessoas com nome, documento, papel, participacao e origem.'
+          description: 'Pessoas com nome, documento, papel, participacao, origem, campos corrigidos e o primeiro contato guardado, dentro de `persons`.'
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RegistryPerson'
+                type: object
+                properties:
+                  persons:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RegistryPerson'
               example:
-                - id: 6612a7f30000000000000021
-                  registryId: 6612a7f30000000000000001
-                  entityType: PERSON
-                  document: '52998224725'
-                  maskedDocument: '***.982.247-**'
-                  name: CARLOS EDUARDO SILVA
-                  role: Sócio administrador
-                  sharePercent: 60
-                  layer: 1
-                  parentPersonId: null
-                  isBeneficialOwner: true
-                  source: QSA_OFICIAL
-                  linkedRegistryId: null
+                persons:
+                  - id: 6612a7f30000000000000021
+                    registryId: 6612a7f30000000000000001
+                    entityType: PERSON
+                    document: '52998224725'
+                    maskedDocument: null
+                    name: CARLOS EDUARDO SILVA
+                    role: Sócio administrador
+                    sharePercent: 60
+                    layer: 1
+                    parentPersonId: null
+                    isBeneficialOwner: true
+                    source: FORM
+                    linkedRegistryId: null
+                    editedFields: []
+                    contact:
+                      name: CARLOS EDUARDO SILVA
+                      email: carlos@aurora.com.br
+                      phone: '51999998888'
+                      source: FORM
+                      preferred: false
+                      lastUsedAt: '2026-09-05T14:20:00.000Z'
+                  - id: 6612a7f30000000000000022
+                    registryId: 6612a7f30000000000000001
+                    entityType: PERSON
+                    document: null
+                    maskedDocument: '***982247**'
+                    name: MARIA HELENA SOUZA
+                    role: Sócio
+                    sharePercent: 38
+                    layer: 1
+                    parentPersonId: null
+                    isBeneficialOwner: true
+                    source: QSA_OFICIAL
+                    linkedRegistryId: null
+                    editedFields: []
+                    contact: null
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: Identificador fora do formato ObjectId (24 caracteres hexadecimais).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'O identificador informado em "id" não é válido.'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -4380,7 +4846,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
           description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
           content:
@@ -4398,16 +4864,21 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - registry
       security:
         - authorization: []
       description: |
-          Socios e administradores do cadastro, com a origem de cada um:
-          QSA_OFICIAL (quadro societario da fonte oficial), DOCUMENT_EXTRACTION (lido de contrato,
-          estatuto, ata ou certidao) ou MANUAL.
-          
+          Socios e administradores do cadastro, por camada e da maior participacao para a menor, com a
+          origem de cada um: QSA_OFICIAL (quadro societario da fonte oficial), DOCUMENT_EXTRACTION (lido
+          de contrato, estatuto, ata ou certidao), MANUAL (criado por um operador) ou FORM (declarado
+          pelo cliente num formulario de solicitacao).
+
+          `editedFields` lista os campos que um operador corrigiu; a atualizacao do quadro oficial nao
+          passa por cima deles. `contact` e o primeiro contato guardado da pessoa (o preferido, senao o
+          mais recente), ou null.
+
           E a base para pedir documento de socio: cada pessoa pode ganhar cadastro proprio.
       x-codeSamples:
         - lang: cURL
@@ -4449,6 +4920,16 @@ paths:
                 $ref: '#/components/schemas/WebhookEventCatalog'
               example:
                 groups:
+                  - title: Relatórios e crédito
+                    events:
+                      - report.section.updated
+                      - report.finished
+                      - report.status.changed
+                      - report.exported
+                      - committee.finished
+                      - credit-policy.evaluated
+                      - operation.updated
+                      - optin.updated
                   - title: Documento
                     events:
                       - registry.document.received
@@ -4475,10 +4956,27 @@ paths:
                       - collection.recipient.opened
                       - collection.message.failed
                 events:
-                  - ping
+                  - report.section.updated
+                  - report.finished
+                  - report.status.changed
+                  - report.exported
+                  - committee.finished
+                  - credit-policy.evaluated
+                  - operation.updated
+                  - optin.updated
+                  - registry.document.received
                   - registry.document.assessed
                   - collection.completed
                   - collection.message.failed
+                eventLabels:
+                  report.section.updated: Seção do relatório atualizada
+                  report.finished: Relatório concluído
+                  report.status.changed: Relatório aprovado ou negado
+                  report.exported: PDF do relatório pronto
+                  committee.finished: Comitê de crédito concluiu a deliberação
+                  credit-policy.evaluated: Política de crédito avaliada
+                  operation.updated: Operação atualizada
+                  optin.updated: Opt-in atualizado
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -4496,7 +4994,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -4505,7 +5003,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - collections
       security:
@@ -4589,7 +5087,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -4598,7 +5096,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - collections
       security:
@@ -4642,7 +5140,11 @@ paths:
       operationId: WebhookController_save
       summary: Criar ou atualizar uma assinatura de webhook
       description: |
-          Cria (sem id) ou atualiza (com id) uma assinatura do modulo de Cadastros e Solicitacoes.
+          Cria (sem id) ou atualiza (com id) uma assinatura de webhook. A mesma assinatura pode escutar
+          eventos do Onboarding e eventos de relatorio e credito.
+
+          Quando os eventos de relatorio e credito nao puderem ser gravados (o endereco precisa responder
+          a um POST de teste no momento do cadastro), a resposta continua 200 e traz `warning` com o motivo.
           
           LISTA DE EVENTOS VAZIA QUER DIZER TODOS. Quem esta comecando nao sabe de quais precisa, e
           escolher antes de conhecer produz assinatura errada e evento perdido em silencio.
@@ -4687,18 +5189,23 @@ paths:
                   - collection.message.failed
                 enabled: true
                 secretHint: …a91f4c
-                secret: whsec_7Kd2pQ9mR4tY6uZ1aB3cE5gH8jL0nSvXa91f4c
+                secret: whsec_4f1c9e2b7a6d3058c1e2f4a9b8d7c6e5f0a1b2c3d4e5f60718293a4b5ca91f4c
                 createdAt: '2026-09-05T18:40:00.000Z'
+                organizationId: 6612a7f30000000000000009
+                consecutiveFailures: 0
+                lastDeliveryStatus: null
+                lastDeliveryError: null
+                lastDeliveryAt: null
                 updatedAt: '2026-09-06T10:12:00.000Z'
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Corpo invalido (URL fora do formato, evento repetido, rotulo acima de 80 caracteres). A mensagem concatena todas as falhas por virgula.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: url must be a URL address
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -4716,25 +5223,25 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
-          description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
+          description: 'id de assinatura inexistente na atualizacao, ou modulo nao liberado ("Recurso não encontrado.").'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 404
-                message: Cadastro não encontrado.
-        '422':
-          description: O pedido e valido mas nao pode ser cumprido no estado atual.
+                message: Assinatura de webhook não encontrada.
+        '502':
+          description: 'O servico de webhooks nao respondeu. Tente de novo.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
-                code: 422
-                message: A solicitação já foi cancelada.
+                code: 502
+                message: Não foi possível salvar a assinatura.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -4743,7 +5250,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - collections
       security:
@@ -4922,20 +5429,33 @@ paths:
                     revoked: false
                 createdAt: '2026-09-05T14:19:58.000Z'
                 updatedAt: '2026-09-05T14:20:03.000Z'
-                publicUrl: 'https://envio.gyramais.com.br/2f8cQ1r7aWxK9pLmN3bV5tYzE6uH0sJdR4gXoC8ifAe'
+                collectionId: 6612a7f30000000000000051
+                publicUrl: 'https://toolbox.gyramais.com.br/envio/2f8cQ1r7aWxK9pLmN3bV5tYzE6uH0sJdR4gXoC8ifAe'
+                notified: true
                 links:
                   - recipientId: 6612a7f30000000000000061
                     name: Ana Souza
-                    url: 'https://envio.gyramais.com.br/2f8cQ1r7aWxK9pLmN3bV5tYzE6uH0sJdR4gXoC8ifAe'
+                    document: '52998224725'
+                    link: 'https://toolbox.gyramais.com.br/envio/2f8cQ1r7aWxK9pLmN3bV5tYzE6uH0sJdR4gXoC8ifAe'
+                    publicUrl: 'https://toolbox.gyramais.com.br/envio/2f8cQ1r7aWxK9pLmN3bV5tYzE6uH0sJdR4gXoC8ifAe'
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Corpo invalido. A mensagem concatena todas as falhas por virgula.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: Informe o documento ou o identificador do cadastro.
+        '502':
+          description: 'O servico de solicitacoes nao respondeu. Tente de novo.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 502
+                message: Não foi possível criar a solicitação.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -4953,25 +5473,16 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
-          description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
+          description: 'Modelo inexistente ("Modelo não encontrado."), registryId inexistente ("Cadastro não encontrado.") ou modulo nao liberado para a organizacao ("Recurso não encontrado.").'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 404
-                message: Cadastro não encontrado.
-        '422':
-          description: O pedido e valido mas nao pode ser cumprido no estado atual.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-              example:
-                code: 422
-                message: A solicitação já foi cancelada.
+                message: Modelo não encontrado.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -4980,7 +5491,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - collections
       security:
@@ -5146,20 +5657,28 @@ paths:
                     itemsAwaitingOperator: 1
                     dueAt: '2026-09-15T23:59:59.000Z'
                     sentAt: '2026-09-05T14:20:00.000Z'
+                    progress:
+                      total: 5
+                      resolved: 3
+                      validated: 3
+                      awaitingOperator: 1
+                      rejected: 0
+                      pending: 1
                     hasScrConsent: true
-                    scrConsentFileUrl: 'https://arquivos.gyramais.com.br/...'
+                    scrConsentItemId: 6612a7f30000000000000073
+                    signingDueAt: null
                     createdAt: '2026-09-05T14:19:58.000Z'
                     updatedAt: '2026-09-06T09:11:20.000Z'
                 total: 1
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Parametro invalido (status fora da lista, data fora do ISO 8601, take acima de 100). A mensagem concatena todas as falhas por virgula.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: take must not be greater than 100
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -5177,7 +5696,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -5186,7 +5705,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - collections
       security:
@@ -5323,7 +5842,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'O identificador informado em "id" não é válido.'
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -5341,16 +5860,16 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
-          description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
+          description: 'Solicitacao inexistente na organizacao, ou modulo nao liberado ("Recurso não encontrado.").'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 404
-                message: Cadastro não encontrado.
+                message: Solicitação não encontrada.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -5359,14 +5878,15 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - collections
       security:
         - authorization: []
       description: |
           Traz os itens (com status e o parecer de cada um), os destinatarios (com o estado da
-          entrega e o link) e a trilha.
+          entrega), o cadastro alvo em `registry`, a contagem em `progress` e a trilha. O link de cada
+          destinatario NAO volta aqui: ele so existe na resposta de criacao e na de envio.
           
           Status de item: PENDING, ALREADY_ON_FILE, SUBMITTED, PROCESSING, VALIDATED, REJECTED,
           MANUAL_REVIEW, AWAITING_OPERATOR (a IA avaliou e espera decisao humana), WAIVED, EXPIRED.
@@ -5414,47 +5934,50 @@ paths:
           description: Id da solicitacao.
       responses:
         '200':
-          description: Links por destinatario e o novo estado da solicitacao.
+          description: 'O detalhe da solicitacao (mesmo corpo de GET /v1/collections/{id}) mais os links por destinatario, `publicUrl` e `notified`. Cada destinatario enviado traz tambem `link`.'
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  status:
-                    type: string
-                  sentAt:
-                    type: string
-                    format: date-time
-                  links:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        recipientId:
-                          type: string
-                        name:
-                          type: string
-                        url:
-                          type: string
+                $ref: '#/components/schemas/CollectionCreateResponse'
               example:
                 id: 6612a7f30000000000000051
+                registryId: 6612a7f30000000000000001
+                templateSlug: onboarding-pj
+                templateName: Onboarding PJ
                 status: SENT
+                channel: BOTH
                 sentAt: '2026-09-05T14:20:00.000Z'
+                subjectName: AURORA COMPONENTES INDUSTRIAIS LTDA
+                subjectDocument: '11444777000161'
+                itemsTotal: 5
+                itemsResolved: 0
+                itemsAwaitingOperator: 0
+                publicUrl: 'https://toolbox.gyramais.com.br/envio/2f8cQ1r7aWxK9pLmN3bV5tYzE6uH0sJdR4gXoC8ifAe'
+                notified: true
                 links:
                   - recipientId: 6612a7f30000000000000061
                     name: Ana Souza
-                    url: 'https://envio.gyramais.com.br/2f8cQ1r7aWxK9pLmN3bV5tYzE6uH0sJdR4gXoC8ifAe'
+                    document: '52998224725'
+                    link: 'https://toolbox.gyramais.com.br/envio/2f8cQ1r7aWxK9pLmN3bV5tYzE6uH0sJdR4gXoC8ifAe'
+                    publicUrl: 'https://toolbox.gyramais.com.br/envio/2f8cQ1r7aWxK9pLmN3bV5tYzE6uH0sJdR4gXoC8ifAe'
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Nenhum destinatario pendente (todos ja concluiram), ou identificador fora do formato ObjectId.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: Nenhum destinatário pendente para enviar.
+        '409':
+          description: 'A solicitacao ja foi concluida, cancelada ou expirou.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 409
+                message: Esta solicitação não está mais aberta para envio.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -5472,7 +5995,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
           description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
           content:
@@ -5481,16 +6004,16 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 404
-                message: Cadastro não encontrado.
-        '422':
-          description: O pedido e valido mas nao pode ser cumprido no estado atual.
+                message: Solicitação não encontrada.
+        '502':
+          description: 'O servico de solicitacoes nao respondeu. Tente de novo.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
-                code: 422
-                message: A solicitação já foi cancelada.
+                code: 502
+                message: Não foi possível enviar a solicitação.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -5499,16 +6022,19 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - collections
       security:
         - authorization: []
       description: |
-          Dispara o envio pelos canais do destinatario e devolve os links por destinatario.
-          
+          Dispara o envio para os destinatarios que ainda nao concluiram e devolve o detalhe da
+          solicitacao com os links por destinatario.
+
           Serve tanto para o primeiro envio de um rascunho quanto para reenviar um pedido que o cliente
-          nao respondeu. Aceita um recado novo.
+          nao respondeu. Sem corpo: o recado do operador e o que foi gravado na criacao.
+
+          Com channel NONE ninguem e avisado (`notified` false) e os links voltam so nesta resposta.
       x-codeSamples:
         - lang: cURL
           label: cURL
@@ -5547,7 +6073,7 @@ paths:
             type: string
           description: Id da solicitacao.
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
@@ -5556,32 +6082,41 @@ paths:
               reason: Operação desistida pelo cliente.
       responses:
         '200':
-          description: Solicitacao em CANCELED.
+          description: 'O detalhe da solicitacao, ja em CANCELED (mesmo corpo de GET /v1/collections/{id}).'
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  status:
-                    type: string
-                  canceledAt:
-                    type: string
-                    format: date-time
+                $ref: '#/components/schemas/Collection'
               example:
                 id: 6612a7f30000000000000051
+                registryId: 6612a7f30000000000000001
+                templateSlug: onboarding-pj
+                templateName: Onboarding PJ
                 status: CANCELED
                 canceledAt: '2026-09-06T10:02:00.000Z'
+                subjectName: AURORA COMPONENTES INDUSTRIAIS LTDA
+                subjectDocument: '11444777000161'
+                itemsTotal: 5
+                itemsResolved: 3
+                itemsAwaitingOperator: 0
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Motivo acima de 500 caracteres, ou identificador fora do formato ObjectId.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: reason must be shorter than or equal to 500 characters
+        '409':
+          description: 'A solicitacao ja esta concluida, cancelada ou expirada.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 409
+                message: Esta solicitação já está encerrada.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -5599,7 +6134,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
           description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
           content:
@@ -5608,16 +6143,16 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 404
-                message: Cadastro não encontrado.
-        '422':
-          description: O pedido e valido mas nao pode ser cumprido no estado atual.
+                message: Solicitação não encontrada.
+        '502':
+          description: 'O servico de solicitacoes nao respondeu, ou a Clicksign recusou o cancelamento do contrato (nesse caso a mensagem diz o motivo).'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
-                code: 422
-                message: A solicitação já foi cancelada.
+                code: 502
+                message: Não foi possível cancelar a solicitação.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -5626,13 +6161,13 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - collections
       security:
         - authorization: []
       description: |
-          Encerra a solicitacao. Os links param de funcionar e nenhum lembrete sai.
+          Encerra a solicitacao. Corpo opcional, com `reason` de ate 500 caracteres. Os links param de funcionar e nenhum lembrete sai.
           
           O motivo fica na trilha.
       x-codeSamples:
@@ -5677,7 +6212,9 @@ paths:
       operationId: CollectionController_review
       summary: Decidir sobre um item em revisao
       description: |
-          A decisao do operador sobre um item em AWAITING_OPERATOR ou MANUAL_REVIEW.
+          A decisao do operador sobre um item em AWAITING_OPERATOR, MANUAL_REVIEW, REJECTED, SUBMITTED
+          ou PROCESSING. Em outro status, responde 409. Cada item aceita ate 3 pedidos de reenvio;
+          depois disso, aprove ou dispense.
           
           Tres saidas:
           - APPROVED: o item fecha;
@@ -5708,51 +6245,54 @@ paths:
               comment: O comprovante está no nome de outra pessoa. Envie um no seu nome.
       responses:
         '200':
-          description: Item com o status resultante.
+          description: 'O detalhe da solicitacao inteira, ja com o item no status resultante (mesmo corpo de GET /v1/collections/{id}). APPROVED leva o item a VALIDATED, WAIVED a WAIVED e RESEND_REQUESTED de volta a PENDING, com o comentario em rejectionReason.'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CollectionItem'
+                $ref: '#/components/schemas/Collection'
               example:
-                id: 6612a7f30000000000000071
-                collectionId: 6612a7f30000000000000051
-                recipientId: 6612a7f30000000000000061
-                order: 1
-                kind: DOCUMENT
-                documentType: CONTRATO_SOCIAL
-                label: Contrato social consolidado
-                instructions: 'Envie a última alteração consolidada, com a chancela da Junta.'
-                required: true
-                rules:
-                  maxAgeDays: 365
-                  allowMultipleFiles: true
-                  maxFiles: 5
-                status: REJECTED
-                registryDocumentId: null
-                attempt: null
-                verdict: INVALIDO
-                score: 0.41
-                rejectionReason: 'HOLDER_MATCH: o titular do comprovante não é a pessoa analisada.'
-                submittedAt: null
-                resendCount: 1
-                files: []
-                signatureMode: INDIVIDUAL
-                signaturePackage: null
-                resolvedAt: null
-                reviewDecision: RESEND_REQUESTED
-                reviewComment: O comprovante está no nome de outra pessoa. Envie um no seu nome.
-                reviewedAt: '2026-09-06T10:05:00.000Z'
-                reviewedByUserId: 6612a7f30000000000000005
-                resendRequestedAt: '2026-09-06T10:05:00.000Z'
+                id: 6612a7f30000000000000051
+                registryId: 6612a7f30000000000000001
+                status: IN_PROGRESS
+                itemsTotal: 5
+                itemsResolved: 3
+                itemsAwaitingOperator: 0
+                items:
+                  - id: 6612a7f30000000000000072
+                    collectionId: 6612a7f30000000000000051
+                    recipientId: 6612a7f30000000000000061
+                    order: 2
+                    kind: DOCUMENT
+                    documentType: COMPROVANTE_RESIDENCIA
+                    label: Comprovante de residência
+                    required: true
+                    status: PENDING
+                    verdict: INVALIDO
+                    rejectionReason: O comprovante está no nome de outra pessoa. Envie um no seu nome.
+                    resendCount: 1
+                    resendRequestedAt: '2026-09-06T10:05:00.000Z'
+                    reviewDecision: RESEND_REQUESTED
+                    reviewComment: O comprovante está no nome de outra pessoa. Envie um no seu nome.
+                    reviewedAt: '2026-09-06T10:05:00.000Z'
+                    resolvedAt: null
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Decisao fora da lista, comentario ausente em RESEND_REQUESTED, comentario acima de 500 caracteres ou identificador fora do formato ObjectId.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: Informe o motivo do pedido de reenvio.
+        '409':
+          description: 'O item nao esta aguardando decisao, ou ja chegou ao limite de reenvios.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 409
+                message: Este item não está aguardando decisão.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -5770,7 +6310,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '404':
           description: 'Recurso inexistente OU capacidade nao liberada para a organizacao. As duas coisas respondem 404 de proposito: para quem nao tem o modulo, a rota nao existe.'
           content:
@@ -5779,16 +6319,16 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 404
-                message: Cadastro não encontrado.
-        '422':
-          description: O pedido e valido mas nao pode ser cumprido no estado atual.
+                message: Item não encontrado nesta solicitação.
+        '502':
+          description: 'O servico de solicitacoes nao respondeu. Tente de novo.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
-                code: 422
-                message: A solicitação já foi cancelada.
+                code: 502
+                message: Não foi possível registrar a decisão.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -5797,7 +6337,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - collections
       security:
@@ -5853,6 +6393,21 @@ paths:
           schema:
             maxLength: 120
             type: string
+        - name: scope
+          required: false
+          in: query
+          schema:
+            type: string
+            enum:
+              - ORGANIZATION
+              - SYSTEM
+          description: 'ORGANIZATION (modelos da sua organizacao) ou SYSTEM (modelos GYRA+). Sem o parametro, os dois.'
+        - name: enabled
+          required: false
+          in: query
+          schema:
+            type: boolean
+          description: 'true devolve so os modelos ligados. Sem o parametro (ou com false), ligados e desligados.'
         - name: itemKind
           required: false
           in: query
@@ -5860,6 +6415,7 @@ paths:
             type: array
             items:
               type: string
+          description: 'So modelos que pedem itens destes tipos (DOCUMENT, FORM, SIGNATURE, CONSENT, IDENTITY, CUSTOM). Repita para varios.'
         - name: skip
           required: false
           in: query
@@ -5905,23 +6461,42 @@ paths:
                     behavior:
                       acceptPartial: false
                       skipItemsAlreadyOnFile: true
+                    onCompleted:
+                      kind: NONE
+                      id: null
+                      byEntityType:
+                        COMPANY:
+                          kind: POLICY
+                          id: 6612a7f300000000000000c1
                     version: 3
                     isCurrent: true
+                    enabled: true
                     metrics:
-                      collectionsCreated: 42
-                      completionRate: 0.79
+                      collections: 42
+                      completedCollections: 33
+                      completionRate: 0.7857
+                      averageCompletionHours: 31.5
                     createdAt: '2026-07-02T09:00:00.000Z'
                     updatedAt: '2026-08-28T17:41:00.000Z'
                 total: 1
         '400':
-          description: 'Corpo ou parametro invalido. A mensagem aponta o campo, e concatena todas as falhas por virgula.'
+          description: 'Parametro invalido (scope fora da lista, take acima de 100, busca acima de 120 caracteres). A mensagem concatena todas as falhas por virgula.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 400
-                message: 'document should not be empty,type must be one of the following values: cpf, cnpj'
+                message: 'scope must be one of the following values: ORGANIZATION, SYSTEM'
+        '404':
+          description: 'O modulo Onboarding nao esta liberado para a organizacao: para ela, a rota nao existe.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                code: 404
+                message: Recurso não encontrado.
         '401':
           description: 'Token ausente, expirado ou invalido. Gere outro em POST /auth/authenticate.'
           content:
@@ -5939,7 +6514,7 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 403
-                message: Você não tem permissão para executar esta ação.
+                message: Você não tem permissão para acessar este recurso.
         '500':
           description: 'Falha nossa. Tente de novo; se persistir, acione o suporte com o horario da chamada.'
           content:
@@ -5948,13 +6523,17 @@ paths:
                 $ref: '#/components/schemas/ApiError'
               example:
                 code: 500
-                message: Erro interno do servidor.
+                message: Internal server error
       tags:
         - collections
       security:
         - authorization: []
       description: |
-          Os modelos vigentes da organizacao, com metricas de uso. Cada um diz o que sera pedido.
+          Os modelos vigentes que a organizacao enxerga (os dela e os modelos GYRA+), com metricas de
+          uso, dos mais usados para os menos usados. Cada um diz o que sera pedido. Pagina padrao de
+          50, maximo 100.
+
+          Para montar um seletor, use enabled=true: modelo desligado continua na listagem sem o filtro.
           
           O `slug` daqui e o que entra em create_collection. Chame esta tool primeiro: criar solicitacao
           com slug inventado falha.
@@ -6218,11 +6797,39 @@ components:
         reportId:
           type: string
           nullable: true
-          description: Relatorio mais recente da organizacao para o mesmo documento.
+          description: 'Reservado para o relatorio mais recente do mesmo documento. Hoje vem null.'
         basicDataSyncedAt:
           type: string
           nullable: true
           format: date-time
+        crossDocument:
+          type: object
+          nullable: true
+          description: 'Ultima conferencia cruzada entre os documentos do cadastro. null quando nunca houve o que cruzar, o que e diferente de conferido e consistente.'
+          properties:
+            status:
+              type: string
+              enum:
+                - CONSISTENTE
+                - DIVERGENTE
+                - NAO_CONFERIDO
+            checks:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            documentIds:
+              type: array
+              items:
+                type: string
+            ruleSetVersion:
+              type: string
+            evaluatedAt:
+              type: string
+              format: date-time
+            triggeredByDocumentId:
+              type: string
+              nullable: true
         createdAt:
           type: string
           format: date-time
@@ -6840,11 +7447,50 @@ components:
             - QSA_OFICIAL
             - DOCUMENT_EXTRACTION
             - MANUAL
-          description: De onde a pessoa veio.
+            - FORM
+          description: 'De onde a pessoa veio. FORM = declarada pelo cliente num formulario de solicitacao.'
         linkedRegistryId:
           type: string
           nullable: true
           description: 'Cadastro proprio da pessoa, quando ja existe.'
+        sourceDocumentId:
+          type: string
+          nullable: true
+          description: 'Documento de onde a pessoa foi lida, quando source e DOCUMENT_EXTRACTION.'
+        editedFields:
+          type: array
+          items:
+            type: string
+            enum:
+              - name
+              - role
+              - sharePercent
+              - document
+          description: 'Campos que um operador corrigiu. A atualizacao do quadro oficial e a extracao nao passam por cima deles.'
+        contact:
+          type: object
+          nullable: true
+          description: 'Primeiro contato guardado da pessoa (o preferido, senao o mais recente). null sem documento completo ou sem contato.'
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+              nullable: true
+            phone:
+              type: string
+              nullable: true
+            source:
+              type: string
+              enum:
+                - FORM
+                - OPERATOR
+                - HISTORY
+            preferred:
+              type: boolean
+            lastUsedAt:
+              type: string
+              format: date-time
     RegistryPresignResponse:
       type: object
       properties:
@@ -7401,7 +8047,36 @@ components:
               createdAt:
                 type: string
                 format: date-time
-          description: 'A trilha, append-only.'
+          description: 'A trilha, append-only. O detalhe traz os 100 eventos mais recentes.'
+        registry:
+          type: object
+          nullable: true
+          description: 'O cadastro alvo: id, document, name e entityType.'
+          properties:
+            id:
+              type: string
+            document:
+              type: string
+            name:
+              type: string
+              nullable: true
+            entityType:
+              type: string
+              enum:
+                - COMPANY
+                - PERSON
+        itemsTotal:
+          type: integer
+        itemsResolved:
+          type: integer
+        itemsAwaitingOperator:
+          type: integer
+          description: Itens esperando decisao humana (AWAITING_OPERATOR ou MANUAL_REVIEW).
+        progress:
+          type: object
+          description: 'Contagem de itens (total, resolved, validated, awaitingOperator, rejected, pending) e de destinatarios (recipientsTotal, recipientsExpected, recipientsCompleted, recipientsWithoutItems).'
+          additionalProperties:
+            type: integer
         createdAt:
           type: string
           format: date-time
@@ -7636,6 +8311,12 @@ components:
         signedDocumentId:
           type: string
           nullable: true
+        signedDocumentAvailable:
+          type: boolean
+          description: 'true quando ha via assinada para baixar em GET /v1/collections/{id}/items/{itemId}/signed-document.'
+        identityEmailCandidateCount:
+          type: integer
+          description: 'Quantos e-mails foram oferecidos para a verificacao por e-mail (nunca quais).'
         signatureMode:
           type: string
           enum:
@@ -7850,12 +8531,23 @@ components:
                 type: string
                 nullable: true
                 format: date-time
+              progress:
+                type: object
+                description: 'Contagem de itens por situacao: total, resolved, validated, awaitingOperator, rejected, pending.'
+                additionalProperties:
+                  type: integer
               hasScrConsent:
                 type: boolean
-              scrConsentFileUrl:
+                description: A solicitacao tem autorizacao de SCR concedida.
+              scrConsentItemId:
                 type: string
                 nullable: true
-                description: 'A via assinada da autorizacao de SCR, quando o PDF existe.'
+                description: 'Item da autorizacao de SCR com via assinada, para baixar em GET /v1/collections/{id}/items/{itemId}/signed-document. null quando nao ha PDF.'
+              signingDueAt:
+                type: string
+                nullable: true
+                format: date-time
+                description: 'Prazo de assinatura na Clicksign, quando a solicitacao tem item assinado por ela.'
               createdAt:
                 type: string
                 format: date-time
@@ -7869,10 +8561,16 @@ components:
         - $ref: '#/components/schemas/Collection'
         - type: object
           properties:
+            collectionId:
+              type: string
+              description: O mesmo valor de `id`.
             publicUrl:
               type: string
               nullable: true
-              description: 'O link, quando ha um destinatario so.'
+              description: 'O link, quando ha um destinatario so. Com varios, vem null e a resposta e `links`.'
+            notified:
+              type: boolean
+              description: 'false quando o canal e NONE: ninguem foi avisado e quem entrega o link e voce.'
             links:
               type: array
               items:
@@ -7882,10 +8580,16 @@ components:
                     type: string
                   name:
                     type: string
-                  url:
+                  document:
                     type: string
-              description: Um link por destinatario. Sempre presente.
-      description: 'A solicitacao criada, com os links. Com channel NONE e por aqui que voce recebe o link para entregar.'
+                    nullable: true
+                  link:
+                    type: string
+                  publicUrl:
+                    type: string
+                    description: O mesmo endereco de `link`.
+              description: 'Um link por destinatario enviado. Nao vem quando a solicitacao e criada como rascunho (draft true ou send false).'
+      description: 'A solicitacao criada. Quando ela e enviada na criacao, traz tambem os links: com channel NONE e por aqui que voce recebe o link para entregar. Os links so existem nesta resposta e na de envio.'
     CollectionTemplateListResponse:
       type: object
       properties:
@@ -7944,11 +8648,54 @@ components:
                 type: integer
               isCurrent:
                 type: boolean
-              metrics:
+              enabled:
+                type: boolean
+                description: 'false quando o modelo foi desligado para escolha. Num modelo GYRA+, vale so para a sua organizacao.'
+              onCompleted:
                 type: object
                 nullable: true
-                additionalProperties: true
-                description: Uso do modelo.
+                description: 'O que o modelo faz ao concluir. kind NONE, POLICY ou OPERATION; id e a politica ou a esteira. byEntityType, quando existe, traz um destino por tipo de cadastro (COMPANY e PERSON), cada um com kind e id.'
+                properties:
+                  kind:
+                    type: string
+                    enum:
+                      - NONE
+                      - POLICY
+                      - OPERATION
+                  id:
+                    type: string
+                    nullable: true
+                  byEntityType:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        kind:
+                          type: string
+                          enum:
+                            - POLICY
+                            - OPERATION
+                        id:
+                          type: string
+              publicFormUrl:
+                type: string
+                description: 'Endereco do formulario publico, quando o modelo tem um.'
+              metrics:
+                type: object
+                description: 'Uso do modelo na sua organizacao.'
+                properties:
+                  collections:
+                    type: integer
+                    description: Solicitacoes criadas com o modelo.
+                  completedCollections:
+                    type: integer
+                  completionRate:
+                    type: number
+                    description: 'De 0 a 1.'
+                  averageCompletionHours:
+                    type: number
+                    nullable: true
+                    description: 'Horas medias entre envio e conclusao. null sem solicitacao concluida.'
               createdAt:
                 type: string
                 format: date-time
@@ -8035,7 +8782,12 @@ components:
           type: array
           items:
             type: string
-          description: 'Todos os nomes, em lista plana.'
+          description: 'Todos os nomes, em lista plana. Os de relatorio e credito vem primeiro.'
+        eventLabels:
+          type: object
+          additionalProperties:
+            type: string
+          description: 'Rotulo em portugues dos eventos de relatorio e credito, por nome de evento.'
     WebhookEndpointListResponse:
       type: object
       properties:
@@ -8061,6 +8813,9 @@ components:
               secretHint:
                 type: string
                 description: Os ultimos caracteres do segredo. O segredo inteiro so aparece na criacao e na rotacao.
+              hasApiKey:
+                type: boolean
+                description: 'So em destino com eventos de relatorio e credito: se ha api-key configurada.'
               consecutiveFailures:
                 type: integer
                 description: 'Em 20, a assinatura e desligada sozinha.'
@@ -8100,7 +8855,10 @@ components:
           type: string
         secret:
           type: string
-          description: 'O segredo em claro. SO VEM AQUI, na criacao e na rotacao. Guarde no seu cofre.'
+          description: 'O segredo em claro, no formato whsec_ seguido de 64 caracteres hexadecimais. SO VEM AQUI, na criacao e na rotacao. Guarde no seu cofre.'
+        warning:
+          type: string
+          description: 'Presente so quando os eventos de relatorio e credito nao foram salvos; diz o motivo.'
         createdAt:
           type: string
           format: date-time
@@ -8134,7 +8892,6 @@ components:
       required:
         - type
         - url
-        - apiKey
     WebhookTypeEnum:
       type: string
       description: Type Webhook
@@ -8152,23 +8909,71 @@ components:
       properties:
         policyId:
           type: string
+          description: Politica habilitada e de usage REPORT.
         document:
           type: string
+          description: 'CPF ou CNPJ sem mascara. Digito verificador validado; CNPJ alfanumerico aceito.'
+        months:
+          type: integer
+          description: 'Meses de historico do SCR. Padrao: o da politica, depois o da organizacao, depois 12.'
         type:
           type: string
+          deprecated: true
+          description: Ignorado. O tipo vem da politica.
       required:
         - policyId
         - document
-        - type
     CreateRegistryDto:
       type: object
-      properties: {}
+      required:
+        - document
+      properties:
+        document:
+          type: string
+          description: 'CNPJ ou CPF valido, com ou sem mascara.'
+        name:
+          type: string
+          description: 'Razao social ou nome. Opcional: os dados basicos oficiais sao buscados na criacao.'
     PresignRegistryDocumentDto:
       type: object
-      properties: {}
+      required:
+        - fileName
+        - size
+        - mimeType
+      properties:
+        fileName:
+          type: string
+          description: Nome do arquivo.
+        size:
+          type: integer
+          minimum: 1
+          maximum: 52428800
+          description: 'Tamanho em bytes, ate 50MB. O PUT tem de mandar exatamente este tamanho.'
+        mimeType:
+          type: string
+          enum:
+            - application/pdf
+            - image/jpeg
+            - image/png
+          description: O PUT tem de mandar este mesmo Content-Type.
     ConfirmRegistryDocumentDto:
       type: object
+      required:
+        - key
+        - fileName
       properties:
+        key:
+          type: string
+          description: A key devolvida pelo presign, exatamente como veio.
+        fileName:
+          type: string
+          description: Nome do arquivo que fica no dossie.
+        personDocument:
+          type: string
+          description: 'CPF ou CNPJ de uma pessoa do quadro deste cadastro, para anexar o documento a ela. Precisa estar na arvore societaria.'
+        callbackUrl:
+          type: string
+          description: 'URL chamada quando o documento terminar de processar.'
         typeHint:
           type: string
           enum:
@@ -8291,18 +9096,22 @@ components:
         url:
           type: string
           example: 'https://api.suaempresa.com/gyra/webhook'
+          description: 'URL publica, http ou https, com dominio.'
         label:
           type: string
-          description: Como a assinatura aparece na tela.
+          maxLength: 80
+          description: 'Como a assinatura aparece na tela. Na atualizacao, omitir mantem o atual; string vazia limpa.'
         events:
-          description: Vazio quer dizer TODOS os eventos.
+          description: 'Vazio ou ausente quer dizer TODOS os eventos, inclusive os de relatorio e credito. Sem repeticao.'
           type: array
           items:
             type: string
         enabled:
           type: boolean
+          description: 'Religar zera o contador de falhas seguidas.'
         apiKey:
           type: string
+          description: 'Valor enviado no cabecalho api-key, so nos eventos de relatorio e credito (esses nao usam a assinatura HMAC).'
       required:
         - url
     CreateCollectionDto:
@@ -8432,5 +9241,7 @@ components:
             - WAIVED
         comment:
           type: string
+          maxLength: 500
+          description: 'Obrigatorio em RESEND_REQUESTED: e o texto que o destinatario le. Opcional nas outras decisoes.'
       required:
         - decision

@@ -19,13 +19,14 @@ Camadas deixam você consultar o dado caro só para quem já passou do primeiro 
 | | Política de análise | Camada de aprofundamento |
 | --- | --- | --- |
 | Relatório base | Tem um (Simples ou superior) | Nenhum: "A política entra num relatório que já existe" |
-| Roda sozinha? | Sim, pelo campo do topo ou numa etapa **Análise** | Não, só dentro de uma esteira, na etapa **Aprofundar** |
+| Onde a política é usada | **Relatório** ou **Esteira** | Sempre **Esteira** |
+| Roda sozinha? | Só se o uso for **Relatório**. Com uso **Esteira**, roda só numa etapa da esteira. | Não, só dentro de uma esteira, na etapa **Aprofundar** |
 | O que acrescenta | O relatório inteiro | Só as fontes que ela declara |
 | Documento | CPF ou CNPJ, pelo relatório base | CPF ou CNPJ, escolhido na camada |
 
-Você cria a camada em **Políticas**, escolhendo **Nenhum** como relatório base. A camada precisa de pelo menos uma fonte: "Uma camada de aprofundamento precisa de pelo menos uma fonte selecionada. Escolha os complementos que a camada vai acrescentar ao relatório."
+Você cria a camada em **Políticas**: em **Onde a política é usada**, escolha **Esteira**, e depois **Nenhum** como relatório base. A opção **Nenhum** só existe no uso Esteira. A camada precisa de pelo menos uma fonte: "Uma camada de aprofundamento precisa de pelo menos uma fonte selecionada. Escolha os complementos que a camada vai acrescentar ao relatório."
 
-Tentar rodar uma camada sozinha é recusado: "Esta é uma política de camada de aprofundamento e não roda sozinha. Ela só é executada dentro de uma esteira, na etapa Aprofundar, sobre um relatório que já existe."
+Tentar rodar sozinha uma política de uso Esteira, camada ou não, é recusado: "Esta política é de esteira: rode a esteira que a usa." Veja [Onde a política é usada](/concepts/politica-de-credito#onde-a-pol%C3%ADtica-%C3%A9-usada).
 
 ## Como o Aprofundar funciona
 
@@ -78,8 +79,8 @@ Uma regra só é avaliada se a política declara uma fonte que traz aquele dado.
 
 - **Na tela da camada**, a regra sem fonte fica desabilitada e diz o que falta: "Escolha um bureau nas Fontes de dados.", "Declare o add-on "X" nas Fontes de dados.", "Ative o SCR nas Fontes de dados."
 - **Ao salvar**, a política recusa a regra sem fonte e nomeia a condição e o que falta: "Ajuste as regras antes de salvar: A condição "X" precisa do add-on "Y", que esta política não declara. Declare essa fonte nas Fontes de dados ou remova a condição."
-- Numa camada, toda regra precisa de fonte. Numa política de análise, só a regra que você está criando ou mudando é conferida.
-- **Na esteira**, o construtor avisa quando a camada de uma etapa tem regra sem fonte: "Declare a fonte na política da camada ou remova a regra."
+- Numa política de uso Relatório, só a regra que você está criando ou mudando é conferida.
+- Numa política de uso **Esteira** (inclusive a camada), o editor oferece as regras de todas as fontes do tipo de documento, e quem confere se a fonte chega é a esteira: na **Conferência das políticas** do construtor, uma fonte que nenhuma etapa anterior traz impede a ativação ("A política "X" precisa de ..."), e uma fonte que só chega por uma etapa condicional vira aviso.
 
 Se mesmo assim uma regra chegar sem fonte na hora de rodar, ela termina em erro. Nunca aprova por acidente.
 

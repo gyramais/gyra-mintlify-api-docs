@@ -11,16 +11,16 @@ lang: nao-tecnica
 O formulário público é um link único, ligado ao modelo de solicitação, que você publica no seu site, no seu app ou numa campanha para o cliente começar o cadastro sozinho, sem esperar um operador.
 
 <Info>
-  **Resumo:** um link, muitas pessoas. Quem abre informa CPF ou CNPJ, nome e contato, confirma o contato por um código e segue para a mesma [página do destinatário](/kyc/pagina-do-destinatario) de sempre. O cadastro é criado (ou reaproveitado) a partir do documento informado.
+  **Resumo:** um link, muitas pessoas. Quem abre informa CPF ou CNPJ, nome e contato, confirma o contato por um código e segue para a mesma [página do destinatário](/onboarding/pagina-do-destinatario) de sempre. O cadastro é criado (ou reaproveitado) a partir do documento informado.
 </Info>
 
 <Note>
-  O formulário público faz parte do módulo de Cadastros e Solicitações. O pedido de financiamento ou de venda a prazo pelo formulário depende também do módulo de Propostas. Ver [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+  O formulário público faz parte do módulo Onboarding. O pedido de financiamento ou de venda a prazo pelo formulário depende também do módulo de Propostas. Ver [Módulos e capacidades](/plataforma/modulos-e-capacidades).
 </Note>
 
 ## Um link por modelo, não por pessoa
 
-Na [solicitação](/kyc/solicitacoes) de sempre, você escolhe o cadastro, informa os destinatários e cada um recebe um link próprio. No formulário público a ordem se inverte: o link vem primeiro, a pessoa responde e o cadastro nasce da resposta.
+Na [solicitação](/onboarding/solicitacoes) de sempre, você escolhe o cadastro, informa os destinatários e cada um recebe um link próprio. No formulário público a ordem se inverte: o link vem primeiro, a pessoa responde e o cadastro nasce da resposta.
 
 | | Solicitação enviada por você | Formulário público |
 | --- | --- | --- |
@@ -32,7 +32,7 @@ Na [solicitação](/kyc/solicitacoes) de sempre, você escolhe o cadastro, infor
 Tudo o que vem depois da identificação (documentos, formulário, termo, assinatura, identidade e o que acontece ao concluir) é igual ao de uma solicitação comum.
 
 <Tip>
-  O item `FORM`, que o destinatário responde dentro de uma solicitação, é outra coisa: está em [Formulários](/kyc/formularios). Esta página trata do link aberto que dá início à solicitação.
+  O item `FORM`, que o destinatário responde dentro de uma solicitação, é outra coisa: está em [Formulários](/onboarding/formularios). Esta página trata do link aberto que dá início à solicitação.
 </Tip>
 
 ## Ligue o link no modelo
@@ -58,7 +58,7 @@ Tudo o que vem depois da identificação (documentos, formulário, termo, assina
 
 ### O endereço
 
-O endereço tem o formato `/form/{código}`, no domínio da plataforma ou no seu [domínio próprio](/kyc/pagina-do-destinatario#domínio-próprio-do-link), quando ele estiver verificado. O código é gerado pela plataforma: são 43 caracteres aleatórios, impossíveis de adivinhar, e não dá para escolher um nome legível.
+O endereço tem o formato `/form/{código}`, no domínio da plataforma ou no seu [domínio próprio](/onboarding/pagina-do-destinatario#domínio-próprio-do-link), quando ele estiver verificado. O código é gerado pela plataforma: são 43 caracteres aleatórios, impossíveis de adivinhar, e não dá para escolher um nome legível.
 
 - **Não muda quando você edita o modelo.** Toda versão nova do modelo responde no mesmo endereço.
 - **Desligar não apaga.** Ligar de novo reencontra o mesmo endereço e a mesma configuração.
@@ -76,7 +76,7 @@ O endereço tem o formato `/form/{código}`, no domínio da plataforma ou no seu
     Recebe um código de 6 dígitos e digita na página. Nada é criado antes disso.
   </Step>
   <Step title="Segue para a página do destinatário">
-    Com o código certo, a pessoa vai direto para a [página do destinatário](/kyc/pagina-do-destinatario) daquela solicitação. Quando a solicitação é nova, ela também recebe o link pelo canal do modelo, para voltar depois.
+    Com o código certo, a pessoa vai direto para a [página do destinatário](/onboarding/pagina-do-destinatario) daquela solicitação. Quando a solicitação é nova, ela também recebe o link pelo canal do modelo, para voltar depois.
   </Step>
 </Steps>
 
@@ -121,7 +121,9 @@ A proposta nasce a cada envio. O que muda é o que acontece com a solicitação:
 
 ## Ao concluir
 
-O que o modelo manda fazer quando a solicitação fecha (nada, gerar um relatório ou rodar uma esteira) vale também para as solicitações do formulário. Ver [Ao concluir](/kyc/solicitacoes#ao-concluir).
+O que o modelo manda fazer quando a solicitação fecha (nada, gerar um relatório ou rodar uma esteira) vale também para as solicitações do formulário. Ver [Ao concluir](/onboarding/solicitacoes#ao-concluir).
+
+Com o link aceitando **CPF e CNPJ**, escolha um destino para cada tipo: esteira e política analisam um tipo só. Se faltar o de um deles, quem responder com aquele documento conclui normalmente, e a pendência fica registrada, sem análise: na solicitação ou, quando o link recebe pedidos, na proposta, que passa a esperar o operador.
 
 Como ninguém da sua equipe abriu a solicitação, o relatório ou a esteira rodam em nome de quem publicou a versão do modelo. Se a versão não tem um usuário responsável, o disparo não acontece.
 
@@ -151,15 +153,15 @@ O link passa a responder como indisponível. Quem publicou a versão do modelo r
 ## Depois do envio
 
 - Na tela da solicitação, a origem aparece como **Veio do link público**.
-- A solicitação emite os mesmos [webhooks](/api-reference/kyc/eventos-de-webhook) de qualquer outra, a começar por `collection.created`, com `actorType` `SYSTEM`. O formulário não tem eventos próprios.
+- A solicitação emite os mesmos [webhooks](/api-reference/onboarding/eventos-de-webhook) de qualquer outra, a começar por `collection.created`, com `actorType` `SYSTEM`. O formulário não tem eventos próprios.
 
 ## Próximos passos
 
 <CardGroup cols={2}>
-  <Card title="Solicitações de coleta" icon="paper-plane" href="/kyc/solicitacoes">
+  <Card title="Solicitações de coleta" icon="paper-plane" href="/onboarding/solicitacoes">
     Modelos, itens, estados e o que acontece ao concluir.
   </Card>
-  <Card title="Página do destinatário" icon="link" href="/kyc/pagina-do-destinatario">
+  <Card title="Página do destinatário" icon="link" href="/onboarding/pagina-do-destinatario">
     Para onde a pessoa vai depois do código.
   </Card>
   <Card title="Propostas" icon="file-invoice-dollar" href="/propostas/visao-geral">

@@ -1,0 +1,196 @@
+---
+title: "HubSpot"
+description: "Integração nativa com o HubSpot: o negócio que entra num estágio do funil vira proposta, roda o relatório ou a esteira, e a decisão volta para o negócio."
+icon: "hubspot"
+surface: plataforma
+domain: proposta
+audience: operador
+lang: nao-tecnica
+---
+
+Com a integração nativa com o HubSpot, o seu time comercial continua trabalhando no funil de sempre. Quando um negócio chega ao estágio que você escolher, a GYRA+ cria a proposta, roda a análise e devolve a situação para o próprio negócio, sem ninguém digitar nada duas vezes.
+
+<Info>
+  **Resumo:** em **Configurações > Integrações**, na área **CRM**, no cartão **HubSpot**, você cola o token de um app privado do HubSpot, define as regras (funil, estágio e o que rodar) e diz de que campo vem cada dado. A GYRA+ procura negócios novos na frequência escolhida e grava a situação da proposta em campos do grupo "Gyra+" do negócio.
+</Info>
+
+<Note>
+  A integração cria propostas, então ela exige o módulo de Propostas e a permissão de configurar a organização. Sem os dois, a área **CRM** não aparece em Integrações. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Como funciona
+
+<Steps>
+  <Step title="O negócio chega ao estágio gatilho">
+    O seu time move o negócio no funil do HubSpot, como sempre.
+  </Step>
+  <Step title="A GYRA+ encontra o negócio">
+    Na próxima sincronização, a GYRA+ lê os negócios dos estágios gatilho que mudaram desde a última rodada.
+  </Step>
+  <Step title="A proposta nasce">
+    A GYRA+ lê o CPF ou CNPJ, o valor, o prazo, o produto e o contato pelos campos que você mapeou e cria a proposta com a origem **CRM**. O nome do negócio vira o nome da proposta.
+  </Step>
+  <Step title="A análise roda">
+    A regra dispara a política (relatório) ou a esteira escolhida. Se o produto pede documentos, a GYRA+ abre a solicitação para o cliente e a análise roda quando ela for concluída.
+  </Step>
+  <Step title="A situação volta para o negócio">
+    A cada rodada, a GYRA+ atualiza os campos "Gyra+" do negócio com a situação, o limite, a validade e o link da proposta. Com a decisão final, ela pode mover o negócio de estágio.
+  </Step>
+</Steps>
+
+## Conectar a conta
+
+<Steps>
+  <Step title="Crie um app privado no HubSpot">
+    Na sua conta do HubSpot, crie um app privado com os escopos `crm.objects.deals.read` e `crm.objects.deals.write`, `crm.objects.companies.read`, `crm.schemas.deals.read` e `crm.schemas.deals.write` e `crm.schemas.companies.read`. Copie o token do app.
+  </Step>
+  <Step title="Abra a integração">
+    No toolbox, vá em **Configurações > Integrações**. Na área **CRM**, clique em **Conectar** no cartão do HubSpot.
+  </Step>
+  <Step title="Cole o token">
+    No cartão **Conta**, cole o token e clique em **Conectar**. A GYRA+ testa o token no HubSpot antes de salvar e mostra "Conectada à conta" com o número da sua conta.
+  </Step>
+</Steps>
+
+O token fica cifrado e nunca volta para a tela. Para trocar, use **Trocar token**. O token novo precisa ser da mesma conta do HubSpot: os negócios já trazidos pertencem àquela conta.
+
+| Mensagem | O que fazer |
+| --- | --- |
+| "Token do HubSpot inválido ou sem permissão." | Gere o token de novo e confira os escopos do app privado |
+| "Este token é da conta X do HubSpot, e a conexão é da conta Y. Use um token da mesma conta." | Use um token da conta já conectada |
+| "Esta integração já trouxe negócios da conta X do HubSpot. Para usar a conta Y, fale com o time Gyra+." | A troca de conta com negócios já vinculados precisa do nosso time |
+
+## Regras: o que dispara a proposta
+
+Cada regra diz: quando um negócio entra neste estágio deste funil, rode isto.
+
+| Campo | O que define |
+| --- | --- |
+| **Funil** | O pipeline de negócios do HubSpot |
+| **Estágio gatilho** | O estágio que cria a proposta |
+| **Relatório** ou **Esteira** | O que roda na proposta |
+| **Política para CNPJ** / **Esteira para CNPJ** | O que roda quando o documento do negócio é um CNPJ |
+| **Política para CPF** / **Esteira para CPF** | O que roda quando o documento do negócio é um CPF |
+| **Produto** | O produto da proposta (ou **Sem produto**) |
+
+Cada política e cada esteira analisa um tipo de documento só, por isso a regra escolhe uma para CNPJ e outra para CPF. Cada seletor mostra só as do tipo dele, e em **Relatório** aparecem só as políticas de uso **Relatório**. Você pode deixar um dos tipos em **Nenhuma**: o negócio daquele tipo recebe o status **Erro** com o motivo, e nenhuma proposta nasce.
+
+Você pode ter várias regras, em funis e estágios diferentes. Duas regras não podem usar o mesmo estágio para a mesma ação.
+
+## Campos da proposta
+
+Em **Campos da proposta**, você escolhe de onde vem cada dado. A lista mostra os campos da sua conta do HubSpot, inclusive os que a sua equipe criou.
+
+| Dado | De onde pode vir | Obrigatório |
+| --- | --- | --- |
+| **CPF ou CNPJ do tomador** | Um campo do **Negócio** ou da **Empresa associada** | Sim |
+| **E-mail do contato** | Negócio ou Empresa associada | Não, mas o produto que pede documentos precisa do e-mail ou do celular |
+| **Celular do contato** | Negócio ou Empresa associada | Não |
+| **Valor pedido** | Um campo numérico do negócio. O padrão é o Valor (`amount`) do negócio | Sim |
+| **Prazo em meses** | Um campo numérico do negócio, ou **Não usar** | Não |
+| **Produto por campo do negócio** | Um campo de seleção do negócio, com cada opção apontando para um produto | Não |
+
+O documento aceita CPF, CNPJ e CNPJ alfanumérico, com ou sem pontuação. O valor aceita o número do HubSpot e também o formato brasileiro digitado num campo de texto (por exemplo, "1.500,50").
+
+### Produto da proposta
+
+- **Desligado** o **Produto por campo do negócio**, vale o produto de cada regra.
+- **Ligado**, cada opção do campo de seleção aponta para um produto. A opção mapeada vence o produto da regra. Uma opção sem produto usa o da regra; se a regra também não tem produto, o negócio recebe o status **Erro**.
+
+O produto precisa atender o tipo de documento do negócio. Veja [Produtos e carteiras](/propostas/produtos).
+
+## Sincronização
+
+| Opção | O que faz |
+| --- | --- |
+| **Frequência** | **A cada 1 minuto**, **5 minutos** (padrão), **15 minutos** ou **1 hora** |
+| **Só em horário comercial** | Sincroniza só em dias úteis, das 8h às 20h (Brasília) |
+| **Mover o negócio com a decisão** | Com a proposta aprovada ou reprovada, leva o negócio para o estágio que você escolher em cada funil, ou **Não mover** |
+
+Clique em **Salvar e ligar**. Ao salvar, a GYRA+ confere a configuração contra a sua conta (funis, estágios e campos precisam existir), cria no negócio o grupo de campos "Gyra+" e começa a primeira sincronização em instantes.
+
+<Warning>
+  Na primeira ativação, entram só os negócios que mudarem daqui em diante. Um negócio que já estava no estágio gatilho entra quando for movido ou editado.
+</Warning>
+
+No topo da página, **Sincronizar agora** antecipa a próxima rodada: os negócios novos entram em até 1 minuto. **Desligar integração** para de criar propostas; nada é apagado.
+
+Cada rodada cria no máximo 50 propostas. O restante entra na rodada seguinte, do negócio mais antigo para o mais novo.
+
+## O que volta para o negócio
+
+Ao salvar, a GYRA+ cria no negócio o grupo "Gyra+" com estes campos. Os campos da análise existem em dois blocos, um para regras de **Relatório** e outro para regras de **Esteira**, e cada proposta preenche o bloco da sua regra.
+
+| Campo no HubSpot | O que traz |
+| --- | --- |
+| **Gyra+ proposta** | O identificador da proposta |
+| **Gyra+ mensagem** | O motivo, quando o negócio não vira proposta ou a proposta é encerrada sem decisão |
+| **Gyra+ Relatório: status** / **Gyra+ Esteira: status** | A situação da proposta (tabela abaixo) |
+| **...: limite** | O valor escolhido na oferta ou, antes da escolha, o valor máximo oferecido |
+| **...: validade** | A validade da oferta atual |
+| **...: data da decisão** | Quando a proposta foi aprovada, reprovada ou encerrada |
+| **...: link** | O link da proposta no toolbox |
+
+Cada bloco também tem o campo **rating**, que hoje fica vazio.
+
+| Status no HubSpot | Quando |
+| --- | --- |
+| **Em análise** | A proposta está sendo analisada |
+| **Aguardando dados** | A proposta espera os documentos do cliente, ou espera o cliente sem uma pré-aprovação enviada |
+| **Pré-aprovado** | A pré-aprovação foi enviada e espera a escolha do cliente |
+| **Aprovado** | A proposta chegou a **Oferta emitida** |
+| **Reprovado** | A proposta foi recusada |
+| **Pendência** | A proposta espera alguém da sua equipe. Se a análise não pôde ser disparada, o motivo vai em **Gyra+ mensagem** |
+| **Erro** | O negócio não virou proposta, ou a proposta foi cancelada ("Proposta cancelada no Gyra+.") ou venceu ("Proposta vencida no Gyra+.") |
+
+A GYRA+ só grava no HubSpot o que mudou. Com **Aprovado**, **Reprovado** ou **Erro**, o negócio deixa de ser acompanhado.
+
+## Um negócio, uma proposta por regra
+
+Cada negócio vira no máximo uma proposta por regra. Se o negócio sai do estágio e volta, ou é editado, nenhuma proposta nova nasce. Uma falha no meio do caminho também não duplica: na rodada seguinte, a GYRA+ reencontra a proposta já criada para aquele negócio.
+
+## Quando o negócio não vira proposta
+
+O negócio recebe o status **Erro** e o motivo em **Gyra+ mensagem**. A integração não tenta aquele negócio de novo naquela regra: corrija o dado e, se o pedido continua valendo, crie a proposta pela tela.
+
+| Motivo | O que fazer |
+| --- | --- |
+| "CPF/CNPJ não encontrado no campo ..." | Preencha o campo do documento no negócio ou na empresa associada |
+| "CPF/CNPJ inválido no campo ..." | Corrija o documento |
+| "A opção ... do campo ... não tem produto correspondente." | Mapeie a opção para um produto ou dê um produto à regra |
+| "A regra não tem esteira ou política para CPF." (ou CNPJ) | Escolha um destino para esse tipo na regra |
+| "A esteira da regra do CRM analisa CNPJ, mas o documento do negócio é um CPF. ..." | Configure um destino para o tipo do documento |
+| "Este produto pede documentos: informe o e-mail ou o celular do cliente." | Mapeie o e-mail ou o celular do contato |
+| "Este produto não atende pessoa física (CPF). Escolha outro produto." | Use um produto que atenda o tipo do documento |
+
+## A situação da integração
+
+O cartão do HubSpot e o topo da página mostram em que pé a integração está:
+
+| Situação | O que significa |
+| --- | --- |
+| **Não conectado** | Nenhum token salvo |
+| **Token salvo · falta configurar as regras** | A conta está conectada, mas a integração ainda não foi salva |
+| **Ativa · aguardando a primeira sincronização** | Tudo certo, a primeira rodada vai começar |
+| **Ativa · sincronizou** (com o horário) | A última rodada terminou bem |
+| **Falhou na última sincronização** | A última rodada falhou. A GYRA+ tenta de novo, espaçando as tentativas até 1 hora |
+| **Pausada · o HubSpot recusou o token** | O token foi revogado ou perdeu permissão. Gere um novo e salve a integração |
+| **Pausada** | A conta do HubSpot foi removida ou mudou. Salve a integração de novo |
+| **Desligada** | Você desligou a integração |
+
+Se o HubSpot limitar as chamadas, a GYRA+ espera o tempo que ele pedir e segue sozinha.
+
+## Na proposta
+
+A proposta criada pelo HubSpot é uma proposta como as outras: aparece em [Propostas](/toolbox/propostas) com a entrada **CRM**, roda a mesma análise e segue o mesmo caminho até a [formalização](/formalizacao/visao-geral). A proposta nasce em nome da pessoa que salvou a integração.
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Propostas" icon="inbox" href="/propostas/visao-geral">
+    Situações, origens e como a proposta se liga ao resto.
+  </Card>
+  <Card title="Integrações no toolbox" icon="plug" href="/toolbox/integracoes">
+    Onde ficam os conectores, o CRM e as conexões de API.
+  </Card>
+</CardGroup>

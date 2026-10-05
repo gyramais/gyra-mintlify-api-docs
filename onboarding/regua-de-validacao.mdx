@@ -131,7 +131,7 @@ Sem espécie mínima configurada, a verificação apenas **informa** a espécie 
 | Similaridade mínima do nome | proporção | organização | 0,85 |
 | Diferença tolerada na soma das quotas | pontos percentuais | organização | 0,5 |
 | Diferença tolerada no capital | % do capital | por categoria/tipo | 1 |
-| Prazo de vigência do documento | dias | por tipo | [padrão do tipo](/kyc/tipos-de-documento) |
+| Prazo de vigência do documento | dias | por tipo | [padrão do tipo](/onboarding/tipos-de-documento) |
 | Espécie mínima de certificação | espécie | por tipo | não exigida |
 | Meses de faturamento exigidos | meses | organização | 12 |
 | Corte de suspeição forense | pontos | organização | 1 |
@@ -161,6 +161,6 @@ A régua é da organização. Um item de solicitação pode declarar `maxAgeDays
 
 ## Onde configurar
 
-No toolbox, em *Cadastros, Validações*: três abas, uma por pergunta, e navegação por tipo documental (pessoa jurídica, pessoa física e os que servem aos dois).
+No toolbox, em **Onboarding**, **Clientes**, aba **Validações**: três abas, uma por pergunta, e navegação por tipo documental (pessoa jurídica, pessoa física e os que servem aos dois).
 
 Não há rota pública para publicar régua. É configuração versionada que afeta todo documento que entrar depois, e a tela mostra o efeito antes de salvar. O que a API devolve é o resultado: `assessment.ruleSetVersion`, em cada parecer, diz qual versão julgou aquele documento.

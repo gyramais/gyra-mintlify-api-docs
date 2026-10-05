@@ -1,0 +1,153 @@
+---
+title: "Onboarding"
+description: "O módulo que conhece o seu cliente, pede o que falta e confere quem ele é: o dossiê de cada CNPJ ou CPF, o pedido de documentos, formulário, termo, assinatura e identidade, e a validação de identidade."
+icon: "folder-open"
+surface: plataforma
+domain: cadastro
+audience: operador
+lang: nao-tecnica
+---
+
+O Onboarding é o módulo onde você conhece o cliente, pede a ele o que falta e confere quem ele é, sem e-mail com anexo e sem WhatsApp de analista.
+
+<Info>
+  **Resumo:** o **cadastro** é o dossiê de um CNPJ ou CPF: documentos lidos pela IA, conferidos pela régua da sua organização, o que o cliente declarou e os contatos de cada pessoa. A **solicitação** é o pedido: um link para o cliente final entregar o que falta. A **validação de identidade** reúne a prova de quem é cada pessoa.
+</Info>
+
+## Para quem é
+
+- **Para a operação de crédito**, que precisa do dossiê completo antes de analisar e não quer correr atrás de documento por e-mail.
+- **Para o time de cadastro e compliance**, que confere autenticidade, titularidade e vigência com uma régua que ele mesmo ajusta.
+- **Para quem integra**, que abre o pedido pelo próprio sistema e recebe o resultado por webhook.
+
+## No menu
+
+O módulo ocupa a seção **Onboarding** do menu lateral:
+
+| Item | O que tem |
+| --- | --- |
+| **Clientes** | Os [cadastros](/toolbox/cadastros): dossiê, documentos, dados declarados, quadro societário, contatos, régua e indicadores |
+| **Solicitações** | Os [pedidos ao cliente](/toolbox/solicitacoes), os modelos e os termos e contratos |
+| **Validação de identidade** | Todas as [verificações de identidade](/toolbox/validacao-de-identidade) da organização |
+
+Sem o módulo contratado, os itens aparecem com cadeado e levam à apresentação do Onboarding.
+
+## Cadastro e solicitação
+
+| | Cadastro | Solicitação |
+| --- | --- | --- |
+| O que é | O dossiê de um CNPJ ou CPF | O pedido enviado a uma pessoa |
+| Quem alimenta | Operador, API, formulário respondido ou uma solicitação | O destinatário, pelo link, ou a própria pessoa, pelo formulário público |
+| Vive | Para sempre, com versão e renovação | Tem prazo, lembrete e desfecho |
+| Onde fica | **Onboarding**, **Clientes** | **Onboarding**, **Solicitações** |
+
+O cadastro é o substrato: todo documento entregue numa solicitação é arquivado no cadastro da pessoa ou da empresa, e o que ela responde no formulário fica no cadastro como **Dados declarados pelo cliente**. Uma solicitação sem cadastro não existe, e o cadastro sobrevive a todas as solicitações que passaram por ele.
+
+## As portas de entrada
+
+| Porta | Quem abre | Como |
+| --- | --- | --- |
+| **Link de solicitação** | Um operador, na tela | Escolhe o modelo e o cadastro, e cada destinatário recebe o próprio link |
+| **Formulário público** | A própria pessoa | Você publica o [link aberto de um modelo](/onboarding/formulario-publico), e ela se identifica, confirma o contato e começa. O cadastro nasce do CPF ou CNPJ informado |
+| **API** | A sua integração | Abre a solicitação pelo seu backend e acompanha por [webhook](/api-reference/onboarding/eventos-de-webhook). Ver [Integrar o Onboarding](/guides/integrar-cadastro-documental) |
+| **Esteira** | A [etapa Solicitação](/esteiras/etapas#solicitação) de uma esteira | A execução para, espera a resposta e retoma de onde parou |
+
+A renovação periódica do cadastro também abre solicitações sozinha. Em todos os casos, o que vem depois é igual: a mesma [página do destinatário](/onboarding/pagina-do-destinatario), os mesmos itens e o mesmo desfecho.
+
+## O que o módulo resolve
+
+<CardGroup cols={2}>
+  <Card title="Ler o documento" icon="file-magnifying-glass">
+    A entrada é um arquivo só. A plataforma reconhece **que documento é aquele** entre [25 tipos](/onboarding/tipos-de-documento) e extrai os campos daquele tipo, cada um com confiança e página.
+  </Card>
+  <Card title="Conferir o documento" icon="shield-check">
+    Autenticidade, titularidade e fé pública, com [régua configurável](/onboarding/regua-de-validacao) por tipo documental: o que reprova, o que vira ressalva e o que nem roda.
+  </Card>
+  <Card title="Pedir ao cliente" icon="paper-plane">
+    Link por e-mail, WhatsApp, os dois, ou nenhum (você mesmo entrega o link). Prazo, lembretes e trilha de quem abriu, quando e o quê.
+  </Card>
+  <Card title="Provar quem é" icon="user-check">
+    [Verificação de identidade](/onboarding/verificacao-de-identidade) por face match com documento, sem documento (base oficial ligada ao CPF) ou pelo código enviado a um e-mail que os bureaus já associam à pessoa.
+  </Card>
+</CardGroup>
+
+## Um pedido, cinco espécies de item
+
+Uma solicitação é uma lista de itens, e cada item é de uma espécie:
+
+| Espécie | O que o destinatário faz |
+| --- | --- |
+| `DOCUMENT` | Envia um arquivo (PDF, JPG ou PNG) |
+| `FORM` | Responde um [formulário](/onboarding/formularios) montado pela sua organização |
+| `CONSENT` | Lê e aceita um [termo](/onboarding/termos-e-assinatura). O de SCR já vem no catálogo |
+| `SIGNATURE` | Assina um documento, sozinho ou em conjunto com outras partes |
+| `IDENTITY` | Faz a verificação de identidade |
+
+Existe ainda `CUSTOM`, para o pedido que não cabe em nenhuma das cinco e é resolvido na conversa com o operador.
+
+## Mapa das páginas
+
+<CardGroup cols={2}>
+  <Card title="Cadastro documental" icon="folder-tree" href="/onboarding/cadastro-documental">
+    O dossiê: situação, documentos, dados declarados, quadro societário, contatos e renovação.
+  </Card>
+  <Card title="Solicitações de coleta" icon="paper-plane" href="/onboarding/solicitacoes">
+    Modelos, itens, destinatários, estados e o que acontece ao concluir.
+  </Card>
+  <Card title="Formulário público" icon="globe" href="/onboarding/formulario-publico">
+    O link aberto para o cliente começar sozinho.
+  </Card>
+  <Card title="Formulários" icon="rectangle-list" href="/onboarding/formularios">
+    O formulário que o destinatário responde.
+  </Card>
+  <Card title="Página do destinatário" icon="link" href="/onboarding/pagina-do-destinatario">
+    O que o cliente final vê, com a sua marca.
+  </Card>
+  <Card title="Termos e assinatura" icon="signature" href="/onboarding/termos-e-assinatura">
+    O que se aceita e o que se assina.
+  </Card>
+  <Card title="Verificação de identidade" icon="user-check" href="/onboarding/verificacao-de-identidade">
+    Os três caminhos e o que cada resultado quer dizer.
+  </Card>
+  <Card title="Análise documental" icon="file-magnifying-glass" href="/onboarding/analise-documental">
+    O ciclo de vida de um documento, do envio ao parecer.
+  </Card>
+  <Card title="Tipos de documento" icon="files" href="/onboarding/tipos-de-documento">
+    O que a plataforma reconhece e por quanto tempo cada um vale.
+  </Card>
+  <Card title="Régua de validação" icon="ruler" href="/onboarding/regua-de-validacao">
+    O catálogo de verificações e o que você configura.
+  </Card>
+  <Card title="O que é cobrado" icon="receipt" href="/onboarding/cobranca">
+    Os eventos de consumo do módulo.
+  </Card>
+  <Card title="Telas no toolbox" icon="table-columns" href="/toolbox/cadastros">
+    Clientes, Solicitações e Validação de identidade, passo a passo.
+  </Card>
+</CardGroup>
+
+## Como se liga ao resto da plataforma
+
+- O cadastro alimenta o **relatório**: balanço e DRE enviados como documento entram na [análise financeira](/concepts/analise-financeira), e o comitê enxerga a situação do cadastro.
+- O que o cliente responde no formulário vira **variável da esteira**: cada campo dos dados declarados mostra o nome que você usa nas fórmulas e regras. Ver [Dados de entrada](/esteiras/dados-de-entrada).
+- O item de consentimento substitui o antigo fluxo de opt-in de SCR: o termo aceito é o que autoriza a consulta ao [SCR](/sources/scr-open-finance).
+- A solicitação concluída pode **gerar um relatório** ou **rodar uma esteira** sozinha, com um destino para CNPJ e outro para CPF, conforme o [Ao concluir](/onboarding/solicitacoes#ao-concluir) do modelo.
+- Com o módulo de Propostas, o formulário público recebe **pedidos de financiamento ou de venda a prazo**: cada envio vira uma [proposta](/propostas/visao-geral), e os documentos que o [produto](/propostas/produtos) exige entram na solicitação.
+- Tudo é observável por [webhook](/api-reference/onboarding/eventos-de-webhook) e por [API](/api-reference/onboarding/visao-geral).
+
+## Capacidades
+
+O módulo é liberado por capacidade da organização. Quem não tem recebe `404` nas rotas (a rota não existe para ela) e vê os itens de menu com cadeado.
+
+| Capacidade | O que libera |
+| --- | --- |
+| `kycEnabled` | O módulo inteiro: Clientes, Solicitações, régua de validação, verificação de identidade e a tela Validação de identidade |
+| `scrEnabled` | O item de autorização de SCR. Sem `kycEnabled`, a organização abre **Solicitações**, monta modelo com esse item e envia, mas **Clientes** e **Validação de identidade** ficam com cadeado |
+| `communicationBrandingEnabled` | Logo, cores, domínio próprio do link e do remetente, WhatsApp da própria empresa |
+| `identityEmailEnabled` | O código por e-mail conhecido como segunda via da verificação de identidade |
+
+O pedido de proposta pelo formulário público depende também do módulo de Propostas. O quadro completo está em [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+
+<Note>
+  Quem tem apenas `scrEnabled` continua com a régua **rodando** nos documentos recebidos, com os padrões da plataforma. O que falta é a tela de edição da régua, não a validação.
+</Note>

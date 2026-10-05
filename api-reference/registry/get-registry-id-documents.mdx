@@ -12,10 +12,12 @@ openapi: get /v1/registry/{id}/documents
 
 Para saber o que o dossiê já tem antes de pedir de novo.
 
-### Versão vigente por padrão
+### O que some por padrão
 
-Nada é sobrescrito: a alteração contratual nova não apaga a antiga, vira a versão vigente. Por padrão a listagem traz só a vigente de cada tipo; com `includeHistory`, traz todas.
+Nada é sobrescrito: a alteração contratual nova não apaga a antiga, vira a versão vigente. Por padrão some só a versão **aprovada** que já foi substituída por uma vigente do mesmo tipo. Documento reprovado, inconclusivo ou ainda em análise aparece sempre. Com `includeHistory`, vem tudo; com `type`, só um tipo.
+
+A lista vem em `documents`, e cada documento traz `verdict`: o veredito que vale hoje, já com a decisão do operador quando houver.
 
 <Note>
-  Contexto e vocabulário em [Cadastro documental](/kyc/cadastro-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+  Contexto e vocabulário em [Cadastro documental](/onboarding/cadastro-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/onboarding/visao-geral).
 </Note>

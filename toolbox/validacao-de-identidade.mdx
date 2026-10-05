@@ -1,6 +1,6 @@
 ---
 title: "Validação de identidade"
-description: "A tela que reúne todas as verificações de identidade da sua organização, com resultado, semelhança, prova de vida e sinais de fraude."
+description: "A tela do Onboarding que reúne todas as verificações de identidade da sua organização, com resultado, semelhança, prova de vida e sinais de fraude."
 icon: "id-card"
 surface: plataforma
 domain: cadastro
@@ -15,7 +15,7 @@ A tela **Validação de identidade** reúne, num lugar só, cada verificação d
 </Info>
 
 <Note>
-  A tela faz parte do módulo de Cadastros e Solicitações. Sem ele, o item aparece com cadeado no menu. Ver [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+  A tela faz parte do módulo Onboarding. Sem ele, o item aparece com cadeado no menu, mesmo para quem tem só a autorização de SCR. Ver [Módulos e capacidades](/plataforma/modulos-e-capacidades).
 </Note>
 
 ## O resumo do período
@@ -32,7 +32,7 @@ No topo, os totais do período escolhido: **Verificações no período**, **Apro
 | Busca | **Buscar por nome ou CPF**, sem se importar com acento, maiúscula ou máscara |
 
 <Tip>
-  Comece pela aba **Em revisão**: são as verificações que pararam esperando uma pessoa decidir.
+  Comece pela aba **Em revisão**: são as verificações que pararam esperando uma pessoa decidir. No **Início**, o bloco **Identidades para revisar** abre a tela direto nessa aba.
 </Tip>
 
 ## As colunas
@@ -40,15 +40,17 @@ No topo, os totais do período escolhido: **Verificações no período**, **Apro
 | Coluna | O que mostra |
 | --- | --- |
 | **Pessoa** | O nome de quem fez a verificação |
-| **Método** | Selfie e prova de vida, selfie com documento, selfie contra a base oficial ou código por e-mail |
+| **Método** | **Selfie e prova de vida**, **Selfie e documento**, selfie contra a base oficial ou **Código por e-mail** |
 | **Resultado** | Aprovada, Em revisão, Reprovada ou Pendente |
 | **Semelhança** | Quanto a selfie se parece com o retrato de referência |
 | **Prova de vida** | O resultado da prova de vida |
-| **Sinais de fraude** | Quantos [sinais de antifraude](/kyc/verificacao-de-identidade#sinais-de-antifraude) a verificação levantou |
+| **Sinais de fraude** | Quantos [sinais de antifraude](/onboarding/verificacao-de-identidade#sinais-de-antifraude) a verificação levantou |
 | **Data** | Quando a verificação foi avaliada, ou quando começou, se ainda não foi |
 | **Solicitação** | A solicitação de onde a verificação veio |
 
-A lista traz tanto os itens de identidade quanto as verificações das partes de um documento assinado em conjunto. A mais recente aparece primeiro.
+A lista traz tanto os itens de identidade quanto as verificações das partes de um documento assinado em conjunto. A mais recente aparece primeiro, e clicar na linha abre a solicitação.
+
+Para pedir uma verificação nova, use **Novo pedido de identidade**, que leva à [nova solicitação](/toolbox/solicitacoes#nova-solicitação).
 
 ## O que a tela não mostra
 
@@ -56,12 +58,12 @@ As imagens (selfie e documento) não aparecem aqui. Para vê-las, abra a solicit
 
 ## Pela API
 
-A mesma lista está disponível em `GET /v1/collections/identity-verifications`, com os mesmos filtros e o mesmo resumo. Ver [Visão geral da API](/api-reference/kyc/visao-geral#listar-as-validações-de-identidade).
+A mesma lista está disponível em `GET /v1/collections/identity-verifications`, com os mesmos filtros e o mesmo resumo. Ver [Visão geral da API](/api-reference/onboarding/visao-geral#listar-as-validações-de-identidade).
 
 ## Próximos passos
 
 <CardGroup cols={2}>
-  <Card title="Verificação de identidade" icon="user-check" href="/kyc/verificacao-de-identidade">
+  <Card title="Verificação de identidade" icon="user-check" href="/onboarding/verificacao-de-identidade">
     Os três caminhos e o que cada resultado quer dizer.
   </Card>
   <Card title="Solicitações no toolbox" icon="paper-plane" href="/toolbox/solicitacoes">

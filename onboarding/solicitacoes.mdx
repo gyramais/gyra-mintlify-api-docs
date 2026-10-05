@@ -1,6 +1,6 @@
 ---
 title: "Solicitações de coleta"
-description: "O pedido enviado ao cliente final: modelo, itens, destinatários, canal, prazo, lembretes e o que acontece com cada resposta."
+description: "O pedido do Onboarding ao cliente final: modelo, itens, destinatários, canal, prazo, lembretes e o que acontece com cada resposta."
 icon: "paper-plane"
 surface: plataforma
 domain: cadastro
@@ -9,7 +9,7 @@ lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** uma solicitação nasce de um **modelo**, aponta para um **cadastro** e vai para um ou mais **destinatários**. Cada destinatário recebe um link próprio; o que ele entrega é analisado e arquivado no cadastro. A solicitação também pode nascer do [formulário público](/kyc/formulario-publico), quando a própria pessoa abre o link do modelo.
+  **Resumo:** uma solicitação nasce de um **modelo**, aponta para um **cadastro** e vai para um ou mais **destinatários**. Cada destinatário recebe um link próprio; o que ele entrega é analisado e arquivado no cadastro. A solicitação também pode nascer do [formulário público](/onboarding/formulario-publico), quando a própria pessoa abre o link do modelo.
 </Info>
 
 ## Anatomia
@@ -30,11 +30,12 @@ Cada item do modelo declara:
 | Campo | O que é |
 | --- | --- |
 | `kind` | A espécie do item |
-| `documentType` ou `requirement` | O tipo pedido, ou o [requisito societário](/kyc/tipos-de-documento#requisito-societário-em-vez-de-tipo-fixo) que a natureza jurídica resolve |
+| `documentType` ou `requirement` | O tipo pedido, ou o [requisito societário](/onboarding/tipos-de-documento#requisito-societário-em-vez-de-tipo-fixo) que a natureza jurídica resolve |
 | `label` | O que o destinatário lê |
 | `instructions` | Instrução opcional |
 | `required` | Obrigatório ou não |
 | `perPerson` | Um item por destinatário pessoa física |
+| `appliesTo` | `PF` ou `PJ`: o item só é pedido em cadastro daquele tipo. Ausente, vale para os dois |
 | `rules` | Regras daquele pedido (abaixo) |
 
 Modelos podem ser **duplicados** numa cópia editável e removidos logicamente.
@@ -47,9 +48,11 @@ Cada modelo pode ser **desligado** na sua organização. Desligado, ele some da 
 
 Além dos modelos da sua organização, há os **modelos GYRA+**, prontos para uso. Você pode usá-los como estão e desligá-los só para a sua organização, mas não editá-los: para mudar algo, duplique e edite a cópia.
 
+No modelo **Autorização de consulta ao SCR (pessoa jurídica)**, a verificação de identidade e a autorização são **por pessoa**: cada sócio pessoa física convidado recebe os dois itens, prova quem é e só então autoriza. A solicitação conclui quando todos resolverem os seus. No modelo **Abertura de relacionamento (empresa)**, a identidade e a autorização continuam sendo só do representante.
+
 ### Link público
 
-Um modelo pode ganhar um endereço aberto, que qualquer pessoa usa para começar a própria solicitação. Ver [Formulário público](/kyc/formulario-publico).
+Um modelo pode ganhar um endereço aberto, que qualquer pessoa usa para começar a própria solicitação. Ver [Formulário público](/onboarding/formulario-publico).
 
 ### Regras do item
 
@@ -61,7 +64,7 @@ Um modelo pode ganhar um endereço aberto, que qualquer pessoa usa para começar
 | `allowMultipleFiles` | Aceita mais de um arquivo no mesmo item (desligado por padrão) |
 | `maxFiles` | Teto de arquivos quando o anterior está ligado |
 | `reuseIfValidWithinDays` | Reaproveita documento já validado dentro da janela |
-| `minFaceSimilarity`, `requireLiveness` | Exigências da [verificação de identidade](/kyc/verificacao-de-identidade) |
+| `minFaceSimilarity`, `requireLiveness` | Exigências da [verificação de identidade](/onboarding/verificacao-de-identidade) |
 | `identityMethods` | Como a identidade pode ser cumprida: `FACE_MATCH`, `EMAIL` ou os dois |
 
 <Warning>
@@ -94,8 +97,20 @@ O modelo decide o que acontece quando a solicitação fecha. O padrão é não f
 | **Gerar relatório** | A plataforma gera um relatório com a política escolhida, usando o documento do cadastro |
 | **Rodar esteira** | A plataforma roda a [esteira](/esteiras/visao-geral) escolhida com o documento do cadastro |
 
+### Um destino para CNPJ e outro para CPF
+
+Esteira e política analisam um tipo de documento só, e o mesmo modelo pode atender empresa e pessoa. Por isso o destino é escolhido **por tipo**: **Política para CNPJ** e **Política para CPF** (ou **Esteira para CNPJ** e **Esteira para CPF**), cada seletor mostrando só o que analisa aquele tipo. Na hora de disparar, vale o destino do tipo do cadastro.
+
+- **Só política de uso Relatório.** A política que roda como etapa de esteira não aparece no seletor: o **Ao concluir** roda a política sozinha.
+- **Tipo sem destino vira pendência visível.** Se o modelo tem destino para um tipo e não para o outro, quem responde com o tipo descoberto não dispara análise, e a solicitação mostra **A análise ao concluir não foi disparada.**, com o motivo. Com proposta ligada, a pendência fica na proposta, que passa a esperar o operador. O editor do modelo avisa antes de salvar.
+- **Recusa do disparo também aparece.** Quando a análise é recusada (por exemplo, a política analisa outro tipo de documento), o motivo fica na solicitação do mesmo jeito, para alguém rodar à mão.
+
+Pela API, `onCompleted` aceita o destino único (`kind` e `id`) ou `byEntityType`, com um `{ kind, id }` para `COMPANY` e outro para `PERSON`. Com `byEntityType`, o `kind` do topo é opcional.
+
+### Regras do disparo
+
 - **Vale o combinado no envio.** A escolha viaja com a solicitação: editar o modelo depois não muda o que acontece com as solicitações já enviadas.
-- **Com proposta, o disparo é por proposta.** Quando a solicitação tem [propostas](/propostas/visao-geral) ligadas, a análise roda para cada uma delas, e não uma vez só para a solicitação.
+- **Com proposta, o disparo é por proposta.** Quando a solicitação tem [propostas](/propostas/visao-geral) ligadas, a análise roda para cada uma delas, e não uma vez só para a solicitação. Vence o primeiro destino que serve ao tipo do documento, nesta ordem: o pedido para a própria proposta (como a regra da [integração com o HubSpot](/propostas/hubspot)), o do [produto](/propostas/produtos) e o do modelo.
 - **A solicitação aberta pela esteira não dispara.** Ela devolve o controle à execução que a abriu (ver [Origens](#quem-abre-uma-solicitação)).
 - **Sem documento, sem disparo.** A análise precisa do CPF ou CNPJ do cadastro.
 - **Falha no disparo não chega ao cliente.** Quem respondeu vê a solicitação concluída do mesmo jeito.
@@ -118,8 +133,10 @@ Toda solicitação guarda a origem. Na tela da solicitação, ela aparece como u
 | --- | --- | --- |
 | Manual | Um operador, na tela, ou a sua integração, pela API | (sem rótulo) |
 | Renovação | A renovação periódica do cadastro. Enquanto uma renovação está em curso, outra não é aberta | **Renovação automática** |
-| Esteira | A etapa de solicitação de uma [esteira](/esteiras/visao-geral). Ao fechar, a execução retoma de onde parou, e o **Ao concluir** do modelo não roda | **Aberta por uma esteira** |
-| Formulário público | A própria pessoa, pelo [link aberto do modelo](/kyc/formulario-publico). O cadastro nasce do documento informado | **Veio do link público** |
+| Esteira | A [etapa Solicitação](/esteiras/etapas#solicitação) de uma esteira. Ao fechar, a execução retoma de onde parou, e o **Ao concluir** do modelo não roda | **Aberta por uma esteira** |
+| Formulário público | A própria pessoa, pelo [link aberto do modelo](/onboarding/formulario-publico). O cadastro nasce do documento informado | **Veio do link público** |
+
+Quando a etapa da esteira manda a solicitação para os sócios, os destinatários saem dos [contatos guardados](/onboarding/cadastro-documental#contatos) de cada sócio, e a pessoa é o CPF ou CNPJ: dois sócios que dividem o mesmo e-mail ou telefone recebem cada um a sua solicitação, e cada um resolve os próprios itens.
 
 Na solicitação do formulário público, o contato que a pessoa informa nunca substitui o que o cadastro já conhece. Quando diverge, a tela da solicitação mostra o aviso e nada muda no cadastro.
 
@@ -153,6 +170,8 @@ Você pode **pré-visualizar** a mensagem exata que vai sair, sem enviá-la.
 
 Em revisão, o operador tem três decisões: `APPROVED`, `RESEND_REQUESTED` (pede de novo, com motivo) ou `WAIVED` (dispensa).
 
+O mesmo item pode ser pedido de novo até **3 vezes**. No modo `AUTOMATIC`, um item reprovado além disso para de voltar ao destinatário e vai para `MANUAL_REVIEW`; na revisão, o pedido de reenvio é recusado e sobram aprovar ou dispensar.
+
 ## Estados
 
 ### Da solicitação
@@ -183,7 +202,7 @@ Em revisão, o operador tem três decisões: `APPROVED`, `RESEND_REQUESTED` (ped
 | Ação | Efeito |
 | --- | --- |
 | Enviar / reenviar | Dispara o envio e devolve os links por destinatário |
-| Reemitir link | Gera link novo para um destinatário (até 3 reenvios) |
+| Reemitir link | Gera link novo para um destinatário, sem perder o que ele já entregou |
 | Revisar item | Aprova, pede reenvio ou dispensa |
 | Dispensar item | Tira o item da lista sem reprová-lo |
 | Cancelar | Encerra a solicitação |
@@ -194,9 +213,9 @@ Em revisão, o operador tem três decisões: `APPROVED`, `RESEND_REQUESTED` (ped
 
 Duas ajudas que a plataforma dá ao montar o pedido:
 
-- **Contatos:** os e-mails e telefones que aquele CNPJ/CPF já usou em solicitações anteriores.
+- **Contatos:** os [contatos guardados](/onboarding/cadastro-documental#contatos) de cada pessoa (informados em formulário, incluídos pela equipe ou já usados em envios anteriores), com o fixado pela equipe primeiro e, sem escolha, o mais recente.
 - **Signatários:** quem assina, deduzido do documento societário vigente do cadastro (nome, documento e papel), com o regime de assinatura já lido.
 
 ## Trilha
 
-Toda mudança de estado entra numa trilha append-only, com quem fez (operador, usuário de API, destinatário, formulário público ou sistema), quando e o id do evento. É dela que saem os [webhooks](/api-reference/kyc/eventos-de-webhook), o que garante que caso de uso novo não fique sem aviso. As ações próprias do formulário público (início, reaproveitamento de uma solicitação em andamento e divergência de contato) ficam só na trilha e não viram webhook.
+Toda mudança de estado entra numa trilha append-only, com quem fez (operador, usuário de API, destinatário, formulário público ou sistema), quando e o id do evento. É dela que saem os [webhooks](/api-reference/onboarding/eventos-de-webhook), o que garante que caso de uso novo não fique sem aviso. As ações próprias do formulário público (início, reaproveitamento de uma solicitação em andamento e divergência de contato) ficam só na trilha e não viram webhook.

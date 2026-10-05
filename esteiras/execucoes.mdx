@@ -30,6 +30,8 @@ Antes de abrir, a plataforma confere:
 | Documento inválido | Informe um CPF (11 dígitos) ou um CNPJ (14 dígitos) válido. |
 | Tipo de documento errado | A esteira "X" analisa CNPJ, mas o documento informado é um CPF. |
 
+Quando a primeira etapa não gera relatório (uma Solicitação, um Checkpoint, um Enquadramento de produto ou uma Integração), a tela avisa: "Esteira iniciada. A primeira etapa não gera relatório: acompanhe pela execução."
+
 ## Estados da execução
 
 | Na tela | Quando |
@@ -39,7 +41,7 @@ Antes de abrir, a plataforma confere:
 | **aprovada** | Terminou com o crédito aprovado (inclui alerta aprovado) |
 | **reprovada** | Terminou com o crédito reprovado |
 | **concluída** | Terminou sem decisão de crédito, por exemplo numa esteira só de consulta |
-| **erro** | Uma falha técnica interrompeu a execução |
+| **erro** | Uma falha técnica interrompeu a execução, ou uma condição **Executar quando** não pôde ser calculada |
 
 Um selo final não é reescrito para melhor: uma execução reprovada ou com erro não vira "concluída" depois.
 
@@ -66,13 +68,15 @@ Uma execução em andamento pode estar parada esperando alguém. A tela diz quem
 | --- | --- |
 | **aguardando decisão** | Um analista, num Checkpoint ou numa etapa que foi para o analista |
 | **aguardando decisão no relatório** | Um analista, aprovando ou reprovando o próprio relatório |
+| **aguardando escolha do produto** | Um analista designado, no Enquadramento de produto |
+| **aguardando revisão da pré-aprovação** | Um analista designado, que confere a faixa antes de a oferta sair |
 | **aguardando revisão da oferta** | Um analista, na Revisão da oferta |
 | **aguardando comitê de crédito IA** | O Comitê IA, sozinho |
 | **aguardando aprovação da alçada** | Os aprovadores da faixa |
-| **aguardando cliente** | O cliente, respondendo uma solicitação ou escolhendo a oferta |
+| **aguardando cliente** | O cliente (ou o atendente do canal, quando a proposta vem de um [correspondente](/plataforma/correspondentes)), respondendo uma solicitação ou escolhendo a oferta |
 | **aguardando fechamento externo** | O seu sistema, chamando `POST /operation/close` |
 
-A decisão manual é registrada com autor, horário e comentário. Se outra pessoa decidiu primeiro, a tela avisa: "Esta etapa já não está esperando decisão (pode ter sido decidida por outra pessoa). A execução foi atualizada."
+A decisão manual é registrada com autor, horário e comentário. Reprovar antes da Decisão (num Checkpoint, no Enquadramento de produto ou na revisão da Pré-aprovação) recusa a proposta: a execução grava a decisão final **Reprovado** e termina **reprovada**. Se outra pessoa decidiu primeiro, a tela avisa: "Esta etapa já não está esperando decisão (pode ter sido decidida por outra pessoa). A execução foi atualizada."
 
 ## Rodar de novo
 

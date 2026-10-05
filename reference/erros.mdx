@@ -60,13 +60,14 @@ lang: tecnica
 
 ### Módulo não contratado
 
-A rota existe, mas a sua organização não tem o módulo. O `403` é proposital (e não `404`), para você saber que não é um endereço errado. Não repita: é configuração de conta. Ver [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+A rota existe, mas a sua organização não tem o módulo. A resposta depende do módulo: alguns respondem `403` com o nome do módulo, outros respondem `404`, como se a rota não existisse. Nos dois casos, não repita: é configuração de conta. Ver [Módulos e capacidades](/plataforma/modulos-e-capacidades).
 
 | Código | Mensagem | Causa |
 |---|---|---|
 | `403` | `"Sua organização não tem o módulo de Propostas habilitado."` | Rotas de propostas, produtos, carteiras e simulação sem o módulo de Propostas. |
 | `403` | `"Sua organização não tem o módulo de Formalização habilitado."` | Rotas de modelos de contrato e formalização sem o módulo de Formalização. |
 | `403` | `"A customização dos prompts do Comitê não está habilitada para esta organização."` | Ler ou gravar instruções dos agentes do comitê sem o recurso habilitado. |
+| `404` | `"Recurso não encontrado."` | Rotas de Onboarding (cadastros e solicitações), autorização de SCR, correspondentes, Clicksign, marca e envio próprios e sincronização com o HubSpot, sem o módulo correspondente. |
 
 ---
 
@@ -75,15 +76,22 @@ A rota existe, mas a sua organização não tem o módulo. O `403` é proposital
 | Código | Mensagem | Causa |
 |---|---|---|
 | `404` | `"Relatório não encontrado"` | ID inexistente **ou de outra organização**. O 404 é proposital, para não revelar a existência de relatórios de terceiros. |
-| `404` | `"Seção não encontrada"` | A seção não existe nesse relatório. |
+| `404` | `"Relatório não encontrado."` | Mesma causa, na leitura de pareceres (`GET /report/{id}/insights`) e na exportação assíncrona. |
+| `404` | `"Seção não encontrada"` | O `sectionType` é válido, mas a seção não existe nesse relatório. |
 | `404` | `"Tipo de seção não encontrado"` | O `sectionType` informado não é um tipo válido. |
-| `400` | `"Sessão ainda não finalizada. Aguarde finalizar..."` | O relatório ainda está processando. |
+| `404` | `"O relatório não foi encontrado."` | `POST /report/analyze` com um `id` inexistente. |
+| `400` | `"O relatório já foi analisado."` | `POST /report/analyze` num relatório que já tem decisão. Para trocar a decisão, use `POST /report/re-analyze`. |
+| `400` | `"Você precisa inserir um CNPJ ou CPF válido."` | `document` com dígito verificador inválido na criação do relatório. |
+| `400` | `"Você precisa inserir um status de relatório válido."` | `statusValue` fora de `PENDING`, `APPROVED` ou `REJECTED` na listagem. |
+| `400` | `"O identificador informado em \"id\" não é válido."` | O `id` da URL não é um ObjectId (24 caracteres hexadecimais). |
+| `503` | `"Não foi possível iniciar a análise do relatório. Tente novamente em alguns instantes."` | A análise não pôde ser enfileirada. O relatório já foi criado: quando existir, o `reportId` vem no corpo do erro. Consulte esse relatório antes de recriar. |
 
 ### Exportação
 
 | Código | Mensagem | Causa |
 |---|---|---|
-| `400` | `"type must be one of the following values: REPORT, REPORT_MINIFIED,type should not be empty"` | **Verificado.** O parâmetro `type` é obrigatório. Use `type=REPORT`. |
+| `400` | `"type must be one of the following values: REPORT, REPORT_MINIFIED,type should not be empty"` | O parâmetro `type` é obrigatório. Use `type=REPORT`. |
+| `400` | `"exportFormat must be one of the following values: pdf, excel, both"` | `exportFormat` fora dos valores aceitos. |
 
 <Note>
   As rotas de exportação respondem **`202 Accepted`**, não `200`. Ver [Exportar Relatório](/api-reference/report/get-reportexport).
@@ -95,7 +103,10 @@ A rota existe, mas a sua organização não tem o módulo. O `403` é proposital
 
 | Código | Mensagem | Causa |
 |---|---|---|
-| `400` | `"Política não está habilitada para ser utilizada"` | A política existe mas está inativa. |
+| `400` | `"policyId not defined"` | `POST /v2/report` sem `policyId`. |
+| `400` | `"Política não está habilitada para ser utilizada"` | O `policyId` não existe ou a política não está habilitada para a sua organização. |
+| `400` | `"Esta política é de esteira: rode a esteira que a usa."` | `POST /v2/report` com uma política de esteira. Use uma política de relatório (`usage: REPORT`). |
+| `422` | `"The provided document does not match the selected policy"` | CPF enviado para uma política de CNPJ, ou o contrário. |
 | `400` | `"Não existe política de crédito associada"` | O relatório foi criado sem política. |
 | `400` | `"A política encontrou um erro ao ser processada."` | Falha na avaliação das regras. |
 | `404` | `"Política não encontrada."` | `policyId` inexistente ou removido. |

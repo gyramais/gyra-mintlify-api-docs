@@ -10,7 +10,7 @@ openapi: get /webhook/findBy
 
 ### Quando usar
 
-Use este endpoint para consultar o webhook ativo por ID (ou pelo contexto da organização). Você pode usar para auditoria de configuração, troubleshooting de entrega de eventos ou validação antes de atualizar/remover um webhook.
+Use esta rota para listar os webhooks cadastrados na sua organização: tipo, URL e `apiKey` de cada um. Serve para auditar a configuração antes de criar ou remover um webhook.
 
 ### Autenticação
 
@@ -20,12 +20,14 @@ Bearer JWT no header `Authorization`.
 
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
-| `webhookId` | `query` | `string` | `não` | Webhook Id, If you do not add the webhookId, the organizationId extracted from the token is used as a search. |
+| `webhookId` | `query` | `string` | não | ID de um webhook. Sem o parâmetro, a resposta traz todos os webhooks da organização do token. |
+
+A resposta é sempre um array, mesmo com `webhookId`. Se a consulta falhar, a resposta é `200` sem corpo.
 
 <RequestExample>
 
 ```bash cURL
-curl --location 'https://gyra-core.gyramais.com.br/webhook/findBy'
+curl --location 'https://gyra-core.gyramais.com.br/webhook/findBy' \
 --header 'Authorization: Bearer {seu_token_jwt}'
 ```
 
@@ -63,7 +65,7 @@ print(response.json())
     "updatedAt": "2025-06-18T23:48:24.706Z",
     "organizationId": "6612a7f3fa9e086b00000000",
     "type": "REPORT_FINISHED",
-    "url": "https://exemplo.gyramais.com.br/arquivo",
+    "url": "https://seu-sistema.com/webhooks/gyra",
     "apiKey": null
   },
   {
@@ -72,7 +74,7 @@ print(response.json())
     "updatedAt": "2025-08-26T17:00:37.398Z",
     "organizationId": "6612a7f3fa9e086b00000000",
     "type": "REPORT_FINISHED",
-    "url": "https://exemplo.gyramais.com.br/arquivo",
+    "url": "https://seu-sistema.com/webhooks/gyra",
     "apiKey": null
   }
 ]

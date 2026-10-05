@@ -34,7 +34,7 @@ O fechamento externo é a chamada que o seu sistema faz quando o crédito foi li
 
 Se a etapa tem prazo e ele vence sem a sua chamada, a espera passa a um analista. Até o analista decidir, você ainda pode fechar pela API.
 
-Os dados do fechamento ficam disponíveis para as etapas seguintes nas variáveis `fechamento.referencia`, `fechamento.data` e `fechamento.documento`.
+Os dados do fechamento ficam disponíveis para as etapas seguintes nas variáveis `fechamento.referencia`, `fechamento.documento`, `fechamento.data` (número de série de data, como nas planilhas) e `fechamento.data_texto` (`AAAA-MM-DD`).
 
 ---
 
@@ -104,7 +104,7 @@ curl -X POST https://gyra-core.gyramais.com.br/operation/close \
 <ResponseField name="proposalId" type="string | null">Proposta ligada à execução, quando há.</ResponseField>
 <ResponseField name="referenceId" type="string">Número do contrato informado, sem espaços e em maiúsculas.</ResponseField>
 <ResponseField name="contractNumber" type="string">Número do contrato da operação depois do fechamento.</ResponseField>
-<ResponseField name="document" type="string">Documento só com dígitos.</ResponseField>
+<ResponseField name="document" type="string">Documento sem máscara. CNPJ alfanumérico sai em maiúsculas.</ResponseField>
 <ResponseField name="date" type="string">Data do fechamento, `AAAA-MM-DD`.</ResponseField>
 <ResponseField name="closedAt" type="string">Quando o fechamento foi registrado. Na repetição, é o do primeiro fechamento.</ResponseField>
 <ResponseField name="executionStatus" type="string">Situação da execução depois do fechamento, por exemplo `APPROVED` quando terminou, ou `PENDING` quando ainda há etapas rodando.</ResponseField>
@@ -133,10 +133,12 @@ Quando mais de uma execução casa, a resposta é `409` com os ids na mensagem. 
 | --- | --- | --- |
 | `400` | `"Informe o número do contrato (referenceId, ccbNumber ou externalId)."` | Envie um dos três campos |
 | `400` | `"referenceId, ccbNumber e externalId são o mesmo número do contrato: informe só um, ou todos com o mesmo valor."` | Mande um só campo |
+| `400` | `"O número do contrato deve ser um texto."` | Envie o número como texto ou número JSON |
 | `400` | `"O número do contrato deve ter no máximo 100 caracteres."` | Encurte o número |
 | `400` | `"Informe o CPF ou o CNPJ do tomador."` | Envie `document` |
 | `400` | `"Informe o CPF ou o CNPJ do tomador (11 ou 14 caracteres, com ou sem máscara)."` | Confira a quantidade de caracteres do documento |
 | `400` | `"Documento inválido."` | `document` com mais de 30 caracteres |
+| `400` | `"Informe a data do fechamento (AAAA-MM-DD)."` | `date` ausente ou que não é texto |
 | `400` | `"Informe a data do fechamento no formato AAAA-MM-DD (ex.: 2026-09-21)."` | Corrija o formato ou use uma data que existe |
 | `400` | `"O operationId informado não é um id válido."` | Use o id de 24 caracteres da execução |
 | `404` | `"Nenhuma operação aguardando fechamento externo foi encontrada para esse número de contrato e documento."` | Confira número e documento. A execução pode não ter chegado à formalização |

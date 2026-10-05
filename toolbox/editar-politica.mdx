@@ -35,12 +35,12 @@ lang: nao-tecnica
 
     O menu **Configurar política**, à esquerda, tem as seis etapas. Tudo que pode ser editado:
 
-    - **Fontes de dados**: Relatório base (nível ou **Nenhum**, para camada), bureau de crédito, SCR, e as fontes adicionais **Cenprot** (protestos nacionais, ver [Protestos](/sources/protestos#como-escolher-a-fonte)), **[Núclea](/sources/inteligencia-pagamentos)** (indicadores de transações reais, PJ), as **consultas adicionais** de bureau e os **[Indicadores do SCR](/sources/scr-open-finance#indicadores-do-scr)**, além de **Balanço patrimonial** e **Bases externas**.
+    - **Fontes de dados**: **Onde a política é usada** (**Relatório** ou **Esteira**), Relatório base (nível ou, no uso Esteira, **Nenhum**, para camada), bureau de crédito, SCR, e as fontes adicionais **Cenprot** (protestos nacionais, ver [Protestos](/sources/protestos#como-escolher-a-fonte)), **[Núclea](/sources/inteligencia-pagamentos)** (indicadores de transações reais, PJ), as **consultas adicionais** de bureau e os **[Indicadores do SCR](/sources/scr-open-finance#indicadores-do-scr)**, além de **Balanço patrimonial** e **Bases externas**.
     - **Minhas variáveis**: criar, editar e remover as fórmulas reutilizáveis (`#nome`).
     - **Condições**: adicionar, remover, desabilitar, ajustar campo, operador, valor e o veredito ou a pontuação.
     - **Classificação de risco**: ligar ou desligar a pontuação e ajustar as faixas de score e seus vereditos.
     - **Precificação**: as fórmulas de limite, taxa e prazo. Ver [Precificação](/concepts/precificacao).
-    - **Decisão e alçada**: objetivo da política, decisão automática, quem pode alterar análises e o **Comitê de Crédito IA** (ver abaixo).
+    - **Decisão e inteligência**: objetivo da política, quem pode sobrepor a decisão, **Rota por resultado** e **Quem revisa** (ver abaixo). O **Parecer IA** aparece só como status: quem liga é a GYRA+.
 
     O nome da política fica no cabeçalho. Toda política é de CPF ou de CNPJ; o tipo de documento é imutável depois de criada.
 
@@ -52,6 +52,8 @@ lang: nao-tecnica
   </Step>
   <Step title="Salvar">
     Assim que há alteração, a barra de salvar aparece, com as opções de salvar ou descartar. Ao salvar, a política passa a valer imediatamente: qualquer análise disparada a partir desse momento usa a versão nova.
+
+    Numa política de uso Esteira, depois de salvar, o editor diz em quais esteiras ela está e o que a conferência de cada uma acusou. Uma política usada por esteira ativa não pode ser desativada nem excluída enquanto a esteira estiver ativa.
   </Step>
 </Steps>
 
@@ -61,13 +63,13 @@ lang: nao-tecnica
 
 ## Comitê de Crédito IA
 
-No bloco **Comitê de Crédito IA** você escolhe se o [comitê](/concepts/comite-de-credito) é convocado sozinho ao fim da análise:
+Em **Decisão e inteligência**, **Quem revisa** define o papel do [comitê](/concepts/comite-de-credito) nos resultados que vão para revisão:
 
-- **Não convocar automaticamente**: o comitê só roda pelo botão *Convocar Comitê* dentro do relatório, ou por [`POST /report/{id}/committee`](/api-reference/report/post-reportcommittee). É o modo manual.
-- **Convocar comitê e sugerir decisão**: o comitê roda sozinho e sugere; aprovar ou negar continua com o analista.
-- **Convocar comitê e decisão automática**: o comitê roda sozinho e aplica a decisão no status do relatório.
+- **Analista**: um analista decide. O comitê só roda pelo botão *Convocar Comitê* dentro do relatório, ou por [`POST /report/{id}/committee`](/api-reference/report/post-reportcommittee).
+- **Comitê IA recomenda, analista decide**: o comitê roda sozinho e sugere; aprovar ou negar continua com o analista.
+- **Comitê IA decide**: o comitê roda sozinho e aplica a decisão no status do relatório.
 
-Com *Usar resultado da política no relatório* ativo, o comitê só é convocado quando a política aprova.
+As opções com comitê exigem Parecer IA ativo na política, habilitado pela GYRA+. Em esteiras, quem define o papel do comitê é a etapa Decisão.
 
 ### Instruções adicionais dos agentes
 
@@ -87,7 +89,7 @@ Pontos práticos:
 
 ## Versionamento
 
-A versão sobe **0,01** a cada salvamento que muda algo que afeta a decisão: condições, faixas de risco, fórmulas de preço, fontes de dados e add-ons. Mudanças que não mexem na decisão, como nome, ligar ou desligar, parecer e permissões, salvam sem versão nova. Cada relatório registra a versão da política que rodou, o que permite rastrear qualquer decisão ao conjunto exato de regras vigentes no momento.
+A versão sobe **0,01** a cada salvamento que muda algo que afeta a decisão: condições, faixas de risco, fórmulas de preço, fontes de dados, add-ons, rota por resultado, quem revisa e onde a política é usada. Mudanças que não mexem na decisão, como nome, ligar ou desligar, objetivo, parecer e permissões, salvam sem versão nova. Cada relatório registra a versão da política que rodou, o que permite rastrear qualquer decisão ao conjunto exato de regras vigentes no momento.
 
 Editar ou excluir uma variável sua (`#nome`) sobe, na mesma hora, a versão de **todas as políticas ativas** que usam aquela variável. Pela API, a resposta traz a lista em `policyVersions`, com `policyId`, a versão anterior (`from`) e a nova (`to`). Se a política que você está editando é uma delas, o editor acompanha a versão nova e o seu próximo salvamento funciona normalmente.
 

@@ -14,19 +14,19 @@ lang: nao-tecnica
 
 ## Papéis disponíveis
 
-| Papel | Roda análise | Cria e edita política | Monta esteira | Gerencia usuários | Relatórios visíveis |
-| ----- | :---: | :---: | :---: | :---: | :---: |
-| **Administrador** | Sim | Sim | Sim | Sim | Todos da organização |
-| **Gestor de Crédito** | Sim | Sim | Sim | Sim | Todos da organização |
-| **Coordenador de Crédito** | Sim | Não | Não | Sim (analistas) | Todos da organização |
-| **Analista de Crédito** | Sim | Não | Não | Não | Apenas os próprios |
-| **Financeiro** | Não | Não | Não | Não | Nenhum |
+| Papel | Roda análise | Cria e edita política | Monta esteira | Gerencia usuários | Plano e consumo | Relatórios visíveis |
+| ----- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Administrador** | Sim | Sim | Sim | Sim | Sim | Todos da organização |
+| **Gestor de Crédito** | Sim | Sim | Sim | Sim | Não | Todos da organização |
+| **Coordenador de Crédito** | Sim | Não | Não | Sim (analistas) | Não | Todos da organização |
+| **Analista de Crédito** | Sim | Não | Não | Não | Não | Apenas os próprios |
+| **Financeiro** | Não | Não | Não | Não | Sim | Nenhum |
 
 Cada papel só cria e edita usuários de papéis abaixo dele: o coordenador cuida de analistas, o gestor de crédito de coordenadores e analistas, e o administrador de todos.
 
 ## O que cada papel faz em cada área
 
-A tabela vale dentro dos módulos que a organização contratou. Sem o módulo, a área não abre para ninguém (veja [Módulos e capacidades](/plataforma/modulos-e-capacidades)).
+A tabela vale dentro dos módulos que a organização contratou. Sem o módulo, a área não abre para ninguém (veja [Módulos e capacidades](/plataforma/modulos-e-capacidades)). O Financeiro não roda análise: a área dele é **Plano e consumo**, no grupo **Conta** do menu.
 
 | Área | Administrador | Gestor de Crédito | Coordenador e Analista |
 | --- | :---: | :---: | :---: |
@@ -38,13 +38,14 @@ A tabela vale dentro dos módulos que a organização contratou. Sem o módulo, 
 | **Produtos** e carteiras: configurar | Sim | Sim | Não |
 | **Modelos de contrato**: consultar | Sim | Sim | Sim |
 | **Modelos de contrato**: editar e publicar | Sim | Não | Não |
-| **Correspondentes** | Sim | Não | Não |
+| **Correspondentes**: entrada do canal, credenciamento e atendentes | Sim | Não | Não |
+| **Plano e consumo** | Sim | Não | Não |
 | **Configurações** da organização: Fontes de dados, Exportação, Integrações, Marca, Envio, API & MCP | Sim | Não | Não |
 | **Usuários** | Sim | Sim | Só o coordenador, para analistas |
 
 ### Onboarding
 
-Quem tem o módulo [Onboarding](/kyc/visao-geral) ganha estas ações, distribuídas assim:
+Quem tem o módulo [Onboarding](/onboarding/visao-geral) ganha estas ações, distribuídas assim:
 
 | Ação | Quem pode |
 | --- | --- |
@@ -53,9 +54,9 @@ Quem tem o módulo [Onboarding](/kyc/visao-geral) ganha estas ações, distribu�
 | Ver a Validação de identidade | Todos os papéis que rodam análise |
 | Pausar a renovação de um cadastro | Todos os papéis que rodam análise |
 | Editar a régua de validação | Todos os papéis que rodam análise |
-| Configurar marca, domínio e canais de envio | Administrador, Owner e Superuser |
-| Gerar e revogar credenciais de API, cadastrar webhooks | Administrador, Owner e Superuser |
-| **Remover cadastro** | Administrador, Owner, Superuser e Gestor de Crédito |
+| Configurar marca, domínio e canais de envio | Administrador |
+| Gerar e revogar credenciais de API, cadastrar webhooks | Administrador |
+| **Remover cadastro** | Administrador e Gestor de Crédito |
 
 <Note>
   **Editar a régua acompanha "rodar análise"**, e não a permissão de configurações: qualquer perfil que gere relatório publica uma versão nova da régua. Se isso não é o que a sua operação quer, o controle hoje é de processo, não de permissão.

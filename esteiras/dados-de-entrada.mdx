@@ -25,7 +25,7 @@ Não existe tela para digitar dados de entrada. Eles se formam sozinhos a partir
 | Grupo | Origem | Exemplo |
 | --- | --- | --- |
 | **Proposta** | Campos da [proposta](/propostas/visao-geral) | Valor e prazo pedidos, produto |
-| **Formulário** | Respostas de [formulários](/kyc/formularios) enviados numa solicitação | Renda mensal declarada |
+| **Formulário** | Respostas de [formulários](/onboarding/formularios) enviados numa solicitação | Renda mensal declarada |
 | **Documentos** | Campos extraídos dos documentos do cadastro | Data de validade de uma certidão |
 | **Verificações** | Resultado das verificações, como a de identidade | Identidade confirmada |
 
@@ -73,11 +73,11 @@ Os dados também podem ir no pedido de uma [Chamada de API](/esteiras/chamada-de
 
 ### Dado sem valor
 
-Se o dado existe no catálogo mas veio vazio (ou fora do tipo), a fórmula que depende dele falha com "Variável X sem valor", em vez de assumir zero ou texto vazio. Numa condição **Executar quando**, a etapa é pulada com esse motivo. Isso evita uma decisão tomada em silêncio sobre um dado que não chegou.
+Se o dado existe no catálogo mas veio vazio (ou fora do tipo), ele entra na fórmula como o erro `#N/A`, em vez de zero ou texto vazio. Você pode tratá-lo com `IFNA` ou `IFERROR`. Sem tratamento, a fórmula falha com "Variável X sem valor". Numa condição **Executar quando**, a execução para em erro com esse motivo, em vez de pular a etapa. Isso evita uma decisão tomada em silêncio sobre um dado que não chegou.
 
 ## Na política de crédito
 
-Os dados de entrada também viram variáveis nas regras da [política de crédito](/concepts/politica-de-credito). No editor de regras, cada um aparece como **Dado de entrada: Rótulo**.
+Os dados de entrada também viram variáveis nas regras da [política de crédito](/concepts/politica-de-credito) de uso **Esteira**. No editor de regras, cada um aparece como **Dado de entrada: Rótulo**, e o campo de formulário também entra nas **Condições** como regra própria, sem precisar de fórmula. A política de uso **Relatório** não oferece dados de entrada: fora da esteira, eles não chegam.
 
 | Tipo do dado | Tipo na regra |
 | --- | --- |
@@ -91,6 +91,7 @@ Regras para ter em mente:
 - **Dado ausente vira erro, não aprovação.** Sem valor, a regra é marcada como erro ("Indisponível") e o desfecho segue a configuração de erro da regra.
 - **Fórmula não mistura origens.** Uma regra de fórmula que combina dado de entrada com dado de outra fonte é recusada ao salvar: "Fórmulas com dados de entrada ainda não podem ser combinadas com variáveis de outras fontes. Separe em regras diferentes."
 - **Só na política de análise.** Numa camada de aprofundamento, a regra de dado de entrada termina em erro, porque o dado não é reenviado depois que o relatório nasce. Use a regra na política da Análise.
+- **Só no titular.** Uma política que usa dados de formulário não pode ser usada numa etapa Vínculos: "Dados de formulário só existem para o titular; a política "X" não pode ser usada em Vínculos."
 - **A política só espera o dado quando precisa.** Se nenhuma regra usa dados de entrada, a análise não espera por eles.
 - Uma variável de dado de entrada nunca é apagada. Se a chave some do catálogo, a variável fica indisponível.
 

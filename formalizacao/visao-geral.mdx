@@ -20,14 +20,14 @@ A formalização transforma um crédito aprovado em contrato assinado, sem Word 
 
 ## Onde a formalização entra na esteira
 
-Uma esteira tem três fases: análise, decisão e formalização. Revisão, Comitê e Alçada vivem antes. A formalização só começa depois do resultado de crédito, e só quando ele saiu **aprovado** ou **em alerta**. Crédito reprovado não chega aqui.
+Uma esteira tem três fases: análise, decisão e formalização. Revisão, Comitê e Alçada vivem antes. A formalização é a parte da esteira que vem depois da Decisão. Ela só começa depois do resultado de crédito, e só quando ele saiu **aprovado** ou **em alerta**. Crédito reprovado não chega aqui, inclusive quando a proposta é recusada antes da Decisão (num Checkpoint, no Enquadramento de produto ou na revisão da Pré-aprovação).
 
 | Etapa | O que faz | Só existe na formalização? |
 | --- | --- | --- |
 | **Solicitação** | Pede ao cliente documentos, formulário ou dados que faltam para o contrato | Não |
 | **Integração** | Envia o pedido ao BNDES Online ou chama uma API sua ([Chamada de API](/esteiras/chamada-de-api)) | Os conectores do BNDES, sim |
 | **Contrato e assinatura** | Escolhe o modelo, gera o contrato e colhe as assinaturas | Sim |
-| **Fechamento externo** | Espera o seu sistema dizer que a operação foi liberada | Sim |
+| **Aguardar fechamento externo** | Espera o seu sistema dizer que a operação foi liberada | Sim |
 
 O catálogo completo de etapas, com a configuração de cada uma, está em [Etapas](/esteiras/etapas).
 
@@ -116,13 +116,13 @@ Os modelos de contrato e a política de partes são configurados no toolbox. Ele
 
 ## Cobrança
 
-Não há item de cobrança próprio do contrato. A assinatura pela Assinatura Gyra é cobrada por parte que assinou, como evento de assinatura do módulo de Cadastros e Solicitações. A assinatura pela Clicksign é paga pela sua organização direto na sua conta Clicksign.
+Não há item de cobrança próprio do contrato. A assinatura pela Assinatura Gyra é cobrada por parte que assinou, como evento de assinatura do módulo Onboarding. A assinatura pela Clicksign é paga pela sua organização direto na sua conta Clicksign.
 
 ## Contrato e termo não são a mesma coisa
 
 A plataforma tem dois jeitos de colher assinatura, e eles resolvem problemas diferentes.
 
-| | [Termos e assinatura](/kyc/termos-e-assinatura) | Formalização |
+| | [Termos e assinatura](/onboarding/termos-e-assinatura) | Formalização |
 | --- | --- | --- |
 | O que é | Termo avulso: consentimento, autorização, declaração | Contrato de crédito: CCB, contrato, aditivo |
 | Modelo | Markdown no editor ou PDF com campos posicionados | O seu Word (.docx), com variáveis, repetições e condições |

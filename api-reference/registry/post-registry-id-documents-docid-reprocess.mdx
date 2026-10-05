@@ -20,6 +20,13 @@ Sem `stages`, roda o pipeline inteiro. Com um subconjunto de `CLASSIFY`, `EXTRAC
 
 `forceType` corrige uma classificação errada. Como ele afirma o tipo, a conferência `EXPECTED_TYPE_MATCH` sai `SKIP` naquela tentativa.
 
+### Dois limites
+
+- Documento que um operador já decidiu responde `409`. Mande `overrideFeedback: true` para substituir a decisão pelo parecer novo.
+- Cada documento aceita até 5 tentativas. Depois disso, a resposta é `429` com `Limite de reprocessamentos atingido.`
+
+A resposta `202` traz `documentId`, `status` (`RECEIVED`) e `attempt`, a tentativa que acabou de começar.
+
 <Note>
-  Contexto e vocabulário em [Análise documental](/kyc/analise-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/kyc/visao-geral).
+  Contexto e vocabulário em [Análise documental](/onboarding/analise-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/onboarding/visao-geral).
 </Note>
