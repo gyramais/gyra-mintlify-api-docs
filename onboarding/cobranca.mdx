@@ -1,0 +1,95 @@
+---
+title: "O que é cobrado"
+description: "Os eventos de consumo do módulo de cadastros e solicitações: o que entra na fatura, o que não entra, e por quê."
+icon: "receipt"
+surface: plataforma
+domain: cadastro
+audience: ambos
+lang: nao-tecnica
+---
+
+<Info>
+  **Resumo:** a regra que cabe numa frase é **você paga por documento analisado, não por arquivo enviado**. Abaixo estão os dez eventos de consumo do módulo, com a regra exata de cada um. O preço de cada evento é o do seu contrato; esta página diz **quando** ele é contado.
+</Info>
+
+## Os eventos
+
+| Evento | Unidade | Quando conta |
+| --- | --- | --- |
+| `DOCUMENT_VALIDATION` | Por documento | O pipeline fechou com parecer |
+| `IDENTITY_VERIFICATION` | Por verificação | A verificação com documento terminou, com qualquer veredito |
+| `IDENTITY_VERIFICATION_NO_DOCUMENT` | Por verificação | A verificação sem documento terminou |
+| `IDENTITY_EMAIL` | Por pessoa | O Valida+ resolveu, ou desistiu do e-mail e escalou |
+| `SIGNATURE` | Por parte que assinou | A assinatura foi registrada |
+| `CONSENT_SCR` | Por aceite | O termo de **SCR** foi aceito |
+| `FORM_SUBMISSION` | Por formulário | O formulário foi respondido |
+| `DELIVERY_EMAIL` | Por e-mail que saiu | Convite ou lembrete entregue |
+| `DELIVERY_WHATSAPP` | Por mensagem que saiu | Convite ou lembrete entregue |
+| `REGISTRY_BASIC_DATA` | Por cadastro, por dia | Consulta dos dados oficiais do CNPJ/CPF |
+
+## Documento analisado
+
+Conta quando o documento chega num terminal **com parecer**:
+
+| Status | Conta? | Por quê |
+| --- | :---: | --- |
+| `VALIDATED` | sim | Com qualquer veredito. Reprovar um contrato social é o trabalho, não a falha dele: o parecer que diz "está inválido, por isto" é exatamente o que se comprou |
+| `MANUAL_REVIEW` | sim | O pipeline rodou inteiro e produziu parecer, só que pedindo olho humano |
+| `FAILED` | **não** | Erro técnico nosso |
+| `OUT_OF_SCOPE` | **não** | Paramos cedo e não entregamos análise |
+| `REJECTED_QUALITY` | **não** | Idem: foto ilegível não vira crédito consumido |
+
+<Tip>
+  **Reprocessar não cobra de novo.** A chave de cobrança é o documento, não a tentativa: reprocessar (por decisão sua ou por falha nossa) roda a IA outra vez, e isso é problema nosso.
+</Tip>
+
+O documento é cobrado **num lugar só**. Ele entra no cadastro tanto por uma solicitação quanto pela tela do operador, e a cobrança acontece quando o pipeline fecha, nos dois caminhos. Quem usa coleta não paga duas vezes pelo mesmo arquivo.
+
+## Verificação de identidade
+
+Com documento e sem documento são **dois produtos**, não um com variação: custam diferente e valem diferente.
+
+Ambos contam no terminal, **com qualquer veredito**. O provedor cobra de nós mesmo quando a resposta é "não é a mesma pessoa", e é justamente essa a resposta que vale dinheiro para você.
+
+O que decide qual dos dois foi é o que **de fato rodou**: um item marcado como sem documento que caiu no fluxo com documento (porque a base não reconheceu o CPF) conta como verificação com documento.
+
+### Valida+
+
+Conta uma vez por pessoa, em um de dois desfechos mutuamente exclusivos:
+
+- a pessoa **confirmou** o código; ou
+- o fluxo **desistiu** do e-mail e escalou para o face match.
+
+<Note>
+  Quando o Valida+ não resolve e cai no face match, **os dois entram na conta**. Pagamos a consulta de bureau de qualquer jeito, e a tentativa por e-mail é o que evita o face match na maioria das vezes.
+</Note>
+
+Não contam: listar os candidatos (é meio de tela), enviar o código (pedido sem desfecho, e reenvio somaria uma cobrança por tentativa) e código errado (não produziu resposta nenhuma).
+
+Num documento com várias partes, cada parte que confere o próprio código gera a própria cobrança.
+
+## Assinatura
+
+A unidade é a **parte que assinou**, não o documento: num contrato conjunto com três sócios, o trabalho (e a via) são três.
+
+## Consentimento
+
+Só o consentimento de **SCR** entra. Aceite de termo comum da sua organização não é produto: não custa nada e não se cobra por ele.
+
+## Envio de mensagem
+
+Um evento por **canal que saiu de verdade**. Não contam:
+
+- a tentativa que falhou;
+- o envio simulado de ambiente de desenvolvimento;
+- o aviso interno para a sua própria equipe, que não é entrega ao destinatário.
+
+Convite e lembrete contam igual: os dois são mensagem entregue.
+
+## Dados oficiais do cadastro
+
+Uma consulta por cadastro **por dia**. Atualizar os dados básicos do mesmo cadastro duas vezes no mesmo dia é um consumo só.
+
+## Como acompanhar
+
+Cada evento carrega uma chave de idempotência determinística, então redelivery, retentativa e reprocessamento nunca dobram a conta. O consumo fica no ledger da plataforma, referenciado ao cadastro, ao documento, à solicitação e ao item que o originou.

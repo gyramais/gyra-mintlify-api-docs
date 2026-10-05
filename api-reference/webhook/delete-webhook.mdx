@@ -10,7 +10,7 @@ openapi: delete /webhook/{id}
 
 ### Quando usar
 
-Use este endpoint para desativar um webhook existente. Você pode usar quando trocar URL de integração, encerrar uma automação ou interromper recebimento de eventos em um destino antigo.
+Use esta rota para remover um webhook, por exemplo ao trocar a URL de destino. A remoção é definitiva e a URL para de receber eventos. Para trocar a URL, remova e cadastre de novo em [Criar Webhook](/api-reference/webhook/post-webhook).
 
 ### Autenticação
 
@@ -20,17 +20,19 @@ Bearer JWT no header `Authorization`.
 
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
-| `id` | `path` | `string` | `sim` | Webhook Id |
+| `id` | `path` | `string` | sim | ID do webhook, de [Consultar Webhook](/api-reference/webhook/get-webhookfindby). |
+
+A resposta traz o webhook removido.
 
 <RequestExample>
 
 ```bash cURL
-curl --location 'https://gyra-core.gyramais.com.br/webhook/{id}' \
+curl --location --request DELETE 'https://gyra-core.gyramais.com.br/webhook/6612a7f32f90990d00000000' \
 --header 'Authorization: Bearer {seu_token_jwt}'
 ```
 
 ```javascript JavaScript
-fetch("https://gyra-core.gyramais.com.br/webhook/{id}", {
+fetch("https://gyra-core.gyramais.com.br/webhook/6612a7f32f90990d00000000", {
   method: "DELETE",
   headers: {
     "Authorization": "Bearer {seu_token_jwt}",
@@ -43,7 +45,7 @@ fetch("https://gyra-core.gyramais.com.br/webhook/{id}", {
 ```python Python
 import requests
 
-url = "https://gyra-core.gyramais.com.br/webhook/{id}"
+url = "https://gyra-core.gyramais.com.br/webhook/6612a7f32f90990d00000000"
 headers = {
   "Authorization": "Bearer {seu_token_jwt}"
 }

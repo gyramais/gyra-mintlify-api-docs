@@ -1,0 +1,227 @@
+---
+title: "Enviar Balanço e DRE por upload direto"
+description: "Envia os PDFs do balanço e da DRE direto para o armazenamento, em dois passos, e dispara a mesma extração do envio multipart."
+surface: api
+domain: relatorio
+audience: integrador
+lang: tecnica
+---
+
+O upload direto manda o PDF do seu sistema para o armazenamento da GYRA+ sem passar pela API. Pela API trafega só JSON pequeno: um pedido de URL antes e uma confirmação depois.
+
+<Info>
+  Exige a permissão `can-generate-report`. O resultado é o mesmo de [Enviar Balanço e DRE](/api-reference/report/post-report-financial-tab): mesmas seções, mesmo e-mail, mesma forma de acompanhar.
+</Info>
+
+```
+POST /report/{id}/financial-tab/presign
+PUT  <uploadUrl>
+POST /report/{id}/financial-tab/complete
+```
+
+### Quando usar
+
+Use o upload direto para arquivos grandes, como balancetes assinados perto do limite de 50 MB: o arquivo vai do seu sistema direto ao armazenamento, sem passar pela API. Para arquivos pequenos, o envio em uma chamada só, em [`POST /report/{id}/financial-tab`](/api-reference/report/post-report-financial-tab), continua valendo.
+
+### Limites
+
+| Regra | Valor |
+| --- | --- |
+| Formato | Somente PDF. O nome precisa terminar em `.pdf` e o conteúdo precisa começar com `%PDF-` |
+| Tamanho por arquivo | 50 MB |
+| Arquivos por lote | De 1 a 10 |
+| Validade da URL de upload | 15 minutos (`expiresInSeconds: 900`) |
+| Relatório | Precisa ser da sua organização |
+
+<Steps>
+  <Step title="Peça as URLs de upload">
+    Informe nome e tamanho de cada arquivo. Você recebe uma URL de upload e uma `key` por arquivo.
+  </Step>
+  <Step title="Envie cada PDF com PUT">
+    Um `PUT` por arquivo, na `uploadUrl` recebida, com os headers exatos descritos abaixo.
+  </Step>
+  <Step title="Confirme o lote">
+    Envie as `key` do lote. A GYRA+ valida cada arquivo e dispara a extração.
+  </Step>
+</Steps>
+
+### Passo 1: pedir as URLs
+
+`POST /report/{id}/financial-tab/presign`
+
+| Campo | Tipo | Obrigatório | Regra |
+| --- | --- | --- | --- |
+| `files` | `array` | sim | De 1 a 10 itens, um por arquivo |
+| `files[].name` | `string` | sim | De 1 a 255 caracteres, terminando em `.pdf` |
+| `files[].size` | `integer` | sim | Tamanho exato do arquivo em bytes, de 1 a 52428800 (50 MB) |
+
+<CodeGroup>
+```bash cURL
+curl --request POST 'https://gyra-core.gyramais.com.br/report/6612a7f3a19b467000000000/financial-tab/presign' \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "files": [
+      { "name": "balanco-2025.pdf", "size": 2483017 },
+      { "name": "dre-2025.pdf", "size": 912455 }
+    ]
+  }'
+```
+
+```json Resposta 200
+[
+  {
+    "key": "presigned/balanco-2025-3f2b9c1e-7a4d-4e8b-9c21-5d0e6f7a8b90.pdf",
+    "uploadUrl": "https://...url-assinada...",
+    "expiresInSeconds": 900
+  },
+  {
+    "key": "presigned/dre-2025-a1c4e2f9-0b3d-4c6e-8f17-2e9d4b5a6c03.pdf",
+    "uploadUrl": "https://...url-assinada...",
+    "expiresInSeconds": 900
+  }
+]
+```
+</CodeGroup>
+
+A resposta vem na mesma ordem de `files`. Guarde cada `key`: é ela, e nunca a URL, que vai na confirmação.
+
+### Passo 2: enviar o arquivo
+
+Faça um `PUT` com o conteúdo do PDF na `uploadUrl`, sem o header `Authorization`. A assinatura da URL amarra dois headers, e o armazenamento recusa o envio se eles não baterem:
+
+| Header | Valor exigido |
+| --- | --- |
+| `Content-Type` | `application/pdf`, exatamente |
+| `Content-Length` | O mesmo número de bytes informado em `size` no passo 1 |
+
+<CodeGroup>
+```bash cURL
+curl --request PUT "$UPLOAD_URL" \
+  --header 'Content-Type: application/pdf' \
+  --upload-file /caminho/balanco-2025.pdf
+```
+</CodeGroup>
+
+O `curl --upload-file` envia o `Content-Length` com o tamanho real do arquivo. Se você declarou outro valor em `size`, ou mandou outro `Content-Type`, o armazenamento responde com erro e o arquivo não é gravado: peça uma URL nova no passo 1. Uma URL vencida (mais de 15 minutos) também exige pedir outra.
+
+### Passo 3: confirmar o lote
+
+`POST /report/{id}/financial-tab/complete`
+
+| Campo | Tipo | Obrigatório | Regra |
+| --- | --- | --- | --- |
+| `keys` | `string[]` | sim | De 1 a 10 `key` recebidas no passo 1 |
+
+A confirmação confere cada arquivo no armazenamento: se existe, se tem até 50 MB e se começa com `%PDF-`. Só depois que **todas** passam a extração é disparada, com os arquivos do lote consolidados na mesma análise.
+
+<Warning>
+  O lote é tudo ou nada. Se uma `key` falha, as que já tinham sido confirmadas nesta chamada são desfeitas e nada é processado. Um arquivo reprovado na validação é apagado do armazenamento: refaça os passos 1 e 2 para ele antes de confirmar de novo.
+</Warning>
+
+<CodeGroup>
+```bash cURL
+curl --request POST 'https://gyra-core.gyramais.com.br/report/6612a7f3a19b467000000000/financial-tab/complete' \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "keys": [
+      "presigned/balanco-2025-3f2b9c1e-7a4d-4e8b-9c21-5d0e6f7a8b90.pdf",
+      "presigned/dre-2025-a1c4e2f9-0b3d-4c6e-8f17-2e9d4b5a6c03.pdf"
+    ]
+  }'
+```
+
+```json Resposta 200 (resumida)
+{
+  "id": "6612a7f3a19b467000000000",
+  "document": "11222333000181",
+  "name": "EMPRESA EXEMPLO LTDA",
+  "organizationId": "6612a7f3fa9e086b00000000",
+  "integrationTypes": ["...", "GYRA_BALANCE_SHEET"],
+  "reportProgress": {
+    "isFinalized": false,
+    "finalizedAt": null
+  },
+  "sections": [
+    {
+      "id": "6612a7f3a19b467000000201",
+      "type": {
+        "id": "6612a7f3625ea4ab00000001",
+        "title": "Balanço patrimonial",
+        "value": "BALANCE_SHEET"
+      },
+      "selectedIntegrations": ["GYRA_BALANCE_SHEET"],
+      "errors": []
+    }
+  ]
+}
+```
+</CodeGroup>
+
+A resposta é o relatório, igual à do envio multipart. A chamada é assíncrona: o `200` quer dizer "arquivos aceitos e enfileirados". Para saber quando os dados ficam prontos e onde lê-los, veja [O que acontece depois](/api-reference/report/post-report-financial-tab#o-que-acontece-depois) e [Como saber que terminou](/api-reference/report/post-report-financial-tab#como-saber-que-terminou).
+
+### Exemplo ponta a ponta
+
+<CodeGroup>
+```bash Shell
+TOKEN='<token>'
+REPORT_ID='6612a7f3a19b467000000000'
+ARQUIVO='/caminho/balanco-2025.pdf'
+BASE='https://gyra-core.gyramais.com.br'
+
+# 1. Pede a URL, informando o tamanho exato em bytes
+SIZE=$(wc -c < "$ARQUIVO" | tr -d ' ')
+PRESIGN=$(curl -s --request POST "$BASE/report/$REPORT_ID/financial-tab/presign" \
+  --header "Authorization: Bearer $TOKEN" \
+  --header 'Content-Type: application/json' \
+  --data "{\"files\":[{\"name\":\"balanco-2025.pdf\",\"size\":$SIZE}]}")
+
+KEY=$(echo "$PRESIGN" | jq -r '.[0].key')
+UPLOAD_URL=$(echo "$PRESIGN" | jq -r '.[0].uploadUrl')
+
+# 2. Envia o PDF direto para o armazenamento (sem Authorization)
+curl -s --fail --request PUT "$UPLOAD_URL" \
+  --header 'Content-Type: application/pdf' \
+  --upload-file "$ARQUIVO"
+
+# 3. Confirma e dispara a extração
+curl -s --request POST "$BASE/report/$REPORT_ID/financial-tab/complete" \
+  --header "Authorization: Bearer $TOKEN" \
+  --header 'Content-Type: application/json' \
+  --data "{\"keys\":[\"$KEY\"]}"
+```
+</CodeGroup>
+
+### Erros
+
+Todas as respostas de erro da API seguem o formato `{ "code": 400, "message": "..." }`.
+
+**Nos dois passos da API**
+
+| Código | Mensagem | Quando |
+| --- | --- | --- |
+| `401` | `Token de acesso inválido.` | Token ausente, expirado ou inválido |
+| `403` | `Você não tem permissão para acessar este recurso.` | O usuário não tem `can-generate-report` |
+| `404` | `Relatório não encontrado` | Relatório inexistente ou de outra organização. A checagem vem antes de gerar URL ou confirmar arquivo |
+
+**Passo 1 (`presign`)**
+
+| Código | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `files.0.Apenas arquivos PDF são aceitos.` | O nome não termina em `.pdf`. O número indica a posição do arquivo em `files` |
+| `400` | `files.0.Arquivo maior que 50MB.` | `size` acima de 52428800 |
+| `400` | `files must contain at least 1 elements` | `files` vazio |
+| `400` | `files must contain no more than 10 elements` | Mais de 10 arquivos |
+
+**Passo 3 (`complete`)**
+
+| Código | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `Key de upload inválida.` | A `key` não tem o formato das emitidas no passo 1 |
+| `400` | `Arquivo não encontrado no armazenamento. Refaça o upload.` | O `PUT` do passo 2 não foi feito ou não foi aceito |
+| `400` | `Arquivo maior que 50MB.` | O arquivo gravado passa do limite |
+| `400` | `Arquivo vazio ou corrompido.` | O arquivo gravado está vazio ou ilegível |
+| `400` | `Apenas arquivos PDF válidos são aceitos.` | O conteúdo não começa com `%PDF-`. Renomear a extensão não passa |
+| `400` | `keys must contain at least 1 elements` | `keys` vazio |
+| `400` | `keys must contain no more than 10 elements` | Mais de 10 `key` |

@@ -38,11 +38,13 @@ flowchart TD
 
 Após o envio do documento via `POST /v2/report`, o relatório é processado de forma assíncrona. O resultado pode ser consultado de duas maneiras:
 
-- 🔔 **Webhook:** se configurado, a GYRA+ enviará um POST para o seu endpoint com o status atualizado.
-- 📡 **Toolbox:** se você estiver logado no painel, o status do relatório aparece automaticamente via WebSocket sem precisar atualizar a página.
+- **Webhook:** se configurado, a GYRA+ envia um POST para o seu endpoint a cada evento do relatório. Ver [Criar Webhook](/api-reference/webhook/post-webhook).
+- **Consulta:** [`GET /v2/report/{id}`](/api-reference/report-v2/get-v2report) devolve o status e o conteúdo a qualquer momento.
+
+No Toolbox, o relatório se atualiza na tela sozinho, sem recarregar a página.
 
 ---
 
 ## Próximo passo
 
-Após obter suas chaves de API, veja como autenticar suas requisições em [Autenticação](/api-reference/auth/post-authauthenticate).
+Gere as credenciais em [Chaves de API](/api-reference/api-keys) e troque-as por um token em [Gerar Token](/api-reference/auth/post-authauthenticate).

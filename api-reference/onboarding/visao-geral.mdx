@@ -1,0 +1,203 @@
+---
+title: "Visão geral da API"
+description: "Endereço, autenticação, versionamento, capacidades e erros das rotas do Onboarding. Leia uma vez, vale para todas."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+---
+
+<Info>
+  **Resumo:** as rotas deste módulo usam o mesmo endereço e a mesma autenticação do resto da API. O que muda é que elas exigem uma **capacidade** da organização e o caminho é **versionado**. O que está nesta página vale para todos os endpoints do grupo.
+</Info>
+
+## Endereço e autenticação
+
+```
+https://gyra-core.gyramais.com.br
+```
+
+Troque `gyra-client-id` e `gyra-client-secret` por um token em `POST /auth/authenticate` e use `Authorization: Bearer <token>`. O token vale 24 horas.
+
+As credenciais são geradas por você em *Configurações, API & MCP*. Ver [Chaves de API](/api-reference/api-keys).
+
+## Versionamento
+
+Cada rota responde nos dois caminhos:
+
+```
+/v1/registry/...      use este em integração nova
+/registry/...         legado sem versão, mantido por compatibilidade
+```
+
+| Mudança | O que acontece |
+| --- | --- |
+| Aditiva (campo novo opcional, rota nova, valor novo de enum) | Entra na `v1`, sem versão nova |
+| Quebradora (remover ou renomear campo, mudar tipo, mudar semântica de status) | Abre `v2`; a `v1` continua no ar |
+
+<Tip>
+  Valor novo de enum é aditivo do **nosso** lado: o seu parser precisa tolerar um `status` ou um `type` que ainda não conhece, em vez de quebrar.
+</Tip>
+
+## Capacidades
+
+Sem a capacidade, a rota responde `404` com a mensagem `Recurso não encontrado.`: ela não existe para aquela organização.
+
+| Capacidade | O que libera |
+| --- | --- |
+| `kycEnabled` | O módulo inteiro: cadastros, documento, formulário, termo, item livre e verificação de identidade |
+| `scrEnabled` | O item de autorização de SCR. Sem `kycEnabled`, só esse item pode ser pedido numa solicitação |
+| `communicationBrandingEnabled` | Marca, domínio próprio, remetente e WhatsApp da sua empresa |
+| `identityEmailEnabled` | O Valida+ como método de identidade |
+
+<Note>
+  Com credencial de integração, as rotas `/v1/registry` exigem `kycEnabled`. Pedir numa solicitação um item que a organização não contratou responde `403` com o nome do item, por exemplo `Sua organização não pode pedir verificação de identidade nesta solicitação. Fale com a GYRA+ para habilitar.`
+</Note>
+
+As rotas de cadastro e de solicitação pedem a permissão `can-use-registry-api` (credencial de integração) ou `can-generate-report`. As rotas de webhook pedem `can-use-registry-api` ou `can-manage-settings`.
+
+## Erros
+
+O corpo é sempre `{ code, message }`, com a mensagem em português.
+
+| Código | Quando |
+| --- | --- |
+| `400` | Corpo ou parâmetro inválido, inclusive id fora do formato de 24 caracteres hexadecimais. A mensagem concatena todas as falhas por vírgula |
+| `401` | Token ausente, expirado ou inválido |
+| `403` | Sem a permissão exigida pela rota, ou item que a organização não contratou |
+| `404` | Recurso inexistente **ou** capacidade não liberada |
+| `409` | O pedido não cabe no estado atual: arquivo repetido no cadastro, documento já decidido por um operador, solicitação encerrada, item que não aguarda decisão |
+| `413` | Arquivo acima de 15 MB no envio síncrono. No presign, o teto de 50 MB responde `400` |
+| `429` | Documento que já chegou a 5 tentativas de reprocessamento |
+| `502` | Um serviço interno não respondeu. A mensagem diz o que não foi feito; tente de novo |
+
+<Warning>
+  Não faça match exato da mensagem: ela muda sem aviso. Use o `code`.
+
+  E campo que a API não conhece é **descartado em silêncio**, não recusado. Se algo que você mandou não aparece na resposta, confira o nome antes de investigar o resto. Já um **valor** fora da lista num campo conhecido (um `kycStatus` inexistente, por exemplo) é recusado com `400`.
+</Warning>
+
+## Identificadores
+
+Todo id é um ObjectId de 24 caracteres hexadecimais. CNPJ e CPF são aceitos com ou sem máscara e devolvidos só com dígitos.
+
+## Modelos: filtrar e ligar ou desligar
+
+### Filtros da listagem
+
+[`GET /v1/collection-templates`](/api-reference/collection/get-collection-templates) aceita, além de `search`, `itemKind`, `skip` e `take`:
+
+| Parâmetro | Valores | Sem o parâmetro |
+| --- | --- | --- |
+| `scope` | `ORGANIZATION` (modelos da sua organização) ou `SYSTEM` (modelos GYRA+) | Os dois |
+| `enabled` | `true` devolve só os modelos ligados | Ligados e desligados |
+
+<Tip>
+  Para montar um seletor de modelo no seu sistema, use `enabled=true`: é o mesmo critério que o toolbox usa na nova solicitação.
+</Tip>
+
+Cada modelo da listagem traz `enabled`, `scope` e, quando o [formulário público](/onboarding/formulario-publico) está configurado, `publicFormUrl` com o endereço pronto. `metrics` traz o uso do modelo na sua organização: `collections`, `completedCollections`, `completionRate` e `averageCompletionHours`.
+
+`onCompleted` diz o que o modelo faz [ao concluir](/onboarding/solicitacoes#ao-concluir): `kind` é `NONE`, `POLICY` ou `OPERATION`, e `id` é a política ou a esteira. Quando o modelo tem um destino para CNPJ e outro para CPF, eles vêm em `byEntityType`, com as chaves `COMPANY` e `PERSON`, cada uma com o próprio `kind` e `id`.
+
+Em `items`, um item com `appliesTo` igual a `PJ` só nasce quando o cadastro é de pessoa jurídica, e `PF` só quando é de pessoa física. Sem `appliesTo`, o item vale para os dois.
+
+### Ligar ou desligar um modelo
+
+```
+POST /v1/collection-templates/{id}/enabled
+```
+
+```json
+{ "enabled": false }
+```
+
+Resposta:
+
+```json
+{ "enabled": false, "updated": 3 }
+```
+
+O `id` pode ser o de qualquer versão: a mudança vale para todas as versões do modelo, e `updated` diz quantas foram alteradas. Num modelo GYRA+, a mudança vale só para a sua organização e `updated` é `1`.
+
+Modelo desligado some da escolha de modelo (nova solicitação e etapa da esteira), mas continua na listagem. Não é exclusão: solicitação já enviada com ele segue valendo, e o `slug` dele continua aceito em [`POST /v1/collections`](/api-reference/collection/post-collections). Modelo inexistente responde `404` com `Modelo não encontrado.`
+
+## Listar as validações de identidade
+
+```
+GET /v1/collections/identity-verifications
+```
+
+Todas as verificações de identidade da organização, dos itens de identidade e das partes de documento conjunto, da mais recente para a mais antiga. É a mesma lista da tela [Validação de identidade](/toolbox/validacao-de-identidade).
+
+<Note>
+  Esta rota exige `kycEnabled`. Organização que tem apenas `scrEnabled` recebe `404`.
+</Note>
+
+| Parâmetro | O que filtra |
+| --- | --- |
+| `verdict` | `APPROVED`, `MANUAL_REVIEW`, `REJECTED` ou `PENDING`. Pode repetir para mais de um |
+| `method` | `FACE_MATCH` ou `EMAIL` |
+| `from`, `to` | Período, em ISO 8601, sobre a data da avaliação (ou do início, quando ainda não houve avaliação) |
+| `search` | Nome ou documento, até 120 caracteres, sem se importar com acento, caixa ou máscara |
+| `skip` | Quantos pular. Padrão `0` |
+| `take` | Quantos devolver. Padrão `20`, máximo `100` |
+
+```json
+{
+  "items": [
+    {
+      "id": "6612a7f30000000000000081",
+      "source": "ITEM",
+      "collectionId": "6612a7f30000000000000051",
+      "collectionTitle": "Abertura de conta PJ",
+      "personName": "Maria Souza",
+      "documentMasked": "***.456.789-**",
+      "method": "FACE_MATCH",
+      "flow": "DATABASE_VALIDATION",
+      "verdict": "APPROVED",
+      "status": "VALIDATED",
+      "faceSimilarity": 0.94,
+      "livenessScore": 0.98,
+      "livenessStatus": null,
+      "fraudSignalsCount": 0,
+      "startedAt": "2026-09-05T14:18:40.000Z",
+      "evaluatedAt": "2026-09-05T14:21:03.517Z"
+    }
+  ],
+  "total": 1,
+  "summary": { "total": 1, "approved": 1, "manualReview": 0, "rejected": 0, "pending": 0 }
+}
+```
+
+| Campo | O que é |
+| --- | --- |
+| `source` | `ITEM` (item de identidade) ou `SIGNATORY` (parte de documento conjunto) |
+| `method` | `FACE_MATCH` ou `EMAIL` |
+| `flow` | Refina o face match: `DATABASE_VALIDATION` (sem documento, contra a base oficial) ou `DOCUMENT` (com documento) |
+| `verdict` | A [avaliação](/onboarding/verificacao-de-identidade#o-que-a-plataforma-devolve) da verificação |
+| `faceSimilarity`, `livenessScore`, `livenessStatus` | Os números da biometria, quando existem |
+| `fraudSignalsCount` | Quantos [sinais de antifraude](/onboarding/verificacao-de-identidade#sinais-de-antifraude) a verificação levantou |
+| `summary` | Contagem por resultado. Respeita período, método e busca, mas **não** o filtro `verdict`, para você montar abas com os totais |
+
+- O documento sai sempre mascarado. Imagens e o retorno cru do provedor não saem nesta rota.
+- A contagem olha as 5.000 verificações mais recentes de cada origem. Acima disso, `total` e `summary` passam a se referir a essa janela.
+
+## O que não está aqui
+
+A API pública cobre a **integração**: ler documento, montar dossiê, pedir ao cliente e receber aviso. Além das páginas de cada rota, veja [Pessoas, contatos e dados declarados](/api-reference/onboarding/pessoas-e-contatos) e [Baixar a via assinada](/api-reference/onboarding/via-assinada).
+
+Configuração fica no toolbox: a [régua de validação](/onboarding/regua-de-validacao), a montagem dos [modelos de coleta e de termo](/onboarding/termos-e-assinatura) (pela API você lista e liga ou desliga, como acima), a [marca e os canais de envio](/onboarding/pagina-do-destinatario) e os indicadores de acurácia. São telas com previa e versionamento, e um valor errado ali afeta todo documento que entrar depois.
+
+As rotas do [link do destinatário](/onboarding/pagina-do-destinatario) e do [formulário público](/onboarding/formulario-publico) também não entram: elas pertencem às páginas que o seu cliente abre, sem credencial de integração.
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Integrar do zero" icon="route" href="/guides/integrar-cadastro-documental">
+    Da credencial ao webhook chegando, em cinco etapas.
+  </Card>
+  <Card title="Validar um documento" icon="bolt" href="/api-reference/registry/post-registry-validate-document">
+    A chamada mais curta que entrega valor.
+  </Card>
+</CardGroup>

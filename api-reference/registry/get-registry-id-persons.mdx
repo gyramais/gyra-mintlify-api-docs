@@ -1,0 +1,30 @@
+---
+title: "Árvore Societária"
+description: "Para descobrir de quem pedir documento de sócio, e de onde veio cada pessoa."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: get /v1/registry/{id}/persons
+---
+
+### Quando usar
+
+Para descobrir de quem pedir documento de sócio, e de onde veio cada pessoa.
+
+### A origem importa
+
+| `source` | De onde veio |
+| --- | --- |
+| `QSA_OFICIAL` | Quadro societário da fonte oficial. O CPF vem mascarado |
+| `DOCUMENT_EXTRACTION` | Lido de contrato, estatuto, ata ou certidão |
+| `MANUAL` | Criado por um operador |
+| `FORM` | Declarado pelo cliente num formulário de solicitação |
+
+`layer` distingue o quadro direto (`1`) do sócio da sócia pessoa jurídica (`2`).
+
+A resposta vem em `persons`. Cada pessoa traz `editedFields`, os campos que alguém da sua equipe corrigiu (a atualização do quadro oficial não passa por cima deles), e `contact`, o contato guardado que recebe os envios. Para corrigir um sócio ou mexer nos contatos, veja [Pessoas, contatos e dados declarados](/api-reference/onboarding/pessoas-e-contatos).
+
+<Note>
+  Contexto e vocabulário em [Cadastro documental](/onboarding/cadastro-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/onboarding/visao-geral).
+</Note>

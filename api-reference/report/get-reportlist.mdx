@@ -8,38 +8,43 @@ lang: tecnica
 openapi: get /report/list
 ---
 
-### Filtros disponíveis
+### Quando usar
 
-Você pode utilizar query parameters para filtrar os relatórios retornados por este endpoint.
+Use esta rota para listar os relatórios da organização, do mais recente para o mais antigo, com filtros por documento, status e período. Ela traz o resumo de cada relatório (decisão, política, progresso), sem o conteúdo das seções.
 
-#### Parâmetros suportados
+### Autenticação
 
-| Parâmetro     | Tipo     | Descrição                                                                 |
-|---------------|----------|---------------------------------------------------------------------------|
-| `take`        | `number` | Limita o número de relatórios retornados (ex: `take=10`)                  |
-| `skip`        | `number` | Ignora os primeiros N resultados (ex: `skip=5`)                            |
-| `statusValue` | `string` | Filtra por status do relatório: `approved`, `rejected`, `pending`         |
-| `document`    | `string` | CPF ou CNPJ do cliente associado ao relatório (somente números)           |
+Bearer JWT no header `Authorization`. Usuários com papel de analista de crédito veem só os relatórios que criaram.
 
-#### Exemplo de requisição com filtros
+### Parâmetros
+
+| Parâmetro | Tipo | Descrição |
+|---|---|---|
+| `take` | `number` | Quantos relatórios trazer. Padrão: 20. |
+| `skip` | `number` | Quantos pular, para paginar. Padrão: 0. |
+| `document` | `string` | CPF ou CNPJ, sem máscara. Precisa ter dígito verificador válido. |
+| `statusValue` | `string` | `PENDING`, `APPROVED` ou `REJECTED`, em maiúsculas. |
+| `userId` | `string` | Relatórios criados por um usuário. O valor `api-user` traz só os relatórios criados pela API. |
+| `createdAtBetween` | `string[]` | Período de criação: duas datas ISO, início e fim. Repita o parâmetro: `createdAtBetween=2026-07-01T00:00:00Z&createdAtBetween=2026-07-31T23:59:59Z`. |
+| `reportIds` | `string[]` | IDs específicos de relatório. Repita o parâmetro para cada ID. |
+
+Os filtros se combinam.
 
 ```http
-GET /report/list?take=2&document=24657266000170
+GET /report/list?take=2&document=11222333000181
 ```
 
-Este exemplo retorna os **2 relatórios mais recentes** relacionados ao documento **24657266000170**.
-
-> Você pode combinar múltiplos filtros conforme necessário.
+Retorna os **2 relatórios mais recentes** do CNPJ **11.222.333/0001-81**.
 
 <RequestExample>
 
 ```bash cURL
-curl --location 'https://gyra-core.gyramais.com.br/report/list?take=2&document=24657266000170' \
+curl --location 'https://gyra-core.gyramais.com.br/report/list?take=2&document=11222333000181' \
 --header 'Authorization: Bearer {seu_token_jwt}'
 ```
 
 ```javascript JavaScript
-fetch("https://gyra-core.gyramais.com.br/report/list?take=2&document=24657266000170", {
+fetch("https://gyra-core.gyramais.com.br/report/list?take=2&document=11222333000181", {
   headers: {
     Authorization: "Bearer {seu_token_jwt}"
   }
@@ -57,7 +62,7 @@ headers = {
 
 params = {
     "take": 2,
-    "document": "24657266000170"
+    "document": "11222333000181"
 }
 
 response = requests.get("https://gyra-core.gyramais.com.br/report/list", headers=headers, params=params)
@@ -67,7 +72,7 @@ print(response.json())
 </RequestExample>
 
 <Tip>
-O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo está disponível no ambiente real ou mediante solicitação técnica.
+Os arrays `totalIntegrations` e `processedIntegrations` foram resumidos no exemplo.
 </Tip>
 
 <ResponseExample>
@@ -83,7 +88,7 @@ O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo est
     "policyErrorStatusApplied": null,
     "name": "EMPRESA EXEMPLO LTDA",
     "score": 1,
-    "document": "43591367000130",
+    "document": "11222333000181",
     "userId": "6612a7f338154f0100000000",
     "analystId": null,
     "analystName": null,
@@ -129,7 +134,7 @@ O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo est
     "policyErrorStatusApplied": null,
     "name": "EMPRESA EXEMPLO LTDA",
     "score": 500,
-    "document": "43591367000130",
+    "document": "11222333000181",
     "userId": "6612a7f338154f0100000000",
     "analystId": null,
     "analystName": null,
@@ -177,11 +182,3 @@ O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo est
 ```
 
 </ResponseExample>
-
-### Quando usar
-
-Use este endpoint para recuperar histórico de análises com filtros operacionais. Você pode usar em telas de acompanhamento, filas de trabalho de analistas ou consultas por documento/status/período para operação diária.
-
-### Autenticação
-
-Bearer JWT no header `Authorization`.

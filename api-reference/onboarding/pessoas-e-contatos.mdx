@@ -1,0 +1,268 @@
+---
+title: "Pessoas, contatos e dados declarados"
+description: "Corrija um sócio, guarde e escolha os contatos de cada pessoa e leia o que o cliente respondeu nos formulários do cadastro."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+---
+
+O cadastro não guarda só documento. Ele sabe quem são os sócios, por onde falar com cada pessoa e o que o próprio cliente declarou nos formulários. Estas rotas deixam a sua integração ler e corrigir essas três coisas sem passar pela tela.
+
+<Info>
+  Todas exigem `kycEnabled` e a permissão `can-use-registry-api` (ou `can-generate-report`). Autenticação, versionamento e erros comuns estão na [Visão geral da API](/api-reference/onboarding/visao-geral).
+</Info>
+
+| Rota | Para quê |
+| --- | --- |
+| `PUT /v1/registry/{id}/persons/{personId}` | Corrigir nome, cargo, participação ou CPF/CNPJ de um sócio |
+| `GET /v1/registry/contacts/{document}` | Os contatos de uma pessoa, na ordem do envio automático |
+| `POST /v1/registry/contacts` | Incluir um contato, ou marcar um como preferido |
+| `PUT /v1/registry/contacts/{contactId}` | Editar um contato guardado |
+| `DELETE /v1/registry/contacts/{contactId}` | Remover um contato guardado |
+| `POST /v1/registry/contacts/dismiss` | Esconder um contato que só existe no histórico de envios |
+| `GET /v1/registry/{id}/declared-data` | O que o cliente respondeu nos formulários, com a chave da variável da esteira |
+
+## Corrigir um sócio
+
+```
+PUT /v1/registry/{id}/persons/{personId}
+```
+
+O `personId` é o `id` da pessoa em [Árvore societária](/api-reference/registry/get-registry-id-persons). Mande só os campos que mudam.
+
+| Campo | Tipo | Regra |
+| --- | --- | --- |
+| `name` | string | Não pode ficar vazio |
+| `role` | string ou `null` | Cargo ou qualificação. `null` limpa |
+| `sharePercent` | número ou `null` | De 0 a 100 |
+| `document` | string ou `null` | CPF para pessoa física, CNPJ para pessoa jurídica, com ou sem máscara. `null` limpa |
+
+<CodeGroup>
+```json Corpo
+{ "document": "529.982.247-25", "role": "Sócio administrador" }
+```
+
+```json Resposta 200
+{
+  "id": "6612a7f30000000000000022",
+  "registryId": "6612a7f30000000000000001",
+  "entityType": "PERSON",
+  "document": "52998224725",
+  "maskedDocument": "***982247**",
+  "name": "MARIA HELENA SOUZA",
+  "role": "Sócio administrador",
+  "sharePercent": 38,
+  "layer": 1,
+  "isBeneficialOwner": true,
+  "source": "QSA_OFICIAL",
+  "linkedRegistryId": null,
+  "editedFields": ["role", "document"],
+  "contact": null
+}
+```
+</CodeGroup>
+
+A resposta é a pessoa no mesmo formato da árvore societária. `editedFields` lista o que já foi corrigido por alguém da sua equipe ou pela integração: a atualização do quadro oficial e a leitura de documentos não passam por cima desses campos.
+
+| Código | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `Confira o CPF: os dígitos não batem.` | CPF (ou CNPJ) com dígito verificador errado |
+| `400` | `Este documento não confere com o que a Receita mostra para este sócio.` | O documento completo não cabe na máscara que a fonte oficial mostra |
+| `400` | `A participação vai de 0 a 100.` | Participação fora da faixa |
+| `404` | `Pessoa não encontrada neste cadastro.` | `personId` não é deste cadastro |
+| `409` | `Já existe outra pessoa com este documento no quadro.` | Outro sócio da mesma camada já tem esse documento |
+
+## Contatos de uma pessoa
+
+Os contatos são guardados **por CPF ou CNPJ**, não por cadastro: o mesmo sócio aparece em várias empresas e o contato dele vale em todas, dentro da sua organização.
+
+A lista funde três origens:
+
+| `source` | De onde veio |
+| --- | --- |
+| `FORM` | Declarado pelo cliente num formulário de solicitação (sócio, cônjuge, o próprio titular) |
+| `OPERATOR` | Incluído ou editado pela sua equipe ou pela integração |
+| `HISTORY` | Usado num envio de solicitação nos últimos 24 meses e ainda não guardado. Não tem `id` |
+
+A ordem é a do envio automático: o contato `preferred` primeiro, depois o usado ou informado mais recentemente. Só um contato por pessoa fica como preferido.
+
+### Ler
+
+```
+GET /v1/registry/contacts/{document}
+```
+
+<CodeGroup>
+```json Resposta 200
+{
+  "document": "52998224725",
+  "contacts": [
+    {
+      "id": "6612a7f300000000000000a1",
+      "name": "Carlos Eduardo Silva",
+      "email": "carlos@aurora.com.br",
+      "phone": "51999998888",
+      "source": "FORM",
+      "preferred": true,
+      "lastUsedAt": "2026-09-05T14:20:00.000Z",
+      "timesUsed": 2
+    },
+    {
+      "id": null,
+      "name": "Carlos Eduardo Silva",
+      "email": "financeiro@aurora.com.br",
+      "phone": null,
+      "source": "HISTORY",
+      "preferred": false,
+      "lastUsedAt": "2026-07-14T10:02:00.000Z",
+      "timesUsed": 1
+    }
+  ]
+}
+```
+</CodeGroup>
+
+`timesUsed` conta quantas solicitações já saíram para aquele contato. `0` quer dizer que nunca foi usado num envio.
+
+### Incluir, editar, remover
+
+Toda escrita devolve a **lista inteira** já reordenada, no mesmo formato da leitura.
+
+<CodeGroup>
+```bash Incluir
+curl --request POST 'https://gyra-core.gyramais.com.br/v1/registry/contacts' \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{"document":"529.982.247-25","name":"Carlos Eduardo Silva","email":"carlos@aurora.com.br","preferred":true}'
+```
+
+```bash Editar
+curl --request PUT 'https://gyra-core.gyramais.com.br/v1/registry/contacts/6612a7f300000000000000a1' \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{"phone":"(51) 99999-8888"}'
+```
+
+```bash Remover
+curl --request DELETE 'https://gyra-core.gyramais.com.br/v1/registry/contacts/6612a7f300000000000000a1' \
+  --header 'Authorization: Bearer <token>'
+```
+
+```bash Esconder do histórico
+curl --request POST 'https://gyra-core.gyramais.com.br/v1/registry/contacts/dismiss' \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{"document":"52998224725","email":"financeiro@aurora.com.br"}'
+```
+</CodeGroup>
+
+| Campo | Tipo | Regra |
+| --- | --- | --- |
+| `document` | string | CPF ou CNPJ completo da pessoa. Obrigatório para incluir e para esconder |
+| `name` | string | Opcional |
+| `email` | string | Informe e-mail, telefone ou os dois |
+| `phone` | string | Telefone com DDD, com ou sem o 55 |
+| `preferred` | boolean | `true` torna este o contato que recebe os envios automáticos e tira a marca do anterior |
+
+- Incluir um contato que já existe para a pessoa (mesmo e-mail e telefone) reaproveita o registro, inclusive um removido antes. É assim que se marca como preferido um contato que veio do histórico.
+- Remover deixa uma marca: o mesmo contato vindo do histórico de envios não reaparece, a não ser que volte a ser usado num envio depois disso.
+- Esconder (`dismiss`) faz o mesmo para um contato que só existe no histórico e por isso não tem `id`.
+
+| Código | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `Informe o CPF ou CNPJ completo da pessoa.` | Documento ausente ou curto |
+| `400` | `Informe o e-mail ou o telefone do contato.` | Nenhum dos dois |
+| `400` | `Confira o e-mail.` | E-mail fora do formato |
+| `400` | `Informe o telefone com o DDD.` | Telefone sem 10 ou 11 dígitos |
+| `404` | `Contato não encontrado.` | `contactId` inexistente ou já removido |
+| `409` | `Este contato já está cadastrado para esta pessoa.` | A edição repetiria outro contato guardado da mesma pessoa |
+
+## Dados declarados
+
+```
+GET /v1/registry/{id}/declared-data
+```
+
+O que o cliente respondeu nos formulários das solicitações deste cadastro. Só entra resposta enviada; sugestão que ninguém confirmou fica de fora.
+
+<CodeGroup>
+```json Resposta 200 (pessoa jurídica)
+{
+  "registryId": "6612a7f30000000000000001",
+  "entityType": "COMPANY",
+  "forms": [
+    {
+      "prefix": "form.onboarding_pj",
+      "templateSlug": "onboarding-pj",
+      "templateName": "Onboarding PJ",
+      "answeredAt": "2026-09-06T09:11:20.000Z",
+      "collectionId": "6612a7f30000000000000051",
+      "answers": 1,
+      "fields": [
+        {
+          "key": "form.onboarding_pj.faturamento_mensal",
+          "fieldKey": "faturamento_mensal",
+          "label": "Faturamento mensal",
+          "type": "NUMBER",
+          "formType": "MONEY",
+          "category": "CUSTOM",
+          "custom": true,
+          "disputed": false,
+          "value": 185000,
+          "answeredAt": "2026-09-06T09:11:20.000Z",
+          "collectionId": "6612a7f30000000000000051",
+          "itemId": "6612a7f30000000000000075",
+          "history": []
+        }
+      ]
+    }
+  ],
+  "partners": {
+    "prefix": "form.onboarding_pj",
+    "templateName": "Onboarding PJ",
+    "collectionId": "6612a7f30000000000000051",
+    "answeredAt": "2026-09-06T09:11:20.000Z",
+    "variables": [
+      { "key": "form.onboarding_pj.socios_qtd", "label": "Quantidade de sócios" },
+      { "key": "form.onboarding_pj.socios_participacao_total", "label": "Participação total dos sócios (%)" }
+    ],
+    "partners": [
+      {
+        "name": "Carlos Eduardo Silva",
+        "document": "52998224725",
+        "role": "Sócio administrador",
+        "sharePercent": 60,
+        "email": "carlos@aurora.com.br",
+        "phone": "51999998888",
+        "maritalStatus": "CASADO",
+        "maritalLabel": "casado(a)",
+        "propertyRegime": "COMUNHAO_PARCIAL",
+        "propertyRegimeLabel": "comunhão parcial de bens",
+        "maritalSince": null
+      }
+    ]
+  },
+  "asPartner": []
+}
+```
+</CodeGroup>
+
+| Campo | O que é |
+| --- | --- |
+| `forms[]` | Um bloco por modelo de formulário, do respondido mais recentemente para o mais antigo |
+| `fields[].key` | A chave da variável na esteira, no formato `form.<modelo>.<campo>`. É a mesma que regras e fórmulas usam |
+| `fields[].type` | `NUMBER`, `STRING`, `BOOLEAN` ou `DATE` |
+| `fields[].category` | `IDENTITY`, `CONTACT`, `ADDRESS` ou `CUSTOM` (campo criado no modelo) |
+| `fields[].disputed` | `true` quando o cliente contestou o dado oficial sugerido e informou outro |
+| `fields[].history` | Até 5 respostas anteriores diferentes da atual, da mais recente para a mais antiga |
+| `partners` | Só em pessoa jurídica: a lista de sócios da resposta mais recente que informou sócios, ou `null` |
+| `asPartner` | Só em pessoa física: as empresas da sua organização em que esta pessoa foi declarada sócia |
+
+Quando a mesma chave aparece em mais de uma solicitação, vale a da solicitação concluída mais recente.
+
+Sócios declarados também entram na [árvore societária](/api-reference/registry/get-registry-id-persons) com `source` igual a `FORM`, e os contatos que o cliente informou entram nos contatos da pessoa com `source` igual a `FORM`.
+
+<Note>
+  Contexto e vocabulário em [Cadastro documental](/onboarding/cadastro-documental).
+</Note>

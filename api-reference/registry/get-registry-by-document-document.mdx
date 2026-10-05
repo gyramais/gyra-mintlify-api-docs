@@ -1,0 +1,21 @@
+---
+title: "Consultar Cadastro por CNPJ ou CPF"
+description: "Antes de pedir documento ao cliente: responde o que já temos deste CNPJ? sem você guardar o id do cadastro."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: get /v1/registry/by-document/{document}
+---
+
+### Quando usar
+
+Antes de pedir documento ao cliente: responde "o que já temos deste CNPJ?" sem você guardar o id do cadastro.
+
+### Dois campos respondem quase tudo
+
+`kycStatus` diz se libera (`UP_TO_DATE`) ou se pede ação (`ATTENTION`, `EXPIRED`). `completenessSlots` diz exatamente o que falta.
+
+<Note>
+  Contexto e vocabulário em [Cadastro documental](/onboarding/cadastro-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/onboarding/visao-geral).
+</Note>

@@ -1,6 +1,6 @@
 ---
 title: Consultar Seção por Tipo
-description: Retorna uma seção específica de um relatório pelo seu tipo, sem precisar do sectionId.
+description: Retorna uma seção de um relatório pelo tipo, sem precisar do id da seção.
 surface: api
 domain: relatorio
 audience: integrador
@@ -8,148 +8,117 @@ lang: tecnica
 openapi: get /report/{id}/section/{sectionType}
 ---
 
-<Endpoint
-  method="GET"
-  path="/report/{id}/section/{sectionType}"
-  headers={[
-    {
-      name: "Authorization",
-      type: "string",
-      required: true,
-      description: "Token JWT no formato Bearer. Exemplo: `Bearer abc123`"
-    }
-  ]}
-  pathParameters={[
-    {
-      name: "id",
-      type: "string",
-      required: true,
-      description: "ID do relatório"
-    },
-    {
-      name: "sectionType",
-      type: "string",
-      required: true,
-      description: "Tipo da seção (ex.: SUMMARY, LAWSUITS, BUREAU, SCR)"
-    }
-  ]}
-/>
-
 ### Quando usar
 
-Use este endpoint para buscar uma seção de um relatório usando o **tipo** (`sectionType`) em vez do `sectionId`. Útil em telas que renderizam abas por seção, carregam conteúdo sob demanda ou quando você só tem o ID do relatório e quer um bloco específico (ex.: score do bureau, processos judiciais).
+Use esta rota quando você tem o ID do relatório e quer um bloco específico (score, processos, balanço) sem carregar o relatório inteiro. O `sectionType` é a chave estável da seção: não muda entre ambientes nem entre relatórios.
 
 ### Autenticação
 
-Bearer JWT no header `Authorization`.
+Bearer JWT no header `Authorization`. Um relatório de outra organização responde `404`.
 
 ### Parâmetros
 
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
-| `id` | `path` | `string` | `sim` | ID do relatório. |
-| `sectionType` | `path` | `string` | `sim` | Tipo da seção, em maiúsculas. Lista completa abaixo. |
+| `id` | `path` | `string` | sim | ID do relatório. |
+| `sectionType` | `path` | `string` | sim | Tipo da seção, em maiúsculas. Lista abaixo. |
 
 ### Tipos de seção
 
-O `sectionType` é a chave estável da seção: não muda entre ambientes nem entre versões. Quais seções existem em um relatório específico depende do [tipo de relatório](/docs/tipos-relatorios), do documento (CPF ou CNPJ) e das fontes ativadas na política.
+Quais seções existem num relatório depende do [tipo de relatório](/docs/tipos-relatorios), do documento (CPF ou CNPJ) e das fontes da política. A coluna **Parecer IA** marca as seções que recebem [Parecer GYRA+ IA](/concepts/pareceres-gyra-ia) quando o parecer está habilitado no relatório.
 
 **Análise e risco**
 
 | `sectionType` | Seção | Parecer IA |
 |---|---|---|
-| `SUMMARY` | Resumo, indicadores consolidados de risco | – |
-| `BASIC_INFORMATION` | Informações básicas, dados cadastrais e QSA | ✓ |
-| `LOCATION` | Localização e fachada do endereço | ✓ |
-| `RELATIONS` | Vínculos societários e grupo econômico | ✓ |
-| `SCORE` | Score de bureau | ✓ |
-| `PROCESSES` | Processos judiciais | ✓ |
-| `CERTIFICATES` | Certidões (federal, trabalhista, FGTS, estaduais) | ✓ |
-| `LICENSES_AUTHORIZATIONS` | Licenças e autorizações | ✓ |
-| `PEP` | Pessoa politicamente exposta | ✓ |
-| `SANCTIONS` | Sanções e listas restritivas | ✓ |
-| `MEDIA_EXPOSURE` | Exposição em mídia e reputação | ✓ |
-| `CRIMINAL_RECORD` | Antecedentes criminais e mandados de prisão | ✓ |
-| `SOCIAL_ASSISTANCE_PROGRAMS` | Programas sociais e benefícios | ✓ |
-| `SECTOR` | Panorama setorial e macroeconômico | ✓ |
+| `SUMMARY` | Resumo, indicadores consolidados de risco | não |
+| `BASIC_INFORMATION` | Informações básicas, dados cadastrais e QSA | sim |
+| `LOCATION` | Localização e fachada do endereço | sim |
+| `RELATIONS` | Vínculos societários e grupo econômico | sim |
+| `SCORE` | Score de bureau | sim |
+| `POSITIVE_REGISTRY` | Cadastro Positivo | sim |
+| `PROCESSES` | Processos judiciais | sim |
+| `JUDGMENTS` | Ações judiciais | sim |
+| `CERTIFICATES` | Certidões | sim |
+| `LICENSES_AUTHORIZATIONS` | Licenças e autorizações | sim |
+| `PEP` | Pessoa politicamente exposta | sim |
+| `SANCTIONS` | Sanções e listas restritivas | sim |
+| `MEDIA_EXPOSURE` | Exposição em mídia e reputação | sim |
+| `CRIMINAL_RECORD` | Antecedentes criminais e mandados de prisão (CPF) | sim |
+| `SOCIAL_ASSISTANCE_PROGRAMS` | Programas sociais e benefícios (CPF) | sim |
+| `SECTOR` | Panorama setorial e macroeconômico | sim |
 
 **Restritivos e endividamento**
 
 | `sectionType` | Seção | Parecer IA |
 |---|---|---|
-| `SCR` | SCR / Open Finance, categorias e modalidades | ✓ |
-| `SCR_SUMMARY` | Resumo SCR, endividamento consolidado | ✓ |
-| `PEFIN` | Pefin, restritivos de credores não financeiros | ✓ |
-| `REFIN` | Refin, restritivos de instituições financeiras | ✓ |
-| `PROTESTS` | Protestos em cartório | ✓ |
-| `BAD_CHECK` | Cheques sem fundo | ✓ |
-| `PAST_DUE_DEBT` | Dívidas vencidas | ✓ |
-| `PAYMENT_INTELLIGENCE` | Inteligência de pagamentos (fluxo transacionado) | – |
+| `SCR` | SCR, categorias e modalidades | sim |
+| `SCR_SUMMARY` | Resumo SCR, endividamento consolidado | sim |
+| `SCR_INDICATORS` | Indicadores do SCR | não |
+| `PEFIN` | Pefin | sim |
+| `REFIN` | Refin | sim |
+| `PROTESTS` | Protestos em cartório | sim |
+| `BAD_CHECK` | Cheques sem fundo | sim |
+| `PAST_DUE_DEBT` | Dívidas vencidas | sim |
+| `PAYMENT_INTELLIGENCE` | Inteligência de Pagamentos | não |
 
-**Análise financeira** (dependem do envio do balanço)
+**Análise financeira** (CNPJ, depois que o balanço entra no relatório)
 
 | `sectionType` | Seção | Parecer IA |
 |---|---|---|
-| `BALANCE_SHEET` | Balanço patrimonial | ✓ |
-| `DRE` | Demonstração do resultado do exercício | – |
-| `FINANCIAL_INDICATORS` | Indicadores financeiros calculados | – |
-| `FINANCIAL_INSIGHTS` | Resumo executivo da análise financeira | – |
-| `FINANCIAL_RECOMMENDATIONS` | Recomendações da análise financeira | – |
-| `BALANCE_SHEET_CHART` | Séries do balanço para gráficos | – |
-| `COST_PROFIT_FORECAST` | Projeção de custo e resultado | – |
-| `DETAILED_COSTS` | Custos detalhados | – |
-| `SUPPLIERS_CLIENTS` | Fornecedores e clientes | – |
+| `BALANCE_SHEET` | Balanço patrimonial | não |
+| `DRE` | Demonstração do resultado do exercício | não |
+| `FINANCIAL_INDICATORS` | Indicadores financeiros calculados | não |
+| `FINANCIAL_INSIGHTS` | Resumo executivo da análise financeira | não |
+| `FINANCIAL_RECOMMENDATIONS` | Recomendações da análise financeira | não |
+| `BALANCE_SHEET_CHART` | Séries do balanço para gráficos | não |
+| `COST_PROFIT_FORECAST` | Projeção de custo e resultado | não |
+| `DETAILED_COSTS` | Custos detalhados | não |
+| `SUPPLIERS_CLIENTS` | Fornecedores e clientes | não |
 
 <Note>
-  Essas seções só existem depois que o balanço entra no relatório, seja porque a GYRA+ encontrou as demonstrações públicas, seja porque você as enviou via [Enviar Balanço e DRE](/api-reference/report/post-report-financial-tab).
+  A leitura de IA do balanço não é um Parecer IA de seção: ela sai junto com a própria análise financeira, na seção `FINANCIAL_INSIGHTS`. As seções financeiras passam a existir quando a GYRA+ encontra as demonstrações ou quando você as envia em [Enviar Balanço e DRE](/api-reference/report/post-report-financial-tab).
 </Note>
 
 **Complementares e resultado da política**
 
 | `sectionType` | Seção | Parecer IA |
 |---|---|---|
-| `CATEGORIES` | Categorias de atividade | – |
-| `HISTORY` | Histórico cadastral | – |
-| `DOMAINS` | Domínios de internet associados | – |
-| `BUREAU_INQUIRY` | Consultas ao bureau (histórico de pesquisas) | – |
-| `CREDIT_POLICY` | Resultado da avaliação da política de crédito | – |
-| `PRICING` | Limite, taxa e prazo calculados pela política | – |
-
-<Note>
-  A coluna **Parecer IA** marca as 21 seções que recebem um [Parecer GYRA+ IA](/concepts/pareceres-gyra-ia) nos relatórios COMPLETO e COMPLETO+. As demais são estruturais ou já derivadas de outra seção. Para ler só os pareceres, sem os dados brutos, use [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights).
-</Note>
+| `CATEGORIES` | Categorias de atividade | não |
+| `HISTORY` | Histórico cadastral | não |
+| `DOMAINS` | Domínios de internet associados | não |
+| `BUREAU_INQUIRY` | Consultas ao bureau | não |
+| `CREDIT_POLICY` | Resultado da avaliação da política de crédito | não |
+| `PRICING` | Limite, taxa e prazo calculados pela política | não |
+| `INPUT_DATA` | Dados de entrada da proposta | não |
 
 <Warning>
-  Nem todo relatório tem todas as seções. `CRIMINAL_RECORD` e `SOCIAL_ASSISTANCE_PROGRAMS` só existem em relatórios de **CPF**; as seções de análise financeira só existem em **CNPJ** e só depois do envio do balanço. Um `sectionType` que não existe naquele relatório retorna **404**, não vazio. Antes de consultar, confira o array `sections[]` em [`GET /v2/report/{id}`](/api-reference/report-v2/get-v2report).
+  Um `sectionType` válido que não existe naquele relatório responde `404` com `"Seção não encontrada"`, não vazio. Um valor que não é tipo de seção responde `404` com `"Tipo de seção não encontrado"`. Para saber quais seções o relatório tem, leia `sections[]` em [`GET /v2/report/{id}`](/api-reference/report-v2/get-v2report).
 </Warning>
 
 <RequestExample>
 
 ```bash cURL
-curl --location 'https://gyra-core.gyramais.com.br/report/69a207bcdd0197828df9155a/section/SUMMARY' \
---header 'Authorization: Bearer abc123'
+curl --request GET 'https://gyra-core.gyramais.com.br/report/6612a7f3a19b467000000000/section/PROTESTS' \
+  --header 'Authorization: Bearer SEU_TOKEN'
 ```
 
 ```javascript JavaScript
-fetch("https://gyra-core.gyramais.com.br/report/69a207bcdd0197828df9155a/section/SUMMARY", {
-  method: "GET",
-  headers: {
-    "Authorization": "Bearer abc123",
-  },
-})
-  .then(res => res.json())
-  .then(console.log)
+const resposta = await fetch(
+  "https://gyra-core.gyramais.com.br/report/6612a7f3a19b467000000000/section/PROTESTS",
+  { headers: { Authorization: `Bearer ${token}` } },
+);
+const secao = await resposta.json();
 ```
 
 ```python Python
 import requests
 
-url = "https://gyra-core.gyramais.com.br/report/69a207bcdd0197828df9155a/section/SUMMARY"
-headers = {
-  "Authorization": "Bearer abc123"
-}
-response = requests.get(url, headers=headers)
-print(response.json())
+resposta = requests.get(
+    "https://gyra-core.gyramais.com.br/report/6612a7f3a19b467000000000/section/PROTESTS",
+    headers={"Authorization": f"Bearer {token}"},
+)
+secao = resposta.json()
 ```
 
 </RequestExample>
@@ -171,14 +140,10 @@ print(response.json())
     "id": "6612a7f3ae223a4700000000",
     "value": "PROTESTS",
     "tabs": [
-      {
-        "type": "RESTRICTIVE",
-        "order": 5,
-        "side": null
-      }
+      { "type": "RESTRICTIVE", "order": 5, "side": null }
     ]
   },
-  "selectedIntegrations": [ "..." ],
+  "selectedIntegrations": ["..."],
   "createdAt": "2026-07-31T13:42:37.059Z",
   "updatedAt": "2026-07-31T13:43:12.180Z",
   "sectionDetails": [
@@ -186,14 +151,9 @@ print(response.json())
       "values": {
         "bureau": {
           "injunction": false,
-          "protestsQuantity": 15,
-          "protestsTotalValue": "R$ 102.390,05",
-          "protestsByRegion": [
-            {
-              "name": "SP",
-              "value": 5
-            }
-          ],
+          "protestsQuantity": 2,
+          "protestsTotalValue": "R$ 5.850,33",
+          "protestsByRegion": [{ "name": "SP", "value": 2 }],
           "lastProtestDate": "2026-02-05T00:00:00.000Z",
           "formattedLastProtestDate": "05/02/2026",
           "protestsTable": [
@@ -205,38 +165,30 @@ print(response.json())
               "uf": "SAO PAULO/SP",
               "value": 1679.95,
               "formattedValue": "R$ 1.679,95"
-            },
-            {
-              "name": "-",
-              "registry": "08",
-              "formattedDate": "05/02/2026",
-              "date": "2026-02-05T00:00:00.000Z",
-              "uf": "SAO PAULO/SP",
-              "value": 4170.38,
-              "formattedValue": "R$ 4.170,38"
             }
           ]
         }
       },
-      "integrationTypes": [ "..." ]
+      "integrationTypes": ["..."]
     }
   ],
   "errors": []
 }
 ```
 
-```json 401 Unauthorized
-{
-  "code": 401,
-  "message": "Token de acesso inválido."
-}
-```
-
 ```json 404 Not Found
 {
   "code": 404,
-  "message": "Section not found"
+  "message": "Seção não encontrada"
 }
 ```
 
 </ResponseExample>
+
+### Erros
+
+| Código | Mensagem | Causa |
+|---|---|---|
+| `404` | `"Relatório não encontrado"` | ID inexistente ou de outra organização. |
+| `404` | `"Tipo de seção não encontrado"` | `sectionType` fora da lista acima. |
+| `404` | `"Seção não encontrada"` | O relatório não tem essa seção. |

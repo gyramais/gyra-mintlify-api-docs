@@ -1,0 +1,28 @@
+---
+title: "Resultado do Documento"
+description: "Quando você precisa do detalhe: os campos lidos, cada verificação com evidência, e o parecer."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: get /v1/registry/{id}/documents/{docId}/result
+---
+
+### Quando usar
+
+Quando você precisa do detalhe: os campos lidos, cada verificação com evidência, e o parecer.
+
+### O que olhar primeiro
+
+| Campo | Para quê |
+| --- | --- |
+| `assessment.effectiveVerdict` | O veredito que **vale hoje**. Não use `verdict` |
+| `validation.checks[]` | Cada verificação com `PASS`, `WARN`, `FAIL` ou `SKIP`, mensagem e evidência |
+| `statusReason` | Por que parou, quando não houve falha técnica |
+| `stages` | O que rodou nesta tentativa e o que veio reaproveitado |
+
+O objeto `extraction` tem os campos do tipo identificado. Ver [Formatos de retorno](/api-reference/onboarding/formatos-de-retorno).
+
+<Note>
+  Contexto e vocabulário em [Análise documental](/onboarding/analise-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/onboarding/visao-geral).
+</Note>

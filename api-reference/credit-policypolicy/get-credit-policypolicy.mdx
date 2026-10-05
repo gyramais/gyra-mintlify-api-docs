@@ -1,6 +1,6 @@
 ---
 title: Consultar políticas de decisão
-description: Busca todas as políticas de decisão
+description: Lista as políticas da organização, com o id que vai na criação do relatório.
 surface: api
 domain: politica
 audience: integrador
@@ -8,52 +8,68 @@ lang: tecnica
 openapi: get /credit-policy/policy
 ---
 
-<Tip>
-Retorna as características de todas as políticas em uma organização. O id é utilizado para Criar Relatórios
- </Tip>
-
 ### Quando usar
 
-Use este endpoint para listar políticas de decisão disponíveis para o contexto da organização. Você pode usar antes de criar um relatório para selecionar a política adequada ao perfil de risco, produto e estratégia comercial.
+Use esta rota para descobrir o `policyId` que vai em [`POST /v2/report`](/api-reference/report-v2/post-v2report). Para a API, escolha uma política com `enabled: true` e `usage: REPORT`: política desabilitada ou de esteira é recusada na criação do relatório.
 
 ### Autenticação
 
-Bearer JWT no header `Authorization`.
+Bearer JWT no header `Authorization`. A lista traz as políticas da organização do token.
 
 ### Parâmetros
 
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
-| `enabled` | `query` | `boolean` | `não` | Enabled policies |
-| `protected` | `query` | `boolean` | `não` | Include protected policies |
+| `enabled` | `query` | `string` | não | `true` traz só as políticas habilitadas para a organização; `false`, só as desabilitadas. |
+| `usage` | `query` | `string` | não | `REPORT` (roda sozinha, inclusive pela API) ou `PIPELINE` (só roda dentro de uma esteira). |
+| `protected` | `query` | `string` | não | `true` inclui também as políticas protegidas, que não pertencem à organização. |
+| `percentages` | `query` | `string` | não | `true` acrescenta `percentages`, a distribuição dos resultados de cada política. |
+| `includeUser` | `query` | `string` | não | `true` acrescenta `user`, com quem criou a política. |
+
+### Resposta
+
+Um array de políticas. Campos principais:
+
+| Campo | Descrição |
+|---|---|
+| `id` | O `policyId` da criação do relatório. |
+| `name` | Nome da política. |
+| `enabled` | Se a política está habilitada para a sua organização. |
+| `usage` | `REPORT` ou `PIPELINE`. Só `REPORT` roda em `POST /v2/report`. |
+| `kind` | `BASE` (análise completa) ou `LAYER` (camada de aprofundamento de esteira). |
+| `documentType` | `CNPJ` ou `CPF`. O documento enviado no relatório precisa combinar. |
+| `reportType` | Relatório base da política. |
+| `integrationGroup` | Relatório base: `id`, `documentType`, `label`, `name`, `hasParecer`. |
+| `parecerEnabled` | Se os relatórios desta política geram Parecer IA. |
+| `version` | Versão atual. Uma versão nova gera um relatório novo no mesmo dia. |
+| `hasSCR`, `bureauType`, `balanceRuleEnabled` | Fontes da política. |
+| `description`, `summary`, `categories`, `duration` | Textos e classificação exibidos no Toolbox. |
+| `parent` | Política de origem (`id`, `name`), quando foi criada a partir de outra. |
 
 <RequestExample>
 
 ```bash cURL
-curl --location 'https://gyra-core.gyramais.com.br/credit-policy/policy' \
---header 'Authorization: Bearer abc123'
+curl --request GET 'https://gyra-core.gyramais.com.br/credit-policy/policy?enabled=true&usage=REPORT' \
+  --header 'Authorization: Bearer SEU_TOKEN'
 ```
 
 ```javascript JavaScript
-fetch("https://gyra-core.gyramais.com.br/credit-policy/policy", {
-  method: "GET",
-  headers: {
-    "Authorization": "Bearer abc123",
-  },
-})
-  .then(res => res.json())
-  .then(console.log)
+const resposta = await fetch(
+  "https://gyra-core.gyramais.com.br/credit-policy/policy?enabled=true&usage=REPORT",
+  { headers: { Authorization: `Bearer ${token}` } },
+);
+const politicas = await resposta.json();
 ```
 
 ```python Python
 import requests
 
-url = "https://gyra-core.gyramais.com.br/credit-policy/policy"
-headers = {
-  "Authorization": "Bearer abc123"
-}
-response = requests.get(url, headers=headers)
-print(response.json())
+resposta = requests.get(
+    "https://gyra-core.gyramais.com.br/credit-policy/policy",
+    headers={"Authorization": f"Bearer {token}"},
+    params={"enabled": "true", "usage": "REPORT"},
+)
+politicas = resposta.json()
 ```
 
 </RequestExample>
@@ -63,24 +79,45 @@ print(response.json())
 ```json 200 OK
 [
   {
-    "name": "EMPRESA EXEMPLO LTDA",
-    "reportType": "CUSTOMER_GYRA_360_PLUS",
+    "id": "6612a7f3625ea4ab00000000",
+    "name": "Crédito PJ Completo+",
+    "kind": "BASE",
+    "usage": "REPORT",
     "documentType": "CNPJ",
-    "bureauType": "BOAVISTA",
-    "hasSCR": false,
+    "hasSCR": true,
     "balanceRuleEnabled": false,
-    "enabled": false,
-    "id": "6612a7f32ef457de00000000",
+    "reportType": "CUSTOMER_GYRA_360_PLUS",
+    "userId": "6612a7f338154f0100000000",
     "organizationId": "6612a7f3fa9e086b00000000",
-    "createdAt": "2024-07-24T17:32:51.896Z"
+    "createdAt": "2026-05-12T14:03:51.896Z",
+    "updatedAt": "2026-07-30T09:12:10.402Z",
+    "bureauType": "BOAVISTA",
+    "description": null,
+    "summary": null,
+    "categories": [],
+    "duration": null,
+    "templatedAt": null,
+    "version": 3,
+    "enabled": true,
+    "integrationGroup": {
+      "id": "6612a7f3ae25b13000000000",
+      "documentType": "CNPJ",
+      "label": "Completo+",
+      "name": "CUSTOMER_GYRA_360_PLUS",
+      "hasParecer": true
+    },
+    "parent": null,
+    "parecerEnabled": true,
+    "parecerSource": "ORG_TIER",
+    "parecerTier": "COMPLETE_PLUS"
   }
 ]
 ```
 
-```json 401 Unauthorized
+```json 400 Bad Request
 {
-  "code": 401,
-  "message": "Token de acesso inválido."
+  "code": 400,
+  "message": "usage must be one of the following values: REPORT, PIPELINE"
 }
 ```
 

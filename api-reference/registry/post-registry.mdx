@@ -1,0 +1,21 @@
+---
+title: "Criar Cadastro"
+description: "No início de uma jornada, para garantir que o dossiê daquele CNPJ ou CPF existe."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: post /v1/registry
+---
+
+### Quando usar
+
+No início de uma jornada, para garantir que o dossiê daquele CNPJ ou CPF existe.
+
+<Tip>
+  **É idempotente por documento.** Chamar de novo com o mesmo CNPJ devolve o cadastro que já existe, em vez de duplicar. É seguro chamar sempre.
+</Tip>
+
+<Note>
+  Contexto e vocabulário em [Cadastro documental](/onboarding/cadastro-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/onboarding/visao-geral).
+</Note>

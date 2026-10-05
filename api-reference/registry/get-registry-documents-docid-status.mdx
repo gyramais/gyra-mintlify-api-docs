@@ -1,0 +1,23 @@
+---
+title: "Status do Documento"
+description: "O envio respondeu `202` e você precisa acompanhar."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: get /v1/registry/documents/{docId}/status
+---
+
+### Quando usar
+
+O envio respondeu `202` e você precisa acompanhar. Devolve o mesmo corpo do resultado completo.
+
+### Prefira webhook a polling
+
+Status terminais: `VALIDATED`, `FAILED`, `OUT_OF_SCOPE`, `MANUAL_REVIEW`, `REJECTED_QUALITY`. Enquanto não for um deles, o documento ainda está no pipeline.
+
+Assinar `registry.document.assessed` evita o laço de polling por completo.
+
+<Note>
+  Contexto e vocabulário em [Análise documental](/onboarding/analise-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/onboarding/visao-geral).
+</Note>

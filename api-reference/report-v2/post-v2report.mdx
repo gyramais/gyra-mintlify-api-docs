@@ -1,6 +1,6 @@
 ---
 title: Criar Relatório (v2)
-description: Dispara uma nova análise de crédito para CPF ou CNPJ com o payload revisado da v2.
+description: Dispara uma análise de crédito para um CPF ou CNPJ com a política que você escolher.
 surface: api
 domain: relatorio
 audience: integrador
@@ -8,150 +8,116 @@ lang: tecnica
 openapi: post /v2/report
 ---
 
-<Endpoint
-  method="POST"
-  path="/v2/report"
-  headers={[
-    {
-      name: "Authorization",
-      type: "string",
-      required: true,
-      description: "Token JWT no formato Bearer. Exemplo: `Bearer abc123`"
-    }
-  ]}
-  requestBody={{
-    contentType: "application/json",
-    body: {
-      document: "43591367000130",
-      type: "cnpj",
-      policyId: "69a1fbb06a44799c9c440d2d"
-    }
-  }}
-  responses={{
-    200: {
-      contentType: "application/json",
-      body: {
-        id: "69a207bcdd0197828df9155a",
-        status: "PROCESSING",
-        createdAt: "2026-02-27T21:08:11.938Z",
-        updatedAt: "2026-02-27T21:08:11.938Z"
-      }
-    },
-    401: {
-      contentType: "application/json",
-      body: {
-        code: 401,
-        message: "Token de acesso inválido."
-      }
-    }
-  }}
-/>
-
 ### Quando usar
 
-Use este endpoint para iniciar uma nova análise de crédito para CPF ou CNPJ. A chamada é assíncrona: retorna imediatamente o `id` do relatório com status inicial `PROCESSING` e você recebe o resultado final via webhook ou consultando `GET /v2/report/{id}`.
+Use esta rota para iniciar a análise de um CPF ou CNPJ. A chamada é assíncrona: devolve o `id` do relatório na hora, com status `PENDING`, e a análise segue em segundo plano. Acompanhe pelo [webhook](/api-reference/webhook/post-webhook) `REPORT_FINISHED` ou consultando [`GET /v2/report/{id}`](/api-reference/report-v2/get-v2report).
 
 ### Autenticação
 
-Bearer JWT no header `Authorization`.
-
-### Parâmetros
-
-| Nome | Local | Tipo | Obrigatório | Descrição |
-|---|---|---|---|---|
-| `document` | `body` | `string` | `sim` | CPF (11 dígitos) ou CNPJ (14 dígitos), somente números. |
-| `type` | `body` | `string` | `sim` | Tipo do documento. Valores aceitos: `cpf` ou `cnpj`. |
-| `policyId` | `body` | `string` | `sim` | ID da política de decisão que será aplicada. Obtenha em `GET /credit-policy/policy`. |
+Bearer JWT no header `Authorization`. A credencial precisa da permissão de criar relatórios pela API.
 
 ### Corpo da requisição
 
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `document` | `string` | sim | CPF ou CNPJ, sem máscara. O dígito verificador é validado. O CNPJ alfanumérico é aceito. |
+| `policyId` | `string` | sim | ID da política. Use uma política habilitada e de relatório (`usage: REPORT`), listada em [`GET /credit-policy/policy`](/api-reference/credit-policypolicy/get-credit-policypolicy). |
+| `months` | `integer` | não | Meses de histórico do SCR. Sem o campo, vale o configurado na política, depois o da organização, e por fim 12. |
+| `type` | `string` | não | Ignorado. O tipo de relatório e o tipo de documento vêm da política. Aceito por compatibilidade. |
+
 ```json
 {
-  "document": "43591367000130",
-  "type": "cnpj",
-  "policyId": "69a1fbb06a44799c9c440d2d"
+  "document": "11222333000181",
+  "policyId": "6612a7f3625ea4ab00000000"
 }
 ```
 
-<Warning>
-  **Chamar duas vezes para o mesmo documento e a mesma política não gera dois relatórios.** Verificado contra a API: a segunda chamada devolveu **o relatório já existente**, com o mesmo `id` e o `createdAt` original, em vez de criar um novo.
+O documento precisa combinar com a política: CNPJ numa política de CNPJ, CPF numa política de CPF. Caso contrário a resposta é `422`.
 
-  Na prática isso protege contra cobrança duplicada por retry, mas também significa que **você não força uma reanálise repetindo o `POST`**. Se precisa de dados novos, é preciso um documento ou uma política diferente.
+### Mesmo documento, mesma política, mesmo dia
+
+Um relatório é identificado por **documento, política, versão da política e dia**. Repetir o `POST` com essa mesma combinação no mesmo dia não cria um segundo relatório:
+
+| Situação do relatório do dia | O que o `POST` devolve |
+|---|---|
+| Já decidido (`APPROVED` ou `REJECTED`) | O relatório existente, com o mesmo `id`, sem reprocessar. |
+| Ainda `PENDING` | O mesmo `id`, e a coleta das fontes é disparada de novo sobre ele. |
+
+Isso protege contra relatório duplicado por retry. Para uma análise nova, use outro dia, outra política ou publique uma nova versão da política.
+
+<Warning>
+  Se a resposta for `503` com `reportId` no corpo, o relatório **já foi criado**, mas a análise não pôde ser iniciada. Consulte esse `reportId` antes de tentar de novo.
 </Warning>
 
 <RequestExample>
 
 ```bash cURL
-curl --location 'https://gyra-core.gyramais.com.br/v2/report' \
---header 'Authorization: Bearer abc123' \
---header 'Content-Type: application/json' \
---data-raw '{
-  "document": "43591367000130",
-  "type": "cnpj",
-  "policyId": "69a1fbb06a44799c9c440d2d"
-}'
+curl --request POST 'https://gyra-core.gyramais.com.br/v2/report' \
+  --header 'Authorization: Bearer SEU_TOKEN' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "document": "11222333000181",
+    "policyId": "6612a7f3625ea4ab00000000"
+  }'
 ```
 
 ```javascript JavaScript
-fetch("https://gyra-core.gyramais.com.br/v2/report", {
+const resposta = await fetch("https://gyra-core.gyramais.com.br/v2/report", {
   method: "POST",
   headers: {
-    Authorization: "Bearer abc123",
-    "Content-Type": "application/json"
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    document: "43591367000130",
-    type: "cnpj",
-    policyId: "69a1fbb06a44799c9c440d2d"
-  })
-})
-  .then(res => res.json())
-  .then(console.log)
+    document: "11222333000181",
+    policyId: "6612a7f3625ea4ab00000000",
+  }),
+});
+const relatorio = await resposta.json();
 ```
 
 ```python Python
 import requests
 
-url = "https://gyra-core.gyramais.com.br/v2/report"
-headers = {
-  "Authorization": "Bearer abc123",
-  "Content-Type": "application/json"
-}
-payload = {
-  "document": "43591367000130",
-  "type": "cnpj",
-  "policyId": "69a1fbb06a44799c9c440d2d"
-}
-
-response = requests.post(url, headers=headers, json=payload)
-print(response.json())
+resposta = requests.post(
+    "https://gyra-core.gyramais.com.br/v2/report",
+    headers={"Authorization": f"Bearer {token}"},
+    json={
+        "document": "11222333000181",
+        "policyId": "6612a7f3625ea4ab00000000",
+    },
+)
+relatorio = resposta.json()
 ```
 
 </RequestExample>
-
-<Tip>
-A requisição retorna o `id` e o status inicial do relatório. Você pode configurar um webhook para receber a conclusão em tempo real ou consultar `GET /v2/report/{id}` para obter o status atualizado.
-</Tip>
 
 <ResponseExample>
 
 ```json 200 OK
 {
+  "reportProgress": {
+    "steps": [
+      {
+        "event": "REPORT_CHECKING",
+        "message": "Report sent to check the document."
+      }
+    ]
+  },
   "id": "6612a7f3a19b467000000000",
   "createdAt": "2026-07-31T13:42:37.059Z",
-  "updatedAt": "2026-07-31T18:03:37.453Z",
-  "document": "43591367000130",
+  "updatedAt": "2026-07-31T13:42:37.059Z",
+  "document": "11222333000181",
   "organizationId": "6612a7f3fa9e086b00000000",
   "customerId": "6612a7f388be48e900000000",
   "months": 12,
-  "policyVersion": 1.11,
-  "verified": true,
+  "policyVersion": 3,
+  "verified": false,
+  "operationId": null,
+  "operationResultId": null,
   "status": {
-    "id": "6612a7f33fdd7d9400000000",
-    "value": "APPROVED"
-  },
-  "reportProgress": {
-    "steps": []
+    "id": "6612a7f3410dcd8100000000",
+    "value": "PENDING"
   }
 }
 ```
@@ -159,22 +125,36 @@ A requisição retorna o `id` e o status inicial do relatório. Você pode confi
 ```json 400 Bad Request
 {
   "code": 400,
-  "message": "document should not be empty,type must be one of the following values: cpf, cnpj"
+  "message": "Você precisa inserir um CNPJ ou CPF válido."
 }
 ```
 
-```json 401 Unauthorized
+```json 422 Unprocessable Entity
 {
-  "code": 401,
-  "message": "Token de acesso inválido."
+  "code": 422,
+  "message": "The provided document does not match the selected policy"
 }
 ```
 
-```json 500 Internal Server Error
+```json 503 Service Unavailable
 {
-  "code": 500,
-  "message": "Cannot read properties of undefined (reading 'replace')"
+  "code": 503,
+  "message": "Não foi possível iniciar a análise do relatório. Tente novamente em alguns instantes.",
+  "reportId": "6612a7f3a19b467000000000"
 }
 ```
 
 </ResponseExample>
+
+### Erros
+
+| Código | Mensagem | Causa |
+|---|---|---|
+| `400` | `"Você precisa inserir um CNPJ ou CPF válido."` | `document` ausente ou com dígito verificador inválido. |
+| `400` | `"policyId not defined"` | Corpo sem `policyId`. |
+| `400` | `"Política não está habilitada para ser utilizada"` | `policyId` inexistente ou política não habilitada para a sua organização. |
+| `400` | `"Esta política é de esteira: rode a esteira que a usa."` | A política é de esteira e não roda sozinha. |
+| `401` | `"Token de acesso inválido."` | Token ausente ou expirado. |
+| `403` | `"Você não tem permissão para acessar este recurso."` | A credencial não tem a permissão de criar relatórios pela API. |
+| `422` | `"The provided document does not match the selected policy"` | Tipo de documento diferente do da política. |
+| `503` | `"Não foi possível iniciar a análise do relatório. Tente novamente em alguns instantes."` | O relatório foi criado, mas a análise não foi enfileirada. Use o `reportId` do corpo. |

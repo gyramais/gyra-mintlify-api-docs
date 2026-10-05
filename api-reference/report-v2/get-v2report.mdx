@@ -1,6 +1,6 @@
 ---
 title: Consultar Relatório (v2)
-description: Consulta um relatório pelo ID usando a estrutura de resposta revisada da v2.
+description: Retorna o relatório completo, com status, progresso, seções, pareceres e resultado do comitê.
 surface: api
 domain: relatorio
 audience: integrador
@@ -8,97 +8,63 @@ lang: tecnica
 openapi: get /v2/report/{id}
 ---
 
-<Endpoint
-  method="GET"
-  path="/v2/report/{id}"
-  headers={[
-    {
-      name: "Authorization",
-      type: "string",
-      required: true,
-      description: "Token JWT no formato Bearer. Exemplo: `Bearer abc123`"
-    }
-  ]}
-  pathParameters={[
-    {
-      name: "id",
-      type: "string",
-      required: true,
-      description: "ID do relatório"
-    }
-  ]}
-  responses={{
-    200: {
-      contentType: "application/json",
-      body: {
-        id: "69a207bcdd0197828df9155a",
-        status: { id: "6614758260513064a5af1046", value: "PENDING" },
-        document: "43**********30",
-        policyId: "69a1fbb06a44799c9c440d2d",
-        organizationId: "6612a7f30000000000000001",
-        createdAt: "2026-02-27T21:08:11.938Z",
-        updatedAt: "2026-02-27T21:09:39.455Z"
-      }
-    },
-    401: {
-      contentType: "application/json",
-      body: {
-        code: 401,
-        message: "Token de acesso inválido."
-      }
-    }
-  }}
-/>
-
 ### Quando usar
 
-Use este endpoint para acompanhar o ciclo de vida de um relatório específico e obter o resultado consolidado. Use após criar um relatório para fazer polling de status ou para buscar os dados finais antes de tomar decisão de crédito.
+Use esta rota para ler o resultado de um relatório criado em [`POST /v2/report`](/api-reference/report-v2/post-v2report): status da decisão, progresso do processamento e o conteúdo de todas as seções. Para ler uma seção só, use [Consultar Seção por Tipo](/api-reference/report/get-report-section). Para ler só os pareceres, use [`GET /report/{id}/insights`](/api-reference/report/get-reportinsights).
 
 ### Autenticação
 
-Bearer JWT no header `Authorization`.
+Bearer JWT no header `Authorization`. A credencial precisa da permissão de leitura de relatórios pela API. Um `id` de outra organização responde `404`.
 
 ### Parâmetros
 
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
-| `id` | `path` | `string` | `sim` | ID do relatório retornado em `POST /v2/report`. |
-| `tabType` | `query` | `string` | `não` | Tipo do relatório (filtra o conjunto de seções retornadas). |
-| `details` | `query` | `boolean` | `não` | Define se os detalhes das seções devem ser retornados. Use `false` para resposta enxuta. |
+| `id` | `path` | `string` | sim | ID do relatório devolvido em `POST /v2/report`. |
+
+A rota não aceita filtros: a resposta traz sempre todas as seções, com o conteúdo.
+
+### Resposta
+
+| Campo | Descrição |
+|---|---|
+| `status.value` | Decisão do relatório: `PENDING`, `APPROVED` ou `REJECTED`. |
+| `reportProgress.isFinalized` | `true` quando todas as fontes terminaram. `finalizedAt` traz a data. |
+| `sections[]` | Uma entrada por seção: `id`, `type` (`id`, `title`, `value`), `sectionDetails[]` (`values` e `errors`), `errors`, o comentário mais recente em `comments[]` e os campos do Parecer IA (`parecer`, `parecerScore`, `parecerRiskLevel`, `parecerStatus`, `parecerFeedback`). |
+| `policyId`, `policyName`, `policyVersion` | Política aplicada. |
+| `analystId`, `analystName`, `commentary` | Decisão manual, quando houver. |
+| `parecerEnabled` | Se o relatório gera Parecer IA por seção. |
+| `committeeStatus`, `committeeDecision`, `committeeResult` | Resultado do Comitê de Crédito IA, quando convocado. |
+| `exportUrl`, `exportExcelUrl` | Último arquivo exportado (PDF e Excel), ou `null`. |
+
+O nome de cada fonte de dado não vem na resposta: os dados aparecem já organizados por seção.
 
 <RequestExample>
 
 ```bash cURL
-curl --location 'https://gyra-core.gyramais.com.br/v2/report/69a207bcdd0197828df9155a' \
---header 'Authorization: Bearer abc123'
+curl --request GET 'https://gyra-core.gyramais.com.br/v2/report/6612a7f3a19b467000000000' \
+  --header 'Authorization: Bearer SEU_TOKEN'
 ```
 
 ```javascript JavaScript
-fetch("https://gyra-core.gyramais.com.br/v2/report/69a207bcdd0197828df9155a", {
-  method: "GET",
-  headers: {
-    Authorization: "Bearer abc123"
-  }
-})
-  .then(res => res.json())
-  .then(console.log)
+const resposta = await fetch(
+  "https://gyra-core.gyramais.com.br/v2/report/6612a7f3a19b467000000000",
+  { headers: { Authorization: `Bearer ${token}` } },
+);
+const relatorio = await resposta.json();
 ```
 
 ```python Python
 import requests
 
-url = "https://gyra-core.gyramais.com.br/v2/report/69a207bcdd0197828df9155a"
-headers = {"Authorization": "Bearer abc123"}
-
-response = requests.get(url, headers=headers)
-print(response.json())
+resposta = requests.get(
+    "https://gyra-core.gyramais.com.br/v2/report/6612a7f3a19b467000000000",
+    headers={"Authorization": f"Bearer {token}"},
+)
+relatorio = resposta.json()
 ```
 
 </RequestExample>
-
-<Tip>
-O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo inclui todas as seções (`sections[]`) com dados por fonte, regras aplicadas e decisão consolidada.
-</Tip>
 
 <ResponseExample>
 
@@ -107,10 +73,10 @@ O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo inc
   "id": "6612a7f3a19b467000000000",
   "createdAt": "2026-07-31T13:42:37.059Z",
   "updatedAt": "2026-07-31T13:43:28.150Z",
-  "document": "43591367000130",
+  "document": "11222333000181",
   "yearMonthDay": 20260731,
   "policyId": "6612a7f3625ea4ab00000000",
-  "policyVersion": 1.11,
+  "policyVersion": 3,
   "policyName": "Completo+",
   "organizationId": "6612a7f3fa9e086b00000000",
   "commentary": null,
@@ -131,28 +97,22 @@ O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo inc
   "ranWithoutSCRReason": null,
   "sections": [
     {
-      "id": "6612a7f31f3a577d00000000",
-      "type": {
-        "id": "6612a7f3ae25b13000000000",
-        "title": "Resumo",
-        "value": "SUMMARY"
-      },
-      "parecerStatus": null,
-      "parecerScore": null,
-      "parecerRiskLevel": null,
-      "sectionDetails": "[ ... ver GET /report/{id}/section/{sectionType} ... ]"
-    },
-    {
       "id": "6612a7f30a2c8b1a00000000",
       "type": {
         "id": "6612a7f3cd81d4f900000000",
         "title": "Sanções",
         "value": "SANCTIONS"
       },
-      "parecerStatus": "DONE",
+      "comments": [],
+      "sectionDetails": [
+        { "values": { "...": "dados da seção" }, "errors": [] }
+      ],
+      "parecer": "Texto do parecer da seção...",
       "parecerScore": 10,
       "parecerRiskLevel": "LOW",
-      "sectionDetails": "[ ... ver GET /report/{id}/section/{sectionType} ... ]"
+      "parecerStatus": "DONE",
+      "parecerFeedback": null,
+      "errors": []
     }
   ],
   "product": null,
@@ -166,18 +126,15 @@ O exemplo de resposta foi resumido para facilitar a leitura. O JSON completo inc
 }
 ```
 
-```json 401 Unauthorized
-{
-  "code": 401,
-  "message": "Token de acesso inválido."
-}
-```
-
 ```json 404 Not Found
 {
   "code": 404,
-  "message": "Report not found"
+  "message": "Relatório não encontrado"
 }
 ```
 
 </ResponseExample>
+
+<Tip>
+  O exemplo mostra uma seção. Um relatório real traz todas as seções da política, e `sectionDetails[].values` muda de forma por tipo de seção. O dicionário está em [Estrutura do relatório](/data/estrutura-relatorio).
+</Tip>

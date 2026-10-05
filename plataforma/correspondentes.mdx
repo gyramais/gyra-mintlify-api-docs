@@ -1,0 +1,213 @@
+---
+title: "Correspondentes"
+description: "Credencie correspondentes para originar crédito em seu nome: entrada do canal, cadastro da entidade, atendentes, validades, área de atuação, produtos e bloqueio, tudo pela tela Correspondentes."
+icon: "handshake"
+surface: plataforma
+domain: plataforma
+audience: operador
+lang: nao-tecnica
+---
+
+O módulo Correspondentes deixa parceiros credenciados originarem crédito para a sua instituição pelo **portal do parceiro**, cada um com os produtos, a região e os atendentes que você autorizou.
+
+<Info>
+  **Resumo:** módulo específico para clientes CaaS (crédito como serviço). Na tela **Correspondentes** você escolhe a esteira por onde as operações do canal entram, cadastra cada empresa parceira com os dados da Receita, define o que ela pode ofertar e onde atua, e cria os atendentes que usam o portal. Cadastro ou certificação vencidos bloqueiam o acesso, e você recebe o aviso por e-mail antes.
+</Info>
+
+<Note>
+  Correspondentes é um módulo contratado à parte. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Onde fica e quem acessa
+
+Menu lateral, grupo **Operação**, item **Correspondentes**. O item aparece quando a organização tem o módulo **e** a pessoa gerencia as configurações da organização (Administrador). Sem o módulo, o item não aparece: não há cadeado nem apresentação.
+
+| Situação | O que a tela mostra |
+| --- | --- |
+| Organização sem o módulo | *Esta organização não opera canal de correspondentes.* |
+| Pessoa sem a permissão de configurações | *Seu usuário não tem permissão para gerenciar o canal de correspondentes. Peça a um administrador da organização.* |
+
+## Como funciona o canal
+
+<Steps>
+  <Step title="Você escolhe a entrada do canal">
+    Toda operação criada no portal do parceiro entra por uma única esteira da sua organização, a **esteira de entrada do canal**.
+  </Step>
+  <Step title="Você credencia o correspondente">
+    Cadastra a empresa pelo CNPJ, escolhe os produtos que ela pode ofertar, a área de atuação e os atendentes.
+  </Step>
+  <Step title="O atendente cria a operação no portal">
+    Cada atendente recebe por e-mail o convite para criar a senha do portal do parceiro. O acesso ao portal é separado do Toolbox.
+  </Step>
+  <Step title="A esteira de entrada analisa">
+    A esteira começa com uma Solicitação que o próprio atendente preenche no portal (o cadastro inicial). Depois, o Enquadramento de produto escolhe o produto e reprova o que o correspondente não pode ofertar.
+  </Step>
+  <Step title="O atendente escolhe a oferta">
+    Se a esteira tiver uma pré-aprovação para o atendente do canal, ele escolhe valor e prazo no próprio portal. Ver [Na esteira](#na-esteira).
+  </Step>
+</Steps>
+
+## Entrada do canal
+
+No topo da tela, o cartão **Entrada do canal** define a esteira por onde entra toda operação criada no portal do parceiro. Escolha a esteira e clique em **Salvar**.
+
+A esteira precisa começar com uma etapa de Solicitação para **Atendente do canal (correspondente)**, o cadastro inicial que o atendente preenche no portal. Um Enquadramento de produto, depois, escolhe o produto. Ver [Etapas da esteira](/esteiras/etapas).
+
+- O seletor oferece as esteiras de CNPJ, porque o correspondente cria a operação pelo CNPJ. Esteira desativada aparece marcada como **(desativada)**: dá para configurar antes de ativar.
+- **Nenhuma: o portal não cria operação** desliga a entrada.
+
+A tela avisa quando a escolha impede o canal de funcionar:
+
+| Situação | Aviso |
+| --- | --- |
+| Nenhuma esteira | *Sem esteira de entrada, os correspondentes não conseguem criar operação no portal.* |
+| Esteira de CPF | *Esta esteira analisa CPF, e o correspondente cria a operação pelo CNPJ. Escolha uma esteira de CNPJ.* |
+| Esteira desativada | *Esta esteira está desativada: o portal só cria operação depois que ela for ativada.* |
+| Esteira removida | *A esteira escolhida não existe mais. Escolha outra.* |
+
+## Cadastrar um correspondente
+
+Clique em **Cadastrar correspondente**. O cadastro tem três passos: **Empresa**, **Atuação** e **Representantes**.
+
+<Steps>
+  <Step title="Empresa">
+    Informe o **CNPJ** e clique em **Buscar dados** (ou saia do campo): a consulta à Receita Federal pré-preenche razão social, nome fantasia, município da sede, e-mail, telefones, endereço principal e representantes. Confira e complete **Município da sede**, **E-mails** (o primeiro é o principal), **Telefones**, **Endereço principal** e, se houver, **Endereços adicionais**. Cada lista aceita até 10 itens.
+  </Step>
+  <Step title="Atuação">
+    O que é da sua instituição, e não da Receita: **Natureza do relacionamento** (por exemplo, Correspondente ou Associação), **Data do cadastro**, **Validade do cadastro**, **Municípios de atuação** e **Produtos que pode ofertar**.
+  </Step>
+  <Step title="Representantes">
+    Quem responde pela entidade: **Nome**, **CPF**, **Cargo**, **Início do mandato** e **Fim do mandato**. Clique em **Cadastrar**.
+  </Step>
+</Steps>
+
+Depois de salvar, o detalhe do correspondente abre para você adicionar os usuários.
+
+Avisos da consulta do CNPJ:
+
+| Situação | O que acontece |
+| --- | --- |
+| Dados encontrados | *Dados da Receita preenchidos. Confira antes de seguir.* Se a situação cadastral não for ativa, o aviso mostra a situação. |
+| CNPJ sem dados | *Não encontramos dados deste CNPJ; preencha manualmente.* |
+| CNPJ já credenciado na sua organização | O aviso diz com que nome ele está credenciado e o cadastro não avança. Abra o existente na lista para editar. |
+
+O CNPJ é conferido pelo dígito verificador, inclusive no formato alfanumérico.
+
+## A lista de correspondentes
+
+Cada linha mostra **Correspondente** (nome e CNPJ), **Situação**, **Produtos**, **Área**, **Usuários ativos** (por exemplo, *2 de 3*) e **Prontidão**. Use as visões **Todos**, **Ativos** e **Bloqueados** e a busca *Buscar por nome ou CNPJ*. Cadastro que vence em breve ou já venceu aparece com o selo de validade junto da situação.
+
+Clique numa linha para abrir o detalhe, com as seções **Dados**, **Representantes**, **Produtos que pode ofertar**, **Área de atuação** e **Usuários**, cada uma com o seu **Editar**.
+
+## Produtos que pode ofertar
+
+O correspondente não escolhe o produto. A esteira de entrada do canal enquadra a operação, e produto fora desta lista **reprova a proposta** no Enquadramento, com o motivo *O produto (nome) não está habilitado para este correspondente.*
+
+Sem nenhum produto na lista, o correspondente não consegue criar operação. O catálogo vem de [Produtos](/propostas/produtos), só com os produtos ativos.
+
+## Área de atuação
+
+Delimite onde o correspondente pode originar:
+
+- **Municípios atendidos**: escolha o estado e, depois, os municípios dele.
+- **Faixas de CEP**: prefixos de 2 a 8 dígitos. O prefixo `41` cobre toda a faixa que começa com 41.
+
+A área vale para todos os usuários do correspondente, e o endereço cadastral da empresa tomadora é conferido na criação da operação. Sem área declarada, o correspondente atende em qualquer lugar.
+
+## Usuários (atendentes)
+
+Os atendentes são as pessoas do correspondente que criam as operações no portal. Para adicionar, preencha **Nome**, **E-mail**, **CPF** e, se quiser, **Telefone**, **Data da certificação**, **Nota da certificação** (0 a 100) e **Validade da certificação**. Clique em **Adicionar usuário**.
+
+- O atendente recebe por e-mail o convite para criar a senha do portal. Se o convite não sair, a tela avisa: *Agente criado, mas o convite não saiu. Peça para ele usar "Esqueci minha senha" no portal.*
+- Em **Editar**, trocar o e-mail troca o login do portal.
+- **Bloquear** vale só para aquele atendente e preserva a leitura: ele continua vendo as operações dele, mas não inicia novas. **Desbloquear** devolve o acesso.
+
+### Administrador do correspondente
+
+Marque **Administrador** ao criar, ou use **Tornar administrador** na linha, para que o atendente gerencie os usuários do próprio correspondente no portal. A sua instituição marca o primeiro administrador. **Remover administrador** desfaz.
+
+## Validades do cadastro e da certificação
+
+O cadastro do correspondente e a certificação de cada atendente têm validade:
+
+- A validade nasce em **data + 2 anos** e acompanha a data enquanto você não a edita. Você pode escolher outra, mas não anterior à data do cadastro ou da certificação.
+- **Cadastro vencido bloqueia todos os usuários** do correspondente no portal. **Certificação vencida bloqueia só aquele atendente.**
+
+Os selos mostram a situação:
+
+| Selo | Quando |
+| --- | --- |
+| **Válido até** (data) | Dentro da validade. |
+| **Vence em** (dias) | Faltam 30 dias ou menos. |
+| **Vencido em** (data) | A validade passou e o acesso está bloqueado. |
+
+Para renovar, atualize a data do cadastro (em **Dados**) ou da certificação (no **Editar** do atendente).
+
+### Aviso de vencimento por e-mail
+
+Os administradores da organização recebem um e-mail com os cadastros e certificações de correspondentes a vencer ou vencidos, vencidos primeiro. Cada item é avisado **30 dias antes** do vencimento e **no dia** em que vence. O botão **Abrir correspondentes** leva direto à tela.
+
+## Pronto para originar
+
+A coluna **Prontidão** e o topo do detalhe mostram **Pronto** quando o correspondente tem tudo para trabalhar. Quando falta algo, aparece **Incompleto** com o que falta:
+
+| Falta | Motivo |
+| --- | --- |
+| **desbloquear** | O correspondente está bloqueado. |
+| **renovar cadastro** | O cadastro venceu. |
+| **produto** | Nenhum produto que possa ofertar. |
+| **usuário ativo** | Nenhum atendente ativo. |
+
+A prontidão é um aviso para você. A conferência que vale é feita quando o atendente tenta criar a operação. A esteira de entrada do canal também precisa estar configurada.
+
+## Bloquear um correspondente
+
+**Bloquear correspondente** pede confirmação e interrompe a originação de uma vez: nenhum usuário do correspondente inicia propostas novas, e as operações já criadas continuam visíveis no portal. **Desbloquear correspondente** devolve o acesso. Nada é apagado.
+
+## Na esteira
+
+O canal usa as etapas comuns da esteira com o destinatário **Atendente do canal (correspondente)**:
+
+| Etapa | Com o atendente do canal |
+| --- | --- |
+| **Solicitação** | O atendente que criou a operação preenche a solicitação no próprio portal. Nenhuma mensagem é enviada. Numa proposta que não veio de um correspondente, a etapa recusa: *A Solicitação é para o atendente do canal, mas a proposta não veio de um correspondente.* |
+| **Pré-aprovação** | Em **Enviar a oferta para**, escolha **Atendente do canal (correspondente)**: ele escolhe valor e prazo no portal, sem mensagem, e a esteira espera a escolha por padrão. A execução mostra **Atendente do canal escolheu** ou **Venceu sem escolha do atendente do canal**. Ver [Pré-aprovação e oferta](/propostas/pre-aprovacao-e-oferta). |
+
+A página da oferta abre dentro do portal do parceiro e avisa o portal quando a escolha é registrada, ou quando a oferta não aceita mais escolha, para o atendente voltar à operação.
+
+### Regras que só valem no canal
+
+- **Nada do cadastro é reaproveitado.** A Solicitação da esteira pede de novo tudo o que o modelo pede, inclusive a autorização de consulta ao SCR, mesmo que o CNPJ já tenha uma válida na sua organização: o sócio informado assina a cada proposta. Fora do canal, vale o comportamento do modelo.
+- **O titular nunca é o correspondente.** Numa Solicitação para **Titular do cadastro** sem contato na proposta, o destinatário vem do contato do cadastro do cliente, e não do formulário que o atendente preencheu. Para pedir o SCR no canal, prefira **Sócios informados**.
+
+## Acompanhar o canal
+
+Em [Propostas](/propostas/visao-geral), a aba **Gerencial** mostra a origem **Canal de correspondentes**. Nas organizações com o módulo, ela ganha os filtros **Correspondente**, **Tipo de canal** e **Atendente**, e o cartão **Quem traz o negócio** quebra os números por correspondente e por atendente.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="O correspondente acessa o Toolbox?">
+    Não. Os atendentes entram no portal do parceiro, com acesso próprio. O convite leva ao portal, não ao login do Toolbox.
+  </Accordion>
+  <Accordion title="O atendente escolhe o produto da operação?">
+    Não. O Enquadramento de produto da esteira de entrada escolhe. Se o produto escolhido não estiver entre os que o correspondente pode ofertar, a proposta é reprovada no Enquadramento.
+  </Accordion>
+  <Accordion title="Posso apagar um correspondente?">
+    Use **Bloquear correspondente**. O histórico de operações continua disponível.
+  </Accordion>
+  <Accordion title="Um atendente ficou sem acesso. O que verifico?">
+    Se ele está bloqueado, se a certificação dele venceu e se o cadastro do correspondente venceu ou está bloqueado. Cadastro vencido ou bloqueado tira o acesso de todos os atendentes do correspondente.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Etapas da esteira" icon="diagram-project" href="/esteiras/etapas">
+    Solicitação, Pré-aprovação e as demais etapas.
+  </Card>
+  <Card title="Produtos" icon="box" href="/propostas/produtos">
+    O catálogo que o correspondente pode ofertar.
+  </Card>
+</CardGroup>

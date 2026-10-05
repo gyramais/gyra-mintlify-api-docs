@@ -1,6 +1,6 @@
 ---
 title: Gerar Token
-description: Gera um token para autenticar as requisições
+description: Troca o par de credenciais da organização por um token de acesso válido por 24 horas.
 surface: api
 domain: integracao
 audience: integrador
@@ -10,49 +10,63 @@ openapi: post /auth/authenticate
 
 ### Quando usar
 
-Use este endpoint no início de qualquer integração server-to-server para obter o JWT de acesso. Você pode usar quando sua aplicação for iniciar uma sessão técnica, quando o token expirar e precisar renovar autenticação antes de chamar endpoints de relatório, política ou webhook.
+Chame esta rota no início da integração para obter o token que vai no header `Authorization` de todas as outras chamadas. O token vale **24 horas** a partir da emissão (campo `expiresAt`). Gere um novo antes de expirar.
 
 ### Autenticação
 
-Headers obrigatórios: `gyra-client-secret`, `gyra-client-id`.
+A rota é pública: não exige token. As credenciais vão em dois headers. Gere o par em **Configurações**, **API & MCP**, conforme [Chaves de API](/api-reference/api-keys).
 
 ### Parâmetros
 
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
-| `gyra-client-id` | `header` | `string` | `sim` | Client ID da organização, recebido via suporte |
-| `gyra-client-secret` | `header` | `string` | `sim` | Client Secret da organização, recebido via suporte |
+| `gyra-client-id` | `header` | `string` | sim | Client ID da credencial. |
+| `gyra-client-secret` | `header` | `string` | sim | Client Secret da credencial, mostrado uma única vez na criação. |
+
+O corpo da requisição é ignorado.
+
+### Resposta
+
+| Campo | Descrição |
+|---|---|
+| `accessToken` | Token JWT. Envie como `Authorization: Bearer <accessToken>`. |
+| `expiresAt` | Data e hora em que o token deixa de valer (24 horas após a emissão). |
+| `id` | ID da sessão criada. |
+| `userId` | ID do usuário técnico da credencial. |
+| `organizationId` | Organização dona da credencial. Todas as chamadas feitas com o token ficam restritas a ela. |
+| `loggedOutAt` | Sempre `null` na emissão. |
+| `createdAt` / `updatedAt` | Datas de criação da sessão. |
 
 <RequestExample>
 
 ```bash cURL
-curl --location 'https://gyra-core.gyramais.com.br/auth/authenticate' \
---header 'gyra-client-secret: valor' \
---header 'gyra-client-id: valor'
+curl --request POST 'https://gyra-core.gyramais.com.br/auth/authenticate' \
+  --header 'gyra-client-id: SEU_CLIENT_ID' \
+  --header 'gyra-client-secret: SEU_CLIENT_SECRET'
 ```
 
 ```javascript JavaScript
-fetch("https://gyra-core.gyramais.com.br/auth/authenticate", {
+const resposta = await fetch("https://gyra-core.gyramais.com.br/auth/authenticate", {
   method: "POST",
   headers: {
-    "gyra-client-secret": "valor",
-    "gyra-client-id": "valor",
+    "gyra-client-id": process.env.GYRA_CLIENT_ID,
+    "gyra-client-secret": process.env.GYRA_CLIENT_SECRET,
   },
-})
-  .then(res => res.json())
-  .then(console.log)
+});
+const { accessToken, expiresAt } = await resposta.json();
 ```
 
 ```python Python
 import requests
 
-url = "https://gyra-core.gyramais.com.br/auth/authenticate"
-headers = {
-  "gyra-client-secret": "valor",
-  "gyra-client-id": "valor"
-}
-response = requests.post(url, headers=headers)
-print(response.json())
+resposta = requests.post(
+    "https://gyra-core.gyramais.com.br/auth/authenticate",
+    headers={
+        "gyra-client-id": client_id,
+        "gyra-client-secret": client_secret,
+    },
+)
+token = resposta.json()["accessToken"]
 ```
 
 </RequestExample>
@@ -72,11 +86,26 @@ print(response.json())
 }
 ```
 
+```json 400 Bad Request
+{
+  "code": 400,
+  "message": "ClientId inválido."
+}
+```
+
 ```json 401 Unauthorized
 {
   "code": 401,
-  "message": "Credenciais inválidas."
+  "message": "ClientSecret inválido."
 }
 ```
 
 </ResponseExample>
+
+### Erros
+
+| Código | Mensagem | Causa |
+|---|---|---|
+| `400` | `"ClientId inválido."` | O `gyra-client-id` não corresponde a nenhuma credencial (inclusive credencial revogada). |
+| `401` | `"ClientSecret inválido."` | O `gyra-client-secret` não confere com o client id. |
+| `401` | `"Token de acesso inválido."` | Resposta das **outras** rotas quando o token está ausente, malformado ou expirado. Gere outro aqui. |

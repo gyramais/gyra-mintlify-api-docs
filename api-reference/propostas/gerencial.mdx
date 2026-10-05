@@ -1,0 +1,281 @@
+---
+title: "Indicadores gerenciais"
+description: "Leia os números da aba Gerencial de Propostas (volume, aprovação, funil, gargalos e SLA) e exporte as propostas de um período, uma por linha."
+icon: "chart-line"
+surface: api
+domain: proposta
+audience: integrador
+lang: tecnica
+---
+
+As mesmas contas da aba **Gerencial** da tela de Propostas, para levar ao seu BI ou planilha: quantas propostas chegaram, quanto foi aprovado e emitido, onde elas param e quanto tempo cada etapa leva.
+
+<Info>
+  **Resumo:** `GET /v1/proposals/dashboard` devolve indicadores, funil, quebras e SLA de um período. `GET /v1/proposals/dashboard/rows` devolve as propostas desse período, uma por linha, até 5.000. Autenticação, módulo e erros comuns estão na [visão geral](/api-reference/propostas/visao-geral).
+</Info>
+
+## Período e filtros
+
+As duas rotas aceitam os mesmos filtros. O período conta pela **data de criação** da proposta.
+
+<ParamField query="from" type="string">Início do período, em ISO 8601 (por exemplo, `2026-09-05T00:00:00-03:00`). Ausente: 30 dias antes de `to`.</ParamField>
+<ParamField query="to" type="string">Fim do período, exclusivo, em ISO 8601. Ausente: o fim do dia de hoje, no horário de Brasília. O período vai até 366 dias.</ParamField>
+<ParamField query="origin" type="string">Origens, separadas por vírgula: `PUBLIC_FORM`, `OPERATOR`, `API`, `BATCH`, `CRM` e `CHANNEL`. `CHANNEL` é a proposta que veio do [canal de correspondentes](/plataforma/correspondentes); ela conta só como `CHANNEL`, nunca pela origem de cadastro.</ParamField>
+<ParamField query="correspondentId" type="string">Ids de correspondente, separados por vírgula.</ParamField>
+<ParamField query="agentId" type="string">Ids de atendente do correspondente, separados por vírgula.</ParamField>
+<ParamField query="productKey" type="string">Chaves de produto, separadas por vírgula.</ParamField>
+<ParamField query="portfolioId" type="string">Ids de carteira, separados por vírgula.</ParamField>
+<ParamField query="entityType" type="string">`COMPANY`, `PERSON` ou os dois, separados por vírgula.</ParamField>
+<ParamField query="status" type="string">Situações da proposta, separadas por vírgula. Valores em [Situações da proposta](/api-reference/propostas/propostas#situações-da-proposta).</ParamField>
+
+Cada filtro de lista aceita até 2.000 caracteres. Os números ficam guardados por até 60 segundos: a mesma consulta repetida nesse intervalo devolve o mesmo resultado.
+
+---
+
+## Ler os indicadores
+
+```http
+GET /v1/proposals/dashboard
+```
+
+Além dos filtros acima, esta rota aceita:
+
+<ParamField query="compare" type="string" default="true">`true` calcula também o período anterior, do mesmo tamanho e imediatamente antes. `false` devolve os blocos `prev` zerados.</ParamField>
+<ParamField query="dim" type="string" default="correspondent">Quebra do bloco `breakdown`: `correspondent`, `agent`, `product`, `portfolio`, `origin` ou `entityType`.</ParamField>
+<ParamField query="sla" type="string" default="WAITING_OPERATOR:2,IN_ANALYSIS:1,WAITING_CUSTOMER:7">Dias tolerados em cada situação aberta, no formato `SITUAÇÃO:dias` separado por vírgula. Situações aceitas: `DRAFT`, `IN_ANALYSIS`, `WAITING_CUSTOMER` e `WAITING_OPERATOR`. O rascunho só conta como aberto quando aparece aqui.</ParamField>
+
+<CodeGroup>
+```bash Requisição
+curl "https://gyra-core.gyramais.com.br/v1/proposals/dashboard?from=2026-09-05T03:00:00.000Z&to=2026-10-05T03:00:00.000Z&dim=product" \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200 (resumida)
+{
+  "range": {
+    "from": "2026-09-05T03:00:00.000Z",
+    "to": "2026-10-05T03:00:00.000Z",
+    "prevFrom": "2026-08-06T03:00:00.000Z",
+    "prevTo": "2026-09-05T03:00:00.000Z",
+    "weekStarts": ["2026-07-13T03:00:00.000Z", "2026-07-20T03:00:00.000Z", "2026-09-28T03:00:00.000Z"]
+  },
+  "kpis": {
+    "cur": {
+      "received": 48,
+      "requestedCents": 960000000,
+      "approvalRate": 0.6875,
+      "issuedOfferedCents": 312000000,
+      "ticketCents": 20000000,
+      "timeToOfferDays": 6.5,
+      "conversion": 0.3125,
+      "openNow": 11,
+      "outOfSla": 3
+    },
+    "prev": {
+      "received": 41,
+      "requestedCents": 790000000,
+      "approvalRate": 0.6471,
+      "issuedOfferedCents": 254000000,
+      "ticketCents": 19268293,
+      "timeToOfferDays": 7.2,
+      "conversion": 0.2927,
+      "openNow": 2,
+      "outOfSla": 0
+    }
+  },
+  "funnel": {
+    "cur": [
+      { "stage": 0, "count": 48, "valueCents": 960000000 },
+      { "stage": 1, "count": 44, "valueCents": 900000000 },
+      { "stage": 2, "count": 33, "valueCents": 690000000 },
+      { "stage": 3, "count": 18, "valueCents": 352000000 },
+      { "stage": 4, "count": 16, "valueCents": 320000000 },
+      { "stage": 5, "count": 15, "valueCents": 312000000 }
+    ],
+    "prev": []
+  },
+  "breakdown": {
+    "dim": "product",
+    "rows": [
+      {
+        "key": "capital-giro",
+        "label": "Capital de giro",
+        "cur": { "received": 30, "requestedCents": 640000000, "approvalRate": 0.7, "issuedOfferedCents": 210000000, "ticketCents": 21333333, "timeToOfferDays": 6.1, "conversion": 0.3333, "openNow": 7, "outOfSla": 2 },
+        "prev": { "received": 26, "requestedCents": 520000000, "approvalRate": 0.6667, "issuedOfferedCents": 170000000, "ticketCents": 20000000, "timeToOfferDays": 6.8, "conversion": 0.3077, "openNow": 1, "outOfSla": 0 },
+        "weekly": [2, 3, 1, 2, 4, 2, 3, 2, 5, 4, 6, 3]
+      }
+    ]
+  },
+  "mix": [
+    { "productKey": "capital-giro", "productName": "Capital de giro", "count": 30, "requestedCents": 640000000 }
+  ],
+  "cycle": [
+    { "pair": "RECEIVED_ANALYZED", "medianDays": 0.4, "p90Days": 1.8, "n": 44 }
+  ],
+  "offers": {
+    "firm": 18,
+    "chosen": 16,
+    "expiredWithoutChoice": 2,
+    "chosenAmountCents": 320000000,
+    "requestedOfChosenCents": 345000000,
+    "byCustomer": 13,
+    "byOperator": 3
+  },
+  "rejections": {
+    "total": 15,
+    "requestedCents": 270000000,
+    "rows": [{ "step": "Política de crédito PJ", "count": 9 }]
+  },
+  "aging": {
+    "rows": [
+      { "status": "WAITING_OPERATOR", "slaDays": 2, "upTo2": 3, "upTo7": 1, "over7": 1, "total": 5, "outOfSla": 2 }
+    ],
+    "oldest": [
+      {
+        "id": "66f1e0a3c2b9d40012a1b001",
+        "name": "Padaria Exemplo Ltda",
+        "document": "11222333000181",
+        "status": "WAITING_OPERATOR",
+        "days": 9.3,
+        "correspondentId": null,
+        "origin": "API"
+      }
+    ]
+  },
+  "generatedAt": "2026-10-05T12:40:18.000Z"
+}
+```
+</CodeGroup>
+
+O exemplo está resumido: `weekStarts` e as listas semanais têm uma posição por semana, e `weekly`, `statusWeekly`, `funnel.prev` e os demais itens de `cycle` e `aging.rows` foram cortados.
+
+### Indicadores
+
+`kpis.cur` vale para o período pedido; `kpis.prev`, para o período anterior. Sem dado, o indicador sai `0`.
+
+| Campo | Na tela | Como é calculado |
+| --- | --- | --- |
+| `received` | Propostas recebidas | Propostas criadas no período |
+| `requestedCents` | Valor solicitado | Soma do valor fixo do produto ou, sem ele, do valor pedido, em centavos |
+| `approvalRate` | Taxa de aprovação | Aprovadas sobre decididas, de `0` a `1`. Aprovada é a que chegou à pré-aprovação, à decisão final aprovada ou além; decidida é a aprovada ou a recusada |
+| `issuedOfferedCents` | Valor ofertado emitido | Soma do valor ofertado das propostas emitidas: o valor da oferta firme, senão o escolhido, senão o pedido |
+| `ticketCents` | Ticket médio | `requestedCents` dividido por `received` |
+| `timeToOfferDays` | Tempo até a oferta | Mediana, em dias, entre a criação e a emissão |
+| `conversion` | Conversão ponta a ponta | Emitidas sobre recebidas, de `0` a `1` |
+| `openNow` | Abertas agora | Propostas do período que estão agora numa situação aberta (`WAITING_OPERATOR`, `IN_ANALYSIS`, `WAITING_CUSTOMER` e, quando o `sla` o cita, `DRAFT`) |
+| `outOfSla` | Fora do SLA | Das abertas, as que estão na situação atual há mais dias que o `sla` permite |
+
+### Blocos da resposta
+
+<ResponseField name="range" type="object">Período pedido (`from`, `to`), período anterior (`prevFrom`, `prevTo`) e `weekStarts`: as segundas-feiras, à meia-noite de Brasília, das semanas da série. A série cobre o período ou, se ele for menor, as 12 últimas semanas até `to`.</ResponseField>
+<ResponseField name="weekly" type="object">`cur` e `prev`, cada um com os nove indicadores como listas, uma posição por semana de `weekStarts`. Em `prev`, a mesma janela deslocada pelo tamanho do período.</ResponseField>
+<ResponseField name="statusWeekly" type="object[]">Por semana de criação: `weekStart`, `issued` (emitidas), `open` (ainda abertas, rascunho incluído), `rejected` (recusadas) e `closed` (vencidas ou canceladas), pela situação de hoje.</ResponseField>
+<ResponseField name="funnel" type="object">`cur` e `prev`, seis etapas: `0` recebida, `1` analisada, `2` pré-aprovada, `3` oferta firme, `4` oferta escolhida, `5` emitida. `count` são as propostas que chegaram pelo menos à etapa; `valueCents` soma o valor pedido até a etapa `2` e o valor ofertado da `3` em diante.</ResponseField>
+<ResponseField name="breakdown" type="object">A quebra pedida em `dim`. Cada linha tem `key` (o id, a chave ou o valor da dimensão; `null` agrupa as propostas sem ele), `label` (só para `product` e `portfolio`), os indicadores `cur` e `prev` e `weekly`, com as propostas recebidas nas últimas 12 semanas da série. Ordem: mais recebidas primeiro.</ResponseField>
+<ResponseField name="mix" type="object[]">Por produto, no período: `productKey`, `productName`, `count` e `requestedCents`. Mais propostas primeiro.</ResponseField>
+<ResponseField name="cycle" type="object[]">Tempo entre etapas, no período: `pair` (`RECEIVED_ANALYZED`, `ANALYZED_PREAPPROVED`, `PREAPPROVED_FIRM`, `FIRM_CHOSEN` ou `CHOSEN_ISSUED`), `medianDays`, `p90Days` e `n` (propostas medidas). Durações de 120 dias ou mais entram juntas no último balde de 120 dias.</ResponseField>
+<ResponseField name="offers" type="object">No período: `firm` (com oferta firme), `chosen` (com oferta escolhida), `expiredWithoutChoice` (vencidas com oferta e sem escolha), `chosenAmountCents` (soma escolhida), `requestedOfChosenCents` (soma pedida dessas mesmas propostas), `byCustomer` e `byOperator` (quem registrou a escolha).</ResponseField>
+<ResponseField name="rejections" type="object">Recusadas no período: `total`, `requestedCents` e `rows`, com `step` (a etapa da esteira que reprovou, ou a seção da política quando não houve esteira; `null` quando não se sabe) e `count`.</ResponseField>
+<ResponseField name="aging" type="object">Retrato das propostas abertas **agora**, com os filtros mas sem o período. `rows` traz, por situação aberta, `slaDays`, `upTo2`, `upTo7` e `over7` (dias na situação), `total` e `outOfSla`. `oldest` traz as 5 há mais tempo na situação: `id`, `name`, `document`, `status`, `days`, `correspondentId` e `origin`.</ResponseField>
+<ResponseField name="generatedAt" type="string">Quando os números foram calculados.</ResponseField>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `"A data inicial precisa estar no formato ISO."` | `from` inválido |
+| `400` | `"A data final precisa estar no formato ISO."` | `to` inválido |
+| `400` | `"A data final precisa ser depois da data inicial."` | `to` igual ou anterior a `from` |
+| `400` | `"O período máximo é de 366 dias."` | Período longo demais |
+| `400` | `"A comparação precisa ser true ou false."` | `compare` diferente de `true` e `false` |
+| `400` | `"A origem informada não é válida."` | Origem fora da lista |
+| `400` | `"O correspondente informado não é válido."` | Id fora do formato |
+| `400` | `"O atendente informado não é válido."` | Id fora do formato |
+| `400` | `"O produto informado não é válido."` | Chave fora do formato |
+| `400` | `"A carteira informada não é válida."` | Id fora do formato |
+| `400` | `"O tipo de pessoa informado não é válido."` | `entityType` fora da lista |
+| `400` | `"A situação informada não é válida."` | Situação fora da lista |
+| `400` | `"A quebra informada não é válida."` | `dim` fora da lista |
+| `400` | `"O SLA precisa vir como SITUACAO:dias separados por vírgula (ex.: WAITING_OPERATOR:2)."` | `sla` fora do formato. Dias são inteiros de até 3 algarismos |
+| `502` | `"Não foi possível carregar o painel gerencial."` | Falha interna, inclusive consulta que passou do tempo limite: tente um período menor ou menos filtros |
+
+---
+
+## Exportar as propostas do período
+
+```http
+GET /v1/proposals/dashboard/rows
+```
+
+Devolve as propostas criadas no período, uma por linha, com os mesmos filtros dos indicadores. Mais recentes primeiro, até 5.000 linhas. É a mesma base da planilha que a aba **Gerencial** exporta.
+
+<CodeGroup>
+```bash Requisição
+curl "https://gyra-core.gyramais.com.br/v1/proposals/dashboard/rows?from=2026-09-05T03:00:00.000Z&to=2026-10-05T03:00:00.000Z&status=OFFER_ISSUED" \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+{
+  "from": "2026-09-05T03:00:00.000Z",
+  "to": "2026-10-05T03:00:00.000Z",
+  "rows": [
+    {
+      "id": "66f1e0a3c2b9d40012a1b001",
+      "createdAt": "2026-09-29T14:32:10.000Z",
+      "document": "11222333000181",
+      "name": "Padaria Exemplo Ltda",
+      "entityType": "COMPANY",
+      "origin": "API",
+      "correspondentId": null,
+      "agentId": null,
+      "productKey": "capital-giro",
+      "productName": "Capital de giro",
+      "portfolioName": "Varejo",
+      "status": "OFFER_ISSUED",
+      "requestedCents": 25000000,
+      "firmCents": 20000000,
+      "chosenCents": 20000000,
+      "decision": "APPROVED",
+      "rejectionStep": null,
+      "analyzedAt": "2026-09-29T14:33:02.000Z",
+      "preApprovedAt": "2026-09-29T14:40:00.000Z",
+      "firmOfferAt": "2026-10-01T10:15:00.000Z",
+      "chosenAt": "2026-09-30T09:20:41.000Z",
+      "issuedAt": "2026-10-01T10:15:00.000Z",
+      "statusChangedAt": "2026-10-01T10:15:00.000Z"
+    }
+  ],
+  "truncated": false,
+  "maxRows": 5000
+}
+```
+</CodeGroup>
+
+<ResponseField name="from, to" type="string">O período aplicado, já com os padrões preenchidos.</ResponseField>
+<ResponseField name="rows" type="object[]">
+  Uma proposta por linha.
+  <Expandable title="campos">
+    <ResponseField name="origin" type="string">Origem da proposta, ou `CHANNEL` quando ela veio do canal de correspondentes.</ResponseField>
+    <ResponseField name="correspondentId, agentId" type="string | null">Correspondente e atendente, nas propostas do canal.</ResponseField>
+    <ResponseField name="requestedCents" type="integer | null">Valor fixo do produto ou, sem ele, o valor pedido.</ResponseField>
+    <ResponseField name="firmCents" type="integer | null">Valor aprovado da última oferta firme.</ResponseField>
+    <ResponseField name="chosenCents" type="integer | null">Valor da última escolha de oferta.</ResponseField>
+    <ResponseField name="decision" type="string | null">Decisão final mais recente: `APPROVED` ou `REJECTED`.</ResponseField>
+    <ResponseField name="rejectionStep" type="string | null">Etapa que reprovou, quando reprovada.</ResponseField>
+    <ResponseField name="analyzedAt, preApprovedAt, firmOfferAt, chosenAt, issuedAt" type="string | null">Primeira análise, primeira pré-aprovação, primeira oferta firme, última escolha e emissão.</ResponseField>
+    <ResponseField name="statusChangedAt" type="string | null">Última mudança de situação.</ResponseField>
+  </Expandable>
+</ResponseField>
+<ResponseField name="truncated" type="boolean">`true` quando o período tem mais propostas que o teto. Divida o período ou use mais filtros.</ResponseField>
+<ResponseField name="maxRows" type="integer">O teto de linhas: `5000`.</ResponseField>
+
+Os parâmetros `compare`, `dim` e `sla` não mudam as linhas.
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | As mesmas dos indicadores | Período ou filtro inválido |
+| `429` | `"Já existe uma exportação do painel em andamento na sua organização. Tente de novo em alguns segundos."` | Outra exportação, com outros filtros, está rodando para a sua organização. A mesma exportação repetida aproveita a que está em andamento |
+| `502` | `"Não foi possível exportar o painel gerencial."` | Falha interna, inclusive consulta que passou do tempo limite: tente um período menor ou mais filtros |

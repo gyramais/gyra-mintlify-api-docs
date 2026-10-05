@@ -51,7 +51,7 @@ Regras que, se ativadas, negam automaticamente independente do score:
 | Regra | Critério | Resultado |
 |-------|----------|-----------|
 | `COMPANY_OPENING_TIME` | >= 24 meses | `APPROVED` (+200) |
-| `COMPANY_OPENING_TIME` | BETWEEN 12–24 | `ALERT` (+100) |
+| `COMPANY_OPENING_TIME` | BETWEEN 12 a 24 | `ALERT` (+100) |
 | `COMPANY_OPENING_TIME` | < 12 meses | `DENIED` |
 | `CAPITAL_STOCK_AMOUNT` | >= 50.000 | `APPROVED` (+100) |
 
@@ -60,7 +60,7 @@ Regras que, se ativadas, negam automaticamente independente do score:
 | Regra | Critério | Resultado |
 |-------|----------|-----------|
 | `SCORE` | >= 600 | `APPROVED` (+300) |
-| `SCORE` | BETWEEN 400–599 | `ALERT` (+150) |
+| `SCORE` | BETWEEN 400 a 599 | `ALERT` (+150) |
 | `SCORE` | < 400 | `DENIED` |
 | `PEFIN_AMOUNT` | = 0 | `APPROVED` (+200) |
 | `PEFIN_NOT_CALCULATED_REVENUE` | < 10% | `APPROVED` (+100) |
@@ -78,10 +78,10 @@ Regras que, se ativadas, negam automaticamente independente do score:
 
 | Score | Status | Ação recomendada |
 |-------|--------|------------------|
-| 800–1000 | `APPROVED` | Aprovação automática até R$ 50k |
-| 600–799 | `APPROVED` | Aprovação automática até R$ 20k |
-| 400–599 | `ALERT` | Revisão manual + documentação adicional |
-| 0–399 | `DENIED` | Recusar crédito |
+| 800 a 1000 | `APPROVED` | Aprovação automática até R$ 50k |
+| 600 a 799 | `APPROVED` | Aprovação automática até R$ 20k |
+| 400 a 599 | `ALERT` | Revisão manual + documentação adicional |
+| 0 a 399 | `DENIED` | Recusar crédito |
 
 ---
 
@@ -91,7 +91,7 @@ A GYRA+ disponibiliza um workflow n8n pronto para integrar com seu ERP:
 
 <Steps>
   <Step title="Importe o template n8n">
-    Baixe e importe o arquivo [gyra-create-report-from-erp.json](/templates/n8n/gyra-create-report-from-erp.json) no seu ambiente n8n.
+    Baixe e importe um dos workflows prontos em [Integração com n8n](/docs/integracao-n8n) no seu ambiente.
   </Step>
   <Step title="Configure as credenciais">
     Defina as variáveis `GYRA_CLIENT_ID` e `GYRA_CLIENT_SECRET` no n8n.

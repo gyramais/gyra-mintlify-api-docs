@@ -1,0 +1,223 @@
+---
+title: "Visão geral da API de Propostas"
+description: "Endereço, autenticação, módulo exigido, unidades, paginação, repetição segura e erros das rotas de Propostas. Com um fluxo completo em curl."
+icon: "file-invoice-dollar"
+surface: api
+domain: proposta
+audience: integrador
+lang: tecnica
+---
+
+A API de Propostas leva um pedido de crédito do seu sistema até a oferta escolhida pelo cliente, sem passar pela tela.
+
+<Info>
+  **Resumo:** mesmo endereço e mesmo token do resto da API, caminhos só em `/v1`. Dinheiro vai em **centavos** e taxa em **pontos-base**. Não existe webhook de proposta: você acompanha pelo webhook da execução da esteira e pela leitura da proposta.
+</Info>
+
+<Note>
+  Propostas é um módulo contratado à parte. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Endereço e autenticação
+
+```
+https://gyra-core.gyramais.com.br
+```
+
+Troque `gyra-client-id` e `gyra-client-secret` por um token em `POST /auth/authenticate` e envie `Authorization: Bearer <token>` em toda chamada. As credenciais são geradas em **Configurações, API & MCP**. Veja [Chaves de API](/api-reference/api-keys).
+
+Token ausente, vencido ou inválido responde `401` com `"Token de acesso inválido."`.
+
+## Caminhos versionados
+
+As rotas de Propostas e de Dados de entrada respondem **só** com o prefixo `/v1`. Não há caminho legado sem versão.
+
+```
+/v1/proposals/...        propostas, ofertas, participantes, análise
+/v1/proposals/dashboard  indicadores gerenciais e exportação
+/v1/products/...         produtos (leitura)
+/v1/portfolios           carteiras (leitura)
+/v1/proposal-settings    configuração de propostas (leitura)
+/v1/pricing/...          modelos, índices de mercado e simulação
+/v1/input-data/...       catálogo de dados de entrada
+```
+
+A exceção é o [fechamento externo](/api-reference/esteiras/fechamento-externo), `POST /operation/close`, que responde sem prefixo.
+
+## Módulo e permissões
+
+Sem o módulo de Propostas, as rotas `/v1/proposals`, `/v1/products`, `/v1/portfolios`, `/v1/proposal-settings` e `/v1/pricing` respondem `403`, e não `404`: assim você sabe que a rota existe e que falta contratar o módulo. Os dados de entrada aceitam qualquer um de três módulos: Propostas, Onboarding ou Formalização.
+
+| Situação | Status | Mensagem |
+| --- | --- | --- |
+| Organização sem o módulo de Propostas | `403` | `"Sua organização não tem o módulo de Propostas habilitado."` |
+| Dados de entrada sem Propostas, Onboarding nem Formalização | `403` | `"Os dados de entrada exigem o módulo de Propostas, de Cadastros ou de Formalização, que não está habilitado para a sua organização."` |
+| Credencial sem nenhuma das permissões da rota | `403` | `"Você não tem permissão para acessar este recurso."` |
+
+Cada rota exige uma permissão de um grupo. Basta ter uma delas.
+
+| Grupo | Rotas | Permissões aceitas |
+| --- | --- | --- |
+| Operar | todas as leituras, criar proposta, situação, participantes, ofertas, simulação, indicadores gerenciais | `can-generate-report` ou `can-use-registry-api` |
+| Rodar análise | `POST /v1/proposals/{id}/run` | `can-generate-report` ou `can-create-report-api` |
+| Dados de entrada | `/v1/input-data/catalog`, `/v1/proposals/{id}/input-data` | `can-generate-report`, `can-use-registry-api`, `can-manage-credit-policy`, `can-manage-policy-rules` ou `can-manage-operations` |
+| Fechamento externo | `POST /operation/close` | `can-manage-operations`, `can-generate-report` ou `can-create-report-api` |
+
+A organização e o usuário de cada chamada saem sempre do token. Campo `organizationId` ou `userId` no corpo é descartado.
+
+## Unidades e formatos
+
+| O quê | Formato | Exemplo |
+| --- | --- | --- |
+| Dinheiro | inteiro em **centavos** (campos `...Cents`) | `25000000` = R$ 250.000,00 |
+| Taxa | inteiro em **pontos-base ao ano** (campos `...BpsYear`, `...Bps`). `10000` = 100% | `1490` = 14,90% a.a. |
+| Prazo e carência | inteiro em meses | `36` |
+| Data e hora | ISO 8601 em UTC | `2026-09-29T14:32:10.000Z` |
+| Data do fechamento externo | `AAAA-MM-DD` | `2026-09-21` |
+| CPF e CNPJ | aceitos com ou sem máscara; devolvidos só com dígitos | `11.222.333/0001-81` vira `11222333000181` |
+| Identificador | ObjectId, 24 caracteres hexadecimais | `66f1e0a3c2b9d40012a1b001` |
+
+Id fora do formato de 24 caracteres hexadecimais responde `400` antes de qualquer busca.
+
+<Warning>
+  Duas saídas usam reais e percentuais, e não centavos e pontos-base, porque alimentam fórmulas e contratos: o dado de entrada `proposta.valor_pedido` (em reais) e os termos da oferta escolhida em `chosen.terms` (taxas e CET em %, valores em reais). Cada página indica onde isso acontece.
+</Warning>
+
+## Paginação
+
+Só a lista de propostas é paginada.
+
+| Parâmetro | Padrão | Limite |
+| --- | --- | --- |
+| `page` | `1` | a partir de `1` |
+| `pageSize` | `20` | de `1` a `100` |
+
+A resposta traz `total` (propostas que casam com o filtro) e `items` da página pedida. As demais listas (produtos, carteiras, modelos, índices) vêm inteiras. A [exportação gerencial](/api-reference/propostas/gerencial#exportar-as-propostas-do-período) não pagina: devolve até 5.000 propostas e avisa em `truncated` quando cortou.
+
+## Repetir uma chamada com segurança
+
+A API não usa cabeçalho de idempotência. O que acontece quando você repete depende da rota:
+
+| Rota | Repetir a mesma chamada |
+| --- | --- |
+| `POST /v1/proposals` | **Cria outra proposta.** Cada pedido é uma proposta, mesmo com o mesmo documento no mesmo dia. Depois de um timeout, procure com `GET /v1/proposals?search=<documento>` antes de tentar de novo |
+| `PATCH /v1/proposals/{id}/status` | Mesma situação de novo não muda nada e não é erro |
+| `POST /v1/proposals/{id}/run` | Com a execução da mesma esteira ainda em andamento, responde `409` com o `operationResultId` dela e nada dispara |
+| `POST /v1/proposals/{id}/offers/{offerId}/choose` | A escolha vale uma vez. A segunda responde `409` `"Esta oferta já foi escolhida."` |
+| `POST /v1/proposals/{id}/offers/{offerId}/resend` | Gera um link novo a cada chamada; o anterior deixa de abrir |
+| `POST /operation/close` | O mesmo fechamento devolve `200` com o mesmo resultado |
+
+## Erros
+
+O corpo de erro é sempre `{ code, message }`, com `code` igual ao status HTTP e a mensagem em português.
+
+| Status | Quando |
+| --- | --- |
+| `400` | Corpo, parâmetro ou id inválido. Falhas de validação vêm juntas na mesma mensagem, separadas por vírgula |
+| `401` | Token ausente, vencido ou inválido |
+| `403` | Módulo não contratado ou credencial sem a permissão da rota |
+| `404` | Proposta, oferta, produto ou participante inexistente nesta organização |
+| `409` | O pedido não cabe no estado atual (situação, oferta já escolhida, execução em andamento) |
+| `422` | Com `REPORT`, a política não é do tipo de documento da proposta |
+| `429` | Já há uma exportação gerencial da sua organização em andamento |
+| `502` | Um serviço interno não respondeu. Tente de novo; a mensagem começa com `"Não foi possível..."` |
+| `503` | Parte da operação foi feita e parte não. Leia a mensagem antes de repetir |
+
+Alguns erros trazem campos extras para você retomar sem duplicar trabalho: `operationResultId` (execução que já está no ar), `reportId` e `proposalRunId` (relatório já criado e ligado à proposta).
+
+<Warning>
+  Campo que a API não conhece é **descartado em silêncio**, não recusado. Se algo que você mandou não aparece na resposta, confira o nome do campo.
+</Warning>
+
+## Acompanhe a proposta sem webhook próprio
+
+Não existe evento de webhook de proposta ou de oferta. Use as duas fontes que existem:
+
+- **Webhook `OPERATION` da execução.** Quando a análise roda por esteira, a execução avisa ao terminar, com `operationId`, `operationResultId`, `document` e `status`. Cadastre a URL em [Webhooks](/api-reference/webhook/post-webhook) e veja o ciclo em [Execuções](/esteiras/execucoes).
+- **Leitura da proposta.** `GET /v1/proposals/{id}` devolve a situação, as ofertas de cada rodada e as execuções ligadas. Consulte depois do webhook ou, sem ele, em intervalos espaçados.
+
+A situação `WAITING_CUSTOMER` indica que a oferta indicativa foi enviada ao cliente e aguarda a escolha. Não há webhook para esse momento: ele aparece na leitura da proposta.
+
+## Do pedido à oferta escolhida
+
+<Steps>
+  <Step title="Crie a proposta">
+    Informe o documento, o produto e o contato do cliente. A proposta nasce em `DRAFT`.
+
+    ```bash
+    curl -X POST https://gyra-core.gyramais.com.br/v1/proposals \
+      -H "Authorization: Bearer $GYRA_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "document": "11.222.333/0001-81",
+        "name": "Padaria Exemplo Ltda",
+        "productKey": "capital-giro",
+        "requestedAmountCents": 25000000,
+        "requestedTermMonths": 24,
+        "contact": { "name": "Ana Souza", "email": "ana@padariaexemplo.com.br", "phone": "11987654321" }
+      }'
+    ```
+
+    Guarde o `id` da resposta.
+  </Step>
+  <Step title="Rode a análise">
+    Dispare a esteira (`OPERATION`) ou a política (`REPORT`). A proposta vai para `IN_ANALYSIS`.
+
+    ```bash
+    curl -X POST https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001/run \
+      -H "Authorization: Bearer $GYRA_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{ "kind": "OPERATION", "targetId": "66e2b7f1a9c3d20011c4e210" }'
+    ```
+
+    A resposta traz o `operationResultId` da execução.
+  </Step>
+  <Step title="Acompanhe">
+    Espere o webhook `OPERATION` da execução ou leia a proposta.
+
+    ```bash
+    curl https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001 \
+      -H "Authorization: Bearer $GYRA_TOKEN"
+    ```
+
+    Com pré-aprovação na esteira, a situação passa a `WAITING_CUSTOMER` e `offers` traz a oferta indicativa (`INDICATIVE`, `SENT`).
+  </Step>
+  <Step title="Escolha a oferta">
+    O cliente escolhe pela página da oferta, que recebeu por e-mail ou SMS. Se ele escolheu com você por outro canal, registre a escolha em nome dele, com o motivo.
+
+    ```bash
+    curl -X POST https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001/offers/66f1e2c4d8a1b50013f2a002/choose \
+      -H "Authorization: Bearer $GYRA_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{ "amountCents": 20000000, "termMonths": 24, "reason": "Cliente confirmou por telefone." }'
+    ```
+
+    A esteira segue com a escolha. Ao aprovar, emite a oferta firme e a proposta vai para `OFFER_ISSUED`.
+  </Step>
+</Steps>
+
+## Páginas desta referência
+
+<CardGroup cols={2}>
+  <Card title="Propostas" icon="file-lines" href="/api-reference/propostas/propostas">
+    Criar, listar, ler, mudar a situação, participantes e rodar a análise.
+  </Card>
+  <Card title="Ofertas" icon="hand-holding-dollar" href="/api-reference/propostas/ofertas">
+    Link da oferta, reenvio ao cliente e escolha em nome dele.
+  </Card>
+  <Card title="Produtos e precificação" icon="calculator" href="/api-reference/propostas/produtos-e-precificacao">
+    Produtos, carteiras, índices de mercado e simulação de parcelas.
+  </Card>
+  <Card title="Indicadores gerenciais" icon="chart-line" href="/api-reference/propostas/gerencial">
+    Os números da aba Gerencial e a exportação das propostas do período.
+  </Card>
+  <Card title="Dados de entrada" icon="table-list" href="/api-reference/propostas/dados-de-entrada">
+    O que a proposta e o cliente informaram, no formato das regras.
+  </Card>
+  <Card title="Fechamento externo" icon="flag-checkered" href="/api-reference/esteiras/fechamento-externo">
+    Avise que o contrato foi fechado no seu sistema.
+  </Card>
+  <Card title="Conceito de proposta" icon="book-open" href="/propostas/visao-geral">
+    Ciclo de vida, situações e como a proposta se liga à esteira.
+  </Card>
+</CardGroup>

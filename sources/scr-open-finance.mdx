@@ -80,6 +80,47 @@ O resumo de cada mês passou a expor **mais dimensões** da exposição de créd
 
 A lista completa de campos está em [Seção SCR](/data/secao-scr#resumo-consolidado-do-scr-summary).
 
+## Indicadores do SCR
+
+Os **Indicadores do SCR** são recortes prontos do endividamento da empresa no sistema financeiro, contratados um a um como add-on na etapa **Fontes de dados** da política, na seção **Indicadores do SCR** (*Recortes do endividamento no sistema financeiro*). Valem só para CNPJ.
+
+Cada indicador devolve uma **faixa**, nunca o valor exato em reais. Por isso, na regra, o valor comparado é o **código da faixa**: quanto maior o código, pior a situação.
+
+| Indicador | O que mede | Janela |
+| --- | --- | --- |
+| **Dívida em aberto** | Faixa de valor da dívida em aberto | Últimos 3 meses |
+| **Meses com dívida em aberto** | Quantos meses terminaram com dívida em aberto | Últimos 6 meses |
+| **Meses seguidos em aberto** | Maior sequência de meses consecutivos com dívida em aberto | Últimos 6 meses |
+| **Quantidade de credores** | Com quantas instituições financeiras a empresa tem dívida | Últimos 3 meses |
+| **Uso de crédito rotativo** | Quantas vezes a empresa recorreu a crédito rotativo | Últimos 3 meses |
+| **Carteira a vencer** (capital de giro; cheque especial e conta garantida; geral) | Faixa de valor a vencer na modalidade | Últimos 3 meses |
+| **Carteira ativa** (cartão de crédito; geral) | Faixa de valor da carteira ativa | Últimos 3 meses |
+| **Carteira em aberto** (capital de giro; cartão de crédito) | Faixa de valor em aberto na modalidade | Últimos 3 meses |
+
+### Faixas
+
+| Tipo de indicador | Código `100` | Demais códigos |
+| --- | --- | --- |
+| Valor (Dívida em aberto) | **Sem dívida em aberto**, a melhor faixa | `101` *Até R$ 2.300* até `113` *Acima de R$ 405.200* |
+| Valor (carteiras) | Não se aplica | `101` *Até R$ 2.300* até `113` *Acima de R$ 405.200* |
+| Meses com dívida / Meses seguidos | **Nenhum mês** | `101` *Até 2 meses* até `104` *Acima de 6 meses* |
+| Uso de crédito rotativo | **Nenhuma operação no período** | `101` *1 operação* até `108` *Acima de 10 operações* |
+| Quantidade de credores | **Sem informação de saldo** (sem dado, não é zero) | `101` *Até 2 instituições* até `107` *Acima de 12 instituições* |
+
+<Note>
+  Em **Dívida em aberto**, o código `100` quer dizer que a empresa **não deve nada** no sistema financeiro. É a melhor faixa, e a regra avalia normalmente. Em **Quantidade de credores**, ao contrário, o `100` significa ausência de informação.
+</Note>
+
+### Quando não há dado
+
+Indicador sem faixa comparável (sem informação no período, ou um código fora da escala) **nunca aprova por acidente**: a regra fica em erro, com o motivo, e o status que você configurou para erro na regra decide o que acontece.
+
+No relatório, o card dos indicadores mostra cada faixa e uma leitura de risco pela posição dela na escala: **Endividamento baixo**, **Atenção** ou **Endividamento alto**. Sem dado, aparece *Sem informação no período* (o que não afirma que a empresa está sem restrição). Se a consulta falhou, aparece *Não foi possível consultar*.
+
+### Com o Comitê de Crédito IA
+
+O [Comitê de Crédito IA](/concepts/comite-de-credito#indicadores-do-scr-contam-como-scr) lê os indicadores como dado de SCR. Com eles, o comitê não aponta falta de SCR nem recomenda pedir o consentimento do titular.
+
 ## Casos de uso
 
 <CardGroup cols={2}>
@@ -129,7 +170,7 @@ Exemplo:
 - **Lag de até 45 dias** entre a operação e a aparição no SCR (fechamento mensal do banco + processamento BCB).
 - **Não cobre crédito não bancário:** fintechs não reguladas, cartões de loja, crediário interno não aparecem aqui.
 - **CNPJ com múltiplas filiais:** o SCR reporta por raiz do CNPJ (8 primeiros dígitos), não por filial.
-- **Disponibilidade:** seção disponível nos relatórios **COMPLETO** e **COMPLETO+**.
+- **Disponibilidade:** seção disponível nos relatórios **COMPLETO** e **COMPLETO+**. Os [Indicadores do SCR](#indicadores-do-scr) são add-ons à parte, só para CNPJ.
 
 ## Perguntas frequentes
 

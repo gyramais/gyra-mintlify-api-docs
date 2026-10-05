@@ -1,0 +1,1102 @@
+---
+title: "Formatos de retorno por documento"
+description: "A entrada é única, o retorno não: o objeto extraction tem os campos do tipo que a plataforma identificou. Aqui está o mapa completo, campo a campo, dos 25 tipos documentais."
+icon: "table-list"
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+---
+
+<Info>
+  **Resumo:** você manda um arquivo e não diz o que ele é. A plataforma identifica o tipo e devolve, em `extraction`, os campos **daquele tipo**. Esta página lista todos, para os 25 tipos, com o rótulo em português que a plataforma usa nas telas.
+</Info>
+
+## A convenção de todo campo
+
+Todo campo folha volta como uma **tripla**:
+
+```json
+{
+  "value": "11444777000161",
+  "confidence": 0.97,
+  "page": 1
+}
+```
+
+| Chave | O que é |
+| --- | --- |
+| `value` | O valor lido, no tipo do campo, ou `null` |
+| `confidence` | Confiança de 0 a 1 |
+| `page` | Página em que o dado foi lido, ou `null` |
+
+Regras que valem para todos os tipos:
+
+- **Campo ausente no documento** vem com `value: null` e `confidence: 0`. Nada é inventado.
+- **Datas** vêm como texto no formato `YYYY-MM-DD`; data e hora, em ISO 8601.
+- **Valores monetários** vêm como número puro, na moeda declarada em `currency` ou `capitalCurrency` (moeda antiga não é convertida).
+- **Listas** são arrays de objetos cujos campos também são triplas.
+- Um campo pode trazer `discardReason` quando uma checagem determinística o anulou de propósito. O valor sai nulo, e o motivo sobrevive para a auditoria.
+
+<Tip>
+  Trate o schema como **aditivo**. Campo novo pode aparecer numa versão futura sem quebrar contrato, e o seu parser deve ignorar o que não conhece.
+</Tip>
+
+## Campos críticos
+
+Cada tipo tem um punhado de campos **críticos**: são eles que puxam o parecer para baixo quando vêm com confiança fraca, e é sobre eles que rodam as verificações de titularidade (`EXPECTED_DOCUMENT_MATCH`, `EXPECTED_NAME_MATCH`, `DOC_CHECKSUM`). Estão listados em cada tipo abaixo.
+
+O **documento principal** e o **nome principal** de cada tipo dizem qual campo representa a entidade do cadastro: no contrato social é `cnpj` e `companyName`; na procuração é `grantorDocument` e `grantorName`; no comprovante de residência é `holderDocument` e `holderName`.
+
+## Blocos compartilhados
+
+Quatro blocos aparecem em vários tipos com exatamente a mesma forma. Estão documentados aqui uma vez, e referenciados nas tabelas de cada tipo.
+
+### Bloco Certificação
+
+`certification`: o que dá fé ao documento. Está em **todos** os tipos.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `certification.certificationKind` | texto, um de: `SEM_CERTIFICACAO`, `ASSINATURA_MANUSCRITA`, `ASSINATURA_CONTADOR`, `ASSINATURA_ELETRONICA`, `FIRMA_RECONHECIDA`, `CERTIFICADO_DIGITAL`, `ORGAO_EMISSOR` | Espécie de certificação |
+| `certification.certificationDetail` | texto | Como aparece no documento |
+| `certification.accountantName` | texto | Contador responsável |
+| `certification.accountantCrc` | texto | CRC do contador |
+| `certification.notaryOffice` | texto | Cartório |
+| `certification.notaryDate` | data | Data do reconhecimento de firma |
+| `certification.verificationCode` | texto | Código de autenticidade |
+| `certification.verificationUrl` | texto | Endereço de conferência |
+
+### Bloco Marcadores estruturais
+
+`structuralMarkers`: os títulos e seções canônicos **encontrados** no documento. Insumo da checagem de anatomia, não dado do documento. Está em todos os tipos.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `structuralMarkers[].title` | texto | Título encontrado, copiado como impresso |
+| `structuralMarkers[].excerpt` | texto | Linha onde o título aparece |
+
+### Bloco Marcadores de integridade
+
+`documentMarkers`: marcas de integridade do arquivo. Insumo da heurística de página faltante. Aparece nos tipos societários e no requerimento de empresário.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `documentMarkers.declaredTotalPages` | inteiro | Total de páginas que o documento declara |
+| `documentMarkers.citedSheetMax` | inteiro | Maior folha citada ("fls. 47") |
+| `documentMarkers.clauseNumbers` | texto | Números das cláusulas que aparecem, separados por vírgula |
+| `documentMarkers.hasSignatureBlock` | sim/não | Há bloco de assinaturas/fecho |
+
+### Bloco Poderes de representação
+
+`representation`: a cláusula de administração lida de forma estruturada. Aparece em contrato social, alteração contratual, estatuto, ata de assembleia e certidão da Junta.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `representation.regime` | texto, um de: `ISOLADA`, `CONJUNTA`, `MISTA`, `INDETERMINADO` | Regime de assinatura |
+| `representation.signersRequired` | inteiro | Assinaturas exigidas na regra geral |
+| `representation.thresholds[].actType` | texto | Ato ou grupo de atos da faixa |
+| `representation.thresholds[].amountFrom` | número | A partir de |
+| `representation.thresholds[].amountTo` | número | Até |
+| `representation.thresholds[].currency` | texto | Moeda |
+| `representation.thresholds[].signersRequired` | inteiro | Quantos assinam nesta faixa |
+| `representation.thresholds[].requiresPartnerApproval` | sim/não | Exige aprovação dos sócios |
+| `representation.thresholds[].approvalQuorumPercent` | número | Quórum de aprovação (%) |
+| `representation.thresholds[].approvalQuorumText` | texto | Quórum como está escrito |
+| `representation.prohibitions[].type` | texto, um de: `AVAL`, `FIANCA`, `HIPOTECA`, `ALIENACAO_IMOVEL`, `EMPRESTIMO_A_SOCIO`, `DOACAO`, `OUTROS` | Espécie da vedação |
+| `representation.prohibitions[].scope` | texto | A quem a vedação se aplica |
+| `representation.prohibitions[].absolute` | sim/não | Vedação absoluta |
+| `representation.prohibitions[].requiresApproval` | sim/não | Exige aprovação |
+| `representation.prohibitions[].approvalQuorumPercent` | número | Quórum de aprovação (%) |
+| `representation.prohibitions[].approvalQuorumText` | texto | Quórum como está escrito |
+| `representation.prohibitions[].excerpt` | texto | Trecho literal da vedação |
+| `representation.mandate.termYears` | número | Prazo (anos) |
+| `representation.mandate.startDate` | data | Início |
+| `representation.mandate.endDate` | data | Término |
+| `representation.mandate.indefinite` | sim/não | Prazo indeterminado |
+| `representation.mandate.reconductionRule` | texto | Recondução |
+| `representation.clauseNumber` | texto | Cláusula |
+| `representation.clauseExcerpt` | texto | Trecho literal da cláusula |
+
+<Note>
+  Um mesmo trecho do contrato vai em **um** dos dois: ato que só exige aprovação ou quórum é alçada (`thresholds`); ato vedado é vedação (`prohibitions`). Nunca nos dois.
+</Note>
+
+## Pessoa jurídica
+
+### `CONTRATO_SOCIAL`
+
+**Contrato social.** Ato que cria a sociedade limitada e diz quem são os sócios e quem assina pela empresa.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `cnpj`, `companyName`, `signatureDate`, `capitalAmount`, `partners`, `administrators`, `representation.regime`, `representation.clauseExcerpt`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `tradeName` | texto | Nome fantasia |
+| `legalNature` | texto | Natureza jurídica |
+| `nire` | texto | NIRE |
+| `registrationAuthority` | texto | Órgão registrador |
+| `registrationNumber` | texto | Número de registro |
+| `registrationDate` | texto | Data de registro |
+| `signatureDate` | texto | Data de assinatura |
+| `capitalAmount` | número | Capital social |
+| `capitalCurrency` | texto | Moeda do capital |
+| `quotaUnitValue` | número | Valor unitário da quota |
+| `headquartersAddress` | texto | Endereço da sede |
+| `mainActivity` | texto | Atividade principal |
+| `duration` | texto | Prazo de duração |
+| `fiscalYearEnd` | texto | Encerramento do exercício |
+| `partners[]` | lista de objetos | Sócios |
+| `partners[].name` | texto | Nome |
+| `partners[].document` | texto | Documento |
+| `partners[].documentType` | texto, um de: CPF, CNPJ | Tipo de documento |
+| `partners[].nationality` | texto | Nacionalidade |
+| `partners[].maritalStatus` | texto | Estado civil |
+| `partners[].profession` | texto | Profissão |
+| `partners[].address` | texto | Endereço |
+| `partners[].shareCount` | número | Quotas |
+| `partners[].shareValue` | número | Valor das quotas |
+| `partners[].sharePercent` | número | Participação (%) |
+| `partners[].isAdministrator` | sim/não | Administrador |
+| `administrators[]` | lista de objetos | Administradores |
+| `administrators[].name` | texto | Nome |
+| `administrators[].document` | texto | Documento |
+| `administrators[].role` | texto | Cargo |
+| `administrators[].powers` | texto | Poderes |
+| `administrators[].restrictions` | texto | Restrições |
+| `administrators[].jointSignatureRequired` | sim/não | Assinatura conjunta |
+| `administrators[].jointSignatureThreshold` | número | Limite p/ assinatura conjunta |
+| `administrators[].signsAlone` | sim/não | Assina sozinho |
+| `administrators[].mandateEndDate` | texto | Fim do mandato |
+| `representation` | objeto, [bloco Poderes de representação](#bloco-poderes-de-representação) | Poderes de representação |
+| `amendmentNumber` | inteiro | Número da alteração |
+| `isConsolidation` | sim/não | Consolidação |
+| `attorneyClauses[]` | lista de objetos | Cláusulas de procuração |
+| `attorneyClauses[].grantee` | texto | Outorgado |
+| `attorneyClauses[].powers` | texto | Poderes |
+| `attorneyClauses[].validUntil` | texto | Válido até |
+| `signatories[]` | lista de objetos | Assinantes |
+| `signatories[].name` | texto | Nome |
+| `signatories[].document` | texto | Documento |
+| `signatories[].role` | texto | Cargo |
+| `signatories[].onBehalfOf` | texto | Assina em nome de |
+| `documentMarkers` | objeto, [bloco Marcadores de integridade](#bloco-marcadores-de-integridade) | Marcadores de integridade |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `ALTERACAO_CONTRATUAL`
+
+**Alteração contratual.** Altera o contrato social; a última alteração consolidada substitui o contrato original.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `cnpj`, `companyName`, `signatureDate`, `capitalAmount`, `partners`, `administrators`, `changesSummary`, `resultingQsa`, `representation.regime`, `representation.clauseExcerpt`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `tradeName` | texto | Nome fantasia |
+| `legalNature` | texto | Natureza jurídica |
+| `nire` | texto | NIRE |
+| `registrationAuthority` | texto | Órgão registrador |
+| `registrationNumber` | texto | Número de registro |
+| `registrationDate` | texto | Data de registro |
+| `signatureDate` | texto | Data de assinatura |
+| `capitalAmount` | número | Capital social |
+| `capitalCurrency` | texto | Moeda do capital |
+| `quotaUnitValue` | número | Valor unitário da quota |
+| `headquartersAddress` | texto | Endereço da sede |
+| `mainActivity` | texto | Atividade principal |
+| `duration` | texto | Prazo de duração |
+| `fiscalYearEnd` | texto | Encerramento do exercício |
+| `partners[]` | lista de objetos | Sócios |
+| `partners[].name` | texto | Nome |
+| `partners[].document` | texto | Documento |
+| `partners[].documentType` | texto, um de: CPF, CNPJ | Tipo de documento |
+| `partners[].nationality` | texto | Nacionalidade |
+| `partners[].maritalStatus` | texto | Estado civil |
+| `partners[].profession` | texto | Profissão |
+| `partners[].address` | texto | Endereço |
+| `partners[].shareCount` | número | Quotas |
+| `partners[].shareValue` | número | Valor das quotas |
+| `partners[].sharePercent` | número | Participação (%) |
+| `partners[].isAdministrator` | sim/não | Administrador |
+| `administrators[]` | lista de objetos | Administradores |
+| `administrators[].name` | texto | Nome |
+| `administrators[].document` | texto | Documento |
+| `administrators[].role` | texto | Cargo |
+| `administrators[].powers` | texto | Poderes |
+| `administrators[].restrictions` | texto | Restrições |
+| `administrators[].jointSignatureRequired` | sim/não | Assinatura conjunta |
+| `administrators[].jointSignatureThreshold` | número | Limite p/ assinatura conjunta |
+| `administrators[].signsAlone` | sim/não | Assina sozinho |
+| `administrators[].mandateEndDate` | texto | Fim do mandato |
+| `representation` | objeto, [bloco Poderes de representação](#bloco-poderes-de-representação) | Poderes de representação |
+| `amendmentNumber` | inteiro | Número da alteração |
+| `isConsolidation` | sim/não | Consolidação |
+| `attorneyClauses[]` | lista de objetos | Cláusulas de procuração |
+| `attorneyClauses[].grantee` | texto | Outorgado |
+| `attorneyClauses[].powers` | texto | Poderes |
+| `attorneyClauses[].validUntil` | texto | Válido até |
+| `signatories[]` | lista de objetos | Assinantes |
+| `signatories[].name` | texto | Nome |
+| `signatories[].document` | texto | Documento |
+| `signatories[].role` | texto | Cargo |
+| `signatories[].onBehalfOf` | texto | Assina em nome de |
+| `documentMarkers` | objeto, [bloco Marcadores de integridade](#bloco-marcadores-de-integridade) | Marcadores de integridade |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+| `changesSummary[]` | lista de objetos | Alterações realizadas |
+| `changesSummary[].kind` | texto, um de: ENTRADA_SOCIO, SAIDA_SOCIO, CAPITAL, ADMINISTRACAO, ENDERECO, OBJETO, NOME, OUTRO | Tipo |
+| `changesSummary[].description` | texto | Descrição |
+| `partnersIn[]` | lista de objetos | Sócios que entraram |
+| `partnersIn[].name` | texto | Nome |
+| `partnersIn[].document` | texto | Documento |
+| `partnersIn[].sharePercent` | número | Participação (%) |
+| `partnersOut[]` | lista de objetos | Sócios que saíram |
+| `partnersOut[].name` | texto | Nome |
+| `partnersOut[].document` | texto | Documento |
+| `previousCapitalAmount` | número | Capital anterior |
+| `newCapitalAmount` | número | Novo capital |
+| `resultingQsa[]` | lista de objetos | QSA resultante |
+| `resultingQsa[].name` | texto | Nome |
+| `resultingQsa[].document` | texto | Documento |
+| `resultingQsa[].documentType` | texto, um de: CPF, CNPJ | Tipo de documento |
+| `resultingQsa[].nationality` | texto | Nacionalidade |
+| `resultingQsa[].maritalStatus` | texto | Estado civil |
+| `resultingQsa[].profession` | texto | Profissão |
+| `resultingQsa[].address` | texto | Endereço |
+| `resultingQsa[].shareCount` | número | Quotas |
+| `resultingQsa[].shareValue` | número | Valor das quotas |
+| `resultingQsa[].sharePercent` | número | Participação (%) |
+| `resultingQsa[].isAdministrator` | sim/não | Administrador |
+
+### `ESTATUTO_SOCIAL`
+
+**Estatuto social.** Equivalente ao contrato social na sociedade anônima, na cooperativa e na associação.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `cnpj`, `companyName`, `signatureDate`, `capitalAmount`, `partners`, `administrators`, `representation.regime`, `representation.clauseExcerpt`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `tradeName` | texto | Nome fantasia |
+| `legalNature` | texto | Natureza jurídica |
+| `nire` | texto | NIRE |
+| `registrationAuthority` | texto | Órgão registrador |
+| `registrationNumber` | texto | Número de registro |
+| `registrationDate` | texto | Data de registro |
+| `signatureDate` | texto | Data de assinatura |
+| `capitalAmount` | número | Capital social |
+| `capitalCurrency` | texto | Moeda do capital |
+| `quotaUnitValue` | número | Valor unitário da quota |
+| `headquartersAddress` | texto | Endereço da sede |
+| `mainActivity` | texto | Atividade principal |
+| `duration` | texto | Prazo de duração |
+| `fiscalYearEnd` | texto | Encerramento do exercício |
+| `partners[]` | lista de objetos | Sócios |
+| `partners[].name` | texto | Nome |
+| `partners[].document` | texto | Documento |
+| `partners[].documentType` | texto, um de: CPF, CNPJ | Tipo de documento |
+| `partners[].nationality` | texto | Nacionalidade |
+| `partners[].maritalStatus` | texto | Estado civil |
+| `partners[].profession` | texto | Profissão |
+| `partners[].address` | texto | Endereço |
+| `partners[].shareCount` | número | Quotas |
+| `partners[].shareValue` | número | Valor das quotas |
+| `partners[].sharePercent` | número | Participação (%) |
+| `partners[].isAdministrator` | sim/não | Administrador |
+| `administrators[]` | lista de objetos | Administradores |
+| `administrators[].name` | texto | Nome |
+| `administrators[].document` | texto | Documento |
+| `administrators[].role` | texto | Cargo |
+| `administrators[].powers` | texto | Poderes |
+| `administrators[].restrictions` | texto | Restrições |
+| `administrators[].jointSignatureRequired` | sim/não | Assinatura conjunta |
+| `administrators[].jointSignatureThreshold` | número | Limite p/ assinatura conjunta |
+| `administrators[].signsAlone` | sim/não | Assina sozinho |
+| `administrators[].mandateEndDate` | texto | Fim do mandato |
+| `representation` | objeto, [bloco Poderes de representação](#bloco-poderes-de-representação) | Poderes de representação |
+| `amendmentNumber` | inteiro | Número da alteração |
+| `isConsolidation` | sim/não | Consolidação |
+| `attorneyClauses[]` | lista de objetos | Cláusulas de procuração |
+| `attorneyClauses[].grantee` | texto | Outorgado |
+| `attorneyClauses[].powers` | texto | Poderes |
+| `attorneyClauses[].validUntil` | texto | Válido até |
+| `signatories[]` | lista de objetos | Assinantes |
+| `signatories[].name` | texto | Nome |
+| `signatories[].document` | texto | Documento |
+| `signatories[].role` | texto | Cargo |
+| `signatories[].onBehalfOf` | texto | Assina em nome de |
+| `documentMarkers` | objeto, [bloco Marcadores de integridade](#bloco-marcadores-de-integridade) | Marcadores de integridade |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+| `boardMembers[]` | lista de objetos | Conselho |
+| `boardMembers[].name` | texto | Nome |
+| `boardMembers[].document` | texto | Documento |
+| `boardMembers[].role` | texto | Cargo |
+| `boardMembers[].termEnd` | texto | Fim do mandato |
+| `shareClasses[]` | lista de objetos | Classes de ações |
+| `shareClasses[].class` | texto | Classe |
+| `shareClasses[].count` | número | Quantidade |
+| `shareClasses[].votingRights` | sim/não | Direito a voto |
+
+### `REQUERIMENTO_EMPRESARIO`
+
+**Requerimento de empresário.** Ato de abertura do empresário individual e do MEI, que não têm contrato social.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `entrepreneurName`, `entrepreneurCpf`, `companyName`, `signatureDate`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `entrepreneurName` | texto | Empresário |
+| `entrepreneurCpf` | texto | CPF do empresário |
+| `companyName` | texto | Razão social |
+| `nire` | texto | NIRE |
+| `registrationAuthority` | texto | Órgão registrador |
+| `actDescription` | texto | Ato praticado |
+| `capitalAmount` | número | Capital social |
+| `address` | texto | Endereço |
+| `mainActivity` | texto | Atividade principal |
+| `signatureDate` | texto | Data de assinatura |
+| `registrationDate` | texto | Data de registro |
+| `documentMarkers` | objeto, [bloco Marcadores de integridade](#bloco-marcadores-de-integridade) | Marcadores de integridade |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `ATA_ASSEMBLEIA`
+
+**Ata de assembleia.** Elege a diretoria da S.A. e prova quem representa a empresa hoje; o mandato tem prazo e vence.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `cnpj`, `companyName`, `meetingDate`, `electedOfficers`, `administrators`, `representation.regime`, `representation.clauseExcerpt`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `tradeName` | texto | Nome fantasia |
+| `legalNature` | texto | Natureza jurídica |
+| `nire` | texto | NIRE |
+| `registrationAuthority` | texto | Órgão registrador |
+| `registrationNumber` | texto | Número de registro |
+| `registrationDate` | texto | Data de registro |
+| `protocolNumber` | texto | Protocolo |
+| `authenticationCode` | texto | Código de autenticação |
+| `assemblyKind` | texto, um de: AGO, AGE, AGOE, CONSELHO_ADMINISTRACAO, OUTRO | Espécie de assembleia |
+| `documentSubtype` | texto, um de: ELEICAO_DIRETORIA, ALTERACAO_ESTATUTO, AUMENTO_CAPITAL, OUTROS | Formato do arquivo |
+| `meetingNumber` | texto | Número da assembleia |
+| `meetingDate` | texto | Data da assembleia |
+| `attendanceQuorumText` | texto | Quórum de presença |
+| `electionDate` | texto | Data da eleição |
+| `electedOfficers[]` | lista de objetos | Diretores eleitos |
+| `electedOfficers[].name` | texto | Nome |
+| `electedOfficers[].document` | texto | Documento |
+| `electedOfficers[].role` | texto | Cargo |
+| `electedOfficers[].termYears` | número | Prazo (anos) |
+| `electedOfficers[].termEndDate` | texto | Fim do mandato |
+| `electedOfficers[].reelected` | sim/não | Reconduzido |
+| `departingOfficers[]` | lista de objetos | Diretores que saíram |
+| `departingOfficers[].name` | texto | Nome |
+| `departingOfficers[].document` | texto | Documento |
+| `departingOfficers[].role` | texto | Cargo |
+| `deliberations[]` | lista de objetos | Deliberações |
+| `deliberations[].kind` | texto, um de: ELEICAO_ADMINISTRACAO, ALTERACAO_ESTATUTO, CAPITAL, CONTAS, DIVIDENDOS, SEDE, DENOMINACAO, OUTRO | Tipo |
+| `deliberations[].description` | texto | Descrição |
+| `amendedArticles` | texto | Artigos alterados |
+| `previousCapitalAmount` | número | Capital anterior |
+| `newCapitalAmount` | número | Novo capital |
+| `capitalAmount` | número | Capital social |
+| `capitalCurrency` | texto | Moeda do capital |
+| `administrators[]` | lista de objetos | Administradores |
+| `administrators[].name` | texto | Nome |
+| `administrators[].document` | texto | Documento |
+| `administrators[].role` | texto | Cargo |
+| `administrators[].powers` | texto | Poderes |
+| `administrators[].restrictions` | texto | Restrições |
+| `administrators[].jointSignatureRequired` | sim/não | Assinatura conjunta |
+| `administrators[].jointSignatureThreshold` | número | Limite p/ assinatura conjunta |
+| `administrators[].signsAlone` | sim/não | Assina sozinho |
+| `administrators[].mandateEndDate` | texto | Fim do mandato |
+| `representation` | objeto, [bloco Poderes de representação](#bloco-poderes-de-representação) | Poderes de representação |
+| `signatories[]` | lista de objetos | Assinantes |
+| `signatories[].name` | texto | Nome |
+| `signatories[].document` | texto | Documento |
+| `signatories[].role` | texto | Cargo |
+| `signatories[].onBehalfOf` | texto | Assina em nome de |
+| `documentMarkers` | objeto, [bloco Marcadores de integridade](#bloco-marcadores-de-integridade) | Marcadores de integridade |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `CERTIDAO_JUNTA`
+
+**Certidão da Junta Comercial.** Confirma na fonte oficial o que o contrato social afirma; a de inteiro teor traz a cláusula de administração.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `cnpj`, `companyName`, `issuedBy`, `issuedAt`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `nire` | texto | NIRE |
+| `certificateType` | texto, um de: SIMPLIFICADA, ESPECIFICA, INTEIRO_TEOR | Tipo de certidão |
+| `issuedBy` | texto | Emitida por |
+| `issuedAt` | texto | Emitida em |
+| `certificateNumber` | texto | Número da certidão |
+| `authCode` | texto | Código de autenticação |
+| `lastActNumber` | texto | Número do último ato |
+| `lastActDate` | texto | Data do último ato |
+| `lastActDescription` | texto | Último ato |
+| `companyStatus` | texto | Situação da empresa |
+| `qsaSummary[]` | lista de objetos | Resumo do QSA |
+| `qsaSummary[].name` | texto | Nome |
+| `qsaSummary[].role` | texto | Cargo |
+| `qsaSummary[].sharePercent` | número | Participação (%) |
+| `administrators[]` | lista de objetos | Administradores |
+| `administrators[].name` | texto | Nome |
+| `administrators[].document` | texto | Documento |
+| `administrators[].role` | texto | Cargo |
+| `administrators[].powers` | texto | Poderes |
+| `administrators[].restrictions` | texto | Restrições |
+| `administrators[].jointSignatureRequired` | sim/não | Assinatura conjunta |
+| `administrators[].jointSignatureThreshold` | número | Limite p/ assinatura conjunta |
+| `administrators[].signsAlone` | sim/não | Assina sozinho |
+| `administrators[].mandateEndDate` | texto | Fim do mandato |
+| `representation` | objeto, [bloco Poderes de representação](#bloco-poderes-de-representação) | Poderes de representação |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `PROCURACAO_PJ`
+
+**Procuração (PJ).** Transfere poderes de assinatura da empresa a um terceiro, com prazo e limites próprios.
+
+Documento principal: `grantorDocument`, nome principal: `grantorName`.
+
+Campos críticos: `grantorName`, `grantorDocument`, `granteeName`, `powers`, `signatureDate`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `grantorName` | texto | Outorgante |
+| `grantorDocument` | texto | Documento do outorgante |
+| `granteeName` | texto | Outorgado |
+| `granteeDocument` | texto | Documento do outorgado |
+| `isPublicDeed` | sim/não | Escritura pública |
+| `notaryOffice` | texto | Cartório |
+| `powers[]` | lista de objetos | Poderes |
+| `powers[].category` | texto, um de: BANCARIO, JUDICIAL, ADMINISTRATIVO, NEGOCIAL, AD_JUDICIA, OUTRO | Categoria |
+| `powers[].description` | texto | Descrição |
+| `powers[].excerpt` | texto | Trecho citado |
+| `prohibitions[]` | lista de objetos | Vedações |
+| `prohibitions[].type` | texto, um de: AVAL, FIANCA, HIPOTECA, ALIENACAO_IMOVEL, EMPRESTIMO_A_SOCIO, DOACAO, OUTROS | Tipo |
+| `prohibitions[].scope` | texto | Alcance |
+| `prohibitions[].absolute` | sim/não | Vedação absoluta |
+| `prohibitions[].requiresApproval` | sim/não | Exige aprovação |
+| `prohibitions[].approvalQuorumPercent` | número | Quórum de aprovação (%) |
+| `prohibitions[].approvalQuorumText` | texto | Quórum de aprovação |
+| `prohibitions[].excerpt` | texto | Trecho citado |
+| `financialLimit` | número | Limite financeiro |
+| `signersRequired` | inteiro | Assinaturas exigidas |
+| `signatureDate` | texto | Data de assinatura |
+| `validUntil` | texto | Válido até |
+| `canSubstitute` | sim/não | Substabelecimento |
+| `substitutionConditions` | texto | Condição do substabelecimento |
+| `witnesses[]` | lista de textos | Testemunhas |
+| `notaryBook` | texto | Livro do traslado |
+| `notaryPage` | texto | Folha do traslado |
+| `notarySeal` | texto | Selo de fiscalização |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `IRPJ_ECF`
+
+**Imposto de renda da empresa (ECF).** Escrituração Contábil Fiscal entregue à Receita; o que prova a entrega é o recibo com número e hash.
+
+Documento principal: `cnpj`, nome principal: `companyName`, ano de referência: `calendarYear`.
+
+Campos críticos: `cnpj`, `companyName`, `calendarYear`, `receiptNumber`, `hasReceipt`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `calendarYear` | inteiro | Ano-calendário |
+| `taxRegime` | texto, um de: LUCRO_REAL, PRESUMIDO, ARBITRADO, SIMPLES, IMUNE_ISENTA | Regime tributário |
+| `grossRevenue` | número | Receita bruta |
+| `netProfit` | número | Lucro líquido |
+| `taxableProfit` | número | Lucro tributável |
+| `receiptNumber` | texto | Número do recibo |
+| `receiptTimestamp` | texto | Data do recibo |
+| `receiptHash` | texto | Número de controle do recibo |
+| `hasReceipt` | sim/não | Recibo presente |
+| `sped` | sim/não | Transmitido via SPED |
+| `documentSubtype` | texto, um de: RECIBO, ESCRITURACAO, CAPA, ESCRITURACAO_E_RECIBO | Formato do arquivo |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `DECLARACAO_FATURAMENTO`
+
+**Declaração de faturamento (PJ).** Faturamento mês a mês declarado pela empresa e assinado pelo contador.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `companyName`, `cnpj`, `monthlyRevenues`, `issueDate`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `companyName` | texto | Razão social |
+| `cnpj` | texto | CNPJ |
+| `taxRegime` | texto, um de: SIMPLES_NACIONAL, LUCRO_PRESUMIDO, LUCRO_REAL, MEI, OUTRO | Regime tributário |
+| `accountingBasis` | texto, um de: COMPETENCIA, CAIXA | Regime contábil |
+| `periodStart` | texto | Início do período |
+| `periodEnd` | texto | Fim do período |
+| `currency` | texto | Moeda |
+| `monthlyRevenues[]` | lista de objetos | Faturamento mês a mês |
+| `monthlyRevenues[].period` | texto | Competência |
+| `monthlyRevenues[].periodMonth` | inteiro | Mês da competência |
+| `monthlyRevenues[].periodYear` | inteiro | Ano da competência |
+| `monthlyRevenues[].grossRevenue` | número | Receita bruta |
+| `totalDeclaredRevenue` | número | Total declarado no período |
+| `legalRepresentativeName` | texto | Representante legal |
+| `legalRepresentativeCpf` | texto | CPF do representante legal |
+| `issueDate` | texto | Data de emissão |
+| `letterhead` | sim/não | Papel timbrado |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `DEMONSTRACOES_FINANCEIRAS`
+
+**Demonstrações financeiras (balanço e DRE).** Balanço patrimonial e demonstração do resultado assinados pelo contador.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `companyName`, `cnpj`, `baseDate`, `statementScope`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `companyName` | texto | Razão social |
+| `cnpj` | texto | CNPJ |
+| `statementScope` | texto, um de: CONJUNTO_COMPLETO, BALANCO_E_DRE, SOMENTE_BALANCO, SOMENTE_DRE | Peças apresentadas |
+| `baseDate` | texto | Data-base do exercício |
+| `comparativeBaseDate` | texto | Data-base do exercício anterior |
+| `issueDate` | texto | Data de emissão |
+| `currency` | texto | Moeda |
+| `amountScale` | texto, um de: UNIDADE, MIL, MILHAO | Escala dos valores |
+| `assetsTotal` | número | Ativo total |
+| `totalLiabilitiesAndEquity` | número | Passivo mais patrimônio líquido |
+| `equity` | número | Patrimônio líquido |
+| `netRevenue` | número | Receita líquida |
+| `netResult` | número | Resultado líquido do exercício |
+| `auditorName` | texto | Auditor independente |
+| `auditorOpinion` | texto, um de: SEM_RESSALVA, COM_RESSALVA, ADVERSA, ABSTENCAO | Opinião do auditor |
+| `publiclyFiled` | sim/não | Publicado ou arquivado |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `CERTIDAO_PGFN_PJ`
+
+**Certidão de débitos federais (PJ).** Certidão conjunta da Receita e da PGFN sobre tributo federal e dívida ativa.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `cnpj`, `companyName`, `issuedAt`, `validUntil`, `situation`, `authCode`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `issuer` | texto | Emissor |
+| `issuedAt` | texto | Emitida em |
+| `validUntil` | texto | Válido até |
+| `situation` | texto, um de: NEGATIVA, POSITIVA_COM_EFEITO_NEGATIVA, POSITIVA | Situação declarada |
+| `situationText` | texto | Frase literal da situação |
+| `authCode` | texto | Código de autenticação |
+| `coversBranches` | sim/não | Abrange filiais |
+| `legalBasis` | texto | Fundamento legal |
+| `findings[]` | lista de textos | Apontamentos |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `CERTIDAO_FGTS`
+
+**Regularidade do FGTS (CRF).** Certificado da Caixa que diz se a empresa está em dia com o FGTS dos empregados.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `cnpj`, `companyName`, `validUntil`, `situation`, `authCode`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `registrationNumber` | texto | Número de registro |
+| `issuer` | texto | Emissor |
+| `issuedAt` | texto | Emitida em |
+| `validFrom` | texto | Válido a partir de |
+| `validUntil` | texto | Válido até |
+| `situation` | texto, um de: NEGATIVA, POSITIVA | Situação declarada |
+| `situationText` | texto | Frase literal da situação |
+| `authCode` | texto | Código de autenticação |
+| `address` | texto | Endereço |
+| `findings[]` | lista de textos | Apontamentos |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `CADIN_FEDERAL`
+
+**CADIN federal.** Cadastro de inadimplentes com órgão federal.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `cnpj`, `companyName`, `issuedAt`, `situation`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `issuer` | texto | Emissor |
+| `requestingAgency` | texto | Órgão consulente |
+| `issuedAt` | texto | Emitida em |
+| `validUntil` | texto | Válido até |
+| `situation` | texto, um de: NEGATIVA, POSITIVA | Situação declarada |
+| `situationText` | texto | Frase literal da situação |
+| `authCode` | texto | Código de autenticação |
+| `registryCount` | inteiro | Quantidade de registros |
+| `records[]` | lista de objetos | Registros |
+| `records[].creditorAgency` | texto | Órgão credor |
+| `records[].registeredAt` | texto | Data do registro |
+| `records[].amount` | número | Valor |
+| `records[].description` | texto | Descrição |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `CADIN_ESTADUAL`
+
+**CADIN estadual.** O mesmo cadastro, no âmbito do estado.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `cnpj`, `companyName`, `state`, `issuedAt`, `situation`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `state` | texto | UF |
+| `issuer` | texto | Emissor |
+| `stateRegistration` | texto | Inscrição estadual |
+| `issuedAt` | texto | Emitida em |
+| `validUntil` | texto | Válido até |
+| `situation` | texto, um de: NEGATIVA, POSITIVA | Situação declarada |
+| `situationText` | texto | Frase literal da situação |
+| `authCode` | texto | Código de autenticação |
+| `registryCount` | inteiro | Quantidade de registros |
+| `records[]` | lista de objetos | Registros |
+| `records[].creditorAgency` | texto | Órgão credor |
+| `records[].registeredAt` | texto | Data do registro |
+| `records[].amount` | número | Valor |
+| `records[].description` | texto | Descrição |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `CERTIDAO_QSA`
+
+**Quadro societário (QSA).** Lista de sócios e participações na base da Receita.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `cnpj`, `companyName`, `issuer`, `issuedAt`, `qsaSummary`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `tradeName` | texto | Nome fantasia |
+| `legalNature` | texto | Natureza jurídica |
+| `nire` | texto | NIRE |
+| `source` | texto, um de: RECEITA_FEDERAL, JUNTA_COMERCIAL, OUTRO | Fonte |
+| `issuer` | texto | Emissor |
+| `issuedAt` | texto | Emitida em |
+| `validUntil` | texto | Válido até |
+| `registrationStatus` | texto | Situação cadastral |
+| `certificateNumber` | texto | Número da certidão |
+| `authCode` | texto | Código de autenticação |
+| `capitalAmount` | número | Capital social |
+| `capitalCurrency` | texto | Moeda do capital |
+| `qsaSummary[]` | lista de objetos | Resumo do QSA |
+| `qsaSummary[].name` | texto | Nome |
+| `qsaSummary[].document` | texto | Documento |
+| `qsaSummary[].documentType` | texto, um de: CPF, CNPJ | Tipo de documento |
+| `qsaSummary[].role` | texto | Cargo |
+| `qsaSummary[].sharePercent` | número | Participação (%) |
+| `qsaSummary[].entryDate` | texto | Data de entrada |
+| `qsaSummary[].country` | texto | País |
+| `qsaSummary[].legalRepresentativeName` | texto | Representante legal |
+| `qsaSummary[].legalRepresentativeDocument` | texto | Documento do representante legal |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `CERTIFICADO_SIMPLES_NACIONAL`
+
+**Certificado do Simples Nacional.** Comprova que a empresa é optante do Simples, o regime que dispensa a ECF.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `cnpj`, `companyName`, `simplesStatus`, `optionDate`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `simplesStatus` | texto, um de: OPTANTE, NAO_OPTANTE, EXCLUIDO | Situação no Simples |
+| `optionDate` | texto | Data da opção |
+| `exclusionDate` | texto | Data de exclusão |
+| `exclusionReason` | texto | Motivo da exclusão |
+| `simeiStatus` | texto, um de: OPTANTE, NAO_OPTANTE, EXCLUIDO | Situação no SIMEI |
+| `simeiOptionDate` | texto | Opção pelo SIMEI |
+| `simeiExclusionDate` | texto | Exclusão do SIMEI |
+| `previousPeriods[]` | lista de objetos | Períodos anteriores |
+| `previousPeriods[].optionDate` | texto | Data da opção |
+| `previousPeriods[].exclusionDate` | texto | Data de exclusão |
+| `issuer` | texto | Emissor |
+| `consultedAt` | texto | Data da consulta |
+| `certificateNumber` | texto | Número da certidão |
+| `authCode` | texto | Código de autenticação |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `ESOCIAL_PJ`
+
+**eSocial (PJ).** Tela ou recibo de entrega das obrigações trabalhistas.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `cnpj`, `companyName`, `competence`, `payrollStatus`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `screenKind` | texto, um de: FECHAMENTO_FOLHA, RELACAO_TRABALHADORES, RECIBO_EVENTO, SEM_MOVIMENTO, OUTRA | Tela apresentada |
+| `competence` | texto | Competência |
+| `referenceDate` | texto | Mês de referência |
+| `payrollStatus` | texto, um de: FECHADA, ABERTA, SEM_MOVIMENTO, NAO_INFORMADO | Situação da folha |
+| `closedAt` | texto | Data do fechamento |
+| `employeeCount` | inteiro | Empregados declarados |
+| `receiptNumber` | texto | Número do recibo |
+| `capturedAt` | texto | Data da captura da tela |
+| `environment` | texto, um de: PRODUCAO, PRODUCAO_RESTRITA | Ambiente do eSocial |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+## Pessoa física
+
+### `DOC_IDENTIDADE`
+
+**Documento de identidade.** RG, CNH, CIN, RNE ou passaporte, com foto e assinatura visíveis.
+
+Documento principal: `cpf`, nome principal: `name`.
+
+Campos críticos: `documentKind`, `name`, `cpf`, `birthDate`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `documentKind` | texto, um de: RG, CNH, RNE, PASSAPORTE | Tipo do documento |
+| `name` | texto | Nome |
+| `cpf` | texto | CPF |
+| `rgNumber` | texto | RG |
+| `cnhNumber` | texto | CNH |
+| `issuingAgency` | texto | Órgão emissor |
+| `issuingState` | texto | UF de emissão |
+| `birthDate` | texto | Data de nascimento |
+| `motherName` | texto | Nome da mãe |
+| `fatherName` | texto | Nome do pai |
+| `issuedAt` | texto | Emitida em |
+| `validUntil` | texto | Válido até |
+| `cnhCategory` | texto | Categoria da CNH |
+| `hasPhoto` | sim/não | Foto presente |
+| `hasSignature` | sim/não | Assinatura presente |
+| `mirrorNumber` | texto | Número do espelho |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `COMPROVANTE_RESIDENCIA`
+
+**Comprovante de residência.** Conta de luz, água, gás ou telefone no nome da pessoa.
+
+Documento principal: `holderDocument`, nome principal: `holderName`.
+
+Campos críticos: `holderName`, `issuer`, `referenceDate`, `address`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `holderName` | texto | Titular |
+| `holderSecondaryName` | texto | Segundo titular |
+| `holderDocument` | texto | Documento do titular |
+| `utilityKind` | texto, um de: ENERGIA, GAS, AGUA, ESGOTO, TELEFONE, INTERNET, BANCO, ALUGUEL, IPTU, CONDOMINIO, OUTRO | Tipo de conta |
+| `issuer` | texto | Emissor |
+| `issuerDocument` | texto | Documento do emissor |
+| `issuerType` | texto, um de: CONCESSIONARIA, TELECOM, BANCO, PREFEITURA, LOCADOR, OUTRO | Tipo de emissor |
+| `referenceDate` | texto | Mês de referência |
+| `referenceMonth` | texto | Referência impressa |
+| `issueDate` | texto | Data de emissão |
+| `dueDate` | texto | Vencimento |
+| `totalAmount` | número | Total a pagar |
+| `installationNumber` | texto | Unidade consumidora |
+| `consumptionQuantity` | número | Consumo (quantidade) |
+| `consumptionUnit` | texto, um de: KWH, M3, GB, MINUTOS, OUTRO | Unidade do consumo |
+| `consumptionDescription` | texto | Consumo (descrição) |
+| `barcodeLine` | texto | Linha digitável |
+| `address` | texto | Endereço |
+| `zipCode` | texto | CEP |
+| `city` | texto | Cidade |
+| `state` | texto | UF |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `DIRPF`
+
+**Imposto de renda (PF).** Declaração anual da pessoa física; o que prova a entrega é o recibo.
+
+Documento principal: `cpf`, nome principal: `name`, ano de referência: `calendarYear`.
+
+Campos críticos: `name`, `cpf`, `calendarYear`, `receiptNumber`, `hasReceipt`, `incomeTaxable`, `assets`, `debts`, `summary`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `name` | texto | Nome |
+| `cpf` | texto | CPF |
+| `address` | texto | Endereço |
+| `zipCode` | texto | CEP |
+| `city` | texto | Cidade |
+| `state` | texto | UF |
+| `calendarYear` | inteiro | Ano-calendário |
+| `exerciseYear` | inteiro | Exercício |
+| `receiptNumber` | texto | Número do recibo |
+| `hasReceipt` | sim/não | Recibo presente |
+| `receiptTimestamp` | texto | Data do recibo |
+| `dependents[]` | lista de objetos | Dependentes |
+| `dependents[].name` | texto | Nome |
+| `dependents[].cpf` | texto | CPF |
+| `dependents[].relationship` | texto | Parentesco |
+| `incomeTaxable` | número | Renda tributável |
+| `incomeExempt` | número | Renda isenta |
+| `incomeExclusiveTax` | número | Renda com tributação exclusiva |
+| `incomeSources[]` | lista de objetos | Fontes de renda |
+| `incomeSources[].sourceName` | texto | Fonte |
+| `incomeSources[].sourceCnpj` | texto | CNPJ da fonte |
+| `incomeSources[].amount` | número | Valor |
+| `incomeSources[].kind` | texto | Tipo |
+| `assets[]` | lista de objetos | Bens e direitos |
+| `assets[].group` | texto, um de: IMOVEL, VEICULO, INVESTIMENTO, CONTA, PARTICIPACAO_SOCIETARIA, CRIPTO, OUTRO | Grupo |
+| `assets[].codeLine` | texto | Códigos impressos |
+| `assets[].groupCode` | texto | Código do grupo |
+| `assets[].code` | texto | Código |
+| `assets[].description` | texto | Descrição |
+| `assets[].valuePreviousYear` | número | Valor anterior |
+| `assets[].valueCurrentYear` | número | Valor atual |
+| `assets[].location` | texto | Localização |
+| `assets[].acquisitionYear` | inteiro | Ano de aquisição |
+| `debts[]` | lista de objetos | Dívidas e ônus |
+| `debts[].kind` | texto | Tipo |
+| `debts[].creditor` | texto | Credor |
+| `debts[].valuePreviousYear` | número | Valor anterior |
+| `debts[].valueCurrentYear` | número | Valor atual |
+| `summary` | objeto | Resumo |
+| `summary.totalAssetsPreviousYear` | número | Total de bens no ano anterior |
+| `summary.totalAssets` | número | Total de bens |
+| `summary.totalDebtsPreviousYear` | número | Total de dívidas no ano anterior |
+| `summary.totalDebts` | número | Total de dívidas |
+| `summary.netWorth` | número | Patrimônio líquido |
+| `summary.netWorthPreviousYear` | número | Patrimônio anterior |
+| `summary.netWorthVariation` | número | Variação patrimonial |
+| `spouseCpf` | texto | CPF do cônjuge |
+| `taxDue` | número | Imposto a pagar |
+| `taxRefund` | número | Imposto a restituir |
+| `documentSubtype` | texto, um de: DECLARACAO, RECIBO, CAPA, DECLARACAO_E_RECIBO | Formato do arquivo |
+| `declarationNature` | texto, um de: ORIGINAL, RETIFICADORA | Natureza da declaração |
+| `receiptCpf` | texto | CPF impresso no recibo |
+| `receiptVerificationCode` | texto | Código de autenticação do recibo |
+| `submissionDateTimePrimary` | texto | Data de entrega (caixa de recepção) |
+| `submissionDateTimeSecondary` | texto | Data de entrega (frase do recibo) |
+| `receivingAgentCodePrimary` | texto | Agente receptor (caixa de recepção) |
+| `receivingAgentCodeSecondary` | texto | Agente receptor (rodapé) |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `COMPROVANTE_RENDA`
+
+**Comprovante de renda (PF).** Holerite, pró-labore ou recibo que mostra quanto a pessoa recebe.
+
+Documento principal: `cpf`, nome principal: `name`.
+
+Campos críticos: `kind`, `name`, `cpf`, `referencePeriod`, `grossIncome`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `kind` | texto, um de: HOLERITE, INFORME_RENDIMENTOS, PRO_LABORE, DECORE, EXTRATO_INSS, OUTRO | Tipo |
+| `name` | texto | Nome |
+| `cpf` | texto | CPF |
+| `employerName` | texto | Empregador |
+| `employerCnpj` | texto | CNPJ do empregador |
+| `referencePeriod` | texto | Período de referência |
+| `grossIncome` | número | Renda bruta |
+| `netIncome` | número | Renda líquida |
+| `monthlyAverage` | número | Média mensal |
+| `totalDeductions` | número | Total de descontos |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `CERTIDAO_PF`
+
+**Certidão negativa (PF).** Certidão de débito, protesto ou distribuição no nome da pessoa física.
+
+Documento principal: `cpf`, nome principal: `name`.
+
+Campos críticos: `kind`, `name`, `cpf`, `issuer`, `issuedAt`, `result`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `kind` | texto, um de: NEGATIVA_DEBITOS, ANTECEDENTES, PROTESTO, JUSTICA_FEDERAL, JUSTICA_ESTADUAL, TRABALHISTA, OUTRO | Tipo |
+| `name` | texto | Nome |
+| `cpf` | texto | CPF |
+| `issuer` | texto | Emissor |
+| `issuedAt` | texto | Emitida em |
+| `validUntil` | texto | Válido até |
+| `result` | texto, um de: NADA_CONSTA, CONSTA, POSITIVA_COM_EFEITO_NEGATIVA | Resultado |
+| `certificateNumber` | texto | Número da certidão |
+| `authCode` | texto | Código de autenticação |
+| `findings[]` | lista de textos | Apontamentos |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `PROCURACAO_PF`
+
+**Procuração (PF).** Transfere poderes da pessoa física a um terceiro, com prazo e limites próprios.
+
+Documento principal: `grantorDocument`, nome principal: `grantorName`.
+
+Campos críticos: `grantorName`, `grantorDocument`, `granteeName`, `powers`, `signatureDate`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `grantorName` | texto | Outorgante |
+| `grantorDocument` | texto | Documento do outorgante |
+| `granteeName` | texto | Outorgado |
+| `granteeDocument` | texto | Documento do outorgado |
+| `isPublicDeed` | sim/não | Escritura pública |
+| `notaryOffice` | texto | Cartório |
+| `powers[]` | lista de objetos | Poderes |
+| `powers[].category` | texto, um de: BANCARIO, JUDICIAL, ADMINISTRATIVO, NEGOCIAL, AD_JUDICIA, OUTRO | Categoria |
+| `powers[].description` | texto | Descrição |
+| `powers[].excerpt` | texto | Trecho citado |
+| `prohibitions[]` | lista de objetos | Vedações |
+| `prohibitions[].type` | texto, um de: AVAL, FIANCA, HIPOTECA, ALIENACAO_IMOVEL, EMPRESTIMO_A_SOCIO, DOACAO, OUTROS | Tipo |
+| `prohibitions[].scope` | texto | Alcance |
+| `prohibitions[].absolute` | sim/não | Vedação absoluta |
+| `prohibitions[].requiresApproval` | sim/não | Exige aprovação |
+| `prohibitions[].approvalQuorumPercent` | número | Quórum de aprovação (%) |
+| `prohibitions[].approvalQuorumText` | texto | Quórum de aprovação |
+| `prohibitions[].excerpt` | texto | Trecho citado |
+| `financialLimit` | número | Limite financeiro |
+| `signersRequired` | inteiro | Assinaturas exigidas |
+| `signatureDate` | texto | Data de assinatura |
+| `validUntil` | texto | Válido até |
+| `canSubstitute` | sim/não | Substabelecimento |
+| `substitutionConditions` | texto | Condição do substabelecimento |
+| `witnesses[]` | lista de textos | Testemunhas |
+| `notaryBook` | texto | Livro do traslado |
+| `notaryPage` | texto | Folha do traslado |
+| `notarySeal` | texto | Selo de fiscalização |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+### `COMPROVACAO_ESTADO_CIVIL`
+
+**Estado civil (PF).** Certidão de casamento, nascimento ou óbito; o divórcio é anotado na margem.
+
+Documento principal: `holderCpf`, nome principal: `holderName`.
+
+Campos críticos: `documentKind`, `holderName`, `actDate`, `registryOffice`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `documentKind` | texto, um de: CERTIDAO_NASCIMENTO, CERTIDAO_CASAMENTO, AVERBACAO_DIVORCIO, ATESTADO_OBITO_CONJUGE, OUTRO | Tipo do documento |
+| `holderName` | texto | Titular |
+| `holderNameAfterAct` | texto | Nome do titular após o ato |
+| `holderCpf` | texto | CPF do titular |
+| `holderBirthDate` | texto | Nascimento do titular |
+| `spouseName` | texto | Cônjuge |
+| `spouseCpf` | texto | CPF do cônjuge |
+| `maritalStatus` | texto, um de: SOLTEIRO, CASADO, SEPARADO, DIVORCIADO, VIUVO | Estado civil |
+| `actDate` | texto | Data do ato |
+| `issueDate` | texto | Data de emissão |
+| `registryOffice` | texto | Cartório de registro |
+| `registryCity` | texto | Cidade do cartório |
+| `registryState` | texto | UF do cartório |
+| `bookNumber` | texto | Livro |
+| `pageNumber` | texto | Folha |
+| `termNumber` | texto | Termo |
+| `matriculaNumber` | texto | Matrícula |
+| `marginLegible` | sim/não | Margem legível |
+| `marginNotes[]` | lista de objetos | Anotações na margem |
+| `marginNotes[].kind` | texto, um de: DIVORCIO, SEPARACAO, RESTABELECIMENTO_SOCIEDADE_CONJUGAL, OBITO_CONJUGE, CASAMENTO, ALTERACAO_NOME, RETIFICACAO, OUTRO | Tipo |
+| `marginNotes[].date` | texto | Data |
+| `marginNotes[].description` | texto | Descrição |
+| `marginNotes[].excerpt` | texto | Trecho citado |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
+## Pessoa física e jurídica
+
+### `EXTRATO_BANCARIO`
+
+**Extrato bancário.** Movimentação da conta: titularidade da conta de desembolso, entradas, saídas e gasto de risco.
+
+Documento principal: `holderDocument`, nome principal: `holderName`.
+
+Campos críticos: `holderName`, `holderDocument`, `bankName`, `branchNumber`, `accountNumber`, `periodStart`, `periodEnd`, `openingBalance`, `closingBalance`, `transactions`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `bankName` | texto | Banco |
+| `bankCode` | texto | Código do banco |
+| `branchNumber` | texto | Agência |
+| `accountNumber` | texto | Número da conta |
+| `accountType` | texto, um de: CORRENTE, POUPANCA, PAGAMENTO, SALARIO, INVESTIMENTO, OUTRA | Tipo de conta |
+| `holderName` | texto | Titular |
+| `holderDocument` | texto | Documento do titular |
+| `secondHolderName` | texto | Segundo titular |
+| `periodStart` | texto | Início do período |
+| `periodEnd` | texto | Fim do período |
+| `issueDate` | texto | Data de emissão |
+| `currency` | texto | Moeda |
+| `openingBalance` | número | Saldo inicial |
+| `closingBalance` | número | Saldo final |
+| `declaredTotalCredits` | número | Total de créditos declarado |
+| `declaredTotalDebits` | número | Total de débitos declarado |
+| `declaredAverageBalance` | número | Saldo médio declarado |
+| `transactions[]` | lista de objetos | Lançamentos |
+| `transactions[].date` | texto | Data |
+| `transactions[].description` | texto | Descrição |
+| `transactions[].amount` | número | Valor |
+| `transactions[].direction` | texto, um de: CREDITO, DEBITO | Sentido do lançamento |
+| `transactions[].balanceAfter` | número | Saldo após o lançamento |
+| `transactions[].counterpartyName` | texto | Contraparte |
+| `transactions[].counterpartyDocument` | texto | Documento da contraparte |
+| `transactions[].category` | texto, um de: RECEITA_VENDAS, SALARIO_PROLABORE, BENEFICIO_PREVIDENCIA, TRANSFERENCIA_RECEBIDA, DEPOSITO, CREDITO_EMPRESTIMO, RESGATE_APLICACAO, ESTORNO_RECEBIDO, OUTRAS_ENTRADAS, FORNECEDOR, FOLHA_PAGAMENTO, TRIBUTOS, TARIFA_BANCARIA, PARCELA_EMPRESTIMO, PAGAMENTO_CARTAO, SAQUE, APLICACAO_FINANCEIRA, CONSUMO_UTILIDADES, TRANSFERENCIA_ENVIADA, OUTRAS_SAIDAS, APOSTAS, JOGOS_AZAR, CRIPTOATIVOS, CASA_DE_CAMBIO, EMPRESTIMO_CONSIGNADO, JUROS_CHEQUE_ESPECIAL, DEVOLUCAO_INSUFICIENCIA, BLOQUEIO_JUDICIAL | Categoria |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |

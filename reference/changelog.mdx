@@ -12,6 +12,98 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ---
 
+## Outubro 2026
+
+### Esteiras para qualquer jornada, Onboarding, Assistente que executa e um Início que guia
+
+**Esteiras**
+- **Monte a jornada inteira numa esteira:** peça formulários e documentos, rode várias políticas em camadas, pré-aprove, passe por alçada com pessoas, Comitê IA ou os dois, e assine pela Assinatura Gyra ou pela Clicksign. Ver [Esteiras](/esteiras/visao-geral).
+- **Esteira flexível:** a primeira etapa pode ser Análise, Checkpoint, Solicitação, Integração ou Enquadramento de produto, e a Solicitação também abre a esteira pelo **Ao concluir**, com um destino para CNPJ e outro para CPF.
+- **Enquadramento de produto:** a esteira escolhe o produto da proposta por regras, por fórmula ou pelo analista, e a pré-aprovação pode partir do produto. Ver [Etapas](/esteiras/etapas#enquadramento-de-produto).
+- **Uso da política:** cada política declara se é de **Relatório** ou de **Esteira**, e o construtor confere as políticas antes de ativar. Ver [Política de crédito](/concepts/politica-de-credito).
+- **Solicitação por vínculo, decisão por condição e fórmulas conferidas:** peça documentos a cada sócio ou vínculo, defina rota e revisores por condição, e veja no construtor a variável que nenhuma etapa anterior traz.
+
+**Onboarding**
+- **Cadastros e Solicitações passa a se chamar Onboarding**, com **Clientes**, **Solicitações** e **Validação de identidade**. Ver [Onboarding](/onboarding/visao-geral).
+- **Contatos por pessoa, dados declarados e sócios declarados** no cadastro, com correção de sócio pela equipe que a Receita não sobrescreve.
+- **Autorização de SCR de empresa** com identidade e termo de cada sócio.
+
+**Propostas**
+- **Integração nativa com o HubSpot:** o negócio que chega ao estágio gatilho vira proposta e a decisão volta para o negócio. Ver [HubSpot](/propostas/hubspot).
+- **Aba Gerencial:** indicadores, funil, quem traz o negócio, mix por produto, visões salvas e exportação para Excel. Ver [Painel gerencial](/propostas/gerencial) e a [API de indicadores](/api-reference/propostas/gerencial).
+- **Quatro portas de entrada para o mesmo fluxo:** HubSpot, formulário público, API ou a tela, todas seguindo análise, pré-aprovação e aprovação com alçada.
+
+**Assistente GYRA+ e Início**
+- **O Assistente GYRA+ executa por você:** monta esteira completa, cria camada, edita termos e modelos de contrato, age em execuções, solicitações e cadastros, sempre com a sua confirmação, e guarda o histórico de conversas. Ver [Assistente GYRA+](/plataforma/assistente-gyra).
+- **Início novo:** uma barra única (CPF ou CNPJ analisa, texto vai para o Assistente), o que está esperando você, o mês até agora e sugestões conforme a fase da sua organização. Ver [Início](/toolbox/inicio).
+
+**Correspondentes**
+- **Canal de correspondentes para operações CaaS:** cadastro da entidade, atendentes com validade de cadastro e certificação, aviso de vencimento, entrada pela esteira da organização e oferta indicativa para o atendente. Ver [Correspondentes](/plataforma/correspondentes).
+
+---
+
+## Setembro 2026
+
+### Originação de ponta a ponta: Propostas, Esteiras e Formalização
+
+A GYRA+ passa a cobrir o crédito do pedido ao contrato assinado. O cliente pede, a esteira analisa, a oferta volta para ele escolher e o contrato sai pronto para assinar, sem planilha no meio.
+
+**Propostas**
+- **Proposta:** o pedido de crédito do cliente final, com situação clara a cada passo (**Em análise**, **Esperando o cliente**, **Esperando você**, **Oferta emitida**). Entra pelo formulário público, pela tela ou pela API. Ver [Propostas](/propostas/visao-geral).
+- **Produtos e carteiras:** cada produto define finalidade, público, faixa de valor, documentos exigidos, o que roda ao concluir e a estrutura financeira. Carteiras agrupam produtos. Ver [Produtos e carteiras](/propostas/produtos).
+- **Precificação com índices de mercado reais:** taxa pós ou prefixada sobre CDI, Selic, IPCA, IGP-M, TR, TJLP e taxas do BNDES, com spread de risco, carência, tarifas, IOF, CET e cronograma de parcelas. Ver [Precificação do produto](/propostas/precificacao).
+- **Pré-aprovação em duas rodadas:** uma oferta indicativa em faixa vai ao cliente por e-mail ou SMS, ele escolhe valor, prazo e carência numa página própria, e a oferta firme sai no fim da esteira. O operador pode copiar o link, reenviar ou registrar a escolha em nome do cliente. Ver [Pré-aprovação e oferta](/propostas/pre-aprovacao-e-oferta).
+
+**Esteiras** (antigas Operações)
+- **Esteira com etapas:** relatório e camadas, solicitação de documentos, pré-aprovação, Chamada de API, revisão, alçada, comitê IA, contrato e fechamento externo, com condição por fórmula em cada etapa. Ver [Esteiras](/esteiras/visao-geral) e o [catálogo de etapas](/esteiras/etapas).
+- **Rascunho, Salvar e versões:** você edita à vontade e publica de uma vez. Cada execução roda a versão com que começou. Ver [Execuções](/esteiras/execucoes).
+- **Dados de entrada:** o que o cliente informou (proposta, formulário, documentos) vira variável na esteira e na política (`inputs.*`) e ganha seção própria no relatório. Ver [Dados de entrada](/esteiras/dados-de-entrada).
+- **Chamada de API:** uma etapa que consulta o seu sistema no meio da esteira e usa a resposta nas próximas decisões. Ver [Chamada de API](/esteiras/chamada-de-api).
+- **Consultas adicionais por camada e Indicadores do SCR:** cada regra declara a fonte que usa, e a plataforma avisa quando falta. Ver [Camadas e add-ons](/esteiras/camadas-e-add-ons) e [SCR](/sources/scr-open-finance).
+
+**Formalização**
+- **Modelos de contrato em Word:** você sobe o .docx com variáveis, revisa, publica e numera (sequencial, externo ou ID GYRA+). Ver [Modelos de contrato](/formalizacao/modelos-de-contrato) e o [catálogo de variáveis](/formalizacao/variaveis-do-contrato).
+- **Partes e assinaturas por regra:** emitente, avalistas, cônjuges, intervenientes, credor e testemunhas definidos pela política da esteira, com regime de bens, menores e procuração. Assinatura em paralelo ou em etapas, com três níveis de identidade. Ver [Partes e assinaturas](/formalizacao/partes-e-assinaturas).
+- **Clicksign e BNDES Online:** conecte suas contas e a esteira envia, acompanha e registra. Ver [Clicksign](/formalizacao/clicksign) e [BNDES Online](/formalizacao/bndes).
+
+**Plataforma**
+- **Formulário público:** um link aberto por modelo, para o cliente começar sozinho o cadastro ou o pedido, com código de verificação e proteção contra robôs. Ver [Formulário público](/onboarding/formulario-publico).
+- **Assistente GYRA+:** um painel lateral que responde sobre a sua carteira e executa ações com a sua confirmação. Ver [Assistente GYRA+](/plataforma/assistente-gyra).
+- **Correspondentes:** credencie parceiros que originam pedidos para você, com produtos, área de atuação e agentes. Ver [Correspondentes](/plataforma/correspondentes).
+- **Menu novo e módulos:** grupos Operação, Onboarding e Motor de crédito, menu da organização e módulos não contratados visíveis com cadeado. Ver [Visão geral do toolbox](/toolbox/visao-geral) e [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+- **Validação de identidade:** uma tela e uma rota (`GET /v1/collections/identity-verifications`) com todas as verificações da organização. Ver [Validação de identidade](/toolbox/validacao-de-identidade).
+
+**API**
+- **API de Propostas:** criar, listar e acompanhar propostas, rodar a análise, escolher a oferta e simular preço. Ver [API de Propostas](/api-reference/propostas/visao-geral).
+- **Fechamento externo:** `POST /operation/close` para o seu sistema devolver o desfecho de uma execução. Ver [Fechamento externo](/api-reference/esteiras/fechamento-externo).
+- **Modelos de solicitação:** filtros `scope` e `enabled` na listagem e `POST /v1/collection-templates/{id}/enabled` para ligar e desligar. Ver [API do Onboarding](/api-reference/onboarding/visao-geral).
+
+### Cadastros e Solicitações
+
+Módulo novo, no toolbox e na API: o dossiê documental de cada CNPJ/CPF, e o pedido enviado ao cliente final para ele entregar o que falta.
+
+**Novidades**
+- **Cadastros:** dossiê por CNPJ ou CPF, com documentos versionados, completude, situação de KYC, árvore societária, renovação periódica e trilha de auditoria append-only. Ver [Cadastro documental](/onboarding/cadastro-documental) e [Cadastros no toolbox](/toolbox/cadastros).
+- **Análise documental de 25 tipos:** a entrada é um arquivo só; a plataforma reconhece o tipo (24 deles sozinha, e o balanço por tipo afirmado) e extrai os campos daquele tipo, cada um com confiança e página. Ver [Tipos de documento](/onboarding/tipos-de-documento) e o mapa completo em [Formatos de retorno por documento](/api-reference/onboarding/formatos-de-retorno).
+- **Régua de validação configurável:** as verificações organizadas em três perguntas (autenticidade, titularidade, fé pública), com o que reprova, o que ressalva e o que nem roda, ajustável por tipo documental e versionada. Ver [Régua de validação](/onboarding/regua-de-validacao).
+- **Validação síncrona:** `POST /v1/registry/validate-document` recebe o arquivo por multipart (até 15 MB) e devolve `200` com o parecer, ou `202` com `statusUrl` quando passa da janela. Ver [Validação síncrona](/api-reference/registry/post-registry-validate-document).
+- **Solicitações de coleta:** um link por destinatário, com itens de documento, formulário, termo, assinatura e identidade, prazo, lembretes e modo de resposta com ou sem revisão do operador. Ver [Solicitações de coleta](/onboarding/solicitacoes) e [Solicitações no toolbox](/toolbox/solicitacoes).
+- **Canal `NONE`:** a plataforma não avisa ninguém, os links voltam na resposta da criação e quem entrega é o integrador.
+- **Formulários de cadastro:** campos prontos e campos livres com formato conferido (CPF, CNPJ, CEP, telefone, e-mail corporativo), quadro de sócios e pré-preenchimento pela extração. Ver [Formulários](/onboarding/formularios).
+- **Termos e assinatura:** modelos versionados em Markdown ou PDF, com variáveis do cadastro, do formulário e dos documentos extraídos, importação de contrato em Word, assinatura individual e **conjunta** (um documento, várias partes) e o pacote assinatura + identidade. Ver [Termos e assinatura](/onboarding/termos-e-assinatura).
+- **Verificação de identidade em três caminhos:** face match com documento, **sem documento** (prova de vida e conferência contra a base oficial ligada ao CPF) e **Valida+**, o código enviado a um e-mail que o bureau associa ao CPF/CNPJ. Ver [Verificação de identidade](/onboarding/verificacao-de-identidade).
+- **Página do destinatário com a sua marca:** logo, cores, domínio próprio do link, remetente próprio de e-mail e WhatsApp da sua empresa no convite. Ver [Página do destinatário](/onboarding/pagina-do-destinatario).
+- **29 eventos de webhook novos**, com envelope único, assinatura HMAC que inclui o carimbo de tempo, segredo por assinatura e retentativa 5s/30s/120s. Ver [Eventos de webhook](/api-reference/onboarding/eventos-de-webhook).
+- **Chaves de API pelo painel:** `Configurações, API & MCP` passa a gerar, listar e revogar as credenciais da organização. Não é mais preciso pedir ao suporte. Ver [Chaves de API](/api-reference/api-keys).
+- **Webhooks pelo painel:** a mesma tela cadastra, testa e gira o segredo das assinaturas, com o catálogo de eventos por categoria. Os eventos de relatório e crédito ganharam nome público na mesma convenção (`report.finished`, `credit-policy.evaluated`), sem mudar nada para quem já integra.
+- **Versionamento de URI na API do módulo:** as rotas respondem em `/v1/registry/...` e `/registry/...`; use o caminho versionado em integração nova. Ver [API do Onboarding](/api-reference/onboarding/visao-geral).
+- **O cadastro documental no Comitê de Crédito IA:** o comitê passa a receber o recorte de capacidade de pagamento do dossiê (declaração de faturamento, DIRPF e ECF), sempre com procedência (tipo, versão, data-base e o que certifica o papel), e só de documento aprovado e vigente. Ele também distingue "não há cadastro" de "não consegui consultar". Ver [Comitê de Crédito IA](/concepts/comite-de-credito#o-cadastro-documental-no-comitê).
+- **Balanço pelo link do cliente:** um item `DEMONSTRACOES_FINANCEIRAS` numa solicitação faz o próprio cliente enviar o balanço, que é validado, arquivado no cadastro e extraído, com aviso pelo evento `registry.financial.extracted`. Nesse caminho também é aceito o ZIP do XBRL da Central de Balanços. Ver [Análise Financeira](/concepts/analise-financeira#como-enviar-os-balanços).
+- **Consumo do módulo documentado:** os dez eventos de cobrança, com a regra de cada um (documento analisado e não arquivo enviado, reprocessamento não cobra de novo, verificação de identidade cobra com qualquer veredito). Ver [O que é cobrado](/onboarding/cobranca).
+- **Permissão nova `can-remove-registry`:** remover cadastro deixa de acompanhar "rodar análise" e passa a ser de Administrador, Owner, Superuser e Gestor de Crédito. Ver [Gerenciar Usuários e Permissões](/toolbox/gerenciar-usuarios-permissoes#cadastros-e-solicitações).
+
+---
+
 ## Julho 2026
 
 ### Pareceres GYRA+ IA, Comitê de Crédito e Arquivos do Relatório
@@ -47,7 +139,7 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ## Abril 2026
 
-### CNJ — Mandados de Prisão em Antecedente Criminal
+### CNJ, Mandados de Prisão em Antecedente Criminal
 
 **Novidades**
 - Nova fonte **CNJ (mandados de prisão)** integrada à seção `CRIMINAL_RECORD`. Disponível apenas para **PF** nos relatórios **COMPLETO** e **COMPLETO+**. Frequência de atualização: **mensal**.
@@ -127,7 +219,7 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 - Webhooks v1 deixarão de ser suportados em **março de 2025**
 
 <Warning>
-Se você ainda usa a API v1 (endpoints sem `/v2/`), migre para a v2 antes de março de 2025. Consulte o [Guia de Migração](/reference/migracao-v1-v2) para detalhes.
+Se você ainda usa a API v1 (endpoints sem `/v2/`), migre para a v2. O par de rotas está em [Criar Relatório (v2)](/api-reference/report-v2/post-v2report) e [Consultar Relatório (v2)](/api-reference/report-v2/get-v2report).
 </Warning>
 
 ---

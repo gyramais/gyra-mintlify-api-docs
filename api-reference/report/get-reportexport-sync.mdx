@@ -1,6 +1,6 @@
 ---
 title: Exportar Relatório (Síncrono)
-description: Exporta o relatório em PDF e retorna a URL na mesma resposta. Bloqueia até o arquivo ficar pronto.
+description: Gera o PDF ou o Excel do relatório e devolve o link na mesma resposta.
 surface: api
 domain: relatorio
 audience: integrador
@@ -8,30 +8,9 @@ lang: tecnica
 openapi: get /report/export-sync/{id}
 ---
 
-<Endpoint
-  method="GET"
-  path="/report/export-sync/{id}"
-  headers={[
-    {
-      name: "Authorization",
-      type: "string",
-      required: true,
-      description: "Token JWT no formato Bearer. Exemplo: `Bearer abc123`"
-    }
-  ]}
-  pathParameters={[
-    {
-      name: "id",
-      type: "string",
-      required: true,
-      description: "ID do relatório a exportar"
-    }
-  ]}
-/>
-
 ### Quando usar
 
-Use este endpoint para gerar e receber o arquivo de export (PDF, XLS ou ambos) de um relatório **na mesma requisição**. A chamada bloqueia até o arquivo estar pronto e retorna direto a URL para download. Para volumes grandes ou quando preferir não bloquear, use `GET /report/export/{id}` com webhook `REPORT_EXPORTED`.
+Use esta rota quando você quer o link do arquivo na própria resposta. A chamada só volta depois que o arquivo está pronto, então use um timeout generoso no seu cliente HTTP. Para não segurar a conexão, ou para gerar PDF e Excel juntos, use [Exportar Relatório (Assíncrono)](/api-reference/report/get-reportexport).
 
 ### Autenticação
 
@@ -41,57 +20,63 @@ Bearer JWT no header `Authorization`.
 
 | Nome | Local | Tipo | Obrigatório | Descrição |
 |---|---|---|---|---|
-| `id` | `path` | `string` | `sim` | ID do relatório a exportar. |
-| `format` | `query` | `string` | `não` | Formato do arquivo: `pdf`, `excel` ou `both`. Padrão: `pdf`. |
-| `type` | `query` | `string` | **`sim`** | Use `REPORT`. Omitir o parâmetro retorna `400`. |
-| `exportFormat` | `query` | `string` | `não` | `pdf`, `excel` ou `both`. |
-| `sectionOrder` | `query` | `string[]` | `não` | Ordem das seções no arquivo gerado. |
-| `sectionOrder` | `query` | `string[]` | `não` | Lista ordenada de seções a serem incluídas no PDF. Cada seção é informada repetindo o parâmetro (ex.: `sectionOrder=LOCATION&sectionOrder=SUMMARY&sectionOrder=PEFIN`). Define **quais** seções aparecem e **em que ordem**. Se omitido, o relatório é exportado no layout **default** do sistema. Para a lista completa de seções suportadas, consulte o serviço `gyra-core`. |
+| `id` | `path` | `string` | sim | ID do relatório. |
+| `type` | `query` | `string` | **sim** | `REPORT` ou `REPORT_MINIFIED`. Use `REPORT`. Sem o parâmetro, a resposta é `400`. |
+| `exportFormat` | `query` | `string` | não | `pdf` (padrão) ou `excel`. Nesta rota, `both` não gera arquivo e responde erro: use a rota assíncrona. |
+| `sectionOrder` | `query` | `string[]` | não | Seções do arquivo, na ordem desejada. Repita o parâmetro para cada seção. Só as seções listadas entram. |
+| `templateId` | `query` | `string` | não | ID de um modelo de exportação da organização. |
+| `systemTemplate` | `query` | `string` | não | Modelo nativo: `COMPLETE` ou `COMPACT`. |
 
-<Note>
-O parâmetro `sectionOrder` é **opcional**. Quando não enviado, o relatório é exportado no formato padrão do sistema. Quando enviado, o PDF contém apenas as seções listadas, exatamente na ordem informada.
-</Note>
+Sem `sectionOrder`, valem as seções e a ordem do modelo (o escolhido, senão o padrão da organização, senão o do sistema).
+
+### Resposta
+
+A resposta é o registro da exportação. O link está em `url`.
+
+| Campo | Descrição |
+|---|---|
+| `url` | Link do arquivo gerado. |
+| `payload.reportId` | Relatório exportado. |
+| `payload.type` | `PDFMAKE` para PDF, `EXCEL` para Excel. |
+| `payload.generatedAt` | Quando o arquivo foi gerado. |
+| `id`, `userId`, `organizationId`, `typeId`, `createdAt`, `updatedAt` | Metadados do registro. |
+
+O link também fica gravado no relatório, em `exportUrl` (PDF) ou `exportExcelUrl` (Excel). O link do Excel expira em 7 dias.
 
 <RequestExample>
 
-```bash cURL (default)
-curl --location 'https://gyra-core.gyramais.com.br/report/export-sync/69a207bcdd0197828df9155a?format=pdf' \
---header 'Authorization: Bearer abc123'
+```bash cURL
+curl --request GET 'https://gyra-core.gyramais.com.br/report/export-sync/6612a7f3a19b467000000000?type=REPORT&exportFormat=pdf' \
+  --header 'Authorization: Bearer SEU_TOKEN'
 ```
 
 ```bash cURL (com sectionOrder)
-curl --request GET \
-  --url 'https://gyra-core.gyramais.com.br/report/export-sync/69a207bcdd0197828df9155a?type=REPORT&sectionOrder=LOCATION&sectionOrder=SUMMARY&sectionOrder=PEFIN' \
-  --header 'Authorization: Bearer abc123'
+curl --request GET 'https://gyra-core.gyramais.com.br/report/export-sync/6612a7f3a19b467000000000?type=REPORT&sectionOrder=LOCATION&sectionOrder=SUMMARY&sectionOrder=PEFIN' \
+  --header 'Authorization: Bearer SEU_TOKEN'
 ```
 
 ```javascript JavaScript
-fetch("https://gyra-core.gyramais.com.br/report/export-sync/69a207bcdd0197828df9155a?format=pdf", {
-  method: "GET",
-  headers: {
-    "Authorization": "Bearer abc123",
-  },
-})
-  .then(res => res.json())
-  .then(console.log)
+const url = new URL("https://gyra-core.gyramais.com.br/report/export-sync/6612a7f3a19b467000000000");
+url.searchParams.set("type", "REPORT");
+url.searchParams.set("exportFormat", "pdf");
+
+const resposta = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+const { url: link } = await resposta.json();
 ```
 
 ```python Python
 import requests
 
-url = "https://gyra-core.gyramais.com.br/report/export-sync/69a207bcdd0197828df9155a"
-headers = {"Authorization": "Bearer abc123"}
-params = {"format": "pdf"}
-
-response = requests.get(url, headers=headers, params=params)
-print(response.json())
+resposta = requests.get(
+    "https://gyra-core.gyramais.com.br/report/export-sync/6612a7f3a19b467000000000",
+    headers={"Authorization": f"Bearer {token}"},
+    params={"type": "REPORT", "exportFormat": "pdf"},
+    timeout=360,
+)
+link = resposta.json()["url"]
 ```
 
 </RequestExample>
-
-<Tip>
-O link retornado tem validade de 7 dias. Para geração em lote ou relatórios muito grandes, prefira a versão assíncrona (`GET /report/export/{id}`) para não segurar a conexão HTTP.
-</Tip>
 
 <ResponseExample>
 
@@ -103,7 +88,7 @@ O link retornado tem validade de 7 dias. Para geração em lote ou relatórios m
   "userId": "6612a7f3615ff3f200000000",
   "organizationId": "6612a7f3fa9e086b00000000",
   "typeId": "6612a7f371f08b3400000000",
-  "url": "https://exemplo.gyramais.com.br/relatorio.pdf?assinatura=...",
+  "url": "https://exemplo.gyramais.com.br/relatorio.pdf",
   "payload": {
     "reportId": "6612a7f3a19b467000000000",
     "type": "PDFMAKE",
@@ -115,22 +100,12 @@ O link retornado tem validade de 7 dias. Para geração em lote ou relatórios m
 ```json 400 Bad Request
 {
   "code": 400,
-  "message": "format must be one of the following values: pdf, excel, both"
-}
-```
-
-```json 401 Unauthorized
-{
-  "code": 401,
-  "message": "Token de acesso inválido."
-}
-```
-
-```json 404 Not Found
-{
-  "code": 404,
-  "message": "Report not found"
+  "message": "type must be one of the following values: REPORT, REPORT_MINIFIED,type should not be empty"
 }
 ```
 
 </ResponseExample>
+
+<Note>
+  A rota responde `202` mesmo no sucesso, com o arquivo já pronto. Trate `202` com `url` preenchida como sucesso. Um relatório inexistente ou de outra organização não gera arquivo e responde erro.
+</Note>

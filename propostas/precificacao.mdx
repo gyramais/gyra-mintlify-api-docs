@@ -1,0 +1,197 @@
+---
+title: "Precificação do produto"
+description: "Como a estrutura financeira do produto vira taxa, parcela, cronograma e CET: amortização, composição da taxa, índices de mercado, carência, encargos e simulação."
+icon: "calculator"
+surface: conceito
+domain: proposta
+audience: ambos
+lang: nao-tecnica
+---
+
+A precificação do produto transforma as regras da sua linha de crédito em números que o cliente entende: quanto paga por mês, quanto paga no total e qual é o custo efetivo. O mesmo cálculo roda no editor do produto, na página da oferta e no contrato, então o cliente vê exatamente o que vai assinar.
+
+<Info>
+  **Resumo:** cada produto tem uma **estrutura financeira** (amortização, periodicidade, taxa em componentes, carência, encargos, base de dias e limites). A GYRA+ combina essa estrutura com os **índices de mercado** do dia e calcula o cronograma, a parcela e o CET.
+</Info>
+
+<Note>
+  Esta página trata da estrutura financeira do **produto**. As fórmulas de prazo, taxa e valor da **política de crédito** são outra coisa e estão em [Precificação na política](/concepts/precificacao).
+</Note>
+
+## A estrutura financeira
+
+| Peça | Opções | O que decide |
+| --- | --- | --- |
+| **Amortização** | PRICE, SAC, Americano, Parcela única, Sem juros | Como o saldo é pago ao longo do prazo |
+| **Periodicidade** | Mensal, Trimestral, Semestral, Anual | De quanto em quanto tempo vence uma parcela |
+| **Taxa** | Pré, Indexador, Spread de risco | Os componentes que, somados, formam a taxa |
+| **Carência** | Até N meses, com ou sem pagamento de juros | Quanto tempo antes de começar a amortizar |
+| **Encargos** | IOF, Tarifa de análise, Seguro, Fundo garantidor, Outro encargo | Custos além dos juros |
+| **Base de dias** | 252 dias úteis, 30/360, 365 dias corridos | Como a taxa anual vira taxa mensal |
+| **Limites** | Valor mínimo e máximo, prazo mínimo e máximo | O que o produto aceita |
+
+### Amortização
+
+| Sistema | Como o saldo é pago |
+| --- | --- |
+| **PRICE** | Parcelas iguais (antes de correção e encargos). Os juros pesam mais no começo |
+| **SAC** | Amortização constante. A parcela começa maior e cai ao longo do prazo |
+| **Americano** | Só juros em cada vencimento; o principal é pago inteiro no último |
+| **Parcela única** | Tudo no vencimento final. Carência não se aplica |
+| **Sem juros** | Parcelas iguais sem juros. A composição de taxa é ignorada |
+
+**Sem juros até (parcelas)** permite vender parcelado sem juros até um número de parcelas e com juros acima dele. Dentro do limite, a simulação avisa que a taxa do produto não se aplica.
+
+<Warning>
+  Com periodicidade maior que mensal, o prazo sem a carência precisa ser múltiplo da periodicidade. Um crédito rural com parcela anual aceita 36 meses sem carência, mas não 30.
+</Warning>
+
+## Como a taxa é composta
+
+A taxa é uma soma de componentes. Você combina quantos precisar:
+
+| Componente | Na tela | O que é |
+| --- | --- | --- |
+| Taxa pré-fixada | **Pré** | Um percentual fixo ao ano. Pode haver mais de um, cada um com rótulo (ex.: "spread do agente") |
+| Índice | **Indexador** | Um índice de mercado, com o **% do índice** (100% do CDI, 120% do CDI) e **Como o índice entra** |
+| Spread de risco | **Spread de risco** | A parte da taxa que depende do cliente. O valor **vem da esteira**, limitado ao teto que você define no produto. No máximo um por produto |
+
+### Como o índice entra
+
+- **Pós nos juros:** o índice soma aos juros de cada período. É o caso típico de CDI e Selic.
+- **Corrige o saldo:** o índice corrige o saldo devedor antes dos juros (correção monetária). É o caso típico de IPCA.
+
+Dois índices têm regra própria, porque é assim que o mercado os define:
+
+- **TLP:** o IPCA corrige o saldo e a taxa real da TLP entra como juros, qualquer que seja o modo escolhido.
+- **LCD:** Selic mais o spread da LCD publicado pelo BNDES (que pode ser negativo).
+
+### A fórmula
+
+A taxa mensal de juros é:
+
+```
+juros do mês = fator do índice pós × (1 + spread mensal) × fator da taxa real − 1
+```
+
+- O **spread** é a soma dos componentes pré-fixados com o spread de risco, em % ao ano.
+- Na base **30/360**, o spread vira mensal de forma linear (anual dividido por 12). Nas bases **252 dias úteis** e **365 dias corridos**, de forma efetiva: `(1 + anual)^(1/12) − 1`.
+- Índices são sempre convertidos de forma efetiva.
+- Um índice que **corrige o saldo** não entra nessa conta: ele corrige o saldo antes dos juros.
+
+### Spread de risco
+
+O produto guarda só o **teto** do spread de risco. O valor de cada cliente vem da esteira, na [pré-aprovação](/propostas/pre-aprovacao-e-oferta), calculado por fórmula a partir da análise. Quando nenhum valor é informado (por exemplo, na simulação do editor sem preencher o campo), a GYRA+ simula pelo teto e avisa.
+
+## Exemplo: capital de giro de R$ 200 mil em 24 meses
+
+Um produto de capital de giro pós-fixado, com PRICE mensal e base de 252 dias úteis:
+
+| Componente | Valor |
+| --- | --- |
+| Indexador | 100% do CDI, pós nos juros (CDI de 14,90% a.a. no dia) |
+| Pré | 4,00% a.a. |
+| Spread de risco | teto de 6,00% a.a.; a esteira definiu 2,50% a.a. para este cliente |
+
+A conta:
+
+1. CDI mensal: `1,149^(1/12) − 1` = 1,164% a.m.
+2. Spread: 4,00% + 2,50% = 6,50% a.a., que vira `1,065^(1/12) − 1` = 0,526% a.m.
+3. Juros do mês: `1,01164 × 1,00526 − 1` = **1,696% a.m.** (22,37% a.a.).
+4. Parcela PRICE de R$ 200.000,00 em 24 meses: cerca de **R$ 10.214,12**, antes de IOF e tarifas.
+
+Com **3 meses de carência pagando juros**, o cliente paga cerca de R$ 3.392,90 de juros em cada um dos 3 primeiros meses e depois 21 parcelas de cerca de R$ 11.400,50. O prazo total continua 24 meses: a carência conta dentro do prazo.
+
+<Note>
+  Os números acima ilustram a fórmula. O cronograma real sai da simulação, que considera as datas de vencimento, o IOF e os encargos do produto.
+</Note>
+
+## Índices de mercado
+
+Para taxa pós-fixada, a GYRA+ usa o último valor publicado de cada índice, sem você precisar atualizar nada:
+
+| Índice | O que entra no cálculo | Fonte |
+| --- | --- | --- |
+| **CDI** | Taxa anual | Banco Central |
+| **Selic** | Meta anual | Banco Central |
+| **IPCA** | Acumulado em 12 meses | Banco Central |
+| **IGP-M** | Acumulado em 12 meses | Banco Central |
+| **TR** | Taxa mensal, convertida para ano | Banco Central |
+| **TLP** | Taxa real anual (o IPCA entra à parte) | BNDES |
+| **Taxa Fixa BNDES** | Taxa anual | BNDES |
+| **LCD** | Spread sobre a Selic | BNDES |
+
+- O valor de mercado é renovado a cada 6 horas, no máximo.
+- Se a fonte estiver fora do ar, vale o último valor bom, marcado como desatualizado. Nada para de funcionar.
+- Cada simulação mostra os **índices usados**, com o valor, a data de referência e a fonte (por exemplo, "CDI 14,90% a.a. em 23/09/2026, Banco Central"). O cronograma ligado a índice sai marcado como **estimado**, porque o índice futuro ainda não é conhecido.
+
+### De onde vem o valor de cada índice
+
+Em ordem de prioridade:
+
+1. Um valor informado na própria simulação do produto, para testar um cenário.
+2. **Usar valor fixo** no produto, quando o produto deve sempre usar outro valor.
+3. O valor de mercado atual.
+4. Uma premissa guardada no produto.
+5. Um valor de referência da GYRA+, com aviso na simulação.
+
+O valor de mercado em si sempre vem da GYRA+: quem simula não consegue trocá-lo. Na página da oferta, o cliente escolhe só valor, prazo e carência, e o cálculo usa os índices da GYRA+.
+
+## Carência
+
+| Opção | Na tela | Como funciona |
+| --- | --- | --- |
+| Carência de amortização | **Amortização (paga juros)** | O cliente paga só os juros durante a carência |
+| Carência de amortização e juros | **Amortização e juros (juros capitalizados)** | Nada é pago na carência: os juros entram no saldo |
+
+Na carência que paga juros, **Juros da carência** define de quanto em quanto tempo eles vencem: **Mensal**, **Trimestral**, **Semestral** ou **Anual**. Isso independe da periodicidade das parcelas. Se a carência não for múltipla desse intervalo, os juros acumulados também vencem no último mês da carência (a simulação avisa).
+
+Regras:
+
+- **Carência máxima (meses)** limita o que a oferta pode dar. Com máximo zero, o produto não aceita carência.
+- A carência precisa ser menor que o prazo.
+- Parcela única ignora a carência, com aviso.
+
+## Encargos e IOF
+
+Cada encargo tem uma base (**sobre o valor**, **sobre o saldo** ou **na parcela**) e pode ser **Financiado** (entra no valor financiado) ou pago à parte.
+
+O IOF de crédito segue a regra da Receita Federal: 0,38% adicional mais uma alíquota diária (0,0041% ao dia para pessoa jurídica, 0,0082% ao dia para pessoa física) sobre cada parcela de principal até o vencimento, limitada a 365 dias. Marque **IOF isento** quando a operação tiver isenção. Por isso a simulação pergunta se o cálculo é para pessoa jurídica ou física.
+
+## Simulação e cronograma
+
+A simulação devolve:
+
+- **1ª parcela**, **Maior parcela** e **Total pago**;
+- **CET** (custo efetivo total): a taxa interna de retorno do fluxo, com juros, correção e encargos, anualizada;
+- o **cronograma** parcela a parcela, com juros, amortização, correção, encargos e saldo;
+- os índices usados e os avisos do cálculo.
+
+A mesma conta roda em três lugares: na **Simulação ao vivo** do editor de produto, na página da oferta que o cliente abre e na oferta firme, que guarda o cronograma **congelado** para o contrato.
+
+<Accordion title="Mensagens de limite na simulação">
+  | Mensagem | Por quê |
+  | --- | --- |
+  | "O valor mínimo para este produto é R$ X." | Abaixo do limite de valor do produto |
+  | "O valor máximo para este produto é R$ X." | Acima do limite de valor do produto |
+  | "O prazo para este produto precisa estar entre N e M meses." | Fora dos limites de prazo |
+  | "Com pagamento a cada P meses, o prazo sem a carência (N meses) precisa ser múltiplo de P." | Periodicidade maior que mensal |
+  | "Este produto não aceita carência." | Carência máxima zero |
+  | "A carência máxima para este produto é de N meses." | Acima da carência máxima |
+  | "A carência precisa ser menor que o prazo." | Carência igual ou maior que o prazo |
+</Accordion>
+
+## Pela API
+
+A simulação tem rota própria, e a estrutura financeira vai no cadastro do produto. Na API, valores vão em **centavos** e taxas em **pontos-base** ao ano: o teto de spread de risco de 6% a.a. é `600`, e 100% do CDI é `10000`. Prazo aceita de 1 a 600 meses e carência de 0 a 120. Veja [API de Propostas](/api-reference/propostas/visao-geral).
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Pré-aprovação e oferta" icon="hand-holding-dollar" href="/propostas/pre-aprovacao-e-oferta">
+    Como o spread de risco e a faixa chegam ao cliente.
+  </Card>
+  <Card title="Produtos no toolbox" icon="box-open" href="/toolbox/produtos">
+    Monte a estrutura financeira e simule ao vivo.
+  </Card>
+</CardGroup>

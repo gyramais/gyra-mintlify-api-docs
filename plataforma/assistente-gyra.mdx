@@ -1,0 +1,173 @@
+---
+title: "Assistente GYRA+"
+description: "Peça em português, dentro do Toolbox: o Assistente GYRA+ lê a tela aberta, monta esteira e política, edita termos e contratos, age em execuções, solicitações e cadastros, e só grava depois da sua confirmação."
+icon: "sparkles"
+surface: plataforma
+domain: plataforma
+audience: operador
+lang: nao-tecnica
+---
+
+O Assistente GYRA+ é um painel dentro do Toolbox que executa por você: você pede em português, ele monta, confere e explica, e só grava o que você confirmar.
+
+<Info>
+  **Resumo:** o assistente lê a tela que você tem aberta, os relatórios, as esteiras e os cadastros da sua organização, e monta esteira completa, política, camada, termo, modelo de contrato, produto e formulário. **Toda alteração passa por uma prévia** e só é gravada quando você responde com um "sim" explícito. Ele age com o seu acesso: nunca faz o que o seu papel ou os módulos da organização não permitem.
+</Info>
+
+## Abrir o assistente
+
+| Como | O que faz |
+| --- | --- |
+| Botão **Assistente GYRA+**, no topo | Abre e fecha o painel. |
+| **⌘J** (Mac) ou **Ctrl+J** (Windows e Linux) | O mesmo, de qualquer tela. **Esc** fecha. |
+| Texto na barra do topo | Um pedido digitado na barra (em vez de CPF ou CNPJ) vai direto para o assistente. Ver [Início](/toolbox/inicio#a-barra-analisar-ou-perguntar). |
+| **Perguntar à GYRA+ sobre este CPF** (ou CNPJ) | No cartão do documento, na barra. Abre uma conversa sobre aquele documento. |
+
+Em telas a partir de 768 px de largura, o painel abre à direita e a tela encolhe ao lado, sem ficar coberta. No celular, o painel ocupa a tela inteira. O Toolbox lembra, no seu navegador, se você deixou o painel aberto. Fechar o painel não apaga a conversa.
+
+Uma conversa nova abre com *O que você quer fazer hoje?* e sugestões que mudam com a tela aberta: numa execução de esteira, *O que aconteceu nessa execução?*; num relatório, *Por que esse relatório foi negado?*; numa esteira, *Revise essa esteira e aponte o que pode dar errado*. Quando há novidade na plataforma, uma faixa **Novidade** aparece no topo do painel, com **Ver** e a opção de dispensar.
+
+<Note>
+  Se o botão **Assistente GYRA+** não aparece, o assistente está desligado para você ou para a sua organização. Fale com quem administra a conta.
+</Note>
+
+## Ele vê o que você está vendo
+
+O assistente lê a tela aberta ao lado: a esteira, a execução, o relatório, o termo ou o modelo de contrato. Por isso *confira essa esteira* ou *corrija esse termo* funcionam sem colar link ou texto. Num editor, ele enxerga também o rascunho que você ainda não salvou.
+
+Ele também conhece os módulos que a sua organização contratou. Se você pede algo de um módulo que não tem, ele diz que dá para contratar com a GYRA+, em vez de mandar você procurar na tela.
+
+## O que ele lê e o que ele executa
+
+Cada linha respeita o seu papel e os módulos contratados.
+
+| Área | Lê | Executa (sempre com confirmação) |
+| --- | --- | --- |
+| **Esteiras** | Esteiras e o que dá para usar em cada etapa | Monta a esteira completa: etapas, fórmulas conferidas com o mesmo motor que roda a esteira, variáveis das etapas anteriores e [Enquadramento de produto](/esteiras/etapas#enquadramento-de-produto). Ajusta, ativa e desativa |
+| **Execuções de esteira** | A execução etapa por etapa: onde parou, por quê, o que faltou, quem votou na alçada | Decide a etapa do analista, vota na alçada, refaz uma etapa de integração ou o contrato, lembra um aprovador e retira o seu voto |
+| **Políticas** | Políticas, regras e comparação de resultados | Cria e salva política, cria [camada de aprofundamento](/esteiras/camadas-e-add-ons) numa confirmação só, ativa, ajusta as instruções do comitê. Oferece os bureaus que a sua organização tem, pelo nome da tela |
+| **Relatórios** | O relatório pelos insights primeiro (parecer e comitê), e o dado da seção quando precisa; a política regra por regra; as fontes | Roda relatório e esteira, aprofunda, convoca o comitê, consulta de novo uma seção |
+| **Solicitações e formulários** | O que o cliente preencheu e mandou, o que está pendente, modelos de formulário | Cria modelo e solicitação, aprova, pede reenvio ou dispensa um item, cancela, reenvia, gera link novo, inclui ou tira signatário |
+| **Termos** | Termos, variáveis e se o termo funciona no modelo e na esteira | Cria termo (inclusive a partir de um Word anexado), publica versão nova, apaga, liga o termo a um modelo de formulário |
+| **Cadastros** | O cadastro completo, cada documento com o resultado da leitura, o histórico e a régua de validação | Cria cadastro, dá o veredito humano num documento ou reprocessa a leitura, atualiza renovação, contatos e estado civil |
+| **Modelos de contrato** | Modelos, variáveis e prévia em PDF | Cria modelo a partir de um Word anexado, liga as variáveis, ajusta e publica |
+| **Produtos e propostas** | Produtos, carteiras, propostas, simulação de parcelas | Cria e edita produto, liga e desliga, cria carteira, cria e roda proposta |
+| **Exportação do PDF** | Modelos de exportação | Cria e edita modelos, define o padrão, liga e desliga |
+| **E-mail e WhatsApp** | Situação do domínio e dos canais | Configura e remove domínio de e-mail, configura o domínio do link, envia modelo de mensagem do WhatsApp para aprovação |
+| **Balanços automáticos** | Diagnóstico da leitura de um balanço | Reprocessa o balanço e registra um problema para o time GYRA+ |
+| **Ajuda e novidades** | Dúvidas de uso com citação da documentação, atalhos para a tela certa, novidades | |
+
+Quem precisa de quê, em resumo:
+
+- **Esteiras e execuções:** quem monta esteira; quem roda análise também lê e age nas execuções.
+- **Políticas:** quem monta política. Instruções do comitê exigem o [recurso habilitado](/concepts/comite-de-credito#instru%C3%A7%C3%B5es-da-sua-institui%C3%A7%C3%A3o-nos-agentes). O Parecer IA é habilitado pela GYRA+ e não muda pelo assistente.
+- **Solicitações, formulários e cadastros:** módulo de [Onboarding](/onboarding/visao-geral) ou SCR. Criar, versionar e apagar termos exige o módulo de Onboarding.
+- **Modelos de contrato:** módulo de [Formalização](/formalizacao/visao-geral). Alterar exige a permissão de configurações.
+- **Produtos e propostas:** módulo de [Propostas](/propostas/visao-geral).
+- **E-mail e WhatsApp:** quem gerencia configurações, com o módulo de marca e envio próprios.
+
+<Tip>
+  Para montar a política a partir da que você já usa, **anexe o documento** em Word ou Excel e peça ao assistente que monte a política na plataforma.
+</Tip>
+
+## Nada é gravado sem a sua confirmação
+
+Quando o pedido altera alguma coisa, o assistente não grava no mesmo passo. Ele:
+
+<Steps>
+  <Step title="Confere e monta a prévia">
+    Valida o pedido e mostra um card com o **de, para**: o estado atual e como vai ficar.
+  </Step>
+  <Step title="Espera o seu sim">
+    A alteração só roda quando a sua resposta seguinte é uma confirmação inteira, como *sim*, *ok*, *pode*, *confirmo* ou *manda*. Qualquer ressalva, como *sim, mas...* ou *vou falar com o gerente*, não conta como confirmação.
+  </Step>
+  <Step title="Executa com o seu acesso">
+    A gravação acontece com as suas credenciais, e o papel e o módulo são conferidos de novo nesse momento.
+  </Step>
+</Steps>
+
+<Warning>
+  A prévia **expira em 10 minutos**. Depois disso, peça de novo: o assistente monta uma prévia nova com o estado atual. Cada confirmação vale para **uma** alteração.
+</Warning>
+
+Quando o seu acesso não permite a alteração, o assistente responde: *Essa alteração não está disponível para o seu acesso (permissão, módulo contratado ou controle do assistente). Fale com o administrador da conta.*
+
+## Histórico de conversas
+
+As suas conversas ficam guardadas por **90 dias**.
+
+- No painel, o ícone **Histórico de conversas** abre a lista, agrupada por data, com **Buscar nas conversas** (pelo título) e **Nova conversa**. Abrir uma conversa continua de onde parou.
+- Em cada conversa da lista dá para **Renomear** e **Arquivar**. Arquivar tira a conversa do histórico.
+- No menu lateral, **Conversas com a GYRA+** mostra as três mais recentes, com **Nova conversa** e **Todas as conversas**.
+
+## Anexos
+
+| | |
+| --- | --- |
+| **Formatos** | `.docx`, `.xlsx`, `.csv`, `.pdf`, `.txt` e `.md` |
+| **Tamanho** | Até 4 MB por arquivo |
+| **Na conversa** | O assistente considera os 5 anexos mais recentes |
+| **Planilhas** | Até 3.000 linhas por aba |
+
+PDF escaneado (imagem) não é lido. O assistente pede o arquivo em Word, Excel ou um PDF com texto selecionável.
+
+## O assistente escolhe o nível de raciocínio
+
+Você não escolhe modelo. Para cada mensagem, a plataforma decide quanto esforço a tarefa pede, e o painel mostra o nível enquanto trabalha:
+
+| Rótulo | Quando |
+| --- | --- |
+| **Resposta rápida** | Dúvida de uso, saudação, "onde fica tal coisa". |
+| **Trabalhando nisso** | Ler dados, rodar relatório, configurar produto, formulário, exportação ou domínio. |
+| **Analisando com mais profundidade** | Criar ou revisar política, montar esteira, diagnosticar balanço. |
+
+Durante a resposta, o painel também mostra o passo em andamento, como *Lendo a execução etapa por etapa*, *Montando a esteira* ou *Conferindo as fontes do relatório*. Quando a resposta leva você a outra tela, o atalho abre dentro do Toolbox e o painel continua aberto ao lado. No celular, o painel fecha para mostrar a tela.
+
+## Uso e consumo
+
+O uso do assistente entra no consumo do plano da organização e aparece em **Plano e consumo**, como **Assistente GYRA+ (chat)**.
+
+## Controles e limites
+
+O time GYRA+ pode ajustar o assistente por organização e por pessoa: ligar e desligar, permitir ou não alterações, limitar o nível de raciocínio, desligar áreas específicas e definir um teto mensal de uso. Esses controles não têm tela no Toolbox: para mudar, fale com `atendimento@gyramais.com`.
+
+Quando o teto mensal é atingido, o assistente avisa:
+
+- *A sua organização atingiu o limite mensal de uso do assistente GYRA+. Fale com o administrador da conta ou com o time GYRA+ para ampliar.*
+- *Você atingiu o seu limite mensal de uso do assistente GYRA+. Fale com o administrador da conta para ampliar.*
+
+Também há um limite de mensagens por minuto por pessoa, para proteger a plataforma de uso automatizado.
+
+## Perguntas frequentes
+
+<AccordionGroup>
+  <Accordion title="O assistente pode aprovar um crédito sozinho?">
+    Não. Ele pode rodar uma análise, uma esteira, convocar o comitê ou registrar o seu voto numa alçada, sempre com a sua confirmação e em seu nome. A decisão segue as regras da política, da esteira e da alçada.
+  </Accordion>
+  <Accordion title="O assistente pede a senha do meu bureau?">
+    Não. Ele mostra como conectar a sua credencial em **Configurações**, aba **Fontes de dados**, e nunca pede senha no chat.
+  </Accordion>
+  <Accordion title="Qual a diferença para o MCP da GYRA+?">
+    O assistente vive dentro do Toolbox e age com o seu login. O [MCP da GYRA+](/mcp/o-que-e) conecta um agente de IA seu (Claude, n8n, RPA) à API, com uma credencial de integração, e tem o próprio catálogo de [ferramentas](/mcp/ferramentas-disponiveis).
+  </Accordion>
+  <Accordion title="Alguém da GYRA+ consegue alterar a minha conta pelo assistente?">
+    Não pelo assistente da sua organização. A equipe GYRA+, quando acessa a sua organização para suporte, não consegue gravar alterações pelas ações do assistente.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Início" icon="house" href="/toolbox/inicio">
+    A barra que analisa ou pergunta, e as sugestões do dia.
+  </Card>
+  <Card title="Módulos e capacidades" icon="cubes" href="/plataforma/modulos-e-capacidades">
+    Por que uma área aparece ou não para você.
+  </Card>
+  <Card title="Usuários e permissões" icon="users-gear" href="/toolbox/gerenciar-usuarios-permissoes">
+    O que cada papel pode pedir.
+  </Card>
+  <Card title="Montar uma esteira" icon="diagram-project" href="/toolbox/montar-esteira">
+    O construtor que o assistente usa por você.
+  </Card>
+</CardGroup>

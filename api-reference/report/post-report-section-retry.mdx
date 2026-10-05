@@ -1,0 +1,98 @@
+---
+title: "Reprocessar seção com falha"
+description: "Consulta de novo as fontes que falharam em uma seção do relatório, sem criar um relatório novo."
+surface: api
+domain: relatorio
+audience: integrador
+lang: tecnica
+---
+
+Quando uma fonte falha durante o processamento, a seção que depende dela fica incompleta. Esta rota consulta de novo só as fontes que falharam naquela seção, dentro do mesmo relatório.
+
+<Info>
+  Exige a permissão `can-generate-report`. A resposta sai na hora; os dados chegam depois, quando as fontes respondem. O relatório continua o mesmo: nenhum relatório novo é criado.
+</Info>
+
+```
+POST /report/{id}/section/{sectionId}/retry
+```
+
+### Quando usar
+
+Use quando o relatório terminou com falha parcial. O webhook `REPORT_FINISHED` avisa isso em `data.content.errors.sections`, com o título das seções afetadas (por exemplo, `Processos`).
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+| --- | --- | --- | --- | --- |
+| `id` | `path` | `string` | sim | ID do relatório. Precisa ser da sua organização. |
+| `sectionId` | `path` | `string` | sim | ID da seção **dentro deste relatório**, não o tipo da seção. |
+
+Não há corpo. Envie a requisição sem body.
+
+### Como obter o `sectionId`
+
+O `sectionId` é o `id` de cada item de `sections[]` em [`GET /v2/report/{id}`](/api-reference/report-v2/get-v2report). Ele muda de relatório para relatório. Para achar a seção certa, compare `type.title` com o título que veio em `errors.sections`, ou `type.value` com o tipo que você guarda. Mais detalhes em [Consultar Seção por ID](/api-reference/report/get-reportsection#como-obter-o-id).
+
+### O que é reprocessado
+
+<Steps>
+  <Step title="A seção é reservada">
+    Só uma reexecução por seção de cada vez. Um segundo pedido enquanto a primeira está em curso recebe `409`. Se a reexecução anterior ficou mais de 10 minutos sem nenhuma atualização, a seção é liberada e aceita um pedido novo.
+  </Step>
+  <Step title="Só as fontes com erro voltam a rodar">
+    Entram as fontes da seção que registraram erro no processamento do relatório. Fontes que responderam bem não são consultadas de novo. Se nenhuma fonte da seção falhou, a rota responde `400`.
+  </Step>
+  <Step title="O estado de erro é limpo">
+    Os erros dessas fontes saem da seção e de qualquer outra seção do relatório que dependa das mesmas fontes. O relatório volta a ficar em processamento (`reportProgress.isFinalized: false`).
+  </Step>
+  <Step title="As fontes são consultadas de novo">
+    Cada fonte roda uma vez, com a mesma credencial de bureau da política do relatório. Não há nova tentativa automática: se a fonte falhar outra vez, você pode pedir o reprocessamento de novo.
+  </Step>
+</Steps>
+
+### Webhooks
+
+Se o relatório foi criado com webhook cadastrado, o reprocessamento gera eventos de novo:
+
+| Evento | Quando |
+| --- | --- |
+| `REPORT` | Logo após o pedido, com a seção limpa (`errors: []`). Depois, a cada atualização das seções reprocessadas. |
+| `REPORT_FINISHED` | Quando as fontes reprocessadas terminam e o relatório fecha outra vez. Se ainda houver falha, ela vem em `errors.sections`. |
+
+Detalhes do envelope em [Criar Webhook](/api-reference/webhook/post-webhook).
+
+### Resposta
+
+<CodeGroup>
+```bash cURL
+curl --request POST 'https://gyra-core.gyramais.com.br/report/6612a7f3a19b467000000000/section/6612a7f3a19b467000000102/retry' \
+  --header 'Authorization: Bearer <token>'
+```
+
+```json Resposta 200
+{
+  "status": "ok",
+  "types": ["GYRA_ENRICHMENT_PGFN"]
+}
+```
+</CodeGroup>
+
+| Campo | O que é |
+| --- | --- |
+| `status` | Sempre `ok` quando o pedido foi aceito |
+| `types` | As fontes que voltaram a rodar, pelo mesmo identificador que aparece em `integrationTypes` do relatório |
+
+### Erros
+
+| Código | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `Nenhuma integração com erro nesta seção.` | Nenhuma fonte da seção registrou erro. Não há o que reprocessar |
+| `401` | `Token de acesso inválido.` | Token ausente, expirado ou inválido |
+| `403` | `Você não tem permissão para acessar este recurso.` | O usuário não tem `can-generate-report` |
+| `404` | `Relatório não encontrado.` | Relatório inexistente ou de outra organização |
+| `404` | `Seção não encontrada.` | O `sectionId` não pertence a este relatório |
+| `409` | `Esta seção já está sendo reprocessada.` | Já existe uma reexecução em curso para a seção |
+| `503` | `Não foi possível iniciar a análise do relatório. Tente novamente em alguns instantes.` | Nenhuma das consultas pôde ser enviada. A resposta traz também `reportId` |
+
+Todas as respostas de erro seguem o formato `{ "code": 409, "message": "..." }`.

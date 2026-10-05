@@ -1,0 +1,185 @@
+---
+title: "Partes e assinaturas"
+description: "Quem entra no contrato, quem assina, em que ordem e como cada papel prova quem é: a política de partes da esteira e a configuração da assinatura."
+icon: "users"
+surface: conceito
+domain: formalizacao
+audience: operador
+lang: nao-tecnica
+---
+
+A política de partes decide, a cada proposta, quem entra no contrato e quem assina, com as regras de crédito que o seu jurídico já aplica à mão.
+
+<Info>
+  **Resumo:** a esteira guarda as regras no bloco **Partes e assinaturas** da fase de formalização. A plataforma aplica essas regras ao cadastro de cada proposta e monta o **quadro de partes**. A etapa **Contrato e assinatura** decide o canal, a ordem e o nível de identidade de cada papel.
+</Info>
+
+<Note>
+  Partes e assinaturas fazem parte do módulo de Formalização. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## Os papéis do contrato
+
+| Papel | Quem é |
+| --- | --- |
+| Emitente | A tomadora do crédito |
+| Representante do emitente | Quem assina pela emitente PJ |
+| Avalista | Quem garante a dívida com o próprio patrimônio |
+| Cônjuge do avalista | Entra como avalista ou como anuente, conforme o regime de bens |
+| Interveniente | Terceiro que participa do contrato |
+| Credor | A sua instituição |
+| Testemunha | Quem testemunha a assinatura |
+
+Os papéis que um contrato chama saem do [modelo de contrato](/formalizacao/modelos-de-contrato#escolha-quem-assina). As pessoas de cada papel saem do quadro de partes da proposta.
+
+## Comece de um modelo pronto
+
+| Modelo | Para quê |
+| --- | --- |
+| **Sócios e cônjuges avalistas, união estável equiparada** | Repasse do BNDES: aplica as seis regras abaixo |
+| **Sócios e cônjuges em comunhão; união estável não entra** | Capital de giro: as regras sem a de união estável |
+| **Só os representantes assinam pela empresa** | Contrato simplificado: só a regra de separação convencional |
+| **Personalizado** | Aparece quando você ajusta as regras de um modelo |
+
+## As seis regras
+
+| Regra | O que faz | Documento que pede |
+| --- | --- | --- |
+| **Sócios pessoa física são avalistas** | Cada sócio PF entra como avalista e assina. O formulário pergunta estado civil e regime de bens | |
+| **Cônjuge em regime de comunhão é avalista** | Avalista casado em comunhão parcial, universal ou participação final nos aquestos: o cônjuge entra como avalista e assina | Certidão de casamento (até 90 dias) |
+| **Separação obrigatória: cônjuge anuente** | O cônjuge entra como anuente e assina | Certidão de casamento |
+| **União estável: parceiro(a) é avalista** | O parceiro entra como avalista e assina | Escritura de união estável |
+| **Separação convencional: cônjuge só no vínculo** | O cônjuge fica registrado no cadastro, mas não entra no contrato nem assina | Pacto antenupcial |
+| **Sem avalista elegível: exigir avalista terceiro** | Se ninguém pode ser avalista, a esteira exige um avalista terceiro, com cadastro completo | |
+
+No modelo personalizado, cada regra combina condições e ações:
+
+| Condições | Ações |
+| --- | --- |
+| Papel da pessoa, estado civil, regime de bens, participação mínima no capital (0 a 100%), ter cônjuge, não haver avalista elegível, uma fórmula da esteira | Pôr a pessoa no contrato e com qual papel, fazer assinar, trazer o cônjuge (com papel e assinatura, ou só no vínculo), pedir documentos com validade, exigir avalista terceiro, mostrar campos no formulário |
+
+A política aceita até 50 regras. Uma regra que depende de fórmula da esteira que ainda não foi avaliada não se aplica e vira alerta no quadro.
+
+## Regras fixas
+
+Estas regras valem sempre e não se configuram:
+
+| Situação | O que acontece |
+| --- | --- |
+| Pessoa jurídica | Não assina: assina pelos próprios representantes |
+| Procurador sem procuração | A procuração é pedida e o contrato fica pendente |
+| Menor de 16 anos | É representado: não assina, e o responsável legal assina por ele |
+| Menor entre 16 e 18 anos | É assistido: assina junto com o responsável legal |
+| Menor como avalista | Só com alvará judicial |
+
+Para menores, o documento do responsável legal é pedido. Sem um responsável com CPF, o quadro mostra "Informe o responsável legal de X, que assina junto."
+
+## Sem política: a regra do Código Civil
+
+Uma esteira sem política de partes segue a regra do art. 1.647 do Código Civil:
+
+| Estado civil do avalista | Outorga do cônjuge |
+| --- | --- |
+| Casado, regime desconhecido | Exigida |
+| Separação convencional | Dispensada |
+| Separação obrigatória | Exigida (Súmula 377) |
+| União estável | Não exigida |
+| Solteiro, separado, divorciado, viúvo | Não exigida |
+| Sem estado civil | Pendência: o estado civil precisa ser informado |
+
+## Estado civil vem do cadastro e do cliente
+
+O estado civil e o regime de bens de cada sócio podem vir do cliente, pelo formulário da Solicitação, de um documento (certidão, pacto, escritura) ou do operador. O modelo da Solicitação decide se **pergunta**; a política de partes decide se **exige**. O que o cliente declara tem a menor precedência: um documento ou o operador prevalecem.
+
+Estados civis reconhecidos: solteiro, casado, união estável, separado, divorciado, viúvo. Regimes: comunhão parcial (o regime legal padrão), comunhão universal, separação convencional, separação obrigatória, participação final nos aquestos.
+
+Vínculo não é assinatura: um cônjuge pode estar registrado no cadastro sem entrar no contrato.
+
+## O quadro de partes
+
+Para cada proposta, a plataforma monta o quadro de partes: quem entra, com qual papel, se assina, por que, quais documentos e campos faltam.
+
+Qualquer pendência no quadro bloqueia o contrato. As mais comuns:
+
+- cônjuge sem CPF;
+- campo de qualificação obrigatório faltando;
+- parte sem e-mail ou celular;
+- procuração, alvará ou documento do responsável legal faltando;
+- representantes que não puderam ser sugeridos automaticamente.
+
+### Ajuste com motivo
+
+Em **Ajustar**, o operador ajusta uma parte do quadro daquela proposta, sempre com um motivo. O ajuste fica registrado e só vale antes de o contrato sair. Depois que o contrato sai, o quadro trava: mudar as partes exige um contrato novo.
+
+### Regra sem efeito
+
+O bloco **Partes e assinaturas** aparece quando a esteira tem uma etapa **Contrato e assinatura** ou **Solicitação**. Se você tirar essas etapas, as regras continuam salvas, mas sem efeito, e voltam a valer quando uma delas entrar de novo. Para descartar, use **Voltar à regra padrão**.
+
+## Configure a assinatura
+
+A etapa **Contrato e assinatura** define como o contrato é assinado.
+
+### Canal
+
+| Canal | Como funciona |
+| --- | --- |
+| **Pela Assinatura Gyra** | Página da própria plataforma, com convite por e-mail. É o padrão |
+| **Pela Clicksign** | Envelope na conta Clicksign da sua organização. Veja [Clicksign](/formalizacao/clicksign) |
+
+### Ordem
+
+| Fluxo | Como funciona |
+| --- | --- |
+| **Todos ao mesmo tempo** | Todos recebem o convite juntos |
+| **Em etapas** | Você agrupa os papéis em etapas. Quem está na mesma etapa assina em qualquer ordem; a etapa seguinte só é avisada quando a anterior termina. É o padrão |
+
+No fluxo em etapas, cada papel fica em uma etapa só, e pelo menos uma etapa precisa ter papéis. Um papel que você não pôs em nenhuma etapa assina na última.
+
+### Identidade por papel
+
+Cada papel tem um nível de identidade e um canal para o código.
+
+| Nível | O que a pessoa faz |
+| --- | --- |
+| **Essencial** | Confirma um código recebido pelo canal escolhido |
+| **Reforçado** | O código, mais selfie com prova de vida. Veja [Verificação de identidade](/onboarding/verificacao-de-identidade) |
+| **Qualificado** | Assina com certificado ICP-Brasil. Só na Clicksign |
+
+| Canal do código | Assinatura Gyra | Clicksign |
+| --- | --- | --- |
+| E-mail | Sim | Sim |
+| SMS | Não | Sim, exige celular |
+| WhatsApp | Não | Sim, exige celular |
+
+Na Assinatura Gyra, o código vai sempre por e-mail e o nível Qualificado não existe.
+
+### Credora e testemunhas
+
+Pessoas da sua instituição que assinam todos os contratos daquela esteira: credor e testemunhas, com nome, CPF, e-mail, celular e data de nascimento. O e-mail ou o celular é por onde chega o link.
+
+### Prazo e lembretes
+
+| Configuração | Opções | Padrão |
+| --- | --- | --- |
+| Prazo para assinar | 1 a 90 dias | 30 dias |
+| Lembrete | A cada 1, 2, 3, 7 ou 14 dias, ou desligado | A cada 3 dias |
+| Recusa cancela o contrato | Sim ou não (Clicksign) | Sim |
+| Rubricar todas as páginas | Sim ou não (Clicksign) | |
+| Conta Clicksign | A padrão da organização ou uma escolhida | A padrão |
+
+### Mensagens de configuração
+
+| Mensagem | O que fazer |
+| --- | --- |
+| O papel X aparece em mais de uma etapa de assinatura. | Deixe cada papel em uma etapa só |
+| No fluxo em etapas, coloque os papéis em pelo menos uma etapa. | Monte ao menos uma etapa |
+| X: na Assinatura Gyra o código vai por e-mail. Troque para e-mail ou use a Clicksign. | Troque o canal do código ou o canal de assinatura |
+| X: a identidade qualificada (certificado ICP-Brasil) só existe na assinatura pela Clicksign. | Troque o nível ou o canal |
+| A conta Clicksign escolhida na etapa é inválida. Escolha outra conta ou use a padrão. | Revise a conta em [Integrações](/toolbox/integracoes) |
+
+## Veja também
+
+- [Formalização](/formalizacao/visao-geral)
+- [Variáveis do contrato](/formalizacao/variaveis-do-contrato)
+- [Clicksign](/formalizacao/clicksign)
+- [Termos e assinatura](/onboarding/termos-e-assinatura)

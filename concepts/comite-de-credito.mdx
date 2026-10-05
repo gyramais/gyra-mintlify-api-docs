@@ -9,7 +9,7 @@ lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** o Comitê de Crédito IA reproduz um comitê humano. Depois que a GYRA+ gera os **pareceres por seção** e a **política de crédito** conclui, **sete agentes especialistas** analisam o caso em paralelo (cada um no seu domínio) e um **Presidente** reconcilia tudo numa decisão única, com justificativa, condições, registro de divergência e nível de alçada. O comitê pode rodar **automaticamente** (configurado na política) ou ser **convocado manualmente** no relatório ou via API. Nos planos **Business** e **Enterprise**, sua instituição adiciona instruções próprias aos agentes, para o comitê deliberar com o apetite e a política interna da casa.
+  **Resumo:** o Comitê de Crédito IA reproduz um comitê humano. Depois que a GYRA+ gera os **pareceres por seção** e a **política de crédito** conclui, **sete agentes especialistas** analisam o caso em paralelo (cada um no seu domínio) e um **Presidente** reconcilia tudo numa decisão única, com justificativa, condições, registro de divergência e nível de alçada. O comitê pode rodar **automaticamente** (configurado na política) ou ser **convocado manualmente** no relatório ou via API. Com o recurso de instruções habilitado na organização, sua instituição adiciona instruções próprias aos agentes, para o comitê deliberar com o apetite e a política interna da casa.
 </Info>
 
 ## Onde o comitê entra
@@ -55,6 +55,10 @@ Sete especialistas rodam em paralelo, cada um enxergando apenas os pareceres do 
 <Tip>
   O agente **Cadastral** é o único com acesso a **busca na web**. Ele pesquisa a razão social ou o nome antes de opinar, para montar um retrato atualizado do que a empresa faz de fato, porte real e notoriedade recente. Os demais agentes trabalham exclusivamente com os dados do relatório.
 </Tip>
+
+### Indicadores do SCR contam como SCR
+
+Quando a política declara os [Indicadores do SCR](/sources/scr-open-finance#indicadores-do-scr) e o relatório não tem a seção completa do SCR, o comitê lê os indicadores como dado de SCR: não aponta falta de SCR, não coloca o SCR entre as lacunas antes de decidir e não recomenda pedir o consentimento do titular. Ele lê a faixa (por exemplo, *Sem dívida em aberto* ou *Acima de R$ 17.700 até R$ 25.800*) e não inventa o valor exato. A recomendação de pedir o consentimento do SCR só aparece quando o relatório não tem nem a seção do SCR nem os indicadores.
 
 ### O que cada agente devolve
 
@@ -159,6 +163,46 @@ Um relatório com status `SKIPPED` ainda pode ser levado a comitê manualmente.
 
 ---
 
+## O cadastro documental no comitê
+
+Quando a sua organização usa o [Onboarding](/onboarding/visao-geral), o comitê recebe também um recorte do dossiê documental daquele CNPJ ou CPF. É o que responde a pergunta que o relatório sozinho não responde: **quanto essa empresa (ou pessoa) fatura, e desde quando, segundo papel que alguém assinou**.
+
+### O que entra
+
+Três blocos, sempre com procedência:
+
+| Bloco | De onde vem |
+| --- | --- |
+| Declarações de faturamento | `DECLARACAO_FATURAMENTO`, com a série mês a mês |
+| Imposto de renda da pessoa física | `DIRPF`, com renda tributável, isenta e evolução patrimonial |
+| Imposto de renda da empresa | `IRPJ_ECF`, com receita bruta, lucro líquido e regime tributário |
+
+Ao lado do número viajam o tipo do documento, a versão, a data-base e **o que certifica o papel** (assinatura de contador com CRC, firma reconhecida, certificado digital, código do órgão emissor).
+
+<Note>
+  A procedência não é enfeite: sem ela o agente trataria "faturamento que a própria empresa declarou num papel sem contador" e "receita bruta da ECF entregue à Receita Federal" como a mesma evidência. O dado sozinho não carrega essa hierarquia; o bloco carrega.
+</Note>
+
+### Três regras que valem sempre
+
+1. **Só documento aprovado e vigente entra.** Documento em análise, reprovado ou de versão antiga não influencia limite de crédito. Um faturamento lido de um papel que o próprio sistema reprovou seria pior do que não ter faturamento nenhum, porque parece dado.
+2. **O comitê nunca recebe extração crua.** Ele lê blocos processados e tipados, não o JSON inteiro do documento.
+3. **O total impresso e a soma dos meses saem lado a lado.** A divergência entre os dois, quando existe, é informação; calcular um a partir do outro esconderia exatamente o que a verificação confere.
+
+### Quando não há cadastro
+
+O cadastro **enriquece** o comitê, não é pré-requisito dele. E o comitê distingue três situações, em vez de tratar todas como ausência:
+
+| Situação | O que o comitê sabe |
+| --- | --- |
+| Presente | Há cadastro com documento de capacidade de pagamento |
+| Ausente | A organização não tem cadastro para esse documento, ou o cadastro não tem nenhum documento desse tipo |
+| Indisponível | A consulta ao cadastro falhou |
+
+<Warning>
+  A distinção importa: sem ela, o agente fundamentaria a decisão em "ausência de comprovação" que na verdade foi indisponibilidade nossa. A decisão sairia com uma justificativa que não corresponde ao mundo.
+</Warning>
+
 ## Estados da deliberação
 
 | Status | Significado |
@@ -212,7 +256,7 @@ sequenceDiagram
 ## Instruções da sua instituição nos agentes
 
 <Info>
-  Disponível nos planos **Business** e **Enterprise**. Fale com `atendimento@gyramais.com` para habilitar na sua organização.
+  Recurso habilitado por organização. Fale com `atendimento@gyramais.com` para habilitar. Sem ele, o bloco não aparece na política e a API recusa ler ou gravar as instruções com `403`: *A customização dos prompts do Comitê não está habilitada para esta organização.*
 </Info>
 
 Cada agente do comitê tem um **prompt-base GYRA+** (não editável) e um campo de **instruções adicionais** que a sua instituição escreve. Com o recurso habilitado, o bloco **Instruções adicionais dos agentes** aparece na edição da política de crédito, com um campo por agente, incluindo o Presidente.

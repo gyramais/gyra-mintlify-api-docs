@@ -1,0 +1,166 @@
+---
+title: "Clientes no toolbox"
+description: "A tela do dossiê no Onboarding: listar clientes, abrir um cadastro, enviar e reprocessar documentos, ver o que o cliente declarou, cuidar do quadro societário e dos contatos, revisar pendências, configurar validações e acompanhar indicadores."
+icon: "folder-open"
+surface: plataforma
+domain: cadastro
+audience: operador
+lang: nao-tecnica
+---
+
+Em **Clientes** você abre o dossiê de cada CNPJ ou CPF e vê, num lugar só, os documentos entregues, o que a IA leu, o que a régua conferiu, o que o próprio cliente declarou e o que falta.
+
+<Info>
+  **Resumo:** menu lateral, seção **Onboarding**, **Clientes**. A seção tem quatro abas: **Clientes**, **Fila de revisão**, **Validações** e **Indicadores**. Sem o módulo Onboarding, o item aparece com cadeado no menu.
+</Info>
+
+## As telas
+
+| Tela | Para quê |
+| --- | --- |
+| **Clientes** | A listagem dos cadastros, com busca, filtros e envio de documentos em lote |
+| O cadastro (o dossiê) | Um CNPJ ou CPF: estado, documentos, dados declarados, quadro societário ou estado civil, contatos e histórico |
+| **Documento** | Um arquivo: a validação, os dados extraídos e o histórico, lado a lado com o arquivo |
+| **Fila de revisão** | O que precisa de decisão de uma pessoa, documento ou item de solicitação |
+| **Validações** | A régua da organização |
+| **Indicadores** | Acurácia por tipo documental e por campo |
+
+## Listagem
+
+Busque por nome ou documento e use as visões **Todos**, **Com pendências**, **Empresas** e **Pessoas**. O botão **Novo cadastro** cria um cadastro, e a área **Solte documentos de qualquer empresa ou pessoa** recebe arquivos de vários cadastros de uma vez.
+
+| Situação | O que quer dizer |
+| --- | --- |
+| **Pendente** | Criado, ainda sem documento validado |
+| **Processando** | Há documento no meio da análise |
+| **Em dia** | Tudo validado, sem pendência |
+| **Atenção** | Divergência, vencimento próximo ou parecer com ressalva |
+| **Vencido** | Renovação vencida |
+| **Em renovação** | Há uma solicitação de renovação em curso |
+
+## O dossiê
+
+No topo ficam o nome, o documento e a natureza jurídica, com as ações **Histórico**, **Solicitar documentos**, **Ver relatório** (quando existe um) e **Remover**. Abaixo, de cima para baixo:
+
+| Bloco | O que mostra |
+| --- | --- |
+| **Estado do cadastro** | A situação, os documentos, os dados oficiais, a renovação e as solicitações em curso, cada um numa linha |
+| Envio de documentos | A área para soltar arquivos e a fila de processamento. PDF, JPG ou PNG, até 50 MB cada. O tipo é identificado sozinho |
+| **Documentos · versão mais recente por tipo** | Um por tipo, com o veredito e a data. Arquivo fora de escopo fica no dossiê só para registro |
+| **Dados declarados pelo cliente** | Tudo o que o cliente respondeu nos formulários, com o nome da variável da esteira |
+| **Quadro societário** (empresa) | Uma linha por sócio, juntando todas as fontes |
+| **Estado civil e vínculos** (pessoa) | Estado civil, regime de bens, capacidade civil e o cônjuge ou parceiro(a) vinculado |
+| **Contatos da empresa** ou **Contatos** | Os contatos do titular e quem recebe os envios automáticos |
+
+### Renovação
+
+A linha **Renovação** do estado do cadastro mostra a **Próxima renovação** e **Quem recebe**. Em **Ajustar**, você define uma data só deste cadastro (ela vale no lugar da data da política), escolhe se os destinatários vêm da **Última solicitação** ou se você os define aqui, e pode **Pausar renovação automática**. Pausar não apaga o prazo e se desfaz com **Retomar renovação automática**.
+
+### Dados declarados pelo cliente
+
+Os campos vêm agrupados por formulário, com busca por rótulo, valor ou variável.
+
+- **Alterado** marca o campo que mudou desde a resposta anterior, e o histórico mostra os valores antigos.
+- **Contestado** marca o campo em que o cliente discordou do dado oficial sugerido e informou outro valor.
+- O chip com **#** é o nome da variável. Na esteira, digite `#` e escolha esse nome nas fórmulas e no **Roda se**. Clicar copia; passar o mouse mostra também a chave do dado e o caminho na política de crédito.
+
+No cadastro de pessoa, a tela também mostra onde ela foi **Declarado como sócio** nos formulários de empresas.
+
+### Quadro societário
+
+Cada sócio aparece uma vez, com camada, vínculo, participação, estado civil, os documentos da pessoa e o **Contato para envios**. As etiquetas de fonte dizem quem afirma que a pessoa está no quadro: **Receita**, **Documento**, **Formulário** ou **Equipe**. O que o formulário declarou fica anexado à linha, com as divergências apontadas, e o declarado que não casou com ninguém aparece em **Informados no formulário e fora do quadro**.
+
+Em cada sócio:
+
+- **Editar** abre a gaveta do sócio: nome, vínculo, **Participação (%)** e CPF ou CNPJ, conferido contra a máscara que a Receita mostra. Salvar marca **Corrigido pela equipe**, e a consulta à Receita não sobrescreve a correção.
+- Os contatos do sócio ficam na mesma gaveta e são gravados na hora.
+- **Criar cadastro** dá ao sócio um cadastro próprio, ligado ao da empresa. Depois disso, o botão vira **Abrir cadastro**.
+
+<Tip>
+  Sócio sem CPF completo aparece com o aviso de que a esteira não acha o contato dele. Complete o documento em **Editar** antes de mandar uma solicitação para os sócios.
+</Tip>
+
+### Contatos
+
+A lista junta o que veio do **Formulário**, o que foi **Incluído pela equipe** e o **Histórico de envios**, com quantos envios cada contato recebeu e quando.
+
+O contato marcado **Recebe os envios** é o que a esteira usa nos envios automáticos, e a tela diz por quê: escolhido pela equipe ou, sem escolha, o mais recente. **Fixar** prende um contato; **Soltar** volta para o mais recente. Você também pode **Incluir contato**, **Editar**, **Remover** um contato guardado ou **Ocultar** um que só existe no histórico.
+
+## A tela do documento
+
+De um lado, o arquivo, com **Baixar**. Do outro, três abas:
+
+1. **Validação**: o parecer, com veredito, score, justificativa e evidências, e a decisão do operador quando há uma.
+2. **Dados extraídos**: o rótulo em português de cada campo, o valor e a marca de conferir quando a leitura ficou incerta.
+3. **Histórico**: o que aconteceu com o documento.
+
+Em **Se a IA errou**, você **corrige o tipo** quando a classificação errou, **reprocessa** o documento ou o **envia para análise manual**.
+
+<Note>
+  Reprocessar um documento já decidido por uma pessoa pede confirmação: o novo parecer substitui a decisão. Escolha **Manter a decisão** para desistir.
+</Note>
+
+## Fila de revisão
+
+A fila do que parou e precisa de gente, com filtro por tipo de documento e por cadastro. Ela junta duas coisas:
+
+| O que | Decisões |
+| --- | --- |
+| Documento com parecer inconclusivo ou em análise manual | **Marcar como válido** ou **Marcar como inválido** |
+| Item de solicitação **Esperando você** | **Aprovar**, **Pedir reenvio** ou **Dispensar** |
+
+As letras A, R e D decidem pelo teclado, e **Anterior** e **Próximo** andam pela fila. Dá para abrir o documento ou a solicitação sem sair dela.
+
+<Note>
+  Discordar não apaga o parecer da IA. Ele continua gravado e selado; o que muda é o veredito que vale dali em diante, e a trilha registra quem decidiu.
+</Note>
+
+## Validações
+
+A [régua](/onboarding/regua-de-validacao) da organização, com três abas (Autenticidade, Titularidade, Fé pública) e navegação por tipo documental (pessoa jurídica, pessoa física e os que servem aos dois).
+
+Em cada verificação você escolhe entre **não exigir**, **ressalvar** ou **reprovar**, e ajusta o parâmetro dela quando existe (prazo de vigência, espécie mínima de certificação, meses de faturamento, tolerâncias).
+
+<Warning>
+  Salvar **publica uma versão nova** da régua. A anterior não é reescrita, e todo parecer já emitido continua registrando qual versão o julgou.
+</Warning>
+
+Esta tela exige o módulo Onboarding. Quem tem apenas SCR continua com a régua rodando nos documentos recebidos, com os padrões da plataforma; o que falta é a edição.
+
+## Indicadores
+
+A tela **Indicadores de acurácia** mostra, na janela que você escolher (**Últimos 30 dias**, **Últimos 90 dias**, **Últimos 6 meses** ou **Todo o período**):
+
+- a composição dos pareceres;
+- a acurácia por tipo documental: confiança média da extração, score médio do parecer e quanto cada tipo demanda de intervenção;
+- a leitura por campo: preenchimento (quantos documentos trazem o campo) e confiança (como a leitura se saiu nesses).
+
+<Tip>
+  É a tela para responder "vale a pena tornar esta verificação impeditiva?". Olhe quanto o tipo demanda de intervenção antes de subir uma ressalva a reprovação, e a confiança do campo antes de apertar uma tolerância.
+</Tip>
+
+## Quem pode o quê
+
+| Ação | Quem |
+| --- | --- |
+| Ver, enviar, reprocessar, dar parecer, editar sócio e contatos | Quem gera relatório |
+| Editar a régua e a marca | Quem gerencia configurações |
+| Pausar renovação | Qualquer perfil do módulo |
+| **Remover cadastro** | Administrador, Owner, Superuser e Gestor de Crédito |
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Pedir documentos ao cliente" icon="paper-plane" href="/toolbox/solicitacoes">
+    As solicitações do Onboarding.
+  </Card>
+  <Card title="Cadastro documental" icon="folder-tree" href="/onboarding/cadastro-documental">
+    As regras do dossiê, dos dados declarados e dos contatos.
+  </Card>
+  <Card title="Régua de validação" icon="ruler" href="/onboarding/regua-de-validacao">
+    O catálogo completo de verificações.
+  </Card>
+  <Card title="API do módulo" icon="plug" href="/api-reference/onboarding/visao-geral">
+    Fazer o mesmo pelo seu backend.
+  </Card>
+</CardGroup>

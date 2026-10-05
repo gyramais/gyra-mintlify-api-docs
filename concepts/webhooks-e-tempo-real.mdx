@@ -8,9 +8,18 @@ audience: ambos
 lang: nao-tecnica
 ---
 
-<Note>
-**Esta página descreve Webhooks (Notificações Automáticas).** A configuração na plataforma fica em [Webhooks e API Keys](/toolbox/webhooks-e-api-keys). A configuração via API fica em [Criar Webhook](/api-reference/webhook/post-webhook).
-</Note>
+<Info>
+  **Existem duas famílias de evento**, e as duas aparecem na mesma tela de configuração do toolbox. Escolher a certa é a primeira decisão.
+
+  | Família | Sobre o quê | Referência |
+  | --- | --- | --- |
+  | **Relatório e crédito** | Relatório concluído, política avaliada, comitê deliberado, PDF pronto | Esta página e [Criar Webhook](/api-reference/webhook/post-webhook) |
+  | **Onboarding** | Documento analisado, solicitação concluída, mensagem que não chegou | [Eventos de webhook](/api-reference/onboarding/eventos-de-webhook) |
+
+  Elas têm **envelope e assinatura diferentes**: a primeira manda `{ organizationId, webhookType, data }` e opcionalmente um segredo no cabeçalho `api-key`; a segunda manda `{ id, event, occurredAt, organizationId, data }` com assinatura HMAC. Não tente escrever um parser só para as duas.
+
+  Configuração de ambas em *Configurações, API & MCP*. Ver [API & MCP: chaves e webhooks](/toolbox/webhooks-e-api-keys).
+</Info>
 
 ## Por que usar webhooks
 
@@ -138,4 +147,4 @@ Estrutura de `data` para os demais tipos e exemplos completos em [Webhooks e API
 
 ## Retry
 
-A GYRA+ tenta entregar cada evento até **3 vezes** com backoff exponencial (1s, ~2s, ~5s). Se o seu endpoint retornar `429` com `Retry-After`, a GYRA+ respeita esse tempo. Após as tentativas, o evento é descartado — mantenha fallback com polling em `GET /v2/report/:id` para eventuais perdas e planeje idempotência no seu lado.
+A GYRA+ tenta entregar cada evento até **3 vezes** com backoff exponencial (1s, ~2s, ~5s). Se o seu endpoint retornar `429` com `Retry-After`, a GYRA+ respeita esse tempo. Após as tentativas, o evento é descartado, mantenha fallback com polling em `GET /v2/report/:id` para eventuais perdas e planeje idempotência no seu lado.

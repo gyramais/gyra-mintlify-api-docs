@@ -1,6 +1,6 @@
 ---
 title: Consultar Seção por ID
-description: Retorna os dados completos de uma seção específica de um relatório.
+description: Retorna os dados de uma seção a partir do id da seção dentro do relatório.
 surface: api
 domain: relatorio
 audience: integrador
@@ -8,82 +8,73 @@ lang: tecnica
 openapi: get /report/section/{id}
 ---
 
-<Endpoint
-  method="GET"
-  path="/report/section/{id}"
-  headers={[
-    {
-      name: "Authorization",
-      type: "string",
-      required: true,
-      description: "Token JWT no formato Bearer. Exemplo: `Bearer abc123`"
-    }
-  ]}
-  pathParameters={[
-    {
-      name: "id",
-      type: "string",
-      required: true,
-      description: "Identificador da seção do relatório"
-    }
-  ]}
-  responses={{
-    200: {
-      contentType: "application/json",
-      body: {
-        id: "665f1498530134f172352f03",
-        reportId: "665f1498530134f172352efd",
-        sectionType: "financial",
-        status: "completed",
-        data: {
-          score: 742,
-          riskLevel: "LOW"
-        }
-      }
-    },
-    401: {
-      contentType: "application/json",
-      body: {
-        statusCode: 401,
-        message: "Unauthorized"
-      }
-    },
-    404: {
-      contentType: "application/json",
-      body: {
-        statusCode: 404,
-        message: "Section not found"
-      }
-    }
-  }}
-/>
+### Quando usar
+
+Use esta rota quando você já guardou o `id` de uma seção, vindo de `sections[]` do relatório. Se você só tem o ID do relatório, prefira [Consultar Seção por Tipo](/api-reference/report/get-report-section): é uma chamada em vez de duas, e responde `404` claro quando a seção não existe.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`.
+
+### Parâmetros
+
+| Nome | Local | Tipo | Obrigatório | Descrição |
+|---|---|---|---|---|
+| `id` | `path` | `string` | sim | ID da seção dentro do relatório (não é o ID do tipo de seção). |
+
+### Como obter o `id`
+
+<Warning>
+  O `id` desta rota é gerado **por relatório**: a mesma seção `PROCESSES` tem um `id` diferente em cada análise. Não existe lista fixa de ids para guardar.
+</Warning>
+
+Os ids vêm em `sections[]` de [`GET /v2/report/{id}`](/api-reference/report-v2/get-v2report):
+
+```json
+{
+  "id": "6612a7f3a19b467000000000",
+  "sections": [
+    { "id": "6612a7f3a19b467000000101", "type": { "id": "6612a7f3cd81d4f900000000", "value": "SUMMARY" } },
+    { "id": "6612a7f3a19b467000000102", "type": { "id": "6612a7f3cd81d4f900000001", "value": "PROCESSES" } }
+  ]
+}
+```
+
+| Campo | O que é | Estabilidade |
+|---|---|---|
+| `id` (da seção) | A seção daquele relatório. **É o que vai nesta rota.** | Único por relatório |
+| `type.id` | O registro do tipo de seção no catálogo | Varia por ambiente, não use como chave |
+| `type.value` | O nome do tipo (`SUMMARY`, `PROCESSES`) | **Estável.** É a chave a guardar no seu lado |
+
+A lista completa de `type.value` está em [Consultar Seção por Tipo](/api-reference/report/get-report-section#tipos-de-se%C3%A7%C3%A3o).
+
+<Note>
+  Um `id` que não corresponde a nenhuma seção responde `200` **sem corpo**, e não `404`. Trate resposta vazia como "seção não encontrada".
+</Note>
 
 <RequestExample>
 
 ```bash cURL
-curl --location 'https://gyra-core.gyramais.com.br/report/section/665f1498530134f172352f03' \
---header 'Authorization: Bearer abc123'
+curl --request GET 'https://gyra-core.gyramais.com.br/report/section/6612a7f3dc5b830500000000' \
+  --header 'Authorization: Bearer SEU_TOKEN'
 ```
 
 ```javascript JavaScript
-fetch("https://gyra-core.gyramais.com.br/report/section/665f1498530134f172352f03", {
-  method: "GET",
-  headers: {
-    Authorization: "Bearer abc123"
-  }
-})
-  .then(res => res.json())
-  .then(console.log)
+const resposta = await fetch(
+  "https://gyra-core.gyramais.com.br/report/section/6612a7f3dc5b830500000000",
+  { headers: { Authorization: `Bearer ${token}` } },
+);
+const secao = await resposta.json();
 ```
 
 ```python Python
 import requests
 
-url = "https://gyra-core.gyramais.com.br/report/section/665f1498530134f172352f03"
-headers = {"Authorization": "Bearer abc123"}
-
-response = requests.get(url, headers=headers)
-print(response.json())
+resposta = requests.get(
+    "https://gyra-core.gyramais.com.br/report/section/6612a7f3dc5b830500000000",
+    headers={"Authorization": f"Bearer {token}"},
+)
+secao = resposta.json()
 ```
 
 </RequestExample>
@@ -105,14 +96,10 @@ print(response.json())
     "id": "6612a7f3ae223a4700000000",
     "value": "PROTESTS",
     "tabs": [
-      {
-        "type": "RESTRICTIVE",
-        "order": 5,
-        "side": null
-      }
+      { "type": "RESTRICTIVE", "order": 5, "side": null }
     ]
   },
-  "selectedIntegrations": [ "..." ],
+  "selectedIntegrations": ["..."],
   "createdAt": "2026-07-31T13:42:37.059Z",
   "updatedAt": "2026-07-31T13:43:12.180Z",
   "sectionDetails": [
@@ -120,110 +107,15 @@ print(response.json())
       "values": {
         "bureau": {
           "injunction": false,
-          "protestsQuantity": 15,
-          "protestsTotalValue": "R$ 102.390,05",
-          "protestsByRegion": [
-            {
-              "name": "SP",
-              "value": 5
-            }
-          ],
-          "lastProtestDate": "2026-02-05T00:00:00.000Z",
-          "formattedLastProtestDate": "05/02/2026",
-          "protestsTable": [
-            {
-              "name": "-",
-              "registry": "04",
-              "formattedDate": "05/02/2026",
-              "date": "2026-02-05T00:00:00.000Z",
-              "uf": "SAO PAULO/SP",
-              "value": 1679.95,
-              "formattedValue": "R$ 1.679,95"
-            },
-            {
-              "name": "-",
-              "registry": "08",
-              "formattedDate": "05/02/2026",
-              "date": "2026-02-05T00:00:00.000Z",
-              "uf": "SAO PAULO/SP",
-              "value": 4170.38,
-              "formattedValue": "R$ 4.170,38"
-            }
-          ]
+          "protestsQuantity": 2,
+          "protestsTotalValue": "R$ 5.850,33"
         }
       },
-      "integrationTypes": [ "..." ]
+      "integrationTypes": ["..."]
     }
   ],
   "errors": []
 }
 ```
 
-```json 501 Not Implemented
-{
-  "code": 501,
-  "message": "Inconsistent column data: Malformed ObjectID"
-}
-```
-
 </ResponseExample>
-
-### Quando usar
-
-Use este endpoint para consultar uma seção específica já identificada dentro de um relatório. Você pode usar quando a experiência do cliente ou do analista precisa abrir apenas um bloco do relatório (ex.: financeiro, restrições, score) sem recarregar tudo.
-
-### Autenticação
-
-Bearer JWT no header `Authorization`.
-
-### Parâmetros
-
-| Nome | Local | Tipo | Obrigatório | Descrição |
-|---|---|---|---|---|
-| `id` | `path` | `string` | `sim` | Identificador da seção do relatório |
-
-### Como obter o `id`
-
-<Warning>
-  O `id` desta rota é o **id da seção dentro de um relatório específico**. Ele é gerado por relatório: a mesma seção `PROCESSES` tem um `id` diferente em cada análise. Não existe uma lista fixa de ids que você possa guardar.
-</Warning>
-
-Os ids vêm no array `sections[]` do relatório:
-
-```bash
-curl 'https://gyra-core.gyramais.com.br/v2/report/{reportId}' \
-  -H 'Authorization: Bearer {seu_token_jwt}'
-```
-
-```json
-{
-  "id": "69a207bcdd0197828df9155a",
-  "sections": [
-    { "id": "69a207bcdd0197828df9156a", "type": { "id": "672b49a91acad6953b56b109", "value": "SUMMARY" } },
-    { "id": "69a207bcdd0197828df9156b", "type": { "id": "672b49a91acad6953b56b110", "value": "PROCESSES" } }
-  ]
-}
-```
-
-Repare que existem **dois ids** e eles não são a mesma coisa:
-
-| Campo | O que é | Estabilidade |
-|---|---|---|
-| `id` (da seção) | A seção daquele relatório. **É o que vai nesta rota.** | Único por relatório |
-| `type.id` | O registro do tipo de seção no catálogo interno | Varia por ambiente, não use como chave |
-| `type.value` | O nome do tipo (`SUMMARY`, `PROCESSES`, ...) | **Estável.** É a chave a guardar no seu lado |
-
-<Tip>
-  Se você já sabe qual seção quer e só tem o `reportId`, pule esta rota: [`GET /report/{id}/section/{sectionType}`](/api-reference/report/get-report-section) busca direto pelo tipo, sem precisar descobrir o `id` antes. É uma requisição em vez de duas.
-</Tip>
-
-### Tipos de seção (`type.value`)
-
-| Grupo | `sectionType` |
-|---|---|
-| **Análise e risco** | `SUMMARY`, `BASIC_INFORMATION`, `LOCATION`, `RELATIONS`, `SCORE`, `PROCESSES`, `CERTIFICATES`, `LICENSES_AUTHORIZATIONS`, `PEP`, `SANCTIONS`, `MEDIA_EXPOSURE`, `CRIMINAL_RECORD`, `SOCIAL_ASSISTANCE_PROGRAMS`, `SECTOR` |
-| **Restritivos e endividamento** | `SCR`, `SCR_SUMMARY`, `PEFIN`, `REFIN`, `PROTESTS`, `BAD_CHECK`, `PAST_DUE_DEBT`, `PAYMENT_INTELLIGENCE` |
-| **Análise financeira** | `BALANCE_SHEET`, `DRE`, `FINANCIAL_INDICATORS`, `FINANCIAL_INSIGHTS`, `FINANCIAL_RECOMMENDATIONS`, `BALANCE_SHEET_CHART`, `COST_PROFIT_FORECAST`, `DETAILED_COSTS`, `SUPPLIERS_CLIENTS` |
-| **Complementares e política** | `CATEGORIES`, `HISTORY`, `DOMAINS`, `BUREAU_INQUIRY`, `CREDIT_POLICY`, `PRICING` |
-
-Descrição de cada uma e quais recebem parecer de IA em [Consultar Seção por Tipo](/api-reference/report/get-report-section#tipos-de-se%C3%A7%C3%A3o).

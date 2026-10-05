@@ -25,7 +25,7 @@ Casos típicos:
 
 ### Autenticação
 
-Bearer JWT no header `Authorization`. Um `id` de outra organização retorna `404`.
+Bearer JWT no header `Authorization`. A credencial precisa da permissão de leitura de relatórios pela API. Um `id` de outra organização retorna `404`.
 
 ### Parâmetros
 
@@ -34,12 +34,14 @@ Bearer JWT no header `Authorization`. Um `id` de outra organização retorna `40
 | `id` | `path` | `string` | `sim` | ID do relatório. |
 | `section` | `query` | `string` | `não` | Filtra o parecer de **uma** seção. Sem o parâmetro, retorna todos os pareceres concluídos. Um valor que não seja um tipo de seção válido retorna `400`. |
 
-Só estas **21 seções** produzem parecer, e portanto só elas fazem sentido como filtro:
+Só estas **22 seções** produzem parecer, e portanto só elas fazem sentido como filtro:
 
-`BASIC_INFORMATION`, `LOCATION`, `RELATIONS`, `SCORE`, `PROCESSES`, `CERTIFICATES`, `LICENSES_AUTHORIZATIONS`, `PEP`, `SANCTIONS`, `MEDIA_EXPOSURE`, `CRIMINAL_RECORD`, `SOCIAL_ASSISTANCE_PROGRAMS`, `SECTOR`, `SCR`, `SCR_SUMMARY`, `PEFIN`, `REFIN`, `PROTESTS`, `BAD_CHECK`, `PAST_DUE_DEBT`, `BALANCE_SHEET`.
+`BASIC_INFORMATION`, `LOCATION`, `RELATIONS`, `SCORE`, `POSITIVE_REGISTRY`, `PROCESSES`, `JUDGMENTS`, `CERTIFICATES`, `LICENSES_AUTHORIZATIONS`, `PEP`, `SANCTIONS`, `MEDIA_EXPOSURE`, `CRIMINAL_RECORD`, `SOCIAL_ASSISTANCE_PROGRAMS`, `SECTOR`, `SCR`, `SCR_SUMMARY`, `PEFIN`, `REFIN`, `PROTESTS`, `BAD_CHECK`, `PAST_DUE_DEBT`.
+
+A análise financeira não entra aqui: a leitura de IA do balanço está na seção `FINANCIAL_INSIGHTS`, em [Consultar Seção por Tipo](/api-reference/report/get-report-section).
 
 <Warning>
-  Filtrar por um tipo de seção **que existe mas não produz parecer** (por exemplo `SUMMARY`, `DRE` ou `CREDIT_POLICY`) não é erro: a requisição retorna `200` com `insights` **vazio**. O mesmo vale para uma seção com parecer que ainda não terminou. Lista completa dos tipos e quais recebem parecer em [Consultar Seção por Tipo](/api-reference/report/get-report-section#tipos-de-se%C3%A7%C3%A3o).
+  Filtrar por um tipo de seção **que existe mas não produz parecer** (por exemplo `SUMMARY`, `BALANCE_SHEET` ou `CREDIT_POLICY`) não é erro: a requisição retorna `200` com `insights` **vazio**. O mesmo vale para uma seção com parecer que ainda não terminou. Lista completa dos tipos e quais recebem parecer em [Consultar Seção por Tipo](/api-reference/report/get-report-section#tipos-de-se%C3%A7%C3%A3o).
 </Warning>
 
 ### Resposta
@@ -59,7 +61,7 @@ O envelope é o mesmo com ou sem filtro; com `section`, o array `insights` vem c
 | `insights[].score` | Score do parecer daquela seção. |
 | `insights[].riskLevel` | Nível de risco atribuído pelo parecer. |
 | `insights[].parecer` | Texto do parecer. |
-| `insights[].highlights` | Destaques estruturados da seção. |
+| `insights[].highlights` | Destaques estruturados da seção, ou `null`. |
 | `insights[].at` | Quando o parecer foi gerado. |
 
 <Warning>
@@ -105,7 +107,7 @@ print(response.json())
 ```json 200 OK
 {
   "reportId": "6612a7f3a19b467000000000",
-  "document": "43591367000130",
+  "document": "11222333000181",
   "committee": {
     "status": "DONE",
     "decision": "REJECTED",
@@ -261,7 +263,7 @@ print(response.json())
 ```json 200 OK (comitê nunca convocado)
 {
   "reportId": "6612a7f30000000000000001",
-  "document": "43591367000130",
+  "document": "11222333000181",
   "committee": {
     "status": null,
     "decision": null,
@@ -275,7 +277,7 @@ print(response.json())
 ```json 400 Bad Request
 {
   "code": 400,
-  "message": "section must be one of the following values: BASIC_INFORMATION, SUMMARY, SCR, ..."
+  "message": "section must be one of the following values: BASIC_INFORMATION, SUMMARY, SCORE, ..."
 }
 ```
 

@@ -1,0 +1,23 @@
+---
+title: "Listar Cadastros"
+description: "Para varrer a carteira por situação: quem está com pendência, quem venceu, quem está em renovação."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: get /v1/registry
+---
+
+### Quando usar
+
+Para varrer a carteira por situação: quem está com pendência, quem venceu, quem está em renovação.
+
+Filtre por `kycStatus` (repita o parâmetro para mais de uma situação), por `entityType` ou com `search`, que casa razão social, nome fantasia ou parte do CNPJ/CPF. A página tem 20 cadastros por padrão e até 50 com `take`.
+
+<Note>
+  Valor de `kycStatus` fora da lista responde `400`. O `reportId` hoje vem sempre `null`.
+</Note>
+
+<Note>
+  Contexto e vocabulário em [Cadastro documental](/onboarding/cadastro-documental). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/onboarding/visao-geral).
+</Note>

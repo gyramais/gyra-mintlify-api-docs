@@ -1,0 +1,21 @@
+---
+title: "Listar Assinaturas de Webhook"
+description: "Quando o cliente diz que parou de receber: aqui aparece se a assinatura foi desligada e por quê."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: get /v1/webhook/endpoints
+---
+
+### Quando usar
+
+Quando o cliente diz que "parou de receber": aqui aparece se a assinatura foi desligada e por quê.
+
+Assinatura que acumula **20 falhas seguidas** é desligada sozinha. `consecutiveFailures`, `lastDeliveryStatus` e `lastDeliveryError` contam a história.
+
+O segredo não volta aqui: só uma dica com os últimos caracteres.
+
+<Note>
+  Contexto e vocabulário em [Eventos de webhook](/api-reference/onboarding/eventos-de-webhook). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/onboarding/visao-geral).
+</Note>

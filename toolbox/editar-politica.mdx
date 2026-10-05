@@ -1,6 +1,6 @@
 ---
 title: "Editar Política"
-description: "Ajustar regras, thresholds, fórmulas e mensagens de uma política existente. Versionamento e como reverter."
+description: "Ajustar regras, thresholds, fórmulas e fontes de uma política existente, com versão automática quando a mudança afeta a decisão."
 icon: "pen-to-square"
 surface: plataforma
 domain: politica
@@ -9,7 +9,7 @@ lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** editar uma política é o trabalho contínuo de calibração: ajustar thresholds à medida que os resultados reais aparecem, adicionar regras novas quando o risco muda, corrigir fórmulas de precificação. Toda edição gera uma nova versão automaticamente, com diff e autor. Esta página cobre o fluxo de edição e as mecânicas de versionamento e reversão.
+  **Resumo:** editar uma política é o trabalho contínuo de calibração: ajustar thresholds à medida que os resultados reais aparecem, adicionar regras novas quando o risco muda, corrigir fórmulas de precificação. Toda edição que afeta a decisão gera uma nova versão automaticamente, com histórico. Esta página cobre o fluxo de edição e as mecânicas de versionamento.
 </Info>
 
 ## Quando editar
@@ -28,55 +28,53 @@ lang: nao-tecnica
 
 <Steps>
   <Step title="Abrir a política">
-    Em *Política de Crédito, Políticas*, clicar na política que você quer editar. O editor abre com o estado atual.
-  </Step>
-  <Step title="Entrar em modo edição">
-    Toggle *Editar* no cabeçalho. Enquanto em edição, as alterações ficam em um **rascunho não publicado**, a política em produção continua rodando a versão anterior para quem disparar análise.
+    Em **Motor de crédito**, **Políticas**, clicar na política que você quer editar. O editor abre com o estado atual.
   </Step>
   <Step title="Fazer as alterações">
-    Tudo que pode ser editado:
+    Enquanto você não salva, as alterações ficam só no seu navegador, e a política continua rodando a versão salva para quem disparar análise.
 
     O menu **Configurar política**, à esquerda, tem as seis etapas. Tudo que pode ser editado:
 
-    - **Fontes de dados**: Relatório base (nível e tipo de documento), bureau de crédito, SCR, e as fontes adicionais **Cenprot** (protestos nacionais, ver [Protestos](/sources/protestos#como-escolher-a-fonte)) e **[Núclea](/sources/inteligencia-pagamentos)** (indicadores de transações reais, PJ), além de **Balanço patrimonial** e **Bases externas**.
+    - **Fontes de dados**: **Onde a política é usada** (**Relatório** ou **Esteira**), Relatório base (nível ou, no uso Esteira, **Nenhum**, para camada), bureau de crédito, SCR, e as fontes adicionais **Cenprot** (protestos nacionais, ver [Protestos](/sources/protestos#como-escolher-a-fonte)), **[Núclea](/sources/inteligencia-pagamentos)** (indicadores de transações reais, PJ), as **consultas adicionais** de bureau e os **[Indicadores do SCR](/sources/scr-open-finance#indicadores-do-scr)**, além de **Balanço patrimonial** e **Bases externas**.
     - **Minhas variáveis**: criar, editar e remover as fórmulas reutilizáveis (`#nome`).
     - **Condições**: adicionar, remover, desabilitar, ajustar campo, operador, valor e o veredito ou a pontuação.
     - **Classificação de risco**: ligar ou desligar a pontuação e ajustar as faixas de score e seus vereditos.
     - **Precificação**: as fórmulas de limite, taxa e prazo. Ver [Precificação](/concepts/precificacao).
-    - **Decisão e alçada**: objetivo da política, decisão automática, quem pode alterar análises e o **Comitê de Crédito IA** (ver abaixo).
+    - **Decisão e inteligência**: objetivo da política, quem pode sobrepor a decisão, **Rota por resultado** e **Quem revisa** (ver abaixo). O **Parecer IA** aparece só como status: quem liga é a GYRA+.
 
-    O nome da política e o produto vinculado ficam no cabeçalho. O tipo de documento (PF ou PJ) é imutável depois de criada.
+    O nome da política fica no cabeçalho. Toda política é de CPF ou de CNPJ; o tipo de documento é imutável depois de criada.
+
+    Cada condição precisa de uma fonte declarada nas Fontes de dados. Se faltar, o editor mostra o aviso **Fontes das regras** e não salva até você declarar a fonte ou remover a condição. Ver [Cada condição precisa de uma fonte declarada](/concepts/politica-de-credito#cada-condi%C3%A7%C3%A3o-precisa-de-uma-fonte-declarada).
 
     <Warning>
-      Trocar o **Relatório base** para um nível menor pode remover variáveis que as suas condições e fórmulas já usam. O editor sinaliza o que quebra antes de você publicar.
+      Trocar o **Relatório base** para um nível menor pode remover variáveis que as suas condições e fórmulas já usam. O editor sinaliza o que quebra antes de você salvar.
     </Warning>
   </Step>
-  <Step title="Ver o diff">
-    Botão *Ver alterações* mostra, lado a lado, o que mudou em relação à versão publicada: regras adicionadas, removidas, alteradas, fórmulas antes/depois.
-  </Step>
-  <Step title="Publicar">
-    Clicar em *Publicar*. A nova versão passa a ser a vigente imediatamente. Qualquer análise disparada a partir desse momento usa a nova versão.
+  <Step title="Salvar">
+    Assim que há alteração, a barra de salvar aparece, com as opções de salvar ou descartar. Ao salvar, a política passa a valer imediatamente: qualquer análise disparada a partir desse momento usa a versão nova.
+
+    Numa política de uso Esteira, depois de salvar, o editor diz em quais esteiras ela está e o que a conferência de cada uma acusou. Uma política usada por esteira ativa não pode ser desativada nem excluída enquanto a esteira estiver ativa.
   </Step>
 </Steps>
 
 <Tip>
-  Análises disparadas **antes** da publicação continuam rastreáveis à versão antiga da política. A tela de resultado sempre mostra qual versão rodou.
+  Análises disparadas **antes** do salvamento continuam rastreáveis à versão antiga da política. A tela de resultado sempre mostra qual versão rodou.
 </Tip>
 
 ## Comitê de Crédito IA
 
-No bloco **Comitê de Crédito IA** você escolhe se o [comitê](/concepts/comite-de-credito) é convocado sozinho ao fim da análise:
+Em **Decisão e inteligência**, **Quem revisa** define o papel do [comitê](/concepts/comite-de-credito) nos resultados que vão para revisão:
 
-- **Não convocar automaticamente**: o comitê só roda pelo botão *Convocar Comitê* dentro do relatório, ou por [`POST /report/{id}/committee`](/api-reference/report/post-reportcommittee). É o modo manual.
-- **Convocar comitê e sugerir decisão**: o comitê roda sozinho e sugere; aprovar ou negar continua com o analista.
-- **Convocar comitê e decisão automática**: o comitê roda sozinho e aplica a decisão no status do relatório.
+- **Analista**: um analista decide. O comitê só roda pelo botão *Convocar Comitê* dentro do relatório, ou por [`POST /report/{id}/committee`](/api-reference/report/post-reportcommittee).
+- **Comitê IA recomenda, analista decide**: o comitê roda sozinho e sugere; aprovar ou negar continua com o analista.
+- **Comitê IA decide**: o comitê roda sozinho e aplica a decisão no status do relatório.
 
-Com *Usar resultado da política no relatório* ativo, o comitê só é convocado quando a política aprova.
+As opções com comitê exigem Parecer IA ativo na política, habilitado pela GYRA+. Em esteiras, quem define o papel do comitê é a etapa Decisão.
 
 ### Instruções adicionais dos agentes
 
 <Info>
-  Disponível nos planos **Business** e **Enterprise**. Fale com `atendimento@gyramais.com` para habilitar na sua organização.
+  Recurso habilitado por organização. Fale com `atendimento@gyramais.com` para habilitar. Sem ele, o bloco não aparece e a API recusa ler ou gravar as instruções com `403`: *A customização dos prompts do Comitê não está habilitada para esta organização.*
 </Info>
 
 Com o recurso habilitado, o bloco do comitê exibe um campo de texto por agente (Cadastral, Societário, Financeiro, Comportamental, Jurídico, Macro e Setorial, Compliance e Presidente). É onde você registra as **orientações da sua instituição**: apetite de risco, critérios do setor que você opera e política interna.
@@ -86,25 +84,27 @@ Pontos práticos:
 - As instruções **complementam** o conhecimento do agente, não substituem o prompt-base da GYRA+.
 - Elas não podem alterar o formato da resposta, a soberania da política de crédito, as regras de compliance nem o idioma. Texto que tente isso é recusado no salvamento, com a explicação do motivo.
 - Limite de **4.000 caracteres por agente**. Campo vazio remove a customização e volta ao padrão.
-- O botão *Salvar instruções* é independente da publicação da política: as instruções valem para as próximas deliberações assim que salvas.
+- O botão **Salvar instruções** é independente do salvamento da política: as instruções valem para as próximas deliberações assim que salvas.
 - Cada deliberação registra qual versão de instrução cada agente usou, o que permite auditar o efeito de uma mudança.
 
 ## Versionamento
 
-Toda publicação gera uma nova versão da política. Cada relatório gerado registra a versão da política que rodou na análise, o que permite rastrear qualquer decisão ao conjunto exato de regras vigentes no momento.
+A versão sobe **0,01** a cada salvamento que muda algo que afeta a decisão: condições, faixas de risco, fórmulas de preço, fontes de dados, add-ons, rota por resultado, quem revisa e onde a política é usada. Mudanças que não mexem na decisão, como nome, ligar ou desligar, objetivo, parecer e permissões, salvam sem versão nova. Cada relatório registra a versão da política que rodou, o que permite rastrear qualquer decisão ao conjunto exato de regras vigentes no momento.
 
-Na tela da política, a aba *Histórico* lista todas as versões publicadas com autor, data e o que mudou. A consulta do histórico é feita apenas pelo toolbox (não exposta via API).
+Editar ou excluir uma variável sua (`#nome`) sobe, na mesma hora, a versão de **todas as políticas ativas** que usam aquela variável. Pela API, a resposta traz a lista em `policyVersions`, com `policyId`, a versão anterior (`from`) e a nova (`to`). Se a política que você está editando é uma delas, o editor acompanha a versão nova e o seu próximo salvamento funciona normalmente.
+
+O ícone **Histórico de versões**, no cabeçalho da política, abre o **Histórico de alterações**, com o que foi adicionado, removido e editado. A consulta do histórico é feita apenas pelo toolbox (não exposta via API).
 
 ## Boas práticas
 
 <CardGroup cols={2}>
-  <Card title="Uma mudança por publicação" icon="git-branch">
-    Facilita entender o impacto. Evite empilhar 10 ajustes numa única publicação.
+  <Card title="Uma mudança por salvamento" icon="git-branch">
+    Facilita entender o impacto. Evite empilhar 10 ajustes numa única versão.
   </Card>
-  <Card title="Descrição sempre preenchida" icon="pen">
-    O campo *descrição* na publicação é o commit message da política. Futuro você agradece.
+  <Card title="Declare a fonte antes da regra" icon="database">
+    Ligue a fonte em Fontes de dados antes de escrever a condição que depende dela.
   </Card>
-  <Card title="Testar antes de publicar" icon="flask">
+  <Card title="Testar antes de salvar" icon="flask">
     Ao menos 1 caso `APPROVED`, 1 `DENIED` e 1 limítrofe.
   </Card>
   <Card title="Janela de observação" icon="clock">
@@ -114,10 +114,10 @@ Na tela da política, a aba *Histórico* lista todas as versões publicadas com 
 
 ## Limitações e considerações
 
-- **Edição concorrente:** se dois usuários editam a mesma política ao mesmo tempo, o último a publicar sobrescreve. A tela alerta se outra edição está em curso.
+- **Edição concorrente:** se outra pessoa salvou a política depois que você abriu, o seu salvamento é recusado com a mensagem *Você está tentando salvar uma versão nova da política a partir de uma versão desatualizada.* Use **Descartar e sincronizar** para carregar a versão atual e refazer a sua alteração. Pela API, o mesmo caso devolve `409` (`"Conflito de versões"`).
 - **Tipo de documento imutável.** PF não vira PJ. Para mudar, duplique e edite a cópia.
-- **Nível de relatório impacta campos disponíveis.** Reduzir o nível (ex: de COMPLETO para ESSENCIAL) invalida regras que usam campos SCR; o editor bloqueia a publicação até você remover ou desabilitar.
-- **Fórmulas com variáveis inexistentes** bloqueiam o salvar. Se uma variável referenciada sumiu, corrija antes de publicar.
+- **Nível de relatório impacta campos disponíveis.** Reduzir o nível (ex: de COMPLETO para ESSENCIAL) invalida regras que usam campos SCR; o editor bloqueia o salvamento até você remover ou desabilitar.
+- **Fórmulas com variáveis inexistentes** bloqueiam o salvar. Se uma variável referenciada sumiu, corrija antes de salvar.
 
 ## Perguntas frequentes
 
@@ -126,16 +126,16 @@ Na tela da política, a aba *Histórico* lista todas as versões publicadas com 
     Pode. O lote em curso continua usando a versão vigente no momento em que foi disparado. Só novas análises pegam a versão nova.
   </Accordion>
   <Accordion title="Existe limite de versões por política?">
-    Não. Todas as versões ficam salvas indefinidamente, com diff completo.
+    Não. Todas as versões ficam registradas.
   </Accordion>
-  <Accordion title="Como comparo duas versões não consecutivas?">
-    Na aba *Histórico*, selecionar duas versões (checkbox) e clicar em *Comparar*. Mostra o diff acumulado entre as duas.
+  <Accordion title="Mudei só o nome da política e a versão não subiu.">
+    Correto. A versão só sobe quando a mudança afeta a decisão. Nome, ligar ou desligar, parecer e permissões não mudam o resultado da análise.
   </Accordion>
   <Accordion title="Desabilitei uma regra, mas ela ainda aparece no breakdown das análises antigas.">
     Correto. Análises antigas são rastreáveis à versão da política que rodou no momento. A regra não é apagada, só deixa de avaliar em análises futuras.
   </Accordion>
   <Accordion title="Qualquer usuário vê o histórico?">
-    Administradores e gestores de crédito veem. Analistas veem apenas a versão vigente.
+    Quem acessa **Políticas**: administradores e gestores de crédito. Coordenadores e analistas não abrem o editor de políticas.
   </Accordion>
 </AccordionGroup>
 

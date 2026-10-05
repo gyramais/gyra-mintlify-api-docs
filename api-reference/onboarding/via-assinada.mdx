@@ -1,0 +1,52 @@
+---
+title: "Baixar a via assinada"
+description: "Baixe o PDF assinado de um item da solicitação, conferido contra o selo gravado quando a via foi guardada."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+---
+
+Quando o cliente aceita um termo ou assina um documento, a plataforma guarda a via assinada no item da solicitação. Esta rota entrega o PDF para você arquivar no seu sistema.
+
+<Info>
+  Exige a permissão `can-use-registry-api` (ou `can-generate-report`). O arquivo volta em base64 dentro do JSON: o endereço de armazenamento nunca sai daqui.
+</Info>
+
+```
+GET /v1/collections/{id}/items/{itemId}/signed-document
+```
+
+`id` é a solicitação e `itemId` é o item, os dois como aparecem em [Consultar solicitação](/api-reference/collection/get-collections-id). Vale para termo aceito, documento em assinatura conjunta e contrato fechado. No detalhe da solicitação, o item traz `signedDocumentAvailable: true` quando há via para baixar.
+
+<CodeGroup>
+```bash cURL
+curl --request GET 'https://gyra-core.gyramais.com.br/v1/collections/6612a7f30000000000000051/items/6612a7f30000000000000073/signed-document' \
+  --header 'Authorization: Bearer <token>'
+```
+
+```json Resposta 200
+{
+  "fileName": "via-assinada-autorizacao-de-consulta-ao-scr.pdf",
+  "sha256": "3a7bd3e2360a3d29eea436fcfb7e44c735d117c42d1c1835420b6b9942dd4f1b",
+  "contentBase64": "JVBERi0xLjcKJeLjz9MK..."
+}
+```
+</CodeGroup>
+
+| Campo | O que é |
+| --- | --- |
+| `fileName` | `via-assinada-` mais o rótulo do item, sem acento, em minúsculas |
+| `sha256` | O hash do arquivo entregue. Quando a via foi guardada com selo, ele é conferido antes de responder |
+| `contentBase64` | O PDF, em base64 |
+
+| Código | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `O identificador informado em "itemId" não é válido.` | Id fora do formato de 24 caracteres hexadecimais |
+| `404` | `A via assinada deste item não está disponível.` | Item inexistente ou ainda sem via assinada |
+| `409` | `A via assinada não pôde ser conferida agora. Fale com quem solicitou a assinatura.` | O arquivo guardado não confere com o selo gravado |
+| `502` | `Não foi possível abrir a via assinada.` | O armazenamento não respondeu. Tente de novo |
+
+<Note>
+  Contexto em [Termos e assinatura](/onboarding/termos-e-assinatura). Autenticação e erros comuns na [Visão geral da API](/api-reference/onboarding/visao-geral).
+</Note>

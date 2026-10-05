@@ -1,0 +1,242 @@
+---
+title: "Ofertas"
+description: "Copie o link da oferta, reenvie o aviso ao cliente e registre a escolha em nome dele, com motivo."
+icon: "hand-holding-dollar"
+surface: api
+domain: proposta
+audience: integrador
+lang: tecnica
+---
+
+A oferta é o que a análise aprovou para o cliente escolher: uma faixa de valor, os prazos e as carências. Estas rotas deixam você ajudar o cliente a concluir a escolha sem abrir a tela.
+
+<Info>
+  **Resumo:** quem cria as ofertas é a esteira, não a API. Você lê as ofertas em `GET /v1/proposals/{id}`, copia o link, reenvia o aviso e, quando o cliente decidiu com você, registra a escolha. Veja o fluxo em [Pré-aprovação e oferta](/propostas/pre-aprovacao-e-oferta).
+</Info>
+
+## A oferta
+
+A proposta tem uma oferta por **rodada**. A primeira costuma ser a pré-aprovação (`INDICATIVE`), com uma faixa para o cliente escolher. A última, depois da decisão final, é a oferta firme (`FIRM`), com o cronograma congelado. Uma rodada nova substitui as ofertas ainda abertas.
+
+| Campo | Tipo | O que é |
+| --- | --- | --- |
+| `id` | string | Id da oferta. É o `offerId` destas rotas |
+| `round` | integer | Número da rodada: 1, 2, 3 |
+| `kind` | string | `INDICATIVE` (pré-aprovação) ou `FIRM` (oferta firme) |
+| `status` | string | `DRAFT`, `SENT`, `CHOSEN`, `EXPIRED`, `SUPERSEDED` ou `ISSUED` |
+| `minCents`, `maxCents` | integer | Faixa de valor que o cliente pode escolher, em centavos |
+| `terms` | integer[] | Prazos permitidos, em meses |
+| `graceOptions` | integer[] | Carências permitidas, em meses. `0` é sem carência |
+| `riskBpsYear` | integer | Spread de risco da oferta, em pontos-base ao ano |
+| `validUntil` | string | Validade da oferta. A pré-aprovação vale 15 dias quando a esteira não define outra |
+| `chosenAmountCents`, `chosenTermMonths`, `chosenGraceMonths`, `chosenAt` | | O que foi escolhido e quando |
+| `chosenChannel` | string | `CUSTOMER` (página da oferta) ou `OPERATOR` (em nome do cliente) |
+| `chosenReason` | string | Motivo informado quando a escolha foi registrada em nome do cliente |
+| `operationResultId` | string | Execução da esteira que criou a oferta |
+
+| `status` | Significado |
+| --- | --- |
+| `DRAFT` | Criada, ainda não enviada ao cliente |
+| `SENT` | Enviada: o link está aberto para a escolha |
+| `CHOSEN` | O cliente (ou você, por ele) escolheu |
+| `EXPIRED` | Venceu sem escolha, ou a proposta foi encerrada |
+| `SUPERSEDED` | Substituída por uma rodada nova |
+| `ISSUED` | Oferta firme emitida |
+
+Para achar a oferta vigente, use `currentOfferId` da proposta ou a última de `offers[]`.
+
+<Note>
+  Na proposta que veio do [canal de correspondentes](/plataforma/correspondentes), a etapa de pré-aprovação pode mandar a oferta para o **Atendente do canal (correspondente)** em vez do cliente. A oferta fica `SENT` e escolhível do mesmo jeito, mas nenhum aviso sai para o contato da proposta: quem escolhe valor e prazo é o atendente.
+</Note>
+
+---
+
+## Copiar o link da oferta
+
+```http
+GET /v1/proposals/{id}/offers/{offerId}/link
+```
+
+Devolve o link que o cliente recebeu, para você mandar por outro canal. Não gera link novo: o link continua o mesmo que já foi enviado.
+
+<ParamField path="id" type="string" required>Id da proposta.</ParamField>
+<ParamField path="offerId" type="string" required>Id da oferta.</ParamField>
+
+<CodeGroup>
+```bash Requisição
+curl https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001/offers/66f1e2c4d8a1b50013f2a002/link \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json Link disponível
+{
+  "link": "https://toolbox.gyramais.com.br/oferta/q8Zr2mXvT4kP9sWc1LbN7yHd",
+  "expiresAt": "2026-10-14T14:40:00.000Z"
+}
+```
+
+```json Sem link
+{
+  "link": null,
+  "expiresAt": null,
+  "reason": "O cliente já escolheu esta oferta."
+}
+```
+</CodeGroup>
+
+<ResponseField name="link" type="string | null">Endereço da página da oferta. `null` quando não há link que valha a pena copiar.</ResponseField>
+<ResponseField name="expiresAt" type="string | null">Quando o link deixa de abrir.</ResponseField>
+<ResponseField name="reason" type="string">
+  Só quando `link` é `null`. Um destes textos:
+
+  - `"A proposta está encerrada."`
+  - `"O cliente já escolheu esta oferta."`
+  - `"Esta oferta não tem link para o cliente."`
+  - `"Esta oferta já venceu."`
+  - `"O link desta oferta foi emitido antes de poder ser copiado. Reenvie o e-mail para gerar um link novo."`
+  - `"Não foi possível recompor o link. Reenvie o e-mail para gerar um link novo."`
+</ResponseField>
+
+<Warning>
+  O link abre a oferta para quem tiver o endereço, sem login. Mande só para o contato do cliente.
+</Warning>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `404` | `"Proposta não encontrada."` | Id da proposta inexistente |
+| `404` | `"Oferta não encontrada."` | A oferta não é desta proposta |
+| `502` | `"Não foi possível carregar o link da oferta."` | Falha interna |
+
+---
+
+## Reenviar a oferta ao cliente
+
+```http
+POST /v1/proposals/{id}/offers/{offerId}/resend
+```
+
+Gera um link novo e reenvia o aviso de pré-aprovação por todos os canais que o contato da proposta tem (e-mail e SMS). O link anterior deixa de abrir.
+
+<ParamField path="id" type="string" required>Id da proposta.</ParamField>
+<ParamField path="offerId" type="string" required>Id da oferta. Precisa estar aberta (`DRAFT`, `SENT` ou `ISSUED`) e dentro da validade.</ParamField>
+
+Sem corpo.
+
+<CodeGroup>
+```bash Requisição
+curl -X POST https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001/offers/66f1e2c4d8a1b50013f2a002/resend \
+  -H "Authorization: Bearer $GYRA_TOKEN"
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+{
+  "notified": ["EMAIL", "SMS"],
+  "validUntil": "2026-10-14T14:40:00.000Z"
+}
+```
+</CodeGroup>
+
+<ResponseField name="notified" type="string[]">Canais pelos quais o aviso saiu: `EMAIL`, `SMS` ou os dois.</ResponseField>
+<ResponseField name="validUntil" type="string">Validade da oferta.</ResponseField>
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `404` | `"Proposta não encontrada."` | Id da proposta inexistente |
+| `404` | `"Oferta não encontrada."` | A oferta não é desta proposta |
+| `409` | `"Esta proposta está encerrada: a oferta não pode ser enviada."` | Proposta encerrada |
+| `409` | `"Esta oferta não pode mais ser enviada."` | Oferta já escolhida, vencida ou substituída |
+| `409` | `"Esta oferta já venceu. Emita uma nova rodada."` | Validade passou |
+| `502` | `"O link novo foi gerado, mas o aviso ao cliente não saiu. Confira o contato da proposta ou copie o link e envie por outro canal."` | O link girou, mas nenhum canal entregou. Use a rota de copiar o link |
+| `502` | `"Não foi possível gerar o link novo da oferta."` | Falha interna |
+
+---
+
+## Registrar a escolha pelo cliente
+
+```http
+POST /v1/proposals/{id}/offers/{offerId}/choose
+```
+
+Grava a escolha que o cliente fez com você (por telefone, na agência) como se ele tivesse escolhido na página da oferta. A esteira segue com ela do mesmo jeito. O motivo é obrigatório e fica na oferta, junto com o usuário que registrou.
+
+<ParamField path="id" type="string" required>Id da proposta.</ParamField>
+<ParamField path="offerId" type="string" required>Id da oferta, em `SENT`.</ParamField>
+<ParamField body="amountCents" type="integer" required>Valor escolhido, em centavos. Entre `minCents` e `maxCents` da oferta.</ParamField>
+<ParamField body="termMonths" type="integer" required>Prazo escolhido, em meses. Um dos `terms` da oferta.</ParamField>
+<ParamField body="graceMonths" type="integer">Carência escolhida, em meses. `0` ou uma das `graceOptions`. De `0` a `120`.</ParamField>
+<ParamField body="reason" type="string" required>Por que você está registrando pelo cliente. Até 500 caracteres.</ParamField>
+
+<CodeGroup>
+```bash Requisição
+curl -X POST https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001/offers/66f1e2c4d8a1b50013f2a002/choose \
+  -H "Authorization: Bearer $GYRA_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amountCents": 20000000,
+    "termMonths": 24,
+    "graceMonths": 3,
+    "reason": "Cliente confirmou valor e prazo por telefone em 29/09."
+  }'
+```
+</CodeGroup>
+
+<CodeGroup>
+```json 200
+{
+  "chosen": {
+    "amountCents": 20000000,
+    "termMonths": 24,
+    "graceMonths": 3,
+    "terms": {
+      "taxaMensal": 2.21,
+      "taxaAnual": 29.96,
+      "cet": 32.4,
+      "indexador": null,
+      "sistema": "PRICE",
+      "iof": 3120.55,
+      "parcela": 11287.4,
+      "tarifas": 500,
+      "primeiroVencimento": "2026-10-29",
+      "ultimoVencimento": "2029-01-29"
+    }
+  }
+}
+```
+</CodeGroup>
+
+<ResponseField name="chosen.amountCents" type="integer">Valor escolhido, em centavos.</ResponseField>
+<ResponseField name="chosen.termMonths" type="integer">Prazo escolhido.</ResponseField>
+<ResponseField name="chosen.graceMonths" type="integer">Carência escolhida.</ResponseField>
+<ResponseField name="chosen.terms" type="object">
+  Condições calculadas para a escolha, no formato usado pelas regras e pelo contrato. **Unidades diferentes do resto da API:** taxas e CET em percentual (`2.21` = 2,21%), valores em reais, datas `AAAA-MM-DD`, sistema e indexador como código (`PRICE`, `CDI`). Os campos saem `null` quando o cálculo não foi possível; a escolha vale mesmo assim.
+</ResponseField>
+
+Depois da escolha, a proposta volta a `IN_ANALYSIS` e a esteira continua. O cronograma calculado fica gravado na oferta.
+
+| Status | Mensagem | Quando |
+| --- | --- | --- |
+| `400` | `"Informe o valor desejado."` | `amountCents` ausente, não inteiro ou menor que `1` |
+| `400` | `"Escolha o prazo."` | `termMonths` ausente, não inteiro ou menor que `1` |
+| `400` | `"O prazo deve ser de no máximo 600."` | `termMonths` acima de 600 |
+| `400` | `"A carência deve ser de no máximo 120."` | `graceMonths` acima de 120 |
+| `400` | `"Informe o motivo de registrar a escolha pelo cliente."` | `reason` ausente |
+| `400` | `"O motivo passa de 500 caracteres."` | `reason` longo demais |
+| `400` | `"O valor escolhido está abaixo do mínimo desta oferta."` | `amountCents` menor que `minCents` |
+| `400` | `"O valor escolhido está acima do máximo desta oferta."` | `amountCents` maior que `maxCents` |
+| `400` | `"Escolha um dos prazos desta oferta."` | `termMonths` fora de `terms` |
+| `400` | `"Escolha uma das carências desta oferta."` | `graceMonths` fora de `graceOptions` |
+| `404` | `"Proposta não encontrada."` | Id da proposta inexistente |
+| `404` | `"Oferta não encontrada."` | A oferta não é desta proposta |
+| `409` | `"Esta oferta já foi escolhida."` | A escolha já foi feita, pelo cliente ou por você |
+| `409` | `"Esta oferta não está mais valendo: não aceita escolha."` | Oferta vencida ou substituída |
+| `409` | `"Esta oferta não aceita escolha."` | A oferta não está em `SENT` (por exemplo, ainda em rascunho ou já emitida como firme) |
+| `409` | `"Esta proposta foi encerrada e não aceita mais escolha."` | A proposta foi encerrada durante a escolha |
+| `502` | `"Não foi possível registrar a escolha do cliente."` | Falha interna |
+
+<Note>
+  Não há webhook de oferta escolhida. Para saber que o cliente escolheu pela página, leia a proposta: a oferta passa a `CHOSEN` e a proposta volta a `IN_ANALYSIS`. O fim da execução chega pelo webhook `OPERATION`.
+</Note>

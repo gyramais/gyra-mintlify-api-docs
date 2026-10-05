@@ -30,17 +30,19 @@ Bearer JWT no header `Authorization`.
 - `url` (obrigatório): endpoint HTTPS que receberá o `POST`.
 - `apiKey` (opcional): se informado, a GYRA+ envia esse valor no header `api-key` de cada requisição, para o seu endpoint validar a origem.
 
+Você pode cadastrar mais de um webhook do mesmo tipo: cada URL recebe o evento. Uma entrega que falha por timeout, erro de rede, `5xx`, `408`, `425` ou `429` é tentada de novo até 3 vezes, com espera crescente. Os demais `4xx` não são repetidos.
+
 ### Tipos de webhook
 
 Cada disparo é um `POST` com o envelope `{ organizationId, webhookType, data }`. O que muda entre os tipos é **quando dispara** e o conteúdo de **`data`**:
 
 | `type` | Quando dispara | O que vem em `data` |
 | ------ | -------------- | ------------------- |
-| `REPORT_FINISHED` | Relatório totalmente processado (todas as integrações concluíram). É o evento mais usado. | `reportId`, `policyId`, `isFinalized`, `finalizedAt` e, se houve falha parcial, `errors.sections[]`. |
+| `REPORT_FINISHED` | Relatório totalmente processado (todas as integrações concluíram). É o evento mais usado. | `reportId`, `policyId`, `isFinalized`, `finalizedAt` e, se houve falha parcial, `errors.sections[]` (título das seções com falha, ex.: `Processos`). |
 | `REPORT` | A cada **seção** concluída durante o processamento (granular, vários disparos por relatório). | Os dados da seção concluída em `content`. |
-| `REPORT_STATUS` | Decisão **manual** (analista aprovou/rejeitou via `analyze`/`re-analyze`). | `reportId` e `analysis` com `status` (`REPORT_APPROVED`/`REPORT_REJECTED`), autor e data. |
+| `REPORT_STATUS` | Decisão gravada no relatório: manual (`analyze` ou `re-analyze`) ou automática. | `reportId` e `analysis` com `status` (`REPORT_APPROVED` ou `REPORT_REJECTED`), autor e data. Na reanálise vem também `lastAnalysis`, com a decisão anterior. |
 | `REPORT_EXPORTED` | Exportação do relatório (PDF ou XLS) ficou pronta, ou falhou. | `reportId`, `exportUrl` (assinada) e `exportedAt`. Em falha, `exportUrl` vem `null` e há `error`. |
-| `CREDIT_POLICY` | Política de crédito avaliada (resultado final do motor de regras). | `reportId`, `policyId`, `version`, `status`, `risk`, `score`, `date`. |
+| `CREDIT_POLICY` | O resultado da política de crédito mudou de status. | `reportId`, `policyId`, `version`, `status`, `risk`, `score`, `date`. |
 | `COMMITTEE_FINISHED` | [Comitê de Crédito IA](/concepts/comite-de-credito) concluiu (ou falhou) a deliberação do relatório, seja ela automática ou convocada manualmente. | `reportId`, `status`, `decision`, `synthesis`, `deliberationId`, `finishedAt`. Em falha, `status` vem `ERROR` e há `error`. |
 | `OPERATION` | Operação (fluxo multi-relatório com cadeia de políticas) concluiu com status final. | `operationId`, `operationResultId`, `document`, `status`. |
 | `OPTIN` | Reservado para o fluxo de **opt-in de onboarding**. | Conforme o fluxo de onboarding contratado. |
@@ -59,7 +61,7 @@ Cada disparo é um `POST` com o envelope `{ organizationId, webhookType, data }`
       "policyId": "6612a7f30000000000000010",
       "isFinalized": true,
       "finalizedAt": "2026-04-23T14:30:45Z",
-      "errors": { "sections": ["PROCESSES"] }
+      "errors": { "sections": ["Processos"] }
     },
     "compress": false
   }
@@ -116,8 +118,8 @@ Cada disparo é um `POST` com o envelope `{ organizationId, webhookType, data }`
   "data": {
     "reportId": "6612a7f30000000000000001",
     "analysis": {
-      "userId": "user-id-ou-'Política de crédito'",
-      "userName": "Nome do analista",
+      "userId": "6612a7f3615ff3f200000000",
+      "userName": "Usuário API",
       "status": "REPORT_APPROVED",
       "date": "2026-04-23T14:35:00Z"
     }
@@ -168,7 +170,7 @@ Cada disparo é um `POST` com o envelope `{ organizationId, webhookType, data }`
 </Tip>
 
 <Warning>
-  Os webhooks da organização são copiados para o relatório **no momento em que ele é criado**. Um webhook `COMMITTEE_FINISHED` registrado depois da criação não dispara para relatórios que já existiam. Registre o webhook antes de começar a criar relatórios que vão a comitê.
+  Os eventos `REPORT`, `REPORT_FINISHED` e `COMMITTEE_FINISHED` só saem para relatórios que já tinham webhook cadastrado **no momento em que foram criados**. No caso do `COMMITTEE_FINISHED`, precisa existir um webhook desse tipo na criação. Registre os webhooks antes de começar a criar relatórios.
 </Warning>
 
 <Warning>

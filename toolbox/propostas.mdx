@@ -1,0 +1,150 @@
+---
+title: "Propostas no toolbox"
+description: "A tela de Propostas: a lista de pedidos, a aba Gerencial, a criação pelo operador, o detalhe com as abas Resumo, Execuções, Aprovação, Foto da aprovação e Contrato, e as ações de cada situação."
+icon: "table-list"
+surface: plataforma
+domain: proposta
+audience: operador
+lang: nao-tecnica
+---
+
+A tela de Propostas mostra, num lugar só, tudo o que os seus clientes pediram e em que pé está cada pedido. É dali que você cria um pedido, roda a análise, acompanha a pré-aprovação e chega ao contrato.
+
+<Info>
+  **Resumo:** menu lateral, **Operação**, **Propostas**. A tela tem duas abas: **Lista**, que separa o que espera você do que espera o cliente, e **Gerencial**, o painel da operação. O detalhe de cada proposta tem as abas **Resumo**, **Execuções**, **Aprovação**, **Foto da aprovação** e **Contrato**.
+</Info>
+
+<Note>
+  Propostas é um módulo contratado à parte. Sem ele, o item aparece no menu com cadeado e a página apresenta o módulo. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## A lista
+
+A aba **Lista** tem três visões no topo:
+
+| Visão | O que mostra |
+| --- | --- |
+| **Todas** | Todas as propostas |
+| **Esperando você** | As que precisam de uma decisão da sua equipe |
+| **Esperando o cliente** | As que esperam o cliente escolher a pré-aprovação |
+
+Com as [carteiras](/propostas/produtos#carteiras) ligadas, uma faixa de abas separa as propostas por carteira, com a contagem e o valor de cada uma.
+
+Para achar um pedido, use a busca **Buscar por nome, CNPJ ou CPF** (o nome também casa com a razão social e o nome fantasia do cadastro) e os filtros **Produto**, **Situação**, **Origem** e **Tipo**.
+
+| Coluna | O que mostra |
+| --- | --- |
+| **Quem** | Nome e documento do cliente. O nome é o do cadastro (razão social ou nome fantasia); sem cadastro, o nome informado no pedido |
+| **Produto** | O produto congelado na proposta e a carteira |
+| **Valor** | O valor do pedido (ou o do catálogo, para produto de valor fixo), com alerta quando está fora da faixa |
+| **Condições** | A taxa e a estrutura financeira congeladas (ou "sem estrutura", para proposta sem produto) |
+| **Análise** | Onde está a última análise ("Sem análise" quando nenhuma rodou) |
+| **Situação** | A [situação](/propostas/visao-geral) da proposta |
+| **Entrada** | Por onde e quando o pedido entrou: **link público**, **operador**, **API** ou **CRM** (HubSpot) |
+
+## A aba Gerencial
+
+A aba **Gerencial** reúne os indicadores da operação (propostas recebidas, aprovação, conversão, tempo até a oferta, fora do SLA), o funil, onde as propostas estão paradas, quem traz o negócio e o mix por produto. Você salva visões para você ou para a equipe e exporta tudo para Excel. Veja [Painel gerencial](/propostas/gerencial).
+
+## Criar uma proposta
+
+<Steps>
+  <Step title="Abrir Nova proposta">
+    Na lista, clique em **Nova proposta**.
+  </Step>
+  <Step title="Identificar o cliente">
+    **CNPJ ou CPF** e, se quiser, o **Nome (opcional)**. O cadastro não precisa existir: se já existir, a proposta se liga a ele e a tela passa a mostrar o nome do cadastro.
+  </Step>
+  <Step title="Escolher o produto e o pedido">
+    **Produto** (obrigatório; só aparecem os ligados), **Valor pedido** e **Prazo (meses)**. Produto de valor fixo já traz o valor. Valor fora da faixa do produto é aceito, com aviso. O produto precisa atender o tipo do documento.
+  </Step>
+  <Step title="Informar o contato">
+    **E-mail do cliente** e **Celular do cliente**: é para onde vai a pré-aprovação, se a esteira enviar. Se o produto pede documentos, um dos dois é obrigatório ("Este produto pede documentos: informe o e-mail ou o celular do cliente."), porque a GYRA+ abre a solicitação e manda o link ao cliente.
+  </Step>
+  <Step title="Criar proposta">
+    A proposta nasce como **Rascunho**. A análise roda depois, pela política ou pela esteira.
+  </Step>
+</Steps>
+
+## O detalhe da proposta
+
+O cabeçalho mostra o nome do cadastro, o documento, o produto, a carteira, por onde e quando o pedido entrou, com a situação ao lado. As ações ficam à direita:
+
+| Ação | Quando aparece | O que faz |
+| --- | --- | --- |
+| **Rodar análise** / **Rodar de novo** | Sempre, exceto em proposta cancelada | Roda uma política ou uma esteira com o documento da proposta |
+| **Incluir participante** | Sempre | Acrescenta avalista, sócio ou interveniente |
+| **Aprovar** | Proposta **Em análise** cuja última análise foi só por política | Leva a proposta a **Oferta emitida**. Fica desligado até o relatório terminar aprovado |
+| **Recusar** | Mesmo caso de **Aprovar** | Leva a proposta a **Recusada** |
+| **Cancelar proposta** | Proposta aberta | Encerra o pedido. Cancela antes a assinatura de contrato em andamento |
+| **Pedir documentos** | Sem o módulo de Onboarding, com cadeado | Apresenta o módulo |
+
+Quando **Aprovar** está desligado, a tela diz por quê: "O relatório ainda não terminou." ou "O relatório não aprovou esta proposta."
+
+Se a análise automática do **Ao concluir** não pôde ser disparada, o detalhe mostra "A análise não foi disparada." com o motivo, e a proposta fica em **Esperando você**. Rode a análise pela tela ou ajuste o destino.
+
+### Rodar a análise
+
+Em **O que rodar**, escolha **Esteira** ou **Política** (gera um relatório), e depois qual. A lista mostra só as esteiras e políticas ativas para o tipo de documento da proposta (CNPJ ou CPF); em **Política**, só as de uso **Relatório**. Em **Motivo**, escolha **Inicial** na primeira vez; depois, **Entrou participante**, **Cadastro corrigido** ou **Rodada manual**.
+
+Rodar de novo não apaga nada: a execução anterior continua registrada. Se já existe uma execução da mesma esteira em andamento, decida ou conclua a atual antes.
+
+### Aba Resumo
+
+O retrato da proposta. O cartão **A proposta** traz **Produto**, **Pedido**, **Condições**, a oferta atual (**Pré-aprovação**, **Oferta firme** ou **Escolha do cliente**), **1ª parcela**, **Índices usados**, **Contato**, **Solicitação** e **Cadastro**. Abaixo vêm **Participantes** e **Ofertas por rodada**, com **Rodada**, **Tipo** (**Pré-aprovação** ou **Oferta firme**), **Situação**, **Faixa**, **Prazos**, **Escolha** e **Validade**.
+
+Enquanto a proposta está **Esperando o cliente**, o painel **Esperando o cliente escolher** oferece:
+
+- **Copiar link**: o link vigente, para mandar pelo seu canal.
+- **Reenviar e-mail**: gera um link novo e avisa o cliente de novo. O link anterior deixa de abrir.
+- **Registrar escolha do cliente**: valor, prazo, carência e um **Motivo (obrigatório)**, para quando o cliente escolheu fora da página. Depois de **Confirmar escolha**, a esteira segue com ela.
+
+Detalhes em [Pré-aprovação e oferta](/propostas/pre-aprovacao-e-oferta).
+
+### Aba Execuções
+
+Cada análise que rodou na proposta, da mais recente para a mais antiga, com **O quê** (política ou esteira), **Motivo**, **Quando** e **Onde está**. Uma execução que foi substituída por uma mais nova aparece marcada. Sem nenhuma, a aba diz "Nenhuma análise rodou ainda.". Para seguir uma execução de esteira etapa a etapa, veja [Acompanhar execuções](/toolbox/acompanhar-execucoes).
+
+### Aba Aprovação
+
+Aparece quando a proposta passou por uma esteira. Mostra a decisão da execução mais recente sem sair da proposta: o cartão de decisão, os votos, as evidências e a jornada. Se o seu voto está pendente, a aba ganha a marca **1** e a proposta abre direto nela. **Abrir execução** leva à execução completa. Sem esteira, a aba diz "Esta proposta ainda não passou por uma esteira.".
+
+### Aba Foto da aprovação
+
+As fotos tiradas na pré-aprovação e na decisão final. Cada uma mostra o que sustentou a decisão naquele momento:
+
+- **Cadastro naquele momento**: razão social, nome fantasia, natureza jurídica, **Status KYC** e sede;
+- **Sócios e participantes naquele momento**;
+- **Documentos e validações usados**, com a versão e o hash de cada arquivo;
+- **Análises e decisões**;
+- **Oferta aprovada**, com valor, prazo, taxa, estrutura, carteira e **Índices usados**.
+
+Ao lado de cada dado, a coluna **Hoje** mostra o que mudou no cadastro desde a foto. A foto nunca é editada.
+
+### Aba Contrato
+
+O contrato gerado na formalização, o quadro de partes e o andamento das assinaturas. Veja [Contratos no toolbox](/toolbox/contratos).
+
+## Participantes
+
+**Incluir participante** pede **CNPJ ou CPF**, **Nome** e **Papel**: **Avalista**, **Sócio** ou **Interveniente**. O participante entra na proposta, mas a análise que já rodou não muda. Para a análise considerá-lo, rode de novo com o motivo **Entrou participante**.
+
+Remover um participante também não altera a análise já feita.
+
+## Quando uma decisão espera você
+
+Se a esteira para numa alçada ou revisão, a proposta vai para **Esperando você** e o e-mail "Uma decisão de crédito precisa de você" chega a quem decide, com os botões **Abrir execução** e **Ver proposta**.
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Propostas" icon="inbox" href="/propostas/visao-geral">
+    Situações, origens e como tudo se liga.
+  </Card>
+  <Card title="Painel gerencial" icon="chart-line" href="/propostas/gerencial">
+    Indicadores, visões salvas e exportação para Excel.
+  </Card>
+  <Card title="Produtos no toolbox" icon="box-open" href="/toolbox/produtos">
+    O catálogo que as propostas congelam.
+  </Card>
+</CardGroup>

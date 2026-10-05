@@ -1,0 +1,160 @@
+---
+title: "Produtos no toolbox"
+description: "A tela de Produtos: o catálogo, o editor com identificação, valor, estrutura financeira, documentos e simulação ao vivo, e a aba Carteiras."
+icon: "box-open"
+surface: plataforma
+domain: proposta
+audience: operador
+lang: nao-tecnica
+---
+
+A tela de Produtos é onde você descreve cada linha de crédito uma vez e vê, enquanto monta, a parcela que o cliente vai pagar. Tudo o que você salva aqui vale para os próximos pedidos: formulário, proposta, página da oferta e contrato usam o mesmo cálculo.
+
+<Info>
+  **Resumo:** menu lateral, **Motor de crédito**, **Produtos**. Duas abas: **Produtos** (o catálogo e o editor) e **Carteiras**. O editor tem uma **Simulação ao vivo** que recalcula as parcelas a cada mudança.
+</Info>
+
+<Note>
+  Produtos faz parte do módulo de Propostas, contratado à parte, e aparece para quem pode gerenciar a política de crédito. Veja [Módulos e capacidades](/plataforma/modulos-e-capacidades).
+</Note>
+
+## O catálogo
+
+A aba **Produtos** lista os produtos da organização, com filtro por tipo e por **Carteira**.
+
+| Coluna | O que mostra |
+| --- | --- |
+| **Produto** | O nome do produto |
+| **Carteira** | A carteira do produto (ou **Sem carteira**) |
+| **Estrutura** | Amortização e taxa, em resumo |
+| **Valor** | Fixo, faixa ou livre |
+| **Prazo** | Os limites de prazo |
+| **Ao concluir** | A política ou a esteira que o produto dispara |
+| **Ativo** | Liga e desliga o produto |
+
+Desligar um produto o tira do formulário e bloqueia pedidos novos. As propostas que já o usam não mudam.
+
+## Criar um produto
+
+<Steps>
+  <Step title="Novo produto">
+    Clique em **Novo produto**. O editor abre com as seções abaixo e a simulação ao lado.
+  </Step>
+  <Step title="Começar de um modelo (opcional)">
+    **Começar de um modelo** preenche a estrutura financeira a partir de um formato pronto (capital de giro pré ou pós-fixado, repasse BNDES, crédito rural, imobiliário, venda parcelada e outros). Você ajusta os números depois.
+  </Step>
+  <Step title="Preencher as seções">
+    Identificação, valor e limites, estrutura financeira e documentos. A simulação acompanha cada mudança.
+  </Step>
+  <Step title="Criar produto">
+    **Criar produto** salva e deixa o produto disponível para pedidos. Depois, o botão vira **Salvar**.
+  </Step>
+</Steps>
+
+## Identificação
+
+| Campo | O que é |
+| --- | --- |
+| **Nome** | Como o produto aparece (ex.: "Capital de Giro PME") |
+| **Chave** | O que o formulário e a esteira citam (`produto = "chave"`). **Não muda depois de criar** |
+| **Tipo** | **Financiamento** ou **Venda a prazo** |
+| **Finalidade** | Vem do catálogo de objetivos da política de crédito |
+| **Carteira** | Obrigatória com carteiras ligadas. A proposta congela a carteira do dia em que nasce |
+| **Atende** | **PJ**, **PF** ou **Os dois**. O formulário público só oferece o produto a esse público, e nenhuma proposta com o produto aceita documento de outro tipo |
+
+## Valor e limites
+
+Em **Valor do produto**, escolha **Como o valor é definido**:
+
+- **Fixo:** informe o **Valor**. O valor do catálogo manda: o pedido é guardado, mas a proposta nasce com este.
+- **Faixa:** informe **Valor mínimo** e **Valor máximo**. Pedido fora da faixa não é recusado: a proposta nasce com um alerta.
+- **Livre:** qualquer valor.
+
+**Mostrar a faixa de valor para quem preenche** decide se o cliente vê a faixa no formulário público e na página da oferta.
+
+Em **Limites**, informe o **Prazo mínimo (meses)**, o **Prazo máximo (meses)** e, se o produto pede, a **Entrada mínima (%)**.
+
+## Estrutura financeira
+
+A seção **Estrutura financeira** monta o cálculo peça por peça. O conceito de cada peça está em [Precificação do produto](/propostas/precificacao).
+
+| Campo | Opções |
+| --- | --- |
+| **Amortização** | **PRICE**, **SAC**, **Americano**, **Parcela única**, **Sem juros** |
+| **Periodicidade** | **Mensal**, **Trimestral**, **Semestral**, **Anual** |
+| **Base de dias** | **252 dias úteis**, **30/360**, **365 dias corridos** |
+| **Sem juros até (parcelas)** | Até quantas parcelas o produto é sem juros. Vazio = sempre com a amortização escolhida |
+| **Carência máxima (meses)** | O teto de carência que a oferta pode dar |
+| **Carência de** | **Amortização (paga juros)** ou **Amortização e juros (juros capitalizados)** |
+| **Juros da carência** | **Mensal**, **Trimestral**, **Semestral** ou **Anual**, só quando a carência paga juros |
+
+### Taxa, somada por componentes
+
+Adicione quantos componentes precisar:
+
+- **Pré:** um percentual ao ano, com rótulo opcional (ex.: "spread do agente").
+- **Indexador:** o índice (**CDI**, **Selic**, **IPCA**, **IGP-M**, **TR**, **TLP**, **Taxa Fixa BNDES**, **LCD (Selic + spread)**), o **% do índice** e **Como o índice entra**: **Pós nos juros** ou **Corrige o saldo**.
+- **Spread de risco:** o teto, em % ao ano. O valor de cada cliente **vem da esteira**, até esse teto.
+
+### Índices de mercado
+
+Para cada índice que a taxa usa, a seção **Índices de mercado** mostra o último valor, a data de referência e a fonte (por exemplo, "14,90% a.a. · 23/09/2026 · Banco Central"). Marque **Usar valor fixo** para simular um cenário com outro valor; o produto passa a usar o valor que você digitar.
+
+Se o índice de mercado estiver indisponível, a tela avisa e o cálculo usa a premissa do produto ou um valor de referência.
+
+### Encargos
+
+Em **Encargos**, adicione **IOF**, **Tarifa de análise**, **Seguro**, **Fundo garantidor** ou **Outro encargo**. Cada um tem valor, base (**sobre o valor**, **sobre o saldo** ou **na parcela**) e a opção **Financiado**. No IOF, marque **IOF isento** quando a operação tiver isenção.
+
+## Documentos e esteira deste produto
+
+**Documentos:** o que o cliente envia para este produto, acrescentado ao que o modelo do formulário já pede. Exige o módulo de Onboarding.
+
+**Ao concluir:** o que roda quando os documentos chegam. Deixe **O que o modelo do formulário dispara** para seguir o modelo, ou escolha uma política (em **Políticas**) ou uma esteira (em **Esteiras**) só para este produto. Com **Atende** em **Os dois**, aparecem **Ao concluir (CNPJ)** e **Ao concluir (CPF)**, e cada seletor mostra só as políticas e esteiras daquele tipo.
+
+## Simulação ao vivo
+
+O cartão **Simulação ao vivo** usa o **mesmo cálculo da proposta**. Informe:
+
+- **Simular para**: pessoa jurídica ou física (muda o IOF);
+- **Valor**, **Prazo (meses)** e **Carência (meses)**;
+- **Spread de risco (% a.a.)**, para ver o cliente de um risco específico. Vazio, a simulação usa o teto.
+
+O resultado mostra **1ª parcela**, **Maior parcela**, **Total pago**, **CET**, o cronograma parcela a parcela (com juros, correção e saldo) e os **Índices usados na simulação**. Com índice pós-fixado, o resultado vem marcado como **Estimado**. Avisos do cálculo (carência ajustada, parcela sem juros, índice indisponível) aparecem junto.
+
+<Tip>
+  Simule o pedido típico da linha antes de salvar: por exemplo, R$ 200.000,00 em 24 meses com 3 de carência. Se a parcela não cabe no caixa do cliente que você atende, ajuste o prazo ou a carência máxima aqui, e não depois, pedido a pedido.
+</Tip>
+
+## Carteiras
+
+A aba **Carteiras** está sempre visível. Com as carteiras desligadas, ela mostra só o interruptor **Organizar produtos em carteiras**.
+
+Ao ligar, os produtos sem carteira vão para **Geral**. Ao desligar, nada é apagado.
+
+| Coluna | O que mostra |
+| --- | --- |
+| **Carteira** | O nome |
+| **Produtos** | Quantos produtos estão nela |
+| **Em análise** | Valor das propostas em análise, esperando o cliente ou esperando você |
+| **Emitido 30d** | Valor das propostas com oferta emitida nos últimos 30 dias |
+| **Ativa** | Liga e desliga a carteira |
+
+Ações:
+
+- **Nova carteira**: dê um nome e salve.
+- **Renomear carteira**: renomear não muda o passado; a proposta guarda o nome do dia em que nasceu.
+- **Excluir carteira**: só com a carteira vazia. Mova os produtos para outra carteira antes. Propostas que nasceram nela continuam com o nome gravado.
+
+Regras completas em [Produtos e carteiras](/propostas/produtos#carteiras).
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Precificação do produto" icon="calculator" href="/propostas/precificacao">
+    A fórmula da taxa, os índices e o cronograma.
+  </Card>
+  <Card title="Propostas no toolbox" icon="table-list" href="/toolbox/propostas">
+    Onde os pedidos de cada produto aparecem.
+  </Card>
+</CardGroup>

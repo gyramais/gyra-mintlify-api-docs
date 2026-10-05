@@ -26,7 +26,7 @@ Tempo estimado: **5 minutos**.
 - Um CPF ou CNPJ para testar
 
 <Note>
-Ainda não tem credenciais? Entre em contato com **atendimento@gyramais.com** e solicite o acesso.
+Ainda não tem credenciais? Gere você mesmo no toolbox, em **Configurações, API & MCP**. Ver [Chaves de API](/api-reference/api-keys).
 </Note>
 
 ---
@@ -77,7 +77,7 @@ curl -X POST https://gyra-core.gyramais.com.br/report \
   -H "Authorization: Bearer {accessToken}" \
   -H "Content-Type: application/json" \
   -d '{
-    "document": "12345678901",
+    "document": "52998224725",
     "type": "CPF",
     "policyId": "67be2e43d6c1064a759601bf",
     "externalId": "meu-pedido-001"
@@ -131,7 +131,7 @@ curl https://gyra-core.gyramais.com.br/report/64a3b2c1d4e5f6a7b8c9d0e1 \
 |-------|-----------------|
 | `status` | Status geral do relatório |
 | `policyStatus` | Decisão da política de crédito: `APPROVED`, `DENIED` ou `ALERT` |
-| `score` | Score composto calculado pela política (0–1000) |
+| `score` | Score composto calculado pela política (0 a 1000) |
 | `sections` | Dados detalhados por seção temática |
 
 <Tip>

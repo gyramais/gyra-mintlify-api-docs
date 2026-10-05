@@ -1,0 +1,25 @@
+---
+title: "Criar ou Atualizar Assinatura"
+description: "Para assinar os eventos do módulo e parar de fazer polling."
+surface: api
+domain: cadastro
+audience: integrador
+lang: tecnica
+openapi: post /v1/webhook/endpoints
+---
+
+### Quando usar
+
+Para assinar os eventos do módulo e parar de fazer polling.
+
+### Lista de eventos vazia quer dizer todos
+
+Quem está começando não sabe de quais precisa, e escolher antes de conhecer produz assinatura errada e evento perdido em silêncio.
+
+### O segredo aparece uma vez
+
+Ele volta em claro **só nesta resposta**, na criação e na rotação. Confira a assinatura com `HMAC_SHA256(segredo, "<X-Gyra-Timestamp>.<corpo cru>")` e recuse o que estiver fora de uma janela de cinco minutos.
+
+<Note>
+  Contexto e vocabulário em [Eventos de webhook](/api-reference/onboarding/eventos-de-webhook). Autenticação, versionamento e capacidades em [Visão geral da API](/api-reference/onboarding/visao-geral).
+</Note>

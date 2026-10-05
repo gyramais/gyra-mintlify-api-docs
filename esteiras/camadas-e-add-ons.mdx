@@ -1,0 +1,112 @@
+---
+title: "Camadas e add-ons"
+description: "Como a esteira aprofunda o relatório com consultas pontuais, sem pagar duas vezes pelo mesmo dado e sem misturar fontes que se contradizem."
+icon: "layer-group"
+surface: conceito
+domain: esteira
+audience: operador
+lang: nao-tecnica
+---
+
+Camadas deixam você consultar o dado caro só para quem já passou do primeiro filtro, dentro do mesmo relatório e sem refazer o que já foi consultado.
+
+<Info>
+  **Resumo:** uma **camada de aprofundamento** é uma política que não gera relatório: ela entra no relatório que a esteira já criou, pela etapa **Aprofundar**. Os **add-ons individuais** são consultas pontuais (um score, um indicador do SCR, os protestos) que você declara na política ou na camada. A esteira confere, na ativação, que nenhuma dimensão de dado venha de duas fontes.
+</Info>
+
+## Política de análise e camada
+
+| | Política de análise | Camada de aprofundamento |
+| --- | --- | --- |
+| Relatório base | Tem um (Simples ou superior) | Nenhum: "A política entra num relatório que já existe" |
+| Onde a política é usada | **Relatório** ou **Esteira** | Sempre **Esteira** |
+| Roda sozinha? | Só se o uso for **Relatório**. Com uso **Esteira**, roda só numa etapa da esteira. | Não, só dentro de uma esteira, na etapa **Aprofundar** |
+| O que acrescenta | O relatório inteiro | Só as fontes que ela declara |
+| Documento | CPF ou CNPJ, pelo relatório base | CPF ou CNPJ, escolhido na camada |
+
+Você cria a camada em **Políticas**: em **Onde a política é usada**, escolha **Esteira**, e depois **Nenhum** como relatório base. A opção **Nenhum** só existe no uso Esteira. A camada precisa de pelo menos uma fonte: "Uma camada de aprofundamento precisa de pelo menos uma fonte selecionada. Escolha os complementos que a camada vai acrescentar ao relatório."
+
+Tentar rodar sozinha uma política de uso Esteira, camada ou não, é recusado: "Esta política é de esteira: rode a esteira que a usa." Veja [Onde a política é usada](/concepts/politica-de-credito#onde-a-pol%C3%ADtica-%C3%A9-usada).
+
+## Como o Aprofundar funciona
+
+<Steps>
+  <Step title="A Análise cria o relatório">
+    A primeira consulta da esteira gera o relatório, com a política de análise.
+  </Step>
+  <Step title="O Aprofundar acrescenta a camada">
+    A etapa **Aprofundar** aplica a camada ao mesmo relatório. As seções que faltam são criadas, e as existentes ganham as fontes novas.
+  </Step>
+  <Step title="A camada decide, ou só informa">
+    Camada com regras tem resultado próprio e pesa na decisão. Camada sem regras só acrescenta dados e não apaga a decisão anterior.
+  </Step>
+</Steps>
+
+O relatório não é duplicado nem cobrado de novo como relatório novo. Se a mesma camada for aplicada duas vezes ao mesmo relatório, a segunda vez não refaz nada. Ela só é reaplicada quando a política da camada ganhou versão nova ou quando o relatório foi reaberto por um **Rodar de novo**.
+
+### Fontes reaproveitadas
+
+No construtor, cada etapa mostra o que ela consulta:
+
+| Indicação | Significado |
+| --- | --- |
+| **N fontes produzidas** | Fontes que esta etapa consulta |
+| **N fontes disponíveis** | Fontes já consultadas nas etapas anteriores, sem custo novo |
+| **Sem consulta duplicada** | A etapa não repete nenhuma consulta |
+| **Fonte ausente** | A etapa depende de uma fonte que nenhuma etapa anterior traz |
+
+O topo do construtor soma as **fontes reaproveitadas** da esteira inteira.
+
+### Precificação da camada
+
+Uma camada pode ter fórmulas de precificação próprias. Enquanto alguma fonte que a fórmula usa não chegou, o valor fica pendente: nunca sai um valor parcial, e fórmula sem resultado fica vazia, não zero. Se uma etapa seguinte usa essa precificação, o Aprofundar espera até 30 minutos pela fonte.
+
+## Add-ons individuais
+
+Add-ons são consultas pontuais que você soma ao relatório base ou declara numa camada, em **Fontes de dados** da política. Exemplos:
+
+| Para empresa | Para pessoa física |
+| --- | --- |
+| Pendências financeiras, Protestos em cartório, Ações cíveis, Falência e recuperação judicial, Cheques sem fundo, Score de risco, Faturamento presumido, Decisão e limite sugerido | Score de risco (pessoa), Pontualidade, Faturas em atraso, Renda presumida, Renda bruta presumida, Débitos ativos, Protestos em cartório, Ações cíveis |
+
+Os **Indicadores do SCR** (Dívida em aberto, Meses com dívida em aberto, Quantidade de credores, Uso de crédito rotativo, carteiras a vencer, ativa e em aberto) formam uma seção própria no relatório. Nas regras, o valor de cada indicador é uma faixa, nunca o valor exato em reais. Veja [SCR e Open Finance](/sources/scr-open-finance).
+
+O dado de cada add-on aparece na seção do relatório que já trata daquele assunto. Relatório, PDF e API não citam a fonte do dado.
+
+## Cada regra precisa de uma fonte
+
+Uma regra só é avaliada se a política declara uma fonte que traz aquele dado. A plataforma não contrata a fonte por você.
+
+- **Na tela da camada**, a regra sem fonte fica desabilitada e diz o que falta: "Escolha um bureau nas Fontes de dados.", "Declare o add-on "X" nas Fontes de dados.", "Ative o SCR nas Fontes de dados."
+- **Ao salvar**, a política recusa a regra sem fonte e nomeia a condição e o que falta: "Ajuste as regras antes de salvar: A condição "X" precisa do add-on "Y", que esta política não declara. Declare essa fonte nas Fontes de dados ou remova a condição."
+- Numa política de uso Relatório, só a regra que você está criando ou mudando é conferida.
+- Numa política de uso **Esteira** (inclusive a camada), o editor oferece as regras de todas as fontes do tipo de documento, e quem confere se a fonte chega é a esteira: na **Conferência das políticas** do construtor, uma fonte que nenhuma etapa anterior traz impede a ativação ("A política "X" precisa de ..."), e uma fonte que só chega por uma etapa condicional vira aviso.
+
+Se mesmo assim uma regra chegar sem fonte na hora de rodar, ela termina em erro. Nunca aprova por acidente.
+
+## Conflito de fontes entre etapas
+
+Algumas dimensões de dado precisam ter uma única fonte em toda a esteira, para a decisão não misturar dois números que medem a mesma coisa de jeitos diferentes. Na ativação, a esteira recusa:
+
+| Conflito | Mensagem |
+| --- | --- |
+| Dois bureaus completos no mesmo relatório | A etapa "X" acrescenta outro bureau completo ao mesmo relatório. Mantenha apenas um bureau completo na esteira. |
+| Add-on que repete o bureau completo anterior | A etapa "X" repete conteúdo que o bureau completo anterior já trouxe. Remova o add-on repetido ou troque a fonte da etapa. |
+| Segunda fonte de score, faturamento presumido, renda presumida ou limite de crédito | A etapa "X" acrescenta uma segunda fonte de score. Essa dimensão precisa ter uma única fonte em toda a esteira. |
+
+Uma esteira que já estava ativa com um conflito antigo continua rodando, com o aviso **Esteira ativa com fontes em conflito**: "Ela continua rodando, mas não poderá ser reativada se for desativada. Ajuste as Fontes de dados das políticas das etapas." Uma edição que cria um conflito novo numa esteira ativa é recusada.
+
+## Fonte que não chega a tempo
+
+O construtor também confere se cada etapa tem, antes dela, as fontes de que depende. Um Aprofundar que depende de uma fonte que nenhuma etapa anterior produz é recusado na ativação, e o aviso aparece no construtor: "A etapa "X" depende de uma fonte que não chega até ela".
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Política de crédito" icon="scale-balanced" href="/concepts/politica-de-credito">
+    Fontes de dados, regras e precificação da política.
+  </Card>
+  <Card title="Etapas" icon="list-ol" href="/esteiras/etapas#aprofundar">
+    A etapa Aprofundar no catálogo.
+  </Card>
+</CardGroup>

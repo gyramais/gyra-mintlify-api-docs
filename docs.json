@@ -24,7 +24,12 @@
     "url": "https://toolbox.gyramais.com.br/login",
     "type": "link"
   },
-  "openapi": "./openapi.yaml",
+  "api": {
+    "openapi": "openapi.yaml",
+    "params": {
+      "expanded": "all"
+    }
+  },
   "navigation": {
     "groups": [
       {
@@ -42,7 +47,6 @@
           "concepts/analise-de-credito",
           "concepts/politica-de-credito",
           "concepts/templates-de-politica",
-          "concepts/operacoes",
           "concepts/secoes",
           "concepts/pareceres-gyra-ia",
           "concepts/comite-de-credito",
@@ -56,16 +60,84 @@
         ]
       },
       {
+        "group": "Onboarding",
+        "pages": [
+          "onboarding/visao-geral",
+          "onboarding/cadastro-documental",
+          "onboarding/tipos-de-documento",
+          "onboarding/analise-documental",
+          "onboarding/regua-de-validacao",
+          "onboarding/solicitacoes",
+          "onboarding/formularios",
+          "onboarding/formulario-publico",
+          "onboarding/termos-e-assinatura",
+          "onboarding/verificacao-de-identidade",
+          "onboarding/pagina-do-destinatario",
+          "onboarding/cobranca"
+        ]
+      },
+      {
+        "group": "Propostas",
+        "pages": [
+          "propostas/visao-geral",
+          "propostas/produtos",
+          "propostas/precificacao",
+          "propostas/pre-aprovacao-e-oferta",
+          "propostas/gerencial",
+          "propostas/hubspot"
+        ]
+      },
+      {
+        "group": "Esteiras",
+        "pages": [
+          "esteiras/visao-geral",
+          "esteiras/etapas",
+          "esteiras/dados-de-entrada",
+          "esteiras/camadas-e-add-ons",
+          "esteiras/chamada-de-api",
+          "esteiras/decisao-alcada-e-comite",
+          "esteiras/execucoes"
+        ]
+      },
+      {
+        "group": "Formalização",
+        "pages": [
+          "formalizacao/visao-geral",
+          "formalizacao/modelos-de-contrato",
+          "formalizacao/variaveis-do-contrato",
+          "formalizacao/partes-e-assinaturas",
+          "formalizacao/clicksign",
+          "formalizacao/bndes"
+        ]
+      },
+      {
+        "group": "Plataforma",
+        "pages": [
+          "plataforma/modulos-e-capacidades",
+          "plataforma/assistente-gyra",
+          "plataforma/correspondentes"
+        ]
+      },
+      {
         "group": "Guia do Toolbox",
         "pages": [
           "toolbox/visao-geral",
+          "toolbox/inicio",
           "toolbox/primeiro-acesso",
+          "toolbox/propostas",
+          "toolbox/produtos",
           "toolbox/rodar-operacao",
           "toolbox/interpretar-resultado-operacao",
+          "toolbox/montar-esteira",
+          "toolbox/acompanhar-execucoes",
+          "toolbox/contratos",
+          "toolbox/cadastros",
+          "toolbox/solicitacoes",
+          "toolbox/validacao-de-identidade",
           "toolbox/criar-politica",
           "toolbox/editar-politica",
           "toolbox/usar-templates",
-          "toolbox/solicitacoes",
+          "toolbox/integracoes",
           "toolbox/gerenciar-usuarios-permissoes",
           "toolbox/webhooks-e-api-keys"
         ]
@@ -94,6 +166,7 @@
         "group": "Guias",
         "pages": [
           "guides/primeiro-relatorio",
+          "guides/integrar-cadastro-documental",
           "guides/configurar-webhook",
           "guides/interpretar-decisao",
           "guides/criar-politica-personalizada"
@@ -124,9 +197,11 @@
           "api-reference/report-v2/post-v2report",
           "api-reference/report-v2/get-v2report",
           "api-reference/report/post-report-financial-tab",
+          "api-reference/report/post-report-financial-tab-presign",
           "api-reference/report/get-reportlist",
           "api-reference/report/get-reportsection",
           "api-reference/report/get-report-section",
+          "api-reference/report/post-report-section-retry",
           "api-reference/report/get-reportinsights",
           "api-reference/report/post-reportcommittee",
           "api-reference/committee/get-committeedeliberations",
@@ -138,6 +213,70 @@
           "api-reference/webhook/post-webhook",
           "api-reference/webhook/get-webhookfindby",
           "api-reference/webhook/delete-webhook"
+        ]
+      },
+      {
+        "group": "API: Onboarding",
+        "pages": [
+          "api-reference/onboarding/visao-geral",
+          {
+            "group": "Documento",
+            "pages": [
+              "api-reference/registry/post-registry-validate-document",
+              "api-reference/registry/get-registry-documents-docid-status",
+              "api-reference/registry/post-registry-id-documents-presign",
+              "api-reference/registry/post-registry-id-documents",
+              "api-reference/registry/get-registry-id-documents-docid-result",
+              "api-reference/registry/post-registry-id-documents-docid-reprocess"
+            ]
+          },
+          {
+            "group": "Cadastro",
+            "pages": [
+              "api-reference/registry/post-registry",
+              "api-reference/registry/get-registry",
+              "api-reference/registry/get-registry-id",
+              "api-reference/registry/get-registry-by-document-document",
+              "api-reference/registry/get-registry-id-documents",
+              "api-reference/registry/get-registry-id-persons",
+              "api-reference/onboarding/pessoas-e-contatos"
+            ]
+          },
+          {
+            "group": "Solicitação",
+            "pages": [
+              "api-reference/collection/get-collection-templates",
+              "api-reference/collection/post-collections",
+              "api-reference/collection/get-collections",
+              "api-reference/collection/get-collections-id",
+              "api-reference/collection/post-collections-id-send",
+              "api-reference/collection/post-collections-id-cancel",
+              "api-reference/collection/post-collections-id-items-itemid-review",
+              "api-reference/onboarding/via-assinada"
+            ]
+          },
+          {
+            "group": "Webhook",
+            "pages": [
+              "api-reference/collection/get-webhook-events",
+              "api-reference/collection/get-webhook-endpoints",
+              "api-reference/collection/post-webhook-endpoints"
+            ]
+          },
+          "api-reference/onboarding/formatos-de-retorno",
+          "api-reference/onboarding/eventos-de-webhook"
+        ]
+      },
+      {
+        "group": "API: Propostas e Esteiras",
+        "pages": [
+          "api-reference/propostas/visao-geral",
+          "api-reference/propostas/propostas",
+          "api-reference/propostas/ofertas",
+          "api-reference/propostas/produtos-e-precificacao",
+          "api-reference/propostas/gerencial",
+          "api-reference/propostas/dados-de-entrada",
+          "api-reference/esteiras/fechamento-externo"
         ]
       },
       {
@@ -180,6 +319,40 @@
     {
       "source": "/concepts/gyra-insights",
       "destination": "/concepts/pareceres-gyra-ia"
+    },
+    {
+      "source": "/concepts/operacoes",
+      "destination": "/esteiras/visao-geral"
+    },
+    {
+      "source": "/kyc/:slug*",
+      "destination": "/onboarding/:slug*"
+    },
+    {
+      "source": "/api-reference/kyc/:slug*",
+      "destination": "/api-reference/onboarding/:slug*"
     }
-  ]
+  ],
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "cursor",
+      "vscode",
+      "mcp"
+    ]
+  },
+  "markdown": {
+    "schema": true,
+    "instructions": [
+      "A GYRA+ tem um servidor MCP oficial: https://mcp.gyramais.com.br/mcp. A autenticação é o login do próprio usuário na plataforma, não uma credencial separada. Instalação em https://developers.gyramais.com.br/mcp/instalacao.",
+      "Prefira as tools do MCP a montar chamadas HTTP na mão quando o usuário já tem o conector ligado.",
+      "Para analisar crédito de um CNPJ ou CPF, use create_report_v2 e assine um webhook em vez de fazer polling.",
+      "Para ler um documento (contrato social, comprovante de residência, imposto de renda, balanço), use validate_document: a entrada é um arquivo só e a plataforma reconhece o tipo sozinha.",
+      "Para pedir documentos ao cliente final, use create_collection com o slug de um modelo obtido em list_collection_templates.",
+      "Documento (CNPJ/CPF) é dado pessoal: não o repita em log nem o envie a serviços de terceiros."
+    ]
+  }
 }

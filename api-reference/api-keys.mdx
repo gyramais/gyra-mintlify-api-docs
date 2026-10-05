@@ -1,6 +1,6 @@
 ---
 title: Chaves de API
-description: Obtenha uma chave de API para autenticar suas requisições à API da GYRA+.
+description: Gere as credenciais da sua organização no próprio painel do toolbox e autentique as requisições à API da GYRA+.
 icon: "key"
 surface: api
 domain: integracao
@@ -8,30 +8,63 @@ audience: integrador
 lang: tecnica
 ---
 
-Para utilizar os serviços da API da GYRA+, é necessário obter credenciais vinculadas à sua organização.
+Para usar a API da GYRA+ você precisa de credenciais vinculadas à sua organização: `gyra-client-id` e `gyra-client-secret`.
 
-Essas credenciais, `gyra-client-id` e `gyra-client-secret`, são fornecidas durante o processo de onboarding. Caso ainda não tenha acesso ou precise de suporte, entre em contato com nosso time pelo e-mail **[atendimento@gyramais.com](mailto:atendimento@gyramais.com)**.
+<Info>
+  **Você mesmo gera as credenciais**, no toolbox, em **Configurações, API & MCP**. Não é preciso pedir ao suporte.
+</Info>
 
-### 1. Autenticação inicial
+### 1. Gerar a credencial
 
-Para gerar o token de acesso, envie uma requisição `POST` para o endpoint de autenticação, incluindo os seguintes headers:
+<Steps>
+  <Step title="Abra Configurações, API & MCP">
+    Criar e revogar credenciais exige a permissão de **gerenciar configurações** da organização.
+  </Step>
+  <Step title="Crie a credencial">
+    Na seção **Credenciais de API**, clique em criar e dê um nome reconhecível (`backend-producao`, `n8n-homologacao`).
+  </Step>
+  <Step title="Copie o par">
+    O `clientId` e o `clientSecret` aparecem na tela. O painel só fecha depois que você confirma que copiou.
+  </Step>
+</Steps>
 
-| Header               | Tipo     | Obrigatório | Descrição                         |
-|----------------------|----------|-------------|-------------------------------------|
-| `gyra-client-id`     | `string` | ✅           | Identificador da sua organização   |
-| `gyra-client-secret` | `string` | ✅           | Chave secreta fornecida no onboarding |
+<Warning>
+  O `clientSecret` é mostrado **uma única vez**. A plataforma guarda apenas o hash dele e não há rota que o devolva. Se perder, crie outra credencial e revogue a anterior.
+</Warning>
 
-### 2. Requisições autenticadas
+Crie uma credencial por integração e por ambiente: assim dá para revogar a de homologação sem derrubar a produção. A listagem mostra o `clientId` e a data de criação de cada uma, com a ação de revogar.
 
-Após a autenticação, utilize o token JWT retornado para autenticar todas as requisições subsequentes. Para isso, inclua o seguinte header:
+### 2. Autenticação inicial
 
-| Header         | Tipo     | Obrigatório | Descrição                      |
-|----------------|----------|-------------|----------------------------------|
-| `Authorization`| `string` | ✅           | Token no formato `Bearer {token}` |
+Troque o par por um token de acesso em `POST /auth/authenticate`, com os headers:
 
-Exemplo:
+| Header               | Tipo     | Obrigatório | Descrição                          |
+|----------------------|----------|-------------|------------------------------------|
+| `gyra-client-id`     | `string` | sim         | Client ID da credencial            |
+| `gyra-client-secret` | `string` | sim         | Chave secreta gerada no painel     |
+
+```bash
+curl -X POST https://gyra-core.gyramais.com.br/auth/authenticate \
+  -H "gyra-client-id: seu-client-id" \
+  -H "gyra-client-secret: seu-client-secret"
+```
+
+O token vale 24 horas. Renove antes de expirar.
+
+### 3. Requisições autenticadas
+
+Inclua o token em toda chamada:
+
+| Header         | Tipo     | Obrigatório | Descrição                         |
+|----------------|----------|-------------|-----------------------------------|
+| `Authorization`| `string` | sim         | Token no formato `Bearer {token}` |
+
 ```
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
 ```
 
-> Consulte o endpoint de autenticação em [Autenticação](/api-reference/auth/post-authauthenticate).
+<Note>
+  O **MCP da GYRA+** não usa estas credenciais: a autenticação dele é o seu próprio login da plataforma. Ver [Instalação do MCP](/mcp/instalacao).
+</Note>
+
+> Detalhe do endpoint em [Autenticação](/api-reference/auth/post-authauthenticate). Guia de tela em [API & MCP: chaves e webhooks](/toolbox/webhooks-e-api-keys).
