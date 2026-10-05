@@ -4899,7 +4899,7 @@ paths:
                       - registry.document.assessed
                       - collection.completed
                     enabled: true
-                    secretHint: …a91f4c
+                    secretHint: …egredo
                     consecutiveFailures: 0
                     lastDeliveryStatus: 200
                     lastDeliveryError: null
@@ -5024,7 +5024,7 @@ paths:
                   - collection.completed
                   - collection.message.failed
                 enabled: true
-                secretHint: …a91f4c
+                secretHint: …egredo
                 secret: whsec_exemplo_nao_e_um_segredo
                 createdAt: '2026-09-05T18:40:00.000Z'
                 organizationId: 6612a7f30000000000000009
