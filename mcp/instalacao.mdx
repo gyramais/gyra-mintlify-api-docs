@@ -8,6 +8,10 @@ audience: integrador
 lang: tecnica
 ---
 
+import { McpConnectBanner } from '/snippets/mcp-connect-banner.mdx';
+
+<McpConnectBanner />
+
 <Info>
   **Resumo:** o MCP da GYRA+ é hospedado por nós em `https://mcp.gyramais.com.br`. Você configura só o **cliente** (Claude.ai, Claude Desktop, Cursor, etc.) e entra com **o seu próprio login da plataforma**: o mesmo e-mail e senha (ou a mesma conta Google) que você usa no toolbox. Nada de credencial separada, nada de abrir chamado. E, principalmente: o agente enxerga exatamente o que **você** enxerga.
 </Info>
@@ -63,6 +67,10 @@ https://mcp.gyramais.com.br
 ## Opção 1, Connector remoto no Claude.ai, Claude Desktop ou Claude Code (recomendado)
 
 Fluxo via **OAuth**: você adiciona o endpoint uma única vez, clica em *Autenticar* e a GYRA+ abre a própria página de login. Você entra com e-mail e senha ou com Google, e o Claude volta conectado. **É a opção mais segura**: a sua senha é digitada na página da GYRA+ e nunca fica gravada em arquivo de configuração.
+
+<Tip>
+  **Atalho no Claude.ai:** o botão **Conectar** no topo desta página abre o Claude já no formulário de conector, com nome e endereço da GYRA+ preenchidos. É só salvar e seguir para o passo **Autenticar**.
+</Tip>
 
 <Steps>
   <Step title="Abrir a tela de connectors">
