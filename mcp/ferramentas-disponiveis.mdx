@@ -371,12 +371,18 @@ Se alguma coisa mudou entre a prévia e a confirmação (outra pessoa editou a p
 | `gyra_whatsapp_template_submit` | Envia o texto do convite do WhatsApp próprio para aprovação da Meta (o número é conectado na tela *Configurações, Envio*) | Escrita |
 
 <Note>
-  Criar modelo de contrato e termo **a partir de um arquivo Word** só funciona no Assistente, dentro do Toolbox, porque depende de um anexo da conversa. Pelo MCP, crie o modelo pelo Assistente ou pela tela e use as tools acima para ajustar, conferir e publicar.
+  Criar modelo de contrato e termo **a partir de um arquivo Word** só funciona no Assistente, dentro do Toolbox, porque depende de um anexo da conversa, e por isso essas ações não aparecem no MCP. O mesmo vale para os atalhos de tela e a apresentação de novidades. Pelo MCP, crie o modelo pelo Assistente ou pela tela e use as tools acima para ajustar, conferir e publicar.
 </Note>
 
 ### Ajuda e consumo
 
-`gyra_cite_docs` (busca na documentação), `gyra_get_user_context` (quem é você e o que pode fazer), `gyra_list_features` (novidades) e `gyra_get_organization_usage` (consumo da organização no período). Todas de leitura.
+| Tool | O que faz | Tipo |
+| ---- | --------- | ---- |
+| `gyra_load_playbook` | Carrega o guia de um assunto (política, esteira, formulário, produto, exportação, comunicação, balanços, relatórios): conceitos, regras, ordem dos passos e armadilhas. Vale pedir ao agente que leia o guia antes de montar algo grande | Leitura |
+| `gyra_cite_docs` | Busca na documentação da GYRA+ | Leitura |
+| `gyra_get_user_context` | Diz quem é você, o seu papel e a sua organização | Leitura |
+| `gyra_list_features` | Lista as novidades disponíveis para a organização | Leitura |
+| `gyra_get_organization_usage` | Consumo da organização no período | Leitura |
 
 ## Exemplos encadeados
 
