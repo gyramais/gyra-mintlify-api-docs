@@ -55,11 +55,28 @@ O agente tenta chamar uma tool e recebe `401 Unauthorized`.
 - **Senha trocada na plataforma** e configuração do MCP desatualizada. É a causa mais comum: a sessão em aberto continua funcionando até expirar, e o 401 só aparece na próxima renovação, que pode ser horas depois da troca.
 - **Login de outra organização**. Se você tem acesso a mais de uma, confira qual está configurada.
 - **Usuário desativado** na plataforma.
-- **Conta só de SSO**, sem senha definida. Este fluxo exige senha.
+- **Conta só de SSO**, sem senha definida. O stdio exige senha. No connector remoto, quem entra com Google usa o botão **Entrar com Google**.
+- **Connector antigo, autenticado com a credencial de integração.** O MCP passou a exigir o login da pessoa: connectors autenticados com o Client ID e o Client Secret de *Configurações, API & MCP* recebem `401` e o Claude pede o login de novo.
 
 ### Solução
 
-Confira que o e-mail e a senha são exatamente os do toolbox (teste fazendo login lá) e atualize `GYRA_CLIENT_ID` e `GYRA_CLIENT_SECRET` no config do cliente, ou reautentique no custom connector do Claude. Depois reinicie o cliente.
+Confira que o e-mail e a senha são exatamente os do toolbox (teste fazendo login lá) e atualize `GYRA_CLIENT_ID` e `GYRA_CLIENT_SECRET` no config do cliente, ou reautentique o connector remoto no Claude com o seu e-mail e senha ou com Google. Depois reinicie o cliente.
+
+## Página de login do MCP recusa o acesso
+
+### Sintoma
+
+Na página de login da GYRA+ (connector remoto), o login falha ou a página nem abre.
+
+### Causas e solução
+
+| Mensagem | O que fazer |
+| -------- | ----------- |
+| *Credencial de integração (API) não entra no conector* | Você usou o Client ID e o Client Secret da API. Entre com o **seu** e-mail e senha, ou com Google. |
+| *E-mail e/ou senha incorreto(s)* | Teste o mesmo login no toolbox. Se você entra com Google, use o botão **Entrar com Google**. |
+| *Conta bloqueada por 5 minutos* | Muitas tentativas erradas. Espere e tente de novo. |
+| *redirect_uri não autorizado para este cliente* | O cliente MCP não está entre os aceitos (Claude.ai, Claude Desktop e Claude Code). Use a configuração stdio ou fale com atendimento@gyramais.com. |
+| *Este login com Google não foi iniciado neste navegador* ou *O login com Google expirou* | Comece a conexão de novo pelo Claude, no mesmo navegador, sem reaproveitar um link antigo. |
 
 <Note>
   Usando `GYRA_CLIENT_ID` + `GYRA_CLIENT_SECRET`, um `401` isolado por sessão expirada ou deploy **não deveria chegar até você**: o MCP força nova autenticação e repete a chamada sozinho. Um `401` persistente indica credencial de fato inválida, não sessão caída.

@@ -1,0 +1,21 @@
+{/*
+  Faixa "Conectar" do MCP, igual a de Configuracoes > Desenvolvedores no toolbox
+  (gyra-toolbox src/app/configuracoes/desenvolvedores/components/mcp-banner).
+  O link abre o Claude ja no formulario de conector personalizado, com nome e
+  endereco preenchidos. Estilo em /mcp-banner.css.
+*/}
+
+export const McpConnectBanner = () => (
+  <a
+    className="mcp-banner not-prose"
+    href="https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=GYRA%2B&connectorUrl=https%3A%2F%2Fmcp.gyramais.com.br"
+    target="_blank"
+    rel="noreferrer"
+  >
+    <span className="mcp-banner__badge">Novo</span>
+    <span className="mcp-banner__text">
+      Use a GYRA+ direto do Claude com o nosso conector MCP. Você entra com o seu próprio login, e o agente enxerga só o que você enxerga.
+    </span>
+    <span className="mcp-banner__cta">Conectar →</span>
+  </a>
+);

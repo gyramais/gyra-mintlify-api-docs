@@ -8,12 +8,16 @@ audience: integrador
 lang: tecnica
 ---
 
+import { McpConnectBanner } from '/snippets/mcp-connect-banner.mdx';
+
+<McpConnectBanner />
+
 <Info>
   **Resumo:** esta página lista todas as tools do MCP Server da GYRA+, agrupadas por domínio (autenticação, relatórios, políticas, webhooks). Cada entrada descreve o que a tool faz, os parâmetros principais e um exemplo de prompt natural que costuma invocá-la.
 </Info>
 
 <Note>
-  Estas são as tools do **MCP da GYRA+**, que conecta um agente de IA seu à API com uma credencial de integração. O [Assistente GYRA+](/plataforma/assistente-gyra), dentro do Toolbox, é outra coisa: ele age com o login de quem pergunta, lê a tela aberta e tem ações próprias (montar esteira completa, criar camada, editar termos e modelos de contrato, agir em execuções, solicitações e cadastros), que não fazem parte deste catálogo.
+  O MCP da GYRA+ conecta um agente de IA seu à plataforma com o **seu login**. Além das tools da API (abaixo), ele traz as **ações do [Assistente GYRA+](/plataforma/assistente-gyra)**, com o prefixo `gyra_`: montar e editar esteira, criar e salvar política, editar formulários, termos e modelos de contrato, agir em execuções, solicitações e cadastros. Ver [Ações do Assistente GYRA+](#ações-do-assistente).
 </Note>
 
 ## Autenticação
@@ -240,6 +244,150 @@ Cria ou atualiza uma assinatura. **Lista de eventos vazia quer dizer todos.** O 
 
 - **Prompt típico**: *"assina os eventos de parecer de documento e de solicitação concluída no meu endpoint"*.
 
+## Ações do Assistente
+
+As mesmas ações que o [Assistente GYRA+](/plataforma/assistente-gyra) executa dentro do Toolbox aparecem no MCP com o prefixo `gyra_` (por exemplo, `gyra_policy_save`). A lista é montada **a cada conexão, para você**:
+
+- **Permissões do seu papel**: sem permissão para gerenciar políticas, as tools de política não aparecem. É o mesmo corte das telas.
+- **Módulos da organização**: Propostas, Onboarding, Formalização e Comunicação só aparecem se a organização contratou o módulo.
+- **Controles do assistente**: se o administrador desligou um grupo de ações ou as escritas do assistente para a organização ou para você, elas somem do MCP também. Ver [Controles e limites](/plataforma/assistente-gyra#controles-e-limites).
+
+### Escrita sempre com prévia
+
+Toda ação marcada como **escrita** funciona em dois passos, e nada é gravado no primeiro:
+
+1. Chamada **sem** `confirm`: devolve só a **prévia** do que vai mudar e um `proposalId`.
+2. O agente mostra a prévia para você. Só com a sua aprovação ele chama de novo com os mesmos dados, `confirm: true` e o mesmo `proposalId`.
+
+Se alguma coisa mudou entre a prévia e a confirmação (outra pessoa editou a política, a esteira ganhou uma etapa), o `proposalId` não confere, nada é gravado e volta uma prévia nova para aprovar de novo.
+
+### Políticas de crédito
+
+| Tool | O que faz | Tipo |
+| ---- | --------- | ---- |
+| `gyra_policy_list` | Lista as políticas da organização | Leitura |
+| `gyra_policy_get` | Lê uma política com grupos, regras e riscos | Leitura |
+| `gyra_policy_catalog` | Consulta o catálogo de regras disponíveis | Leitura |
+| `gyra_policy_check` | Revisa a política antes de salvar ou ativar | Leitura |
+| `gyra_policy_outcomes_compare` | Compara, regra por regra, o que a política viu nos relatórios que deram problema e nos que deram certo | Leitura |
+| `gyra_policy_create` | Cria uma política desativada, em branco ou copiando um modelo da GYRA+ ou outra política da organização | Escrita |
+| `gyra_policy_save` | Salva as alterações da política | Escrita |
+| `gyra_policy_set_active` | Ativa ou desativa a política | Escrita |
+| `gyra_policy_committee_prompts` | Ajusta as instruções do Comitê IA da política (requer a personalização do comitê contratada) | Escrita |
+
+### Esteiras e execuções
+
+| Tool | O que faz | Tipo |
+| ---- | --------- | ---- |
+| `gyra_operation_list`, `gyra_operation_get` | Lista e lê esteiras, etapa por etapa | Leitura |
+| `gyra_operation_catalog` | Consulta o que dá para usar na esteira: tipos de etapa, políticas, produtos, conexões de API, modelos de solicitação e de contrato | Leitura |
+| `gyra_operation_formula_variables` | Confere as variáveis disponíveis para fórmulas e condições | Leitura |
+| `gyra_operation_build` | Monta uma esteira completa | Escrita |
+| `gyra_operation_update` | Altera nome, política principal, etapas (adicionar, configurar, remover, reordenar), partes e assinaturas | Escrita |
+| `gyra_operation_set_active` | Ativa ou desativa a esteira | Escrita |
+| `gyra_execution_list`, `gyra_execution_get` | Lista execuções e lê cada uma etapa por etapa | Leitura |
+| `gyra_execution_api_call` | Lê o pedido e a resposta de uma etapa de Chamada de API | Leitura |
+| `gyra_execution_decide` | Decide uma etapa parada: checkpoint do analista, revisão da oferta, comitê ou voto na alçada | Escrita |
+| `gyra_execution_action` | Refaz uma etapa de API ou o contrato, lembra um aprovador da alçada ou retira o seu voto | Escrita |
+| `gyra_operation_run` | Roda uma esteira para um CPF ou CNPJ | Escrita |
+
+### Modelos de contrato (Formalização)
+
+| Tool | O que faz | Tipo |
+| ---- | --------- | ---- |
+| `gyra_contract_template_list`, `gyra_contract_template_get` | Lista e lê modelos de contrato | Leitura |
+| `gyra_contract_catalog` | Consulta os dados que o contrato pode usar | Leitura |
+| `gyra_contract_template_preview` | Gera o PDF de prévia do contrato, com dados de exemplo ou de uma proposta | Leitura |
+| `gyra_contract_template_update` | Ajusta o modelo | Escrita |
+| `gyra_contract_template_publish` | Publica o modelo | Escrita |
+
+### Produtos, carteiras e propostas (Propostas)
+
+| Tool | O que faz | Tipo |
+| ---- | --------- | ---- |
+| `gyra_product_list`, `gyra_product_get` | Lista e lê produtos | Leitura |
+| `gyra_portfolio_list` | Lista carteiras | Leitura |
+| `gyra_proposal_list`, `gyra_proposal_get` | Lista e lê propostas | Leitura |
+| `gyra_pricing_simulate` | Simula parcelas, taxa e CET de um produto | Leitura |
+| `gyra_product_upsert` | Cria ou altera um produto | Escrita |
+| `gyra_product_set_enabled` | Liga ou desliga o produto | Escrita |
+| `gyra_portfolio_create` | Cria uma carteira | Escrita |
+| `gyra_proposal_settings_update` | Liga ou desliga as carteiras na organização | Escrita |
+| `gyra_proposal_create` | Cria uma proposta | Escrita |
+| `gyra_proposal_run` | Roda a análise da proposta | Escrita |
+
+### Formulários, termos e solicitações (Onboarding)
+
+| Tool | O que faz | Tipo |
+| ---- | --------- | ---- |
+| `gyra_form_template_list`, `gyra_form_template_get` | Lista e lê modelos de formulário | Leitura |
+| `gyra_form_template_upsert` | Cria ou altera um modelo de formulário | Escrita |
+| `gyra_form_template_set_enabled` | Liga ou desliga o modelo | Escrita |
+| `gyra_form_template_link_term` | Liga um termo ao modelo | Escrita |
+| `gyra_term_list`, `gyra_term_get`, `gyra_term_variables` | Lista e lê termos e as variáveis que eles podem usar | Leitura |
+| `gyra_term_check` | Confere os termos contra o modelo e a esteira | Leitura |
+| `gyra_term_save`, `gyra_term_remove` | Salva ou remove um termo | Escrita |
+| `gyra_collection_list`, `gyra_collection_get` | Lista e lê solicitações | Leitura |
+| `gyra_collection_create` | Cria uma solicitação | Escrita |
+| `gyra_collection_review` | Revisa um item que espera você: aprova, pede reenvio ao cliente ou dispensa | Escrita |
+| `gyra_collection_resend`, `gyra_collection_reissue_link` | Reenvia a solicitação ou gera um link novo | Escrita |
+| `gyra_collection_cancel` | Cancela a solicitação | Escrita |
+| `gyra_collection_signatory` | Inclui ou tira um signatário de uma assinatura conjunta | Escrita |
+
+### Cadastros (Onboarding)
+
+| Tool | O que faz | Tipo |
+| ---- | --------- | ---- |
+| `gyra_registry_list`, `gyra_registry_get` | Lista e lê cadastros | Leitura |
+| `gyra_registry_document`, `gyra_registry_audit` | Lê um documento do cadastro e o histórico de alterações | Leitura |
+| `gyra_registry_rule_set` | Lê a régua de validação de documentos | Leitura |
+| `gyra_registry_create` | Cria um cadastro | Escrita |
+| `gyra_registry_update` | Altera o cadastro | Escrita |
+| `gyra_registry_document_action` | Dá o veredito humano num documento (vale sobre o da IA) ou roda a leitura de novo | Escrita |
+
+### Relatórios e balanços
+
+| Tool | O que faz | Tipo |
+| ---- | --------- | ---- |
+| `gyra_report_list_recent`, `gyra_report_status` | Lista relatórios recentes e lê a situação de um relatório | Leitura |
+| `gyra_report_section`, `gyra_report_sources` | Lê uma seção e as fontes consultadas | Leitura |
+| `gyra_report_policy_rules` | Lê o resultado da política regra por regra | Leitura |
+| `gyra_report_committee` | Lê o parecer do Comitê IA | Leitura |
+| `gyra_report_run` | Roda um relatório | Escrita |
+| `gyra_report_deepen` | Aprofunda um relatório existente com uma camada (as fontes extras podem gerar consumo) | Escrita |
+| `gyra_report_committee_run` | Convoca o Comitê IA | Escrita |
+| `gyra_report_section_retry` | Consulta de novo uma seção que falhou | Escrita |
+| `gyra_balance_diagnose` | Confere a leitura de um balanço | Leitura |
+| `gyra_balance_reprocess` | Reprocessa a leitura do balanço do zero (gera nova cobrança por arquivo) | Escrita |
+| `gyra_balance_issue_report` | Registra uma inconsistência na leitura automática para o time GYRA+ corrigir | Escrita |
+
+### Exportação e comunicação
+
+| Tool | O que faz | Tipo |
+| ---- | --------- | ---- |
+| `gyra_export_template_list`, `gyra_export_template_catalog` | Lista modelos de exportação e as seções disponíveis | Leitura |
+| `gyra_export_template_upsert` | Cria ou altera um modelo de exportação | Escrita |
+| `gyra_export_template_set_default`, `gyra_export_template_set_status` | Define o modelo padrão e ativa ou desativa modelos | Escrita |
+| `gyra_communication_status` | Lê a situação do domínio de e-mail, do domínio do link e do WhatsApp | Leitura |
+| `gyra_email_domain_verify`, `gyra_link_domain_verify` | Confere o DNS dos domínios | Leitura |
+| `gyra_email_domain_setup`, `gyra_email_domain_remove` | Cadastra ou remove o domínio de e-mail | Escrita |
+| `gyra_link_domain_setup` | Cadastra o subdomínio próprio do link das solicitações e devolve os registros de DNS | Escrita |
+| `gyra_whatsapp_template_submit` | Envia o texto do convite do WhatsApp próprio para aprovação da Meta (o número é conectado na tela *Configurações, Envio*) | Escrita |
+
+<Note>
+  Criar modelo de contrato e termo **a partir de um arquivo Word** só funciona no Assistente, dentro do Toolbox, porque depende de um anexo da conversa, e por isso essas ações não aparecem no MCP. O mesmo vale para os atalhos de tela e a apresentação de novidades. Pelo MCP, crie o modelo pelo Assistente ou pela tela e use as tools acima para ajustar, conferir e publicar.
+</Note>
+
+### Ajuda e consumo
+
+| Tool | O que faz | Tipo |
+| ---- | --------- | ---- |
+| `gyra_load_playbook` | Carrega o guia de um assunto (política, esteira, formulário, produto, exportação, comunicação, balanços, relatórios): conceitos, regras, ordem dos passos e armadilhas. Vale pedir ao agente que leia o guia antes de montar algo grande | Leitura |
+| `gyra_cite_docs` | Busca na documentação da GYRA+ | Leitura |
+| `gyra_get_user_context` | Diz quem é você, o seu papel e a sua organização | Leitura |
+| `gyra_list_features` | Lista as novidades disponíveis para a organização | Leitura |
+| `gyra_get_organization_usage` | Consumo da organização no período | Leitura |
+
 ## Exemplos encadeados
 
 O poder do MCP aparece quando o agente **encadeia** tools sem você precisar dizer qual chamar:
@@ -265,13 +413,16 @@ O poder do MCP aparece quando o agente **encadeia** tools sem você precisar diz
 
 ## Limitações
 
-- **Tools disponíveis refletem o escopo contratado pela organização.** Features não contratadas retornam erro claro.
+- **Tools disponíveis refletem o escopo contratado pela organização.** Features não contratadas retornam erro claro, e as ações `gyra_*` de um módulo não contratado nem aparecem.
 - **Rate limit aplicável**: mesmas regras da API REST (100 req/min padrão). O cliente MCP retransmite 429 e o modelo espera.
 - **Payloads grandes**: relatórios COMPLETO+ podem exceder o limite de contexto do modelo. Use `get_report_section_by_type` em vez de `get_report` para buscar só o que precisa.
 
 ## Perguntas frequentes
 
 <AccordionGroup>
+  <Accordion title="Por que não vejo uma ação gyra_* que o Assistente faz no Toolbox?">
+    A lista é montada para você a cada conexão: o seu papel precisa da permissão, a organização precisa do módulo e o administrador não pode ter desligado aquele grupo ou as escritas do assistente. Se a lista mudou (permissão nova, módulo contratado), reconecte o cliente MCP para ela ser montada de novo.
+  </Accordion>
   <Accordion title="Posso criar tools customizadas?">
     Por enquanto o catálogo é fechado. Se você precisa de tool específica, fale com o suporte. Se precisa de tool composta, deixe o modelo encadear as existentes (costuma ser suficiente).
   </Accordion>
