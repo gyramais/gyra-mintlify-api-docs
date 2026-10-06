@@ -1,6 +1,6 @@
 ---
 title: "Instalação do MCP"
-description: "Conectar o MCP Server da GYRA+ no Claude.ai, Claude Desktop, Cursor, Claude Code e outros clientes MCP."
+description: "Conectar o MCP Server da GYRA+ no Claude.ai, Claude Desktop, Claude Code, Cursor e outros clientes MCP, entrando com o seu login (e-mail e senha ou Google)."
 icon: "download"
 surface: mcp
 domain: mcp
@@ -9,19 +9,23 @@ lang: tecnica
 ---
 
 <Info>
-  **Resumo:** o MCP da GYRA+ é hospedado por nós em `https://mcp.gyramais.com.br`. Você configura só o **cliente** (Claude.ai, Claude Desktop, Cursor, etc.) e entra com **o seu próprio login da plataforma**: o mesmo e-mail e senha que você usa no toolbox. Nada de credencial separada, nada de abrir chamado. E, principalmente: o agente enxerga exatamente o que **você** enxerga.
+  **Resumo:** o MCP da GYRA+ é hospedado por nós em `https://mcp.gyramais.com.br`. Você configura só o **cliente** (Claude.ai, Claude Desktop, Cursor, etc.) e entra com **o seu próprio login da plataforma**: o mesmo e-mail e senha (ou a mesma conta Google) que você usa no toolbox. Nada de credencial separada, nada de abrir chamado. E, principalmente: o agente enxerga exatamente o que **você** enxerga.
 </Info>
 
 ## Entre com o seu login
 
-Não existe credencial específica de MCP. Suas credenciais são as que você já tem:
+Não existe credencial específica de MCP. Você entra do mesmo jeito que entra no toolbox:
 
-| Campo | O que informar |
-| ----- | -------------- |
-| **Client ID** | O **e-mail** com que você acessa o toolbox |
-| **Client Secret** | A sua **senha** da plataforma |
+| Como você entra no toolbox | Como entra no MCP |
+| -------------------------- | ----------------- |
+| **E-mail e senha** | Os mesmos **e-mail e senha**, na página de login da GYRA+ |
+| **Google** | O botão **Entrar com Google**, com a mesma conta |
 
-Os nomes dos campos vêm do padrão OAuth de client credentials, mas o conteúdo é o seu login. É a mesma autenticação da plataforma, pela mesma rota.
+É a mesma autenticação da plataforma, pela mesma rota: bloqueio por tentativas erradas e as regras de login da sua organização valem igual.
+
+<Warning>
+  **A credencial de integração (API) não entra no MCP.** O Client ID e o Client Secret que você gera em *Configurações, API & MCP* são para integrações servidor a servidor na API REST. Se você colar essas credenciais na página de login do MCP, o acesso é recusado: o MCP precisa saber **quem** está usando, para aplicar as suas permissões.
+</Warning>
 
 ### Por que isso importa
 
@@ -47,7 +51,7 @@ Porque o permissionamento vem junto. **O agente não é um usuário privilegiado
 </Note>
 
 <Warning>
-  **Se você acessa a plataforma por SSO** (Google ou Microsoft) e nunca definiu uma senha, este fluxo não funciona até você cadastrar uma. Fale com o administrador da sua organização.
+  **Entra com Microsoft?** O login com Microsoft ainda não está disponível no MCP. Use e-mail e senha (se você nunca definiu uma senha, fale com o administrador da sua organização). Quem entra com Google usa o botão **Entrar com Google** normalmente.
 </Warning>
 
 ## Endpoint do servidor
@@ -56,9 +60,9 @@ Porque o permissionamento vem junto. **O agente não é um usuário privilegiado
 https://mcp.gyramais.com.br
 ```
 
-## Opção 1, Custom connector no Claude.ai ou Claude Desktop (recomendado)
+## Opção 1, Connector remoto no Claude.ai, Claude Desktop ou Claude Code (recomendado)
 
-Fluxo via **OAuth**: você adiciona o endpoint uma única vez, clica em *Autenticar* e a GYRA+ abre a própria página de login. Você entra com e-mail e senha, e o Claude volta conectado. **É a opção mais segura**: a sua senha é digitada na página da GYRA+ e nunca fica gravada em arquivo de configuração.
+Fluxo via **OAuth**: você adiciona o endpoint uma única vez, clica em *Autenticar* e a GYRA+ abre a própria página de login. Você entra com e-mail e senha ou com Google, e o Claude volta conectado. **É a opção mais segura**: a sua senha é digitada na página da GYRA+ e nunca fica gravada em arquivo de configuração.
 
 <Steps>
   <Step title="Abrir a tela de connectors">
@@ -75,19 +79,33 @@ Fluxo via **OAuth**: você adiciona o endpoint uma única vez, clica em *Autenti
     Clicar em **Authenticate** ao lado do connector recém-adicionado. O Claude abre uma aba no navegador com a página de login da GYRA+.
   </Step>
   <Step title="Entrar com o seu login">
-    Na página de login da GYRA+, informe:
+    Na página de login da GYRA+, escolha uma das formas:
 
-    - **Client ID**: o seu e-mail de acesso ao toolbox
-    - **Client Secret**: a sua senha
+    - **E-mail e senha**: os mesmos do toolbox. Clique em **Autorizar**.
+    - **Entrar com Google**: escolha a conta Google com que você entra no toolbox.
 
-    Confirmar. Você é redirecionado de volta ao Claude com o connector conectado, e o agente passa a operar com as suas permissões.
+    A página mostra para onde o acesso vai ser entregue (por exemplo, `claude.ai`). Confira antes de entrar. Você é redirecionado de volta ao Claude com o connector conectado, e o agente passa a operar com as suas permissões.
   </Step>
   <Step title="Testar">
     Na conversa, pergunte: *"liste minhas últimas 5 análises"*. O Claude escolhe `list_reports` e traz a resposta.
   </Step>
 </Steps>
 
-## Opção 2, Stdio local (Claude Code, Cursor, VS Code, SDKs)
+### Claude Code, connector remoto
+
+No terminal:
+
+```bash
+claude mcp add --transport http gyra https://mcp.gyramais.com.br
+```
+
+Depois, dentro do Claude Code, rode `/mcp`, escolha `gyra` e **Authenticate**. O navegador abre a mesma página de login da GYRA+ (e-mail e senha ou Google) e volta para o Claude Code conectado.
+
+<Note>
+  **Já tinha o connector configurado antes?** Connectors autenticados com a credencial de integração (Client ID e Client Secret de *Configurações, API & MCP*) deixam de funcionar. O Claude pede o login de novo na próxima vez que usar o GYRA+: basta entrar com o seu e-mail e senha ou com Google.
+</Note>
+
+## Opção 2, Stdio local (Cursor, VS Code, SDKs)
 
 Para clientes que rodam o MCP como **processo local via stdio**, use o pacote `@gyramais/mcp-server` (binário `gyra-mcp`) e passe as credenciais como variáveis de ambiente.
 
@@ -271,8 +289,8 @@ Quando o stdio for necessário:
 ## Perguntas frequentes
 
 <AccordionGroup>
-  <Accordion title="Posso usar a Opção 1 (custom connector) no Cursor ou Claude Code?">
-    Hoje o custom connector com OAuth é suportado no Claude.ai e Claude Desktop. Cursor, Claude Code e VS Code usam configuração stdio local (Opção 2).
+  <Accordion title="Quais clientes podem usar a Opção 1 (connector remoto com login)?">
+    Claude.ai, Claude Desktop e Claude Code. Por segurança, a página de login da GYRA+ só entrega o acesso a clientes conhecidos. Cursor, VS Code e SDKs usam a configuração stdio local (Opção 2). Precisa de outro cliente MCP com login remoto? Fale com atendimento@gyramais.com.
   </Accordion>
   <Accordion title="Preciso instalar algo além do cliente?">
     Para a Opção 2, `npx @gyramais/mcp-server` é baixado on demand. Se o ambiente não tem npm, instale Node.js 18+.
@@ -283,7 +301,7 @@ Quando o stdio for necessário:
   <Accordion title="Posso conectar múltiplas organizações?">
     Sim, desde que você tenha **uma conta em cada uma**. Na plataforma, um e-mail pertence a uma única organização, e não há seleção de organização no login: a sessão já vem amarrada à organização daquele usuário.
 
-    Então cada entrada precisa de um **e-mail diferente**. Para stdio, adicione várias entradas em `mcpServers` com nomes distintos (ex: `gyra-orgA`, `gyra-orgB`), cada uma com as credenciais da conta correspondente. Para custom connector, adicione múltiplos connectors no Claude e autentique cada um com a sua conta.
+    Então cada entrada precisa de um **e-mail diferente**. Para stdio, adicione várias entradas em `mcpServers` com nomes distintos (ex: `gyra-orgA`, `gyra-orgB`), cada uma com as credenciais da conta correspondente. Para connector remoto, adicione múltiplos connectors no Claude e autentique cada um com a sua conta.
 
     Repetir o mesmo e-mail em duas entradas não conecta duas organizações: as duas apontam para a mesma.
   </Accordion>
@@ -297,7 +315,7 @@ Quando o stdio for necessário:
     Não. O MCP usa o seu login da plataforma. As credenciais de **integração servidor a servidor** na API REST são outro caso de uso, e você mesmo as gera em *Configurações, API & MCP*. Ver [Chaves de API](/api-reference/api-keys).
   </Accordion>
   <Accordion title="Uso SSO (Google ou Microsoft). Como conecto?">
-    Este fluxo exige senha. Se você nunca definiu uma, fale com o administrador da sua organização antes de configurar o MCP.
+    **Google**: na Opção 1, use o botão **Entrar com Google** na página de login da GYRA+. **Microsoft**: ainda não disponível no MCP; use e-mail e senha. A Opção 2 (stdio) sempre exige senha. Se você nunca definiu uma, fale com o administrador da sua organização.
   </Accordion>
 </AccordionGroup>
 
