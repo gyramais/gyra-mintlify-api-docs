@@ -12,7 +12,7 @@ openapi: post /integration/blocklist
 
 Para registrar na organização um conjunto de CPFs e CNPJs que não devem passar: fraudes confirmadas, clientes descredenciados, contrapartes vetadas pelo compliance. O conceito está em [Listas de Bloqueio](/concepts/listas-de-bloqueio).
 
-Criar a lista **também cria as regras de política** que consultam ela, uma por categoria de vínculo (documento analisado, sócio, segundo nível, terceiro nível, filial, mesmo endereço, parentesco). Elas passam a aparecer no editor de política com o nome da lista.
+Criar a lista **também cria as regras de política** que consultam ela: uma por categoria de vínculo (documento analisado, sócio, segundo nível, terceiro nível, filial, mesmo endereço, parentesco) e quatro de contato (e-mail principal, e-mail adicional, telefone principal, telefone adicional). Elas passam a aparecer no editor de política com o nome da lista.
 
 ### Parâmetros
 
@@ -20,6 +20,7 @@ Criar a lista **também cria as regras de política** que consultam ela, uma por
 |---|---|---|---|---|
 | `name` | `body` | `string` | `sim` | Nome da lista. Vira também o título das regras geradas, então escolha algo legível na política. |
 | `documents` | `body` | `string[]` | `não` | CPFs e CNPJs a bloquear. Pode criar a lista vazia e preencher depois. |
+| `contacts` | `body` | `string[]` | `não` | E-mails e telefones a bloquear. Ver [Contatos](/concepts/listas-de-bloqueio#contatos-e-mail-e-telefone). |
 
 <Note>
   A organização e o autor vêm **do token**, nunca do corpo. Não existe campo `organizationId` aqui: uma lista pertence sempre à organização de quem a criou.
@@ -33,7 +34,8 @@ curl -X POST https://gyra-core.gyramais.com.br/integration/blocklist \
   -H 'Content-Type: application/json' \
   -d '{
     "name": "Fraudes confirmadas 2026",
-    "documents": ["12345678000199", "98765432100"]
+    "documents": ["12345678000199", "98765432100"],
+    "contacts": ["contato@exemplo.com.br", "(11) 3333-4444"]
   }'
 ```
 
@@ -55,6 +57,7 @@ Guarde o `id`: é ele que vai em `blocklistsIds` ao configurar a política.
 | Regra | Valor |
 |---|---|
 | Documentos por requisição | Até 5.000 |
+| Contatos por requisição | Até 5.000 |
 | Tamanho do corpo | 2 MB nesta rota, acima do padrão das demais |
 | Permissão | `can-manage-settings` |
 

@@ -38,9 +38,9 @@ A checagem de "está na lista?" só resolve de verdade quando ela alcança **que
 
 ---
 
-## As sete verificações
+## As sete verificações de documento
 
-Cada lista gera uma regra por categoria. Todas respondem a mesma pergunta, **sim ou não**: existe alguém dessa categoria que está na lista?
+Cada lista gera uma regra de documento por categoria. Todas respondem a mesma pergunta, **sim ou não**: existe alguém dessa categoria que está na lista?
 
 | Regra | O que verifica |
 | --- | --- |
@@ -57,6 +57,27 @@ As regras de relacionado agregam por **"qualquer um"**: basta um relacionado daq
 <Note>
   As categorias de relacionado dependem da profundidade de vínculos que o tipo de relatório contrata. Um relatório simples enxerga menos níveis que um completo, e uma regra sem dado de entrada não é avaliada.
 </Note>
+
+---
+
+## Contatos: e-mail e telefone
+
+Além de CPF e CNPJ, a lista aceita **e-mails** e **telefones**. Em **Configurações**, a lista tem duas abas, **Documentos** e **Contatos**, e a listagem filtra por **Documentos**, **E-mails** e **Telefones**.
+
+Cada lista gera quatro regras de contato, além das sete de documento:
+
+| Regra | O que verifica |
+| --- | --- |
+| `BLOCKLIST_EMAIL_PRINCIPAL` | O e-mail principal do caso, o do cabeçalho dos dados cadastrais, está na lista |
+| `BLOCKLIST_EMAIL_ADICIONAL` | Algum dos demais e-mails do caso está na lista |
+| `BLOCKLIST_TELEFONE_PRINCIPAL` | O telefone principal do caso está na lista |
+| `BLOCKLIST_TELEFONE_ADICIONAL` | Algum dos demais telefones do caso está na lista |
+
+- Os contatos vêm das fontes cadastrais que o relatório já consulta, para CNPJ e CPF, sem consulta nova.
+- A comparação ignora diferenças de escrita: e-mail sem distinção de maiúsculas, telefone só pelos dígitos, com DDD.
+- As regras de contato olham só o caso analisado, não os relacionados.
+- Listas criadas antes dos contatos ganharam as quatro regras automaticamente, sem mudar nenhuma política.
+- No relatório, o contato que consta numa lista ganha um indicador ao lado do valor. Pela API, o mapa vem em `blocklistContactsByValue` na [seção de Informações Básicas](/data/secao-informacoes-basicas#contatos-em-lista-bloqueada).
 
 ---
 

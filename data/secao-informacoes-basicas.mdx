@@ -60,6 +60,26 @@ Os campos de contato e endereço chegam com um **prefixo histórico** herdado da
   Leia esse bloco varrendo as chaves do fragmento, em vez de fixar o nome completo. O sufixo (`PrimaryAddress`, `PrimaryEmail`) é o que identifica o dado.
 </Note>
 
+## Contatos em lista bloqueada
+
+Quando algum contato do caso consta numa [lista bloqueada](/concepts/listas-de-bloqueio#contatos-e-mail-e-telefone) da sua organização, o fragmento traz `blocklistContactsByValue`.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `blocklistContactsByValue` | object | Mapa do contato para os nomes das listas em que ele consta: `{ "<contato>": ["<nome da lista>"] }`. |
+
+```json
+{
+  "blocklistContactsByValue": {
+    "contato@exemplo.com.br": ["Fraudes confirmadas"],
+    "1133334444": ["Fraudes confirmadas", "Cobrança"]
+  }
+}
+```
+
+- A chave é o contato **normalizado**: e-mail em minúsculas, telefone só com dígitos, com DDD e sem o nono dígito. Normalize o valor exibido da mesma forma antes de procurar no mapa.
+- O campo **só aparece quando há pelo menos um contato na lista**. Ausência do campo não significa que a verificação rodou: quem decide é a política, em que a regra de contato termina em erro quando a verificação não aconteceu.
+
 ## Vínculos e metadados
 
 | Campo | Tipo | Descrição |

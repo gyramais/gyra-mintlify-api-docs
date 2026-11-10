@@ -1316,6 +1316,11 @@ components:
           items:
             type: string
           description: 'CPFs e CNPJs a bloquear. Ate 5000 por requisicao.'
+        contacts:
+          type: array
+          items:
+            type: string
+          description: 'E-mails e telefones a bloquear. Ate 5000 por requisicao.'
       required:
         - name
     EditBlocklistDto:
@@ -1329,6 +1334,11 @@ components:
           items:
             type: string
           description: Nova lista de documentos.
+        contacts:
+          type: array
+          items:
+            type: string
+          description: Nova lista de contatos (e-mails e telefones). Substitui o conteudo; null responde 400.
     CreateWebhookDto:
       type: object
       properties:

@@ -19,9 +19,10 @@ Para acrescentar ou remover documentos da lista, ou para renomeá-la.
 | `id` | `path` | `string` | `sim` | ID da lista. |
 | `name` | `body` | `string` | `não` | Novo nome. |
 | `documents` | `body` | `string[]` | `não` | Nova lista de documentos. |
+| `contacts` | `body` | `string[]` | `não` | Nova lista de contatos (e-mails e telefones). |
 
 <Warning>
-  `documents` **substitui** o conteúdo, não acrescenta. Para adicionar itens, envie a lista completa já com os novos.
+  `documents` e `contacts` **substituem** o conteúdo, não acrescentam. Para adicionar itens, envie a lista completa já com os novos. Campo ausente fica como está; `"contacts": null` responde `400`.
 </Warning>
 
 ### Exemplo
