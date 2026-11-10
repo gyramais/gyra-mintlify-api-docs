@@ -12,6 +12,20 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ---
 
+## Novembro 2026
+
+### Lista bloqueada com e-mails e telefones
+
+**Novidades**
+- **Contatos na lista bloqueada:** além de CPF e CNPJ, a lista bloqueada passa a aceitar **e-mails** e **telefones**, em abas separadas (**Documentos** e **Contatos**) em **Configurações**.
+- **Quatro regras novas na política:** **E-mail principal**, **E-mail adicional**, **Telefone principal** e **Telefone adicional** presentes na lista bloqueada, com o mesmo operador de sim ou não das regras de documento. Valem para CNPJ e CPF e usam os contatos que o relatório já consulta, sem custo novo. As listas que já existiam ganharam as quatro regras automaticamente. Ver [Política de crédito](/concepts/politica-de-credito#regras-de-contato-na-lista-bloqueada).
+- **Indicador no relatório:** o contato que consta numa lista bloqueada ganha um indicador ao lado do valor na seção de dados cadastrais, e a seção `BASIC_INFORMATION` passa a trazer o campo `blocklistContactsByValue`. Ver [Informações Básicas](/data/secao-informacoes-basicas#contatos-em-lista-bloqueada).
+
+**Melhorias**
+- Se a verificação da lista bloqueada não rodou para o caso, a regra de contato termina em **erro**, em vez de passar como "nada encontrado".
+
+---
+
 ## Outubro 2026
 
 ### Esteiras para qualquer jornada, Onboarding, Assistente que executa e um Início que guia

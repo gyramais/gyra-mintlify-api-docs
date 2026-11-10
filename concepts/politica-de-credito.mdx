@@ -265,6 +265,22 @@ Você tem três formas de trabalhar com políticas:
 Para criar ou editar políticas pelo painel, acesse **Motor de crédito**, **Políticas** no menu do Toolbox.
 Para gerenciar via API, veja a [referência do endpoint de políticas](/api-reference/credit-policypolicy/get-credit-policypolicy).
 
+## Regras de contato na lista bloqueada
+
+Uma lista bloqueada pode ter, além de CPF e CNPJ, **e-mails** e **telefones**. Cada lista oferece quatro regras de contato, com o operador **contém** (sim ou não):
+
+| Regra | Avalia |
+|---|---|
+| E-mail principal presente na lista bloqueada | O e-mail principal do caso, o mesmo do cabeçalho dos dados cadastrais |
+| E-mail adicional presente na lista bloqueada | Os demais e-mails do caso |
+| Telefone principal presente na lista bloqueada | O telefone principal do caso |
+| Telefone adicional presente na lista bloqueada | Os demais telefones do caso |
+
+- Valem para políticas de CNPJ e de CPF e usam os contatos que as fontes cadastrais do relatório já trazem, sem consulta nova.
+- Separar tipo e posição permite, por exemplo, bloquear só por e-mail ou só pelo contato principal.
+- A comparação ignora diferenças de escrita: e-mail sem distinção de maiúsculas, telefone só pelos dígitos, com DDD.
+- Caso sem nenhum contato termina como "não encontrado", sem alerta. Se a verificação da lista não rodou para o caso, a regra termina em **erro**, em vez de aprovar em silêncio.
+
 <Note>
 **Regra `Tem mandato`:** disponível para uso em políticas de PF (relatórios COMPLETO e COMPLETO+). Avalia se o CPF possui mandado de prisão ativo no CNJ no mês corrente. Veja detalhes na seção [CRIMINAL_RECORD](/concepts/secoes#an%C3%A1lise-de-risco).
 </Note>
