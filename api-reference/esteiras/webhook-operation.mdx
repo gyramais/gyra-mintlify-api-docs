@@ -201,7 +201,7 @@ Quando a esteira reprova antes do Resultado (num Checkpoint ou numa camada que r
 | Campo | O que é |
 | --- | --- |
 | `offer` | A oferta da execução, no formato do seu produto. `null` sem oferta |
-| `offerStatus` | `FINAL` (oferta fechada no fim da execução), `PROPOSED` (oferta calculada, ainda esperando a escolha ou a revisão) ou `null` |
+| `offerStatus` | `FINAL` (oferta fechada no fim da execução), `PROPOSED` (oferta calculada pelo bloco de Decisão, esperando a revisão do analista) ou `null` |
 
 ### `reports`
 
@@ -231,7 +231,8 @@ Os avisos `OPERATION_WAITING_OPERATOR`, `OPERATION_WAITING_CUSTOMER` e `OPERATIO
 
 - `status` vem `PENDING` e `finishedAt` vem `null`.
 - `decision.finalDecision` fica `null` até a esteira decidir.
-- Na espera pela escolha do cliente, `offer` traz a oferta calculada e `offerStatus` vem `PROPOSED`.
+- Na revisão da oferta pelo analista, `offer` traz a oferta calculada e `offerStatus` vem `PROPOSED`.
+- Na espera pela escolha do cliente, `offer` e `offerStatus` vêm `null`: a faixa oferecida está na proposta, e a oferta escolhida chega no `OPERATION_FINISHED`.
 - `reports` já lista os relatórios que existem, com o resultado das políticas aplicadas até ali.
 
 ## Payload básico
@@ -266,7 +267,7 @@ Sem `decision` no corpo, busque o resultado pela API: `GET /operation/result-lea
     Os avisos de parada e de retomada são para acompanhamento. A decisão vale no `OPERATION_FINISHED`.
   </Accordion>
   <Accordion title="O webhook CREDIT_POLICY sai por camada">
-    Se a sua organização também assina `CREDIT_POLICY`, ele chega uma vez para cada política avaliada, inclusive cada camada do Aprofundar. Para a esteira, use o `OPERATION`: ele já junta todas as camadas em `reports[].policies`.
+    Se a sua organização também assina `CREDIT_POLICY`, ele chega uma vez para cada política cujo resultado muda, inclusive cada camada do Aprofundar. Uma camada sem regras já nasce decidida e não gera esse aviso. Para a esteira, use o `OPERATION`: ele já junta todas as camadas em `reports[].policies`.
   </Accordion>
   <Accordion title="Responda 2xx rápido">
     A GYRA+ tenta entregar até 3 vezes, com backoff. Responda logo e processe numa fila sua. Mantenha um fallback com `GET /operation/result-leafs` para avisos perdidos.
