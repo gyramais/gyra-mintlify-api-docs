@@ -93,7 +93,7 @@ curl -X POST https://gyra-core.gyramais.com.br/operation/run \
 | --- | --- |
 | `operationResultId` | Id da execução. É o id que vem em todos os avisos do webhook |
 | `reportId` | O relatório raiz, quando a primeira etapa gera relatório |
-| `reused` | `true` quando já existia uma execução do mesmo dia, da mesma versão da esteira e do mesmo documento, ainda válida: nada novo rodou e a resposta aponta para ela |
+| `reused` | `true` quando já existia uma execução do mesmo dia, da mesma versão da esteira, do mesmo documento e com os mesmos dados de entrada, que não terminou em erro (em andamento ou já encerrada): nada novo rodou e a resposta aponta para ela. Uma execução reaproveitada não gera aviso novo no webhook |
 
 A execução continua sozinha depois da resposta. Mensagens de recusa (esteira inativa, documento inválido, tipo de documento errado) em [Execuções](/esteiras/execucoes).
 
