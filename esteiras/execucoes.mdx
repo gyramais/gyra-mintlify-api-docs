@@ -1,6 +1,6 @@
 ---
 title: "Execuções"
-description: "O que acontece quando uma esteira roda: estados, esperas, rodar de novo, proposta encerrada, fechamento externo e o webhook de fim de execução."
+description: "O que acontece quando uma esteira roda: estados, esperas, rodar de novo, proposta encerrada, fechamento externo e o webhook da execução."
 icon: "play"
 surface: conceito
 domain: esteira
@@ -11,7 +11,7 @@ lang: nao-tecnica
 Uma execução é uma rodada da esteira para um CPF ou CNPJ, do primeiro relatório à última assinatura, com cada passo e cada decisão registrados.
 
 <Info>
-  **Resumo:** a execução roda a versão da esteira com que começou, para quando precisa de alguém (analista, aprovador, cliente ou parceiro) e termina com um selo: aprovada, reprovada, concluída ou erro. Ao terminar, sua organização recebe o webhook `OPERATION`.
+  **Resumo:** a execução roda a versão da esteira com que começou, para quando precisa de alguém (analista, aprovador, cliente ou parceiro) e termina com um selo: aprovada, reprovada, concluída ou erro. Ao parar, retomar e terminar, sua organização recebe o webhook `OPERATION`.
 </Info>
 
 ## Como uma execução começa
@@ -124,9 +124,18 @@ Content-Type: application/json
 
 Repetir o mesmo fechamento devolve `200` com o mesmo resultado. Depois do fechamento, as etapas seguintes podem usar `fechamento.referencia`, `fechamento.data` e `fechamento.documento`. Resposta, erros e exemplos em [Fechamento externo](/api-reference/esteiras/fechamento-externo).
 
-## Webhook de fim de execução
+## Webhook da execução
 
-Quando a execução termina, a GYRA+ envia o webhook do tipo `OPERATION` (nome público `operation.updated`) para as URLs cadastradas para esse tipo:
+A execução avisa o seu sistema pelo webhook do tipo `OPERATION` (nome público `operation.updated`), enviado para as URLs cadastradas para esse tipo. Cada aviso tem um `event`:
+
+| `event` | Quando |
+| --- | --- |
+| `OPERATION_WAITING_OPERATOR` | A execução parou esperando alguém da operação (Checkpoint, decisão no relatório, Enquadramento de produto, revisão da pré-aprovação, Revisão da oferta, alçada) |
+| `OPERATION_WAITING_CUSTOMER` | A execução parou esperando o cliente escolher a oferta |
+| `OPERATION_RESUMED` | A parada foi respondida e a execução voltou a andar |
+| `OPERATION_FINISHED` | A execução terminou |
+
+O aviso de fim traz a decisão da esteira, a oferta, o relatório raiz e todos os relatórios da execução, com o status, o risco e o score de cada política aplicada, inclusive as camadas. Os campos de antes continuam:
 
 ```json
 {
@@ -136,7 +145,13 @@ Quando a execução termina, a GYRA+ envia o webhook do tipo `OPERATION` (nome p
     "operationId": "6612a7f30000000000000100",
     "operationResultId": "6612a7f30000000000000101",
     "document": "43591367000130",
-    "status": "APPROVED"
+    "status": "APPROVED",
+    "event": "OPERATION_FINISHED",
+    "eventId": "6612a7f30000000000000101:OPERATION_FINISHED:APPROVED",
+    "decision": { "finalDecision": "APPROVED", "route": "APPROVE" },
+    "offer": null,
+    "rootReportId": "6612a7f30000000000000300",
+    "reports": [ { "reportId": "6612a7f30000000000000300", "policies": [] } ]
   }
 }
 ```
@@ -146,9 +161,10 @@ Quando a execução termina, a GYRA+ envia o webhook do tipo `OPERATION` (nome p
 | `operationId` | Id da esteira |
 | `operationResultId` | Id da execução |
 | `document` | CPF ou CNPJ analisado |
-| `status` | Selo final: `APPROVED`, `REPROVED`, `COMPLETED` ou `ERROR` |
+| `status` | Selo final no fim: `APPROVED`, `REPROVED`, `COMPLETED` ou `ERROR`. Nas paradas e retomadas, `PENDING` |
+| `event`, `eventId` | O evento e o identificador do aviso, estável nas repetições |
 
-O webhook sai **uma vez, no fim da execução**. Não há evento por etapa, por voto de alçada ou por espera. Se o webhook tiver chave cadastrada, ela vai no header `api-key`.
+Não há aviso por etapa nem por voto de alçada. O Comitê de crédito IA deliberando e uma Solicitação em aberto não geram aviso de espera. Se o webhook tiver chave cadastrada, ela vai no header `api-key`. Todos os campos, o payload básico e como deduplicar em [Webhook OPERATION](/api-reference/esteiras/webhook-operation).
 
 <Note>
   Quando a esteira tem Comitê de crédito IA, o fim da deliberação também gera o webhook `COMMITTEE_FINISHED`, se a sua organização o cadastrou.
@@ -164,5 +180,11 @@ Como cadastrar: [Webhooks e API keys](/toolbox/webhooks-e-api-keys) e [Criar web
   </Card>
   <Card title="Fechamento externo" icon="code" href="/api-reference/esteiras/fechamento-externo">
     Referência completa de `POST /operation/close`.
+  </Card>
+  <Card title="Webhook OPERATION" icon="webhook" href="/api-reference/esteiras/webhook-operation">
+    Eventos de parada, retomada e fim, com decisão, oferta e relatórios.
+  </Card>
+  <Card title="Esteira incremental pela API" icon="stairs" href="/api-reference/esteiras/esteira-incremental">
+    Simples, Essencial e Completo parando cedo, e o que é cobrado.
   </Card>
 </CardGroup>

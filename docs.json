@@ -281,7 +281,9 @@
           "api-reference/propostas/produtos-e-precificacao",
           "api-reference/propostas/gerencial",
           "api-reference/propostas/dados-de-entrada",
-          "api-reference/esteiras/fechamento-externo"
+          "api-reference/esteiras/fechamento-externo",
+          "api-reference/esteiras/esteira-incremental",
+          "api-reference/esteiras/webhook-operation"
         ]
       },
       {

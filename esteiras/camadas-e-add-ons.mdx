@@ -42,7 +42,7 @@ Tentar rodar sozinha uma política de uso Esteira, camada ou não, é recusado: 
   </Step>
 </Steps>
 
-O relatório não é duplicado nem cobrado de novo como relatório novo. Se a mesma camada for aplicada duas vezes ao mesmo relatório, a segunda vez não refaz nada. Ela só é reaplicada quando a política da camada ganhou versão nova ou quando o relatório foi reaberto por um **Rodar de novo**.
+O relatório não é duplicado nem cobrado de novo como relatório novo: ele é cobrado uma vez, pelo pacote de maior nível entre o da Análise e o das camadas concluídas (Simples com camada Completo cobra Completo). Veja [Esteira incremental pela API](/api-reference/esteiras/esteira-incremental). Se a mesma camada for aplicada duas vezes ao mesmo relatório, a segunda vez não refaz nada. Ela só é reaplicada quando a política da camada ganhou versão nova ou quando o relatório foi reaberto por um **Rodar de novo**.
 
 ### Fontes reaproveitadas
 
