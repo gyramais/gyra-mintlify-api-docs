@@ -128,7 +128,7 @@ Cada webhook é registrado para **um único tipo**. Se você quer receber mais d
 | `REPORT_EXPORTED` | Exportação (PDF ou XLS) do relatório foi gerada e está disponível por URL, ou falhou. |
 | `CREDIT_POLICY` | Política de crédito foi avaliada e o status mudou (resultado final do motor de regras). |
 | `COMMITTEE_FINISHED` | [Comitê de Crédito IA](/concepts/comite-de-credito) concluiu (ou falhou) a deliberação do relatório, tanto na convocação automática quanto na manual. |
-| `OPERATION` | Operação (fluxo multi-relatório com cadeia de políticas) concluiu com status final. |
+| `OPERATION` | Execução de esteira parou esperando alguém, retomou ou terminou (campo `event`). O aviso de fim traz decisão, oferta e relatórios. |
 
 <Warning>
   Os webhooks da organização são copiados para o relatório **na criação dele**. Se você registrar um tipo novo depois, ele não dispara para relatórios que já existiam.
@@ -257,9 +257,17 @@ O payload é enxuto de propósito: decisão e síntese. Os votos individuais dos
   "operationId": "6612a7f30000000000000100",
   "operationResultId": "6612a7f30000000000000101",
   "document": "43591367000130",
-  "status": "APPROVED"
+  "status": "APPROVED",
+  "event": "OPERATION_FINISHED",
+  "eventId": "6612a7f30000000000000101:OPERATION_FINISHED:APPROVED",
+  "decision": { "finalDecision": "APPROVED", "route": "APPROVE", "finalScore": 712 },
+  "offer": null,
+  "rootReportId": "6612a7f30000000000000300",
+  "reports": [ { "reportId": "6612a7f30000000000000300", "policies": [] } ],
+  "reportsTruncated": false
 }
 ```
+Também sai nas paradas (`OPERATION_WAITING_OPERATOR`, `OPERATION_WAITING_CUSTOMER`) e na retomada (`OPERATION_RESUMED`). Todos os campos em [Webhook OPERATION](/api-reference/esteiras/webhook-operation).
 
 ### Retry
 

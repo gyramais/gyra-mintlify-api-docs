@@ -1,0 +1,285 @@
+---
+title: "Webhook OPERATION"
+description: "O aviso que a esteira manda quando para esperando alguém, quando retoma e quando termina, com a decisão, a oferta e todos os relatórios da execução."
+icon: "webhook"
+surface: api
+domain: esteira
+audience: integrador
+lang: tecnica
+---
+
+O webhook `OPERATION` diz ao seu sistema em que pé está uma execução de esteira e traz o resultado inteiro, para você não precisar consultar a API em loop.
+
+<Info>
+  **Resumo:** cada aviso tem um `event` (parada, retomada ou fim) e um `eventId` estável para deduplicar. O aviso de fim traz a decisão da esteira, a oferta, o relatório raiz e a lista de relatórios da execução, com o status, o risco e o score de cada política aplicada, inclusive as camadas. Os 4 campos antigos (`operationId`, `operationResultId`, `document`, `status`) continuam iguais.
+</Info>
+
+## Quando o webhook sai
+
+| `event` | Quando |
+| --- | --- |
+| `OPERATION_WAITING_OPERATOR` | A execução parou esperando alguém da sua operação: Checkpoint, decisão no relatório, Enquadramento de produto, revisão da pré-aprovação, Revisão da oferta ou aprovação da alçada |
+| `OPERATION_WAITING_CUSTOMER` | A execução parou esperando o cliente escolher a oferta |
+| `OPERATION_RESUMED` | Uma parada foi respondida e a execução voltou a andar |
+| `OPERATION_FINISHED` | A execução terminou: aprovada, reprovada, concluída ou com erro |
+
+Não geram aviso: o Comitê de crédito IA deliberando, uma Solicitação de documentos em aberto e o avanço normal de uma etapa para a outra. Não existe aviso por etapa.
+
+Cada parada gera **um** aviso de espera e, quando respondida, **um** aviso de retomada. O fim gera **um** aviso por execução. Isso vale com ou sem proposta: a execução aberta por `POST /operation/run` também recebe os avisos de espera e de retomada.
+
+<Note>
+  Os avisos vão para as URLs cadastradas para o tipo `OPERATION`. Como cadastrar: [Criar webhook](/api-reference/webhook/post-webhook) e [Webhooks e API keys](/toolbox/webhooks-e-api-keys).
+</Note>
+
+## Envelope
+
+O envelope é o mesmo dos outros webhooks de relatório e crédito. Se o webhook tem chave cadastrada, ela vai no header `api-key`.
+
+```json
+{
+  "organizationId": "6612a7f30000000000000001",
+  "webhookType": "OPERATION",
+  "data": { "...": "o corpo descrito abaixo" }
+}
+```
+
+## Corpo do aviso de fim
+
+Exemplo de uma esteira Simples, Essencial e Completo, aprovada no Resultado:
+
+```json
+{
+  "operationId": "6612a7f30000000000000100",
+  "operationResultId": "6612a7f30000000000000101",
+  "document": "43591367000130",
+  "status": "APPROVED",
+  "event": "OPERATION_FINISHED",
+  "eventId": "6612a7f30000000000000101:OPERATION_FINISHED:APPROVED",
+  "emittedAt": "2026-11-13T14:02:11.480Z",
+  "operationVersion": 7,
+  "finishedAt": "2026-11-13T14:02:11.102Z",
+  "decision": {
+    "finalDecision": "APPROVED",
+    "route": "APPROVE",
+    "decidedBy": "POLICY",
+    "decidedAt": "2026-11-13T14:02:10.950Z",
+    "finalScore": 712,
+    "decidingStep": {
+      "id": "6612a7f30000000000000204",
+      "name": "Resultado",
+      "kind": "RESULT"
+    },
+    "decidingPolicy": {
+      "id": "6612a7f30000000000000030",
+      "name": "Completo PJ",
+      "version": 1.03,
+      "status": "APPROVED",
+      "risk": "LOW",
+      "score": 712
+    },
+    "reasons": [
+      {
+        "title": "Restrições",
+        "severity": "ALERT",
+        "conditions": [
+          {
+            "description": "Protestos em cartório nos últimos 12 meses",
+            "observedValue": 1
+          }
+        ]
+      }
+    ],
+    "variant": null
+  },
+  "offer": {
+    "productId": "6612a7f30000000000000500",
+    "amount": 50000,
+    "installments": 12
+  },
+  "offerStatus": "FINAL",
+  "rootReportId": "6612a7f30000000000000300",
+  "reports": [
+    {
+      "reportId": "6612a7f30000000000000300",
+      "document": "43591367000130",
+      "documentType": "CNPJ",
+      "relationshipLevel": "ROOT",
+      "relationshipKind": null,
+      "status": null,
+      "policies": [
+        {
+          "policyId": "6612a7f30000000000000010",
+          "version": 1.02,
+          "stepId": "6612a7f30000000000000201",
+          "stepName": "Simples",
+          "asLayer": false,
+          "status": "APPROVED",
+          "risk": "LOW",
+          "score": null
+        },
+        {
+          "policyId": "6612a7f30000000000000020",
+          "version": 1.04,
+          "stepId": "6612a7f30000000000000202",
+          "stepName": "Essencial",
+          "asLayer": true,
+          "status": "APPROVED",
+          "risk": "LOW",
+          "score": 698
+        },
+        {
+          "policyId": "6612a7f30000000000000030",
+          "version": 1.03,
+          "stepId": "6612a7f30000000000000203",
+          "stepName": "Completo",
+          "asLayer": true,
+          "status": "APPROVED",
+          "risk": "LOW",
+          "score": 712
+        }
+      ]
+    },
+    {
+      "reportId": "6612a7f30000000000000301",
+      "document": "12345678909",
+      "documentType": "CPF",
+      "relationshipLevel": "ASSOCIATES",
+      "relationshipKind": "SOCIO_ADMINISTRADOR",
+      "status": null,
+      "policies": [
+        {
+          "policyId": "6612a7f30000000000000040",
+          "version": 1.01,
+          "stepId": "6612a7f30000000000000205",
+          "stepName": "Sócios",
+          "asLayer": false,
+          "status": "APPROVED",
+          "risk": "MEDIUM",
+          "score": null
+        }
+      ]
+    }
+  ],
+  "reportsTruncated": false
+}
+```
+
+O exemplo é ilustrativo: a forma de `offer` e os valores de `risk` seguem a sua configuração de produto e de política.
+
+### Campos de identificação
+
+| Campo | O que é |
+| --- | --- |
+| `operationId` | Id da esteira |
+| `operationResultId` | Id da execução |
+| `document` | CPF ou CNPJ analisado, sem máscara |
+| `status` | Status da execução no momento do aviso. No fim: `APPROVED`, `REPROVED`, `COMPLETED` ou `ERROR`. Numa parada ou retomada: `PENDING` |
+| `event` | Um dos quatro eventos da tabela acima |
+| `eventId` | Identificador do aviso. Repetições do mesmo aviso trazem o mesmo `eventId`: use para deduplicar |
+| `emittedAt` | Quando o aviso foi montado |
+| `operationVersion` | Versão da esteira com que a execução começou |
+| `finishedAt` | Quando a execução terminou. `null` nos avisos de parada e de retomada |
+
+### `decision`
+
+| Campo | O que é |
+| --- | --- |
+| `finalDecision` | `APPROVED`, `ALERT` ou `REPROVED`. `null` enquanto a execução não decidiu e numa esteira que termina sem decisão de crédito |
+| `route` | O caminho do Resultado: `APPROVE`, `REPROVE` ou `REVIEW`. Sem etapa Resultado, sai da decisão final |
+| `decidedBy` | `POLICY` (a política decidiu sozinha), `ANALYST` (alguém decidiu na tela) ou `COMMITTEE` (Comitê de crédito IA) |
+| `decidedAt` | Quando a decisão foi registrada |
+| `finalScore` | Score final da execução, quando a esteira calcula um |
+| `decidingStep` | A etapa que decidiu: `id`, `name` e `kind` |
+| `decidingPolicy` | A política que decidiu: `id`, `name`, `version`, `status`, `risk` e `score` |
+| `reasons` | Os alertas da política que decidiu, em grupos com `title`, `severity` e `conditions` (`description` e `observedValue`) |
+| `variant` | A variante do Resultado que valeu (`id` e `label`), quando a esteira tem teste A/B |
+
+Quando a esteira reprova antes do Resultado (num Checkpoint ou numa camada que reprova), `decidingStep` e `decidingPolicy` apontam para essa etapa.
+
+### `offer`
+
+| Campo | O que é |
+| --- | --- |
+| `offer` | A oferta da execução, no formato do seu produto. `null` sem oferta |
+| `offerStatus` | `FINAL` (oferta fechada no fim da execução), `PROPOSED` (oferta calculada, ainda esperando a escolha ou a revisão) ou `null` |
+
+### `reports`
+
+A lista tem um item por relatório da execução, sem repetir: o relatório raiz primeiro, depois os relatórios dos vínculos (sócios, empresas ligadas, parentes), na ordem em que foram criados.
+
+| Campo | O que é |
+| --- | --- |
+| `rootReportId` | O relatório do documento analisado |
+| `reports[].reportId` | Id do relatório. Leia o conteúdo em `GET /v2/report/{id}` |
+| `reports[].document` | CPF ou CNPJ do relatório |
+| `reports[].documentType` | `CPF` ou `CNPJ` |
+| `reports[].relationshipLevel` | `ROOT` para o documento analisado; nos vínculos, o nível (`ASSOCIATES`, `FIRST_LEVEL`, `KINSHIP` e outros) |
+| `reports[].relationshipKind` | O tipo de vínculo, quando há: `SOCIO_ADMINISTRADOR`, `SOCIO`, `ADMINISTRADOR`, `PROCURADOR`, `CONJUGE`, `PARENTE`, `FILIAL`, `MESMO_ENDERECO` ou `OUTROS` |
+| `reports[].status` | A decisão manual do relatório, quando um analista decidiu: `APPROVED` ou `REJECTED`. `null` quando a decisão ficou com a política |
+| `reports[].policies` | Uma entrada por política aplicada ao relatório: a da Análise e cada camada do Aprofundar |
+| `policies[].asLayer` | `true` quando a política entrou como camada no relatório que já existia |
+| `policies[].status`, `risk`, `score` | O resultado daquela política. `score` é `null` quando a política não calcula score |
+| `reportsTruncated` | `true` quando a execução tem mais de 50 relatórios. A lista completa fica em `GET /operation/result-leafs` |
+
+<Warning>
+  Os documentos dos vínculos são de terceiros. Eles vêm no mesmo escopo de `GET /operation/result-leafs`: guarde só o que você precisa e trate como dado pessoal.
+</Warning>
+
+## Corpo dos avisos de parada e de retomada
+
+Os avisos `OPERATION_WAITING_OPERATOR`, `OPERATION_WAITING_CUSTOMER` e `OPERATION_RESUMED` têm o mesmo corpo, montado com o que a execução já gravou até ali:
+
+- `status` vem `PENDING` e `finishedAt` vem `null`.
+- `decision.finalDecision` fica `null` até a esteira decidir.
+- Na espera pela escolha do cliente, `offer` traz a oferta calculada e `offerStatus` vem `PROPOSED`.
+- `reports` já lista os relatórios que existem, com o resultado das políticas aplicadas até ali.
+
+## Payload básico
+
+Se a plataforma não conseguir montar o corpo completo, o aviso sai mesmo assim, só com a identificação:
+
+```json
+{
+  "operationId": "6612a7f30000000000000100",
+  "operationResultId": "6612a7f30000000000000101",
+  "document": "43591367000130",
+  "status": "APPROVED",
+  "event": "OPERATION_FINISHED",
+  "eventId": "6612a7f30000000000000101:OPERATION_FINISHED:APPROVED"
+}
+```
+
+Sem `decision` no corpo, busque o resultado pela API: `GET /operation/result-leafs?operationResultId=...` e `GET /v2/report/{rootReportId}`.
+
+## O que nunca vem no webhook
+
+- O nome dos provedores de dado contratados. O bureau (Serasa, Boa Vista, Quod) pode aparecer.
+- O conteúdo dos relatórios: o webhook traz o resultado de cada política, não as seções. Leia o relatório pela API.
+
+## Como tratar no seu sistema
+
+<AccordionGroup>
+  <Accordion title="Deduplique pelo eventId">
+    A entrega pode se repetir (nova tentativa depois de timeout do seu lado, por exemplo). O `eventId` é o mesmo nas repetições: processe cada `eventId` uma vez só.
+  </Accordion>
+  <Accordion title="Decida pelo aviso de fim">
+    Os avisos de parada e de retomada são para acompanhamento. A decisão vale no `OPERATION_FINISHED`.
+  </Accordion>
+  <Accordion title="O webhook CREDIT_POLICY sai por camada">
+    Se a sua organização também assina `CREDIT_POLICY`, ele chega uma vez para cada política avaliada, inclusive cada camada do Aprofundar. Para a esteira, use o `OPERATION`: ele já junta todas as camadas em `reports[].policies`.
+  </Accordion>
+  <Accordion title="Responda 2xx rápido">
+    A GYRA+ tenta entregar até 3 vezes, com backoff. Responda logo e processe numa fila sua. Mantenha um fallback com `GET /operation/result-leafs` para avisos perdidos.
+  </Accordion>
+</AccordionGroup>
+
+## Próximos passos
+
+<CardGroup cols={2}>
+  <Card title="Esteira incremental pela API" icon="stairs" href="/api-reference/esteiras/esteira-incremental">
+    Rodar Simples, Essencial e Completo parando cedo, e o que é cobrado.
+  </Card>
+  <Card title="Execuções" icon="play" href="/esteiras/execucoes">
+    Estados, esperas e fim de uma execução.
+  </Card>
+</CardGroup>
