@@ -184,7 +184,7 @@ O exemplo é ilustrativo: a forma de `offer` e os valores de `risk` seguem a sua
 
 | Campo | O que é |
 | --- | --- |
-| `finalDecision` | `APPROVED`, `ALERT` ou `REPROVED`. `null` enquanto a execução não decidiu e numa esteira que termina sem decisão de crédito |
+| `finalDecision` | `APPROVED`, `ALERT` ou `REPROVED`. `null` enquanto a execução não decidiu e quando ela termina sem decisão de crédito (`ERROR`, oferta vencida sem escolha do cliente, proposta encerrada antes da decisão). Nesses casos `decidedBy`, `decidingStep` e `decidingPolicy` também vêm `null` |
 | `route` | O caminho do Resultado: `APPROVE`, `REPROVE` ou `REVIEW`. Sem etapa Resultado, sai da decisão final |
 | `decidedBy` | `POLICY` (a política decidiu sozinha), `ANALYST` (alguém decidiu na tela) ou `COMMITTEE` (Comitê de crédito IA) |
 | `decidedAt` | Quando a decisão foi registrada |
