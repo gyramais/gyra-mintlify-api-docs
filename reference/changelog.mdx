@@ -12,6 +12,27 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ---
 
+## Novembro 2026
+
+### Avalistas terceiros, certidão estadual e formulários que já chegam preenchidos
+
+**Propostas**
+- **Contato e estado civil ao incluir participante:** [`POST /v1/proposals/{id}/parties`](/api-reference/propostas/propostas#incluir-um-participante) aceita `email`, `phone`, `maritalStatus` e `propertyRegime`, todos opcionais. O avalista terceiro só recebe o contrato com contato guardado e só é qualificado no contrato com o estado civil.
+
+**Onboarding**
+- **Avalistas terceiros no formulário:** com `allowGuarantors: true`, o destinatário informa avalistas de fora do quadro societário (nome, CPF, contato e estado civil), que entram na proposta como avalistas. Ver [Formulários](/onboarding/formularios#avalistas-terceiros).
+- **Pergunta ligada a um campo conhecido:** `prefillFrom` faz a pergunta livre chegar sugerida com dado de documento, bureau ou cadastro (RG, filiação, profissão, estado civil, dados bancários, capital). Ver [Formulários](/onboarding/formularios#ligar-a-pergunta-a-um-campo-conhecido).
+- **Novo tipo documental `CERTIDAO_ESTADUAL`:** certidão de débitos tributários estaduais (CND da Sefaz), com vigência padrão de 60 dias e formato de retorno próprio. Ver [Tipos de documento](/onboarding/tipos-de-documento) e [Formatos de retorno](/api-reference/onboarding/formatos-de-retorno).
+- **Documentos e formulário das regras de partes:** os comportamentos `requestPartyDocuments` e `requestPartyForm` do modelo escolhem se a solicitação pede certidão de casamento, pacto e escritura de união estável, e se mostra o formulário de estado civil e cônjuge. Ver [Solicitações](/onboarding/solicitacoes#comportamento-do-modelo).
+
+**Esteiras**
+- **Vínculos com sócios do formulário e avalistas terceiros:** a etapa Vínculos ganha a opção **Incluir sócios informados no formulário** e o nível **Avalistas terceiros**. Ver [Etapas](/esteiras/etapas#vínculos).
+
+**MCP da GYRA+**
+- **Correção:** o login do connector remoto pelo Claude Code dentro do app desktop deixou de cair em *redirect_uri não autorizado para este cliente*.
+
+---
+
 ## Outubro 2026
 
 ### Esteiras para qualquer jornada, Onboarding, Assistente que executa e um Início que guia

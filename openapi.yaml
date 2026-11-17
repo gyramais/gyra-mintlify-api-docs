@@ -2193,7 +2193,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateReportDto'
+              $ref: '#/components/schemas/CreateReportV2Dto'
             example:
               document: '11222333000181'
               policyId: 6612a7f3625ea4ab00000000
@@ -2854,9 +2854,13 @@ paths:
                     - CERTIDAO_FGTS
                     - CADIN_FEDERAL
                     - CADIN_ESTADUAL
+                    - CERTIDAO_ESTADUAL
+                    - CERTIDAO_CGU
                     - CERTIDAO_QSA
                     - CERTIFICADO_SIMPLES_NACIONAL
                     - ESOCIAL_PJ
+                    - ALVARA_FUNCIONAMENTO
+                    - ALVARA_SANITARIO
                     - COMPROVACAO_ESTADO_CIVIL
                     - DEMONSTRACOES_FINANCEIRAS
                     - EXTRATO_BANCARIO
@@ -2885,9 +2889,13 @@ paths:
                     - CERTIDAO_FGTS
                     - CADIN_FEDERAL
                     - CADIN_ESTADUAL
+                    - CERTIDAO_ESTADUAL
+                    - CERTIDAO_CGU
                     - CERTIDAO_QSA
                     - CERTIFICADO_SIMPLES_NACIONAL
                     - ESOCIAL_PJ
+                    - ALVARA_FUNCIONAMENTO
+                    - ALVARA_SANITARIO
                     - COMPROVACAO_ESTADO_CIVIL
                     - DEMONSTRACOES_FINANCEIRAS
                     - EXTRATO_BANCARIO
@@ -8895,6 +8903,28 @@ components:
       required:
         - policyId
         - document
+    CreateReportV2Dto:
+      type: object
+      properties:
+        policyId:
+          type: string
+        document:
+          type: string
+        type:
+          type: string
+        apiFields:
+          type: object
+          additionalProperties: true
+          description: 'Valores das bases externas locais, agrupados pela chave da base (payloadKey).'
+          example:
+            dados_matera:
+              faturamento_informado: 1500000
+              endereco:
+                uf: SP
+      required:
+        - policyId
+        - document
+        - type
     CreateRegistryDto:
       type: object
       properties:
@@ -8955,9 +8985,13 @@ components:
             - CERTIDAO_FGTS
             - CADIN_FEDERAL
             - CADIN_ESTADUAL
+            - CERTIDAO_ESTADUAL
+            - CERTIDAO_CGU
             - CERTIDAO_QSA
             - CERTIFICADO_SIMPLES_NACIONAL
             - ESOCIAL_PJ
+            - ALVARA_FUNCIONAMENTO
+            - ALVARA_SANITARIO
             - COMPROVACAO_ESTADO_CIVIL
             - DEMONSTRACOES_FINANCEIRAS
             - EXTRATO_BANCARIO
@@ -8986,9 +9020,13 @@ components:
             - CERTIDAO_FGTS
             - CADIN_FEDERAL
             - CADIN_ESTADUAL
+            - CERTIDAO_ESTADUAL
+            - CERTIDAO_CGU
             - CERTIDAO_QSA
             - CERTIFICADO_SIMPLES_NACIONAL
             - ESOCIAL_PJ
+            - ALVARA_FUNCIONAMENTO
+            - ALVARA_SANITARIO
             - COMPROVACAO_ESTADO_CIVIL
             - DEMONSTRACOES_FINANCEIRAS
             - EXTRATO_BANCARIO
@@ -9035,9 +9073,13 @@ components:
             - CERTIDAO_FGTS
             - CADIN_FEDERAL
             - CADIN_ESTADUAL
+            - CERTIDAO_ESTADUAL
+            - CERTIDAO_CGU
             - CERTIDAO_QSA
             - CERTIFICADO_SIMPLES_NACIONAL
             - ESOCIAL_PJ
+            - ALVARA_FUNCIONAMENTO
+            - ALVARA_SANITARIO
             - COMPROVACAO_ESTADO_CIVIL
             - DEMONSTRACOES_FINANCEIRAS
             - EXTRATO_BANCARIO
