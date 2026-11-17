@@ -1,6 +1,6 @@
 ---
 title: "Tipos de documento aceitos"
-description: "Os 25 tipos documentais que a plataforma analisa, com o que cada um é, o prazo de vigência padrão e os subtipos aceitos."
+description: "Os 26 tipos documentais que a plataforma analisa, com o que cada um é, o prazo de vigência padrão e os subtipos aceitos."
 icon: "files"
 surface: plataforma
 domain: cadastro
@@ -9,11 +9,11 @@ lang: nao-tecnica
 ---
 
 <Info>
-  **Resumo:** a entrada é sempre a mesma, um arquivo. A plataforma reconhece sozinha qual dos 25 tipos abaixo aquele arquivo é, e o **formato do que ela devolve muda conforme o tipo identificado**. Os campos de cada tipo estão em [Formatos de retorno por documento](/api-reference/onboarding/formatos-de-retorno).
+  **Resumo:** a entrada é sempre a mesma, um arquivo. A plataforma reconhece sozinha qual dos 26 tipos abaixo aquele arquivo é, e o **formato do que ela devolve muda conforme o tipo identificado**. Os campos de cada tipo estão em [Formatos de retorno por documento](/api-reference/onboarding/formatos-de-retorno).
 </Info>
 
 <Note>
-  **24 dos 25 são reconhecidos sozinhos.** A exceção é `DEMONSTRACOES_FINANCEIRAS`: balanço e DRE têm leitura própria, mas a classificação automática não os emite. Mande `typeHint: DEMONSTRACOES_FINANCEIRAS` no envio, ou peça o item pelo tipo numa solicitação.
+  **25 dos 26 são reconhecidos sozinhos.** A exceção é `DEMONSTRACOES_FINANCEIRAS`: balanço e DRE têm leitura própria, mas a classificação automática não os emite. Mande `typeHint: DEMONSTRACOES_FINANCEIRAS` no envio, ou peça o item pelo tipo numa solicitação.
 </Note>
 
 ## Pessoa jurídica
@@ -32,6 +32,7 @@ lang: nao-tecnica
 | `DEMONSTRACOES_FINANCEIRAS` | Balanço patrimonial e DRE assinados pelo contador; alimenta a análise financeira | 455 dias |
 | `CERTIDAO_PGFN_PJ` | Certidão conjunta da Receita e da PGFN: diz se a empresa deve tributo federal ou dívida ativa | 180 dias |
 | `CERTIDAO_FGTS` | Certificado de Regularidade do FGTS (CRF), emitido pela Caixa | 30 dias |
+| `CERTIDAO_ESTADUAL` | Certidão de débitos tributários estaduais, emitida pela Secretaria da Fazenda do estado (ex.: SEFAZ-BA): diz se a empresa deve tributo estadual, como ICMS, ou dívida ativa do estado. Não é a consulta ao CADIN estadual | 60 dias (o prazo muda por estado; vale a validade impressa na certidão) |
 | `CADIN_FEDERAL` | Cadastro de inadimplentes com órgão federal; pendência ali impede contratar com a União | 30 dias |
 | `CADIN_ESTADUAL` | Mesmo cadastro, no âmbito do estado; cada unidade da federação emite o seu | 30 dias |
 | `CERTIDAO_QSA` | Lista de sócios e participações na base da Receita, para conferir contra o contrato social | 90 dias |

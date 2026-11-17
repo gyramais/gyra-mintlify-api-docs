@@ -65,7 +65,7 @@ Escolhidos por marcação, já vêm com rótulo, máscara e validação.
 
 ## Campos livres
 
-Cada campo livre precisa de `key`, `label`, `type` e `required`. Aceita ainda `hint` (dica curta abaixo do campo) e `maxLength`.
+Cada campo livre precisa de `key`, `label`, `type` e `required`. Aceita ainda `hint` (dica curta abaixo do campo), `maxLength` e `prefillFrom`.
 
 | Tipo | O que aceita |
 | --- | --- |
@@ -82,6 +82,17 @@ Cada campo livre precisa de `key`, `label`, `type` e `required`. Aceita ainda `h
 | `CPF_CNPJ` | Um ou outro, com dígito verificador |
 | `PHONE_BR` | Telefone brasileiro |
 | `CEP` | CEP |
+
+### Ligar a pergunta a um campo conhecido
+
+Com `prefillFrom`, a pergunta livre passa a chegar sugerida com um dado que a plataforma já conhece da pessoa ou da empresa (de documento validado, bureau ou cadastro). A pessoa confere em vez de digitar. Em campo `BOOLEAN` a ligação é ignorada.
+
+| Grupo | Valores aceitos |
+| --- | --- |
+| Pessoa | `RG_NUMBER`, `RG_ISSUER`, `RG_STATE`, `MOTHER_NAME`, `FATHER_NAME`, `GENDER`, `NATIONALITY`, `PROFESSION`, `MARITAL_STATUS` |
+| Empresa | `BANK`, `BANK_BRANCH`, `BANK_BRANCH_DIGIT`, `BANK_ACCOUNT`, `BANK_ACCOUNT_DIGIT`, `BANK_ACCOUNT_TYPE`, `CAPITAL` |
+
+Valor fora da lista é recusado ao salvar o modelo com `"O campo conhecido escolhido para preencher a pergunta não existe."`.
 
 ### Regras da chave
 
@@ -100,6 +111,12 @@ A `key` é **kebab-case** (`faturamento-medio-mensal`), até 60 caracteres, e é
 ## Sócios
 
 Com `allowPartners: true`, o destinatário pode acrescentar sócios ao formulário: nome, documento, função, participação, e-mail e telefone. Para sócio pessoa física, o formulário pergunta também estado civil e regime de bens, a menos que o modelo desligue com `partnerFields: []`. É o caminho para o quadro societário que a empresa declara, ao lado do que a fonte oficial diz.
+
+## Avalistas terceiros
+
+Com `allowGuarantors: true` (padrão: `false`), o destinatário pode informar **avalistas terceiros**: pessoas físicas de fora do quadro societário que garantem a operação. Para cada avalista, o formulário pede nome, CPF, e-mail, celular com DDD e estado civil. CPF inválido, CNPJ no lugar do CPF e avalista repetido são recusados, com o erro preso ao campo. O formulário aceita até 20 avalistas.
+
+O avalista informado entra na proposta como avalista, com o contato guardado para receber o contrato. Na esteira, a etapa [Vínculos](/esteiras/etapas#vínculos) pode analisá-lo pelo nível de vínculo **Avalistas terceiros** (`GUARANTOR`).
 
 ## Para onde vai a resposta
 

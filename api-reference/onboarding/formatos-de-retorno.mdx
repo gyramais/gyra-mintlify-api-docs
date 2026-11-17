@@ -655,6 +655,31 @@ Campos críticos: `cnpj`, `companyName`, `validUntil`, `situation`, `authCode`.
 | `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
 | `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
 
+### `CERTIDAO_ESTADUAL`
+
+**Certidão de débitos estaduais (PJ).** Certidão da Secretaria da Fazenda do estado sobre tributos estaduais (ICMS, IPVA, ITCMD) e dívida ativa do estado. Cada estado tem o seu leiaute: a leitura é pelo conteúdo, não pela posição no papel.
+
+Documento principal: `cnpj`, nome principal: `companyName`.
+
+Campos críticos: `cnpj`, `companyName`, `validUntil`, `situation`, `authCode`.
+
+| Campo | Tipo | Rótulo |
+| --- | --- | --- |
+| `cnpj` | texto | CNPJ |
+| `companyName` | texto | Razão social |
+| `state` | texto | UF da certidão, em duas letras |
+| `issuer` | texto | Emissor |
+| `stateRegistration` | texto | Inscrição estadual |
+| `issuedAt` | texto | Emitida em |
+| `validUntil` | texto | Válido até. Quando a certidão imprime só o prazo ("válida por 60 dias"), é a emissão mais esse prazo |
+| `validityDays` | inteiro | Prazo impresso em dias, quando a certidão não imprime a data final |
+| `situation` | texto, um de: NEGATIVA, POSITIVA_COM_EFEITO_NEGATIVA, POSITIVA | Situação declarada |
+| `situationText` | texto | Frase literal da situação |
+| `authCode` | texto | Código de controle, de autenticidade ou número da certidão |
+| `findings[]` | lista de textos | Débitos ou pendências listados |
+| `certification` | objeto, [bloco Certificação](#bloco-certificação) | Certificação do documento |
+| `structuralMarkers` | lista, [bloco Marcadores estruturais](#bloco-marcadores-estruturais) | Marcadores estruturais |
+
 ### `CADIN_FEDERAL`
 
 **CADIN federal.** Cadastro de inadimplentes com órgão federal.

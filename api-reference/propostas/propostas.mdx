@@ -502,13 +502,27 @@ Inclui avalista, sócio ou interveniente que entrou depois do pedido. Para que a
 <ParamField body="document" type="string" required>CPF ou CNPJ do participante.</ParamField>
 <ParamField body="name" type="string" required>Nome. Até 200 caracteres.</ParamField>
 <ParamField body="role" type="string" required>`GUARANTOR` (avalista), `PARTNER` (sócio) ou `INTERVENING` (interveniente).</ParamField>
+<ParamField body="email" type="string">E-mail do participante. Até 254 caracteres.</ParamField>
+<ParamField body="phone" type="string">Telefone do participante, com DDD. Até 30 caracteres.</ParamField>
+<ParamField body="maritalStatus" type="string">Estado civil: `SOLTEIRO`, `CASADO`, `UNIAO_ESTAVEL`, `SEPARADO`, `DIVORCIADO` ou `VIUVO`.</ParamField>
+<ParamField body="propertyRegime" type="string">Regime de bens: `COMUNHAO_PARCIAL`, `COMUNHAO_UNIVERSAL`, `SEPARACAO_CONVENCIONAL`, `SEPARACAO_OBRIGATORIA` ou `PARTICIPACAO_FINAL_AQUESTOS`.</ParamField>
+
+Contato e estado civil são opcionais, mas fazem diferença no **avalista terceiro** (pessoa de fora do quadro societário): ele só recebe o contrato para assinar se houver contato guardado para o CPF dele, e só é qualificado no contrato com o estado civil. O contato e o estado civil ficam gravados no cadastro da pessoa como informados por quem incluiu, e a combinação de estado civil com regime de bens é conferida na gravação.
 
 <CodeGroup>
 ```bash Requisição
 curl -X POST https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1b001/parties \
   -H "Authorization: Bearer $GYRA_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{ "document": "529.982.247-25", "name": "Carlos Pereira", "role": "GUARANTOR" }'
+  -d '{
+    "document": "529.982.247-25",
+    "name": "Carlos Pereira",
+    "role": "GUARANTOR",
+    "email": "carlos.pereira@exemplo.com.br",
+    "phone": "(11) 98765-4321",
+    "maritalStatus": "CASADO",
+    "propertyRegime": "COMUNHAO_PARCIAL"
+  }'
 ```
 </CodeGroup>
 
@@ -533,6 +547,10 @@ curl -X POST https://gyra-core.gyramais.com.br/v1/proposals/66f1e0a3c2b9d40012a1
 | `400` | `"Informe o CPF ou CNPJ do participante."` | `document` ausente |
 | `400` | `"Informe o nome do participante."` | `name` ausente |
 | `400` | `"Papel do participante inválido."` | `role` fora da lista |
+| `400` | `"O e-mail aceita no máximo 254 caracteres."` | `email` longo demais |
+| `400` | `"O telefone aceita no máximo 30 caracteres."` | `phone` longo demais |
+| `400` | `"Estado civil inválido."` | `maritalStatus` fora da lista |
+| `400` | `"Regime de bens inválido."` | `propertyRegime` fora da lista |
 | `404` | `"Proposta não encontrada."` | Id inexistente |
 | `502` | `"Não foi possível incluir o participante."` | Falha interna |
 
