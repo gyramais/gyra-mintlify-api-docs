@@ -12,6 +12,15 @@ Acompanhe as novidades, melhorias e correções da plataforma GYRA+ Toolbox.
 
 ---
 
+## Novembro 2026
+
+### Resultado da análise pela API v2
+
+- **Registrar resultados em lote:** `POST /v2/outcomes/bulk` recebe, linha a linha, se a análise aprovada ficou em dia, atrasou ou não fechou. Chave ambígua devolve os candidatos e não grava essa linha. Correção é um evento novo, sem apagar o anterior. Ver [Registrar resultados em lote](/api-reference/report-v2/post-v2-outcomes-bulk).
+- **`externalId` no relatório:** o identificador do seu sistema na criação do relatório passa a ser a âncora estável desse resultado. Ver [Criar Relatório (v2)](/api-reference/report-v2/post-v2report).
+
+---
+
 ## Outubro 2026
 
 ### Esteiras para qualquer jornada, Onboarding, Assistente que executa e um Início que guia

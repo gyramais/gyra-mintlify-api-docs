@@ -22,6 +22,7 @@ Bearer JWT no header `Authorization`. A credencial precisa da permissão de cria
 |---|---|---|---|
 | `document` | `string` | sim | CPF ou CNPJ, sem máscara. O dígito verificador é validado. O CNPJ alfanumérico é aceito. |
 | `policyId` | `string` | sim | ID da política. Use uma política habilitada e de relatório (`usage: REPORT`), listada em [`GET /credit-policy/policy`](/api-reference/credit-policypolicy/get-credit-policypolicy). |
+| `externalId` | `string` | não | Identificador desse relatório no seu sistema. Único na organização. É a âncora que evita ambiguidade em [Registrar resultados em lote](/api-reference/report-v2/post-v2-outcomes-bulk). |
 | `months` | `integer` | não | Meses de histórico do SCR. Sem o campo, vale o configurado na política, depois o da organização, e por fim 12. |
 | `type` | `string` | não | Ignorado. O tipo de relatório e o tipo de documento vêm da política. Aceito por compatibilidade. |
 
@@ -33,6 +34,8 @@ Bearer JWT no header `Authorization`. A credencial precisa da permissão de cria
 ```
 
 O documento precisa combinar com a política: CNPJ numa política de CNPJ, CPF numa política de CPF. Caso contrário a resposta é `422`.
+
+`externalId` é opcional e, quando vem, precisa ser único na organização. Guarde o mesmo valor para informar o resultado depois, em [`POST /v2/outcomes/bulk`](/api-reference/report-v2/post-v2-outcomes-bulk). Sem ele, documento e data da decisão podem casar com mais de uma análise, e essa linha volta ambígua, sem gravar.
 
 ### Mesmo documento, mesma política, mesmo dia
 

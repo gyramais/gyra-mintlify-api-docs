@@ -1,0 +1,217 @@
+---
+title: Registrar resultados em lote (v2)
+description: Informe o que aconteceu depois da aprovação, linha a linha. Chave ambígua devolve os candidatos e não grava essa linha.
+icon: "clipboard-check"
+surface: api
+domain: relatorio
+audience: integrador
+lang: tecnica
+---
+
+O resultado é o que aconteceu com uma análise que você aprovou: fechou e está em dia, fechou e atrasou, ou não fechou. Esta rota grava esses fatos em lote.
+
+<Info>
+  **Resumo:** `POST /v2/outcomes/bulk` recebe uma lista. Cada linha casa, fica ambígua (com os candidatos), não acha decisão ou é inválida. A plataforma nunca escolhe sozinha no caso ambíguo, e uma linha com problema não impede as outras.
+</Info>
+
+<Note>
+  A organização precisa ter Resultados ligado. Sem isso, a rota responde `404`, como se não existisse. O mesmo `404` vale para recurso de outra organização.
+</Note>
+
+### Quando usar
+
+Use esta rota para devolver, a partir do seu sistema, o desfecho de análises já decididas. Um envio pode misturar várias decisões. Para acompanhar a decisão da análise em si (`APPROVED`, `REJECTED`, `PENDING`), continue em [`GET /v2/report/{id}`](/api-reference/report-v2/get-v2report). Esta rota não muda essa decisão.
+
+Grave o `externalId` na [criação do relatório](/api-reference/report-v2/post-v2report). Ele é a chave que evita ambiguidade quando o mesmo documento tem mais de uma análise.
+
+### Autenticação
+
+Bearer JWT no header `Authorization`. A credencial precisa da permissão de registrar resultados. A organização sai do token. Um `organizationId` no corpo é ignorado.
+
+### Corpo da requisição
+
+```http
+POST /v2/outcomes/bulk
+```
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `items` | `array` | sim | Linhas do lote. A ordem da resposta segue a ordem daqui. |
+| `items[].kind` | `string` | sim | `ON_TIME` (em dia), `LATE` (atrasou) ou `NOT_OPERATED` (não fechou). |
+| `items[].at` | `string` | sim | Data do fato, `AAAA-MM-DD`. É o dia em que aconteceu, não o dia do envio. |
+| `items[].externalId` | `string` | âncora | O identificador que você mandou em `POST /v2/report`. |
+| `items[].reportId` | `string` | âncora | ID do relatório. |
+| `items[].document` | `string` | âncora | CPF ou CNPJ, com ou sem máscara. Só vale junto com `decidedAt`. |
+| `items[].decidedAt` | `string` | âncora | Data da decisão, `AAAA-MM-DD`. Só vale junto com `document`. |
+| `items[].installment` | `integer` | não | Número da parcela, quando o fato é de uma parcela. |
+| `items[].title` | `string` | não | Título da cobrança, quando não há número de parcela. |
+
+Cada linha precisa de pelo menos uma âncora: `externalId`, ou `reportId`, ou o par `document` + `decidedAt`. Sem âncora, a linha é inválida.
+
+Se a linha trouxer mais de uma âncora, a decisão precisa bater com todas. `externalId` que não existe na sua organização não cai para a busca por documento: a linha fica sem decisão. A plataforma não escolhe outra análise no seu lugar.
+
+`installment` e `title` são opcionais. Mande um dos dois quando o fato for de uma cobrança específica. Sem os dois, o fato é da decisão inteira, que é o caso dos três desfechos abaixo.
+
+| `kind` | O que você está dizendo | O que entra no resultado de pagamento |
+|---|---|---|
+| `ON_TIME` | Fechou e está em dia. | Sim. |
+| `LATE` | Fechou e atrasou. | Sim. |
+| `NOT_OPERATED` | Não fechou. | Não. Conta só no funil de decisões. Não é inadimplência. |
+
+Não existe operação para marcar todas as análises em dia. Cada `ON_TIME` vale para a linha que você enviou.
+
+```json
+{
+  "items": [
+    {
+      "externalId": "pedido-8841",
+      "kind": "ON_TIME",
+      "at": "2026-10-15"
+    },
+    {
+      "document": "11222333000181",
+      "decidedAt": "2026-09-11",
+      "kind": "LATE",
+      "at": "2026-10-20",
+      "installment": 2
+    }
+  ]
+}
+```
+
+### Resposta linha a linha
+
+Um corpo válido responde `200`, mesmo quando alguma linha não grava. Leia `results`. O `index` é a posição em `items`, começando em zero.
+
+| `status` | O que aconteceu |
+|---|---|
+| `MATCHED` | A linha casou com uma decisão e o evento foi gravado. `matchedBy` diz qual âncora casou: `EXTERNAL_ID`, `REPORT_ID` ou `DOCUMENT_DATE`. |
+| `AMBIGUOUS` | Mais de uma decisão casa. Nada é gravado nessa linha. `candidates` traz as opções. |
+| `NO_DECISION` | Nenhuma decisão aprovada da sua organização casa com a âncora. |
+| `INVALID` | A linha em si não serve (âncora ausente, data impossível, `kind` fora da lista). `message` diz o motivo. |
+
+`MATCHED` devolve `outcomeId` da decisão encontrada. Repetir a mesma linha volta `MATCHED` com o mesmo `outcomeId` e não cria outro evento.
+
+<RequestExample>
+
+```bash cURL
+curl --request POST 'https://gyra-core.gyramais.com.br/v2/outcomes/bulk' \
+  --header "Authorization: Bearer $GYRA_TOKEN" \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "items": [
+      {
+        "externalId": "pedido-8841",
+        "kind": "ON_TIME",
+        "at": "2026-10-15"
+      }
+    ]
+  }'
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200 com linha casada
+{
+  "results": [
+    {
+      "index": 0,
+      "status": "MATCHED",
+      "matchedBy": "EXTERNAL_ID",
+      "outcomeId": "6612a7f30000000000000021",
+      "reportId": "6612a7f30000000000000011",
+      "kind": "ON_TIME",
+      "at": "2026-10-15"
+    }
+  ]
+}
+```
+
+</ResponseExample>
+
+### Caso ambíguo
+
+Documento e data da decisão, sozinhos, podem cair em mais de uma análise aprovada. O caso típico é o mesmo documento com duas decisões na mesma data, quando a linha não traz `externalId` nem `reportId`.
+
+A linha ambígua **não grava**. A resposta lista os candidatos para você escolher. As outras linhas do mesmo lote seguem o caminho normal: as que casam são gravadas.
+
+Reenvie só a linha ambígua com `reportId` ou `externalId` de um dos candidatos. Não reenvie o lote inteiro se as outras linhas já voltaram `MATCHED`: repetir a mesma âncora, o mesmo `kind`, a mesma parcela ou título e a mesma data `at` não duplica o evento.
+
+O lote de duas linhas mostrado acima volta com a primeira casada e a segunda ambígua:
+
+```json
+{
+  "results": [
+    {
+      "index": 0,
+      "status": "MATCHED",
+      "matchedBy": "EXTERNAL_ID",
+      "outcomeId": "6612a7f30000000000000021",
+      "reportId": "6612a7f30000000000000011",
+      "kind": "ON_TIME",
+      "at": "2026-10-15"
+    },
+    {
+      "index": 1,
+      "status": "AMBIGUOUS",
+      "candidates": [
+        {
+          "reportId": "6612a7f30000000000000031",
+          "externalId": "pedido-9100",
+          "document": "11222333000181",
+          "decidedAt": "2026-09-11"
+        },
+        {
+          "reportId": "6612a7f30000000000000032",
+          "externalId": null,
+          "document": "11222333000181",
+          "decidedAt": "2026-09-11"
+        }
+      ]
+    }
+  ]
+}
+```
+
+<Warning>
+  A plataforma não escolhe um candidato. Sem uma nova chamada com âncora única, essa linha continua sem resultado.
+</Warning>
+
+### Correção
+
+Toda resposta pode ser corrigida. Não existe rota para editar um evento já gravado. A correção é uma linha nova, na mesma âncora, com o `kind` certo e a data do fato em `at`.
+
+O evento anterior permanece no histórico. A resposta que vale é a do evento mais recente. Corrigir um "não fechou" para `ON_TIME` ou `LATE` devolve a decisão ao resultado de pagamento. Corrigir para `NOT_OPERATED` tira a decisão desse resultado e deixa o fato só no funil.
+
+A mesma combinação de âncora, `kind`, parcela ou título e `at` é idempotente nesta rota. Mudar o `kind` ou a data `at` grava um evento novo.
+
+```json
+{
+  "items": [
+    {
+      "reportId": "6612a7f30000000000000041",
+      "kind": "ON_TIME",
+      "at": "2026-10-20",
+      "installment": 2
+    }
+  ]
+}
+```
+
+Essa chamada, feita depois de um `LATE` que já voltou `MATCHED` na parcela 2 desse relatório, passa a valer em dia. O atraso informado antes continua no histórico.
+
+### Erros do lote
+
+Estes códigos são da chamada inteira. O desfecho de cada linha vai em `results`, com `200`.
+
+| Código | Quando |
+|---|---|
+| `200` | O corpo é um lote válido. Vale também quando toda linha veio `AMBIGUOUS`, `NO_DECISION` ou `INVALID`. |
+| `400` | `items` ausente ou não é uma lista. A mensagem de validação vem em `message`. |
+| `401` | `"Token de acesso inválido."` Token ausente ou expirado. |
+| `403` | `"Você não tem permissão para acessar este recurso."` A credencial não registra resultados. |
+| `404` | `"Recurso não encontrado."` Resultados não está ligado na organização, ou o endereço não existe para ela. |
+
+Não repita um `404`: é configuração da conta ou rota inexistente, não uma falha transitória. Linha ambígua também não se resolve repetindo o mesmo corpo. Reenvie com `reportId` ou `externalId`.

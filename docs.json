@@ -201,6 +201,7 @@
           "api-reference/auth/post-authauthenticate",
           "api-reference/report-v2/post-v2report",
           "api-reference/report-v2/get-v2report",
+          "api-reference/report-v2/post-v2-outcomes-bulk",
           "api-reference/report/post-report-financial-tab",
           "api-reference/report/post-report-financial-tab-presign",
           "api-reference/report/get-reportlist",
