@@ -90,7 +90,7 @@ Um corpo válido responde `200`, mesmo quando alguma linha não grava. Leia `res
 | `NO_DECISION` | Nenhuma decisão aprovada da sua organização casa com a âncora. |
 | `INVALID` | A linha em si não serve (âncora ausente, data impossível, `kind` fora da lista). `message` diz o motivo. |
 
-`MATCHED` devolve `outcomeId` da decisão encontrada. Repetir a mesma linha volta `MATCHED` com o mesmo `outcomeId` e não cria outro evento.
+`MATCHED` devolve `outcomeId` da decisão encontrada. Repetir a mesma linha volta `MATCHED` com o mesmo `outcomeId`, não cria outro evento e não troca o evento vigente.
 
 <RequestExample>
 
@@ -181,11 +181,15 @@ O lote de duas linhas mostrado acima volta com a primeira casada e a segunda amb
 
 ### Correção
 
-Toda resposta pode ser corrigida. Não existe rota para editar um evento já gravado. A correção é uma linha nova, na mesma âncora, com o `kind` certo e a data do fato em `at`.
+Não existe rota para editar um evento já gravado. Corrigir é gravar um evento novo, na mesma âncora, com outro `kind` ou com outra data `at`. A data `at` é o dia em que o fato aconteceu.
 
 O evento anterior permanece no histórico. A resposta que vale é a do evento mais recente. Corrigir um "não fechou" para `ON_TIME` ou `LATE` devolve a decisão ao resultado de pagamento. Corrigir para `NOT_OPERATED` tira a decisão desse resultado e deixa o fato só no funil.
 
-A mesma combinação de âncora, `kind`, parcela ou título e `at` é idempotente nesta rota. Mudar o `kind` ou a data `at` grava um evento novo.
+A mesma combinação de âncora, `kind`, parcela ou título e data `at` não grava outro evento. A chamada volta `MATCHED` com o mesmo `outcomeId` e não muda qual evento é o vigente.
+
+Voltar a um desfecho anterior com a mesma data do fato também não corrige. Se você gravou `ON_TIME` em 15/10, depois `LATE` em 20/10, e manda de novo o `ON_TIME` de 15/10, a terceira chamada encontra o primeiro evento e para. O vigente continua sendo o `LATE`. Não existe operação para reativar um evento antigo.
+
+Não altere `at` só para escapar dessa regra. Se o fato corrigido aconteceu em outro dia, use esse dia: a combinação é nova e o evento entra. Mudar a data só para furar a idempotência registraria o dia errado.
 
 ```json
 {
@@ -200,7 +204,7 @@ A mesma combinação de âncora, `kind`, parcela ou título e `at` é idempotent
 }
 ```
 
-Essa chamada, feita depois de um `LATE` que já voltou `MATCHED` na parcela 2 desse relatório, passa a valer em dia. O atraso informado antes continua no histórico.
+Essa chamada grava em dia na parcela 2, com o fato em 20/10, depois de um `LATE` já gravado com outra data. O atraso anterior continua no histórico. Mandar de novo aquele `LATE`, com a data original, não passa a valer.
 
 ### Erros do lote
 

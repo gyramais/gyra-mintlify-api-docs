@@ -30,6 +30,8 @@ test('page describes the bulk contract, the ambiguous case, and correction', () 
   assert.match(page, /evento novo|uma linha nova/i);
   assert.match(page, /não existe rota para editar um evento/i);
   assert.match(page, /não existe operação para marcar todas/i);
+  assert.match(page, /não existe operação para reativar um evento antigo/i);
+  assert.match(page, /Não altere `at` só para escapar dessa regra/);
 });
 
 test('report create documents externalId as the stable anchor', () => {
