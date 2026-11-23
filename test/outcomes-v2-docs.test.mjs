@@ -31,7 +31,11 @@ test('page describes the bulk contract, the ambiguous case, and correction', () 
   assert.match(page, /não existe rota para editar um evento/i);
   assert.match(page, /não existe operação para marcar todas/i);
   assert.match(page, /não existe operação para reativar um evento antigo/i);
-  assert.match(page, /Não altere `at` só para escapar dessa regra/);
+  assert.match(page, /Não altere `at` só para forçar um evento/);
+  // Reversao (GYR-2064): voltar ao desfecho anterior com a mesma data grava.
+  assert.match(page, /Voltar a um desfecho anterior corrige, mesmo com a mesma data do fato/);
+  assert.match(page, /revisão 3/);
+  assert.match(page, /repetido duas vezes, ele grava um evento só/);
 });
 
 test('report create documents externalId as the stable anchor', () => {
